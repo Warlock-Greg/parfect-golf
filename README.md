@@ -1,0 +1,36 @@
+# ⛳️ Parfect.golfr v3
+
+**Parfect.golfr** est une webapp de suivi des statistiques de golf, pensée pour les joueurs qui veulent progresser et comparer leurs performances à leurs objectifs selon leur index.
+
+---
+
+## 🚀 Fonctionnalités
+
+- **Scorecard interactive** : saisie trou par trou (score, putts, fairway, GIR, routine, plan de jeu).
+- **Choix 9 ou 18 trous** via une popup modale avant chaque partie.
+- **Navigation intuitive** : barre de progression avec indicateurs ✅ trou terminé / 🔵 trou en cours.
+- **Résumé détaillé** :
+  - Score total
+  - Nombre de fairways touchés
+  - Greens en régulation
+  - Putts totaux
+  - Pars
+  - Routines respectées
+  - Plans respectés
+  - **PARFECT** (Fairway + GIR + ≤ 2 putts)
+- **Comparaison aux objectifs** selon l’index sélectionné (ex. index 12 → 50% fairways, 33% GIR, 33 putts, etc.).
+- **Historique des parties** (sauvegarde automatique en LocalStorage).
+- **Page Objectifs** : consultez vos cibles selon l’index (de 0 à 21).
+- **Export PDF** pour archiver vos parties.
+- **Partage Instagram** (image auto-générée avec watermark © Parfect.golfr).
+- **Design moderne** (Tailwind CSS, responsive mobile-first).
+- **Footer branding** avec lien vers [@parfect.golfr](https://instagram.com/parfect.golfr).
+
+---
+
+## 🛠️ Installation & utilisation
+
+### 1. Cloner le repo
+```bash
+git clone https://github.com/<ton-username>/parfect-golfr.git
+cd parfect-golfr
