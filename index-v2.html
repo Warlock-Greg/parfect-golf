@@ -3,40 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parfect v2</title>
+  <title>Parfect v3</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#10B981">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="icon.png">
   <style>
     body { font-family: 'Inter', sans-serif; }
     .page { display: none; }
     .page.active { display: block; }
     .hole-indicator {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      background: #374151;
-      color: #fff;
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; background: #374151; color: #fff;
     }
     .hole-indicator.active { background: #10B981; font-weight: bold; }
     .hole-indicator.done { background: #4ade80; }
-    .watermark {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      font-size: 14px;
-      color: rgba(255,255,255,0.6);
-      font-weight: bold;
-    }
+    .watermark { position: absolute; bottom: 10px; right: 10px; font-size: 14px;
+      color: rgba(255,255,255,0.6); font-weight: bold; }
   </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
@@ -46,11 +29,12 @@
     <!-- Header -->
     <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
       <nav class="flex justify-between items-center">
-        <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect v2</h1>
+        <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect v3</h1>
         <div class="flex space-x-2 md:space-x-4">
-          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Accueil</button>
-          <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Carte</button>
-          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Historique</button>
+          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
+          <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
+          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
         </div>
       </nav>
     </header>
@@ -60,7 +44,7 @@
       <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
         <h2 class="text-2xl font-bold mb-4">Bienvenue sur Parfect.golfr</h2>
         <p class="mb-6">Suivez vos stats de golf trou par trou et améliorez votre jeu ⛳️</p>
-        <button data-page="scorecard" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle partie</button>
+        <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Démarrer une partie</button>
       </div>
     </main>
 
@@ -74,6 +58,27 @@
           <button id="prev-hole" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">⬅️ Précédent</button>
           <button id="next-hole" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Suivant ➡️</button>
         </div>
+      </div>
+    </main>
+
+    <!-- Page Objectifs -->
+    <main id="objectives" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-4 text-center">Objectifs par Index</h2>
+        <label class="block mb-4 text-center">
+          Choisissez votre index :
+          <select id="index-select" class="text-black px-2 ml-2">
+            <option value="0">0</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+            <option value="9">9</option>
+            <option value="12">12</option>
+            <option value="15">15</option>
+            <option value="18">18</option>
+            <option value="21">21</option>
+          </select>
+        </label>
+        <div id="objectives-table" class="overflow-x-auto"></div>
       </div>
     </main>
 
@@ -96,29 +101,73 @@
           <button id="share-insta" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg">📲 Partager sur Instagram</button>
         </div>
         <div class="mt-6 text-center">
-          <button data-page="home" class="nav-btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle Partie</button>
+          <button id="new-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle Partie</button>
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Modal choix 9 ou 18 trous -->
+  <div id="holes-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-xl font-bold mb-4">Choisissez le nombre de trous</h3>
+      <div class="flex justify-center space-x-4">
+        <button data-holes="9" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">9 trous</button>
+        <button data-holes="18" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">18 trous</button>
+      </div>
+    </div>
   </div>
 
   <!-- Footer -->
   <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
     <p>&copy; 2025 Parfect.golfr —
       <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a>
-      — v2.0
+      — v3.0
     </p>
   </footer>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     let currentHole = 1;
-    const totalHoles = 18;
+    let totalHoles = 18;
     let gameData = [];
     let history = JSON.parse(localStorage.getItem('parfectHistory') || '[]');
+    let selectedIndex = 12;
 
+    const objectives = {
+      0: {fairways:79, gir:67, putts:29, pars:15, fw:11, gr:12},
+      5: {fairways:71, gir:56, putts:30, pars:12, fw:10, gr:10},
+      7: {fairways:64, gir:50, putts:31, pars:11, fw:9, gr:9},
+      9: {fairways:57, gir:44, putts:32, pars:10, fw:8, gr:8},
+      12:{fairways:50, gir:33, putts:33, pars:8, fw:7, gr:6},
+      15:{fairways:43, gir:22, putts:34, pars:6, fw:6, gr:4},
+      18:{fairways:36, gir:17, putts:35, pars:5, fw:5, gr:3},
+      21:{fairways:29, gir:11, putts:36, pars:4, fw:4, gr:2}
+    };
+
+    // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', () => showPage(btn.dataset.page));
+    });
+
+    // Start game buttons
+    document.getElementById('start-game').addEventListener('click', () => {
+      document.getElementById('holes-modal').classList.remove('hidden');
+    });
+    document.getElementById('new-game').addEventListener('click', () => {
+      document.getElementById('holes-modal').classList.remove('hidden');
+    });
+
+    // Choose holes
+    document.querySelectorAll('.choose-holes').forEach(btn => {
+      btn.addEventListener('click', () => {
+        totalHoles = parseInt(btn.dataset.holes);
+        gameData = [];
+        currentHole = 1;
+        document.getElementById('holes-modal').classList.add('hidden');
+        showPage('scorecard');
+        renderHole();
+      });
     });
 
     function showPage(pageId) {
@@ -127,6 +176,7 @@
       if(pageId === 'scorecard') renderHole();
       if(pageId === 'history') renderHistory();
       if(pageId === 'summary') renderSummary();
+      if(pageId === 'objectives') renderObjectives();
     }
 
     function renderProgress() {
@@ -146,25 +196,26 @@
       const form = document.getElementById('hole-form');
       const holeData = gameData[currentHole-1] || {};
       form.innerHTML = `
-        <h3 class="text-lg font-semibold mb-3">Trou ${currentHole}</h3>
-        <label class="block mb-2">Score : <input type="number" id="score" value="${holeData.score ?? ''}" class="text-black px-2"></label>
-        <label class="block mb-2">Type : 
-          <select id="scoreType" class="text-black px-2">
-            <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
-            <option ${holeData.scoreType==='BIRDIE'?'selected':''}>BIRDIE</option>
-            <option ${holeData.scoreType==='EAGLE'?'selected':''}>EAGLE</option>
-            <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
-            <option ${holeData.scoreType==='DOUBLE BOGEY'?'selected':''}>DOUBLE BOGEY</option>
-            <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
-          </select>
-        </label>
-        <label class="block mb-2">Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" class="text-black px-2"></label>
-        <label class="block mb-2">Distance 1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" class="text-black px-2"></label>
-        <label class="block"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway</label>
-        <label class="block"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
-        <label class="block"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
-        <label class="block"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
-      `;
+        <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <label>Score : <input type="number" id="score" value="${holeData.score ?? ''}" class="text-black px-2 w-full"></label>
+          <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
+          <label class="col-span-2">Type :
+            <select id="scoreType" class="text-black px-2 w-full">
+              <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
+              <option ${holeData.scoreType==='BIRDIE'?'selected':''}>BIRDIE</option>
+              <option ${holeData.scoreType==='ALBATROS'?'selected':''}>ALBATROS</option>
+              <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
+              <option ${holeData.scoreType==='DOUBLE BOGEY'?'selected':''}>DOUBLE BOGEY</option>
+              <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
+            </select>
+          </label>
+          <label>1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" class="text-black px-2 w-full"></label>
+          <label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway</label>
+          <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
+          <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
+          <label><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
+        </div>`;
       document.getElementById('score').addEventListener('input', saveHole);
       document.getElementById('scoreType').addEventListener('change', saveHole);
       document.getElementById('putts').addEventListener('input', saveHole);
@@ -196,15 +247,14 @@
     });
 
     function endGame() {
-      history.push({ date: new Date().toLocaleString(), holes: gameData });
+      history.push({ date: new Date().toLocaleString(), holes: gameData, index: selectedIndex });
       localStorage.setItem('parfectHistory', JSON.stringify(history));
       showPage('summary');
     }
 
     function renderSummary() {
       const container = document.getElementById('summary-content');
-      let totalScore = 0, fairways=0, girs=0, routines=0, plans=0, parfect=0;
-      let totalPutts = 0;
+      let totalScore = 0, fairways=0, girs=0, routines=0, plans=0, parfect=0, totalPutts=0, pars=0;
       gameData.forEach(h => {
         totalScore += h.score;
         fairways += h.fairway?1:0;
@@ -212,48 +262,104 @@
         routines += h.routine?1:0;
         plans += h.plan?1:0;
         totalPutts += h.putts;
+        if(h.scoreType==='PAR') pars++;
         if(h.fairway && h.gir && h.putts<=2) parfect++;
       });
-      container.innerHTML = `
+
+      const obj = objectives[selectedIndex];
+      function check(val, target, betterIsLess=false) {
+        if (betterIsLess) return val <= target ? '✅' : '❌';
+        return val >= target ? '✅' : '❌';
+      }
+
+            container.innerHTML = `
         <div id="summary-box" class="grid md:grid-cols-2 gap-4 relative">
           <div class="bg-gray-700 p-4 rounded-lg">
             <h3 class="font-bold text-green-400 mb-2">Stats globales</h3>
             <ul class="space-y-1">
               <li><strong>Score total :</strong> ${totalScore}</li>
-              <li><strong>Fairways :</strong> ${fairways}/18</li>
-              <li><strong>GIR :</strong> ${girs}/18</li>
+              <li><strong>Fairways :</strong> ${fairways}/${totalHoles}</li>
+              <li><strong>GIR :</strong> ${girs}/${totalHoles}</li>
               <li><strong>Putts :</strong> ${totalPutts}</li>
-              <li><strong>Routines :</strong> ${routines}/18</li>
-              <li><strong>Plans :</strong> ${plans}/18</li>
+              <li><strong>Pars :</strong> ${pars}</li>
+              <li><strong>Routines :</strong> ${routines}</li>
+              <li><strong>Plans :</strong> ${plans}</li>
               <li><strong>PARFECT :</strong> ${parfect}</li>
             </ul>
           </div>
-          <div class="absolute bottom-2 right-2 text-xs text-gray-500">© Parfect.golfr</div>
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="font-bold text-green-400 mb-2">Vs Objectifs (Index ${selectedIndex})</h3>
+            <ul class="space-y-1">
+              <li>Fairways : ${fairways} / objectif ${obj.fw} ${check(fairways,obj.fw)}</li>
+              <li>GIR : ${girs} / objectif ${obj.gr} ${check(girs,obj.gr)}</li>
+              <li>Putts : ${totalPutts} / objectif ${obj.putts} ${check(totalPutts,obj.putts,true)}</li>
+              <li>Pars : ${pars} / objectif ${obj.pars} ${check(pars,obj.pars)}</li>
+            </ul>
+          </div>
         </div>`;
     }
+
+    function renderObjectives() {
+      const container = document.getElementById('objectives-table');
+      const idx = selectedIndex;
+      const obj = objectives[idx];
+      container.innerHTML = `
+        <table class="table-auto w-full text-sm text-left border border-gray-600">
+          <thead class="bg-gray-700 text-green-400">
+            <tr>
+              <th class="px-2 py-1">Index</th>
+              <th class="px-2 py-1">Fairways %</th>
+              <th class="px-2 py-1">GIR %</th>
+              <th class="px-2 py-1">Putts</th>
+              <th class="px-2 py-1">Pars</th>
+              <th class="px-2 py-1">FW</th>
+              <th class="px-2 py-1">GR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-gray-800">
+              <td class="px-2 py-1">${idx}</td>
+              <td class="px-2 py-1">${obj.fairways}%</td>
+              <td class="px-2 py-1">${obj.gir}%</td>
+              <td class="px-2 py-1">${obj.putts}</td>
+              <td class="px-2 py-1">${obj.pars}</td>
+              <td class="px-2 py-1">${obj.fw}</td>
+              <td class="px-2 py-1">${obj.gr}</td>
+            </tr>
+          </tbody>
+        </table>`;
+    }
+
+    // Gestion changement index
+    document.getElementById('index-select').addEventListener('change', (e) => {
+      selectedIndex = parseInt(e.target.value);
+      renderObjectives();
+    });
 
     function renderHistory() {
       const container = document.getElementById('history-list');
       container.innerHTML = history.map((g,i) => `
         <div class="bg-gray-700 p-3 rounded-lg">
           <p><strong>Partie ${i+1}</strong> — ${g.date}</p>
-          <p>${g.holes.length} trous enregistrés</p>
+          <p>${g.holes.length} trous enregistrés — Index ${g.index ?? '-'}</p>
         </div>`).join('') || '<p>Aucune partie enregistrée.</p>';
     }
 
+    // Export PDF
     document.getElementById('export-pdf').addEventListener('click', () => {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
       pdf.text("Résumé de partie Parfect.golfr", 10, 10);
       let y = 20;
       gameData.forEach(h => {
-        pdf.text(`Trou ${h.hole} - Score: ${h.score}, Putts: ${h.putts}, Fairway: ${h.fairway?"✓":""}, GIR: ${h.gir?"✓":""}`, 10, y);
+        pdf.text(`Trou ${h.hole} - Score: ${h.score}, Putts: ${h.putts}, FW: ${h.fairway?"✓":"-"}, GIR: ${h.gir?"✓":"-"}`, 10, y);
         y += 8;
       });
-      pdf.text("© Parfect.golfr", 10, y+10);
+      pdf.text(`© Parfect.golfr — Index ${selectedIndex}`, 10, y+10);
       pdf.save("parfect-score.pdf");
     });
 
+    // Partage Instagram (image)
     document.getElementById('share-insta').addEventListener('click', () => {
       const box = document.getElementById('summary-box');
       html2canvas(box).then(canvas => {
