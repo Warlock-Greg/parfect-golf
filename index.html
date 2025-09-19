@@ -1,652 +1,389 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parfect</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .page {
-            display: none;
-        }
-        .page.active {
-            display: block;
-        }
-        [contenteditable="true"] {
-            outline: 2px dashed #4ade80; 
-            cursor: pointer;
-        }
-        [contenteditable="true"]:focus {
-            outline: 2px solid #22c55e;
-            background-color: #1f2937;
-        }
-        .custom-checkbox {
-            appearance: none;
-            background-color: #374151;
-            border: 1px solid #4b5563;
-            width: 1.5rem;
-            height: 1.5rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            position: relative;
-            transition: background-color 0.2s ease-in-out;
-        }
-        .custom-checkbox:checked {
-            background-color: #22c55e;
-            border-color: #16a34a;
-        }
-        .custom-checkbox:checked::after {
-            content: '✓';
-            color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1rem;
-            font-weight: bold;
-        }
-        .player-tab {
-            transition: all 0.2s ease-in-out;
-        }
-        .player-tab.active {
-            background-color: #10B981; /* green-500 */
-            color: #ffffff;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parfect v3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .hole-indicator {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; background: #374151; color: #fff;
+    }
+    .hole-indicator.active { background: #10B981; font-weight: bold; }
+    .hole-indicator.done { background: #4ade80; }
+    .watermark { position: absolute; bottom: 10px; right: 10px; font-size: 14px;
+      color: rgba(255,255,255,0.6); font-weight: bold; }
+  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
 
-    <div id="app" class="container mx-auto p-4 md:p-6 max-w-4xl">
+  <div id="app" class="container mx-auto p-4 md:p-6 max-w-4xl flex-1">
 
-        <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-            <nav class="flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <svg class="h-8 w-8 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M12 18.5v-15"></path>
-                      <path d="M12 3.5l6 4-6 4"></path>
-                    </svg>
-                    <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect</h1>
-                </div>
-                <div class="flex space-x-2 md:space-x-4">
-                    <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Accueil</button>
-                    <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Carte</button>
-                    <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg transition-colors">Objectifs</button>
-                </div>
-            </nav>
-        </header>
+    <!-- Header -->
+    <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+      <nav class="flex justify-between items-center">
+        <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect v3</h1>
+        <div class="flex space-x-2 md:space-x-4">
+          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
+          <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
+          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
+        </div>
+      </nav>
+    </header>
 
-        <main id="home" class="page active">
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                <h2 class="text-2xl font-bold mb-6 text-center">Nouvelle Partie</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold mb-3 text-green-400">Joueur 1</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="player1-name" class="block text-sm font-medium text-gray-300">Nom</label>
-                                <input type="text" id="player1-name" class="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-white p-2">
-                            </div>
-                            <div>
-                                <label for="player1-index" class="block text-sm font-medium text-gray-300">Index</label>
-                                <select id="player1-index" class="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-white p-2"></select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-700 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold mb-3 text-green-400">Joueur 2</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="player2-name" class="block text-sm font-medium text-gray-300">Nom</label>
-                                <input type="text" id="player2-name" class="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-white p-2" placeholder="Optionnel">
-                            </div>
-                            <div>
-                                <label for="player2-index" class="block text-sm font-medium text-gray-300">Index</label>
-                                <select id="player2-index" class="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-white p-2"></select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                 <div class="mt-6">
-                    <label for="golf-course" class="block text-sm font-medium text-gray-300">Nom du Golf</label>
-                    <input type="text" id="golf-course" class="mt-1 block w-full bg-gray-800 border-gray-600 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 text-white p-2">
-                </div>
-                <div class="mt-8 text-center">
-                    <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                        Démarrer la partie
-                    </button>
-                </div>
-            </div>
-        </main>
+    <!-- Page Accueil -->
+    <main id="home" class="page active">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Bienvenue sur Parfect.golfr</h2>
+        <p class="mb-6">Suivez vos stats de golf trou par trou et améliorez votre jeu ⛳️</p>
+        <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Démarrer une partie</button>
+      </div>
+    </main>
 
-        <main id="scorecard" class="page">
-             <div class="bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl md:text-2xl font-bold" id="scorecard-title">Carte de Score</h2>
-                    <div class="text-right">
-                        <h3 class="text-lg font-semibold text-green-400" id="hole-indicator">Trou 1 / 18</h3>
-                        <p class="text-xl font-bold">Score cumulé: <span id="cumulative-score">0</span></p>
-                    </div>
-                </div>
+    <!-- Page Carte -->
+    <main id="scorecard" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-4 text-center">Carte de Score</h2>
+        <div id="hole-progress" class="flex justify-center space-x-1 mb-4 flex-wrap"></div>
+        <div id="hole-form"></div>
+        <div class="flex justify-between mt-4">
+          <button id="prev-hole" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">⬅️ Précédent</button>
+          <button id="next-hole" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Suivant ➡️</button>
+        </div>
+      </div>
+    </main>
 
-                <div id="player-tabs" class="flex mb-6 border-b border-gray-600">
-                    <button id="p1-tab" data-player="1" class="player-tab flex-1 py-2 px-4 font-semibold text-gray-300 bg-gray-700 rounded-t-lg">Joueur 1</button>
-                    <button id="p2-tab" data-player="2" class="player-tab flex-1 py-2 px-4 font-semibold text-gray-300 bg-gray-700 rounded-t-lg hidden">Joueur 2</button>
-                </div>
+    <!-- Page Objectifs -->
+    <main id="objectives" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-4 text-center">Objectifs par Index</h2>
+        <label class="block mb-4 text-center">
+          Choisissez votre index :
+          <select id="index-select" class="text-black px-2 ml-2">
+            <option value="0">0</option>
+            <option value="5">5</option>
+            <option value="7">7</option>
+            <option value="9">9</option>
+            <option value="12">12</option>
+            <option value="15">15</option>
+            <option value="18">18</option>
+            <option value="21">21</option>
+          </select>
+        </label>
+        <div id="objectives-table" class="overflow-x-auto"></div>
+      </div>
+    </main>
 
+    <!-- Page Historique -->
+    <main id="history" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-4 text-center">Historique des Parties</h2>
+        <div id="history-list" class="space-y-4"></div>
+      </div>
+    </main>
 
-                <div id="hole-entry-form" class="space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4 bg-gray-700 p-4 rounded-lg">
-                             <div class="flex items-center justify-between">
-                                <label for="score-input" class="text-lg font-medium text-gray-200">Score du trou</label>
-                                <input type="number" id="score-input" class="w-20 bg-gray-800 text-center rounded-md p-2 text-lg focus:ring-green-500 focus:border-green-500" min="1">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label for="score-type-select" class="text-lg font-medium text-gray-200">Type de score</label>
-                                <select id="score-type-select" class="w-32 bg-gray-800 rounded-md p-2 text-lg focus:ring-green-500 focus:border-green-500">
-                                    <option>PAR</option>
-                                    <option>BIRDIE</option>
-                                    <option>BOGEY</option>
-                                    <option>DOUBLE BOGEY</option>
-                                    <option>TRIPLE+</option>
-                                    <option>ALBATROS</option>
-                                </select>
-                            </div>
-                             <div class="flex items-center justify-between">
-                                <label for="putts-input" class="text-lg font-medium text-gray-200">Nombre de Putts</label>
-                                <input type="number" id="putts-input" class="w-20 bg-gray-800 text-center rounded-md p-2 text-lg focus:ring-green-500 focus:border-green-500" min="0">
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <label for="putt-distance-input" class="text-lg font-medium text-gray-200">Distance 1er putt (m)</label>
-                                <input type="number" id="putt-distance-input" class="w-20 bg-gray-800 text-center rounded-md p-2 text-lg focus:ring-green-500 focus:border-green-500" min="0">
-                            </div>
-                        </div>
-                        <div class="space-y-4 bg-gray-700 p-4 rounded-lg">
-                             <div class="flex items-center justify-between">
-                                <label for="fairway-hit" class="text-lg font-medium text-gray-200">Fairway Touché</label>
-                                <input type="checkbox" id="fairway-hit" class="custom-checkbox">
-                            </div>
-                             <div class="flex items-center justify-between">
-                                <label for="gir-hit" class="text-lg font-medium text-gray-200">Green en Régulation</label>
-                                <input type="checkbox" id="gir-hit" class="custom-checkbox">
-                            </div>
-                             <div class="flex items-center justify-between">
-                                <label for="routine-followed" class="text-lg font-medium text-gray-200">Routine respectée</label>
-                                <input type="checkbox" id="routine-followed" class="custom-checkbox">
-                            </div>
-                             <div class="flex items-center justify-between">
-                                <label for="plan-followed" class="text-lg font-medium text-gray-200">Plan de jeu respecté</label>
-                                <input type="checkbox" id="plan-followed" class="custom-checkbox">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="parfait-message" class="hidden text-center p-3 bg-green-900 border border-green-500 rounded-lg">
-                        <p class="font-bold text-lg text-green-300">Parfect !</p>
-                    </div>
+    <!-- Page Résumé -->
+    <main id="summary" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg relative">
+        <h2 class="text-2xl font-bold mb-6 text-center">Résumé de la Partie</h2>
+        <div id="summary-content" class="text-gray-300"></div>
+        <div class="watermark">© Parfect.golfr</div>
+        <div class="mt-6 text-center space-x-2">
+          <button id="export-pdf" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">📄 Exporter en PDF</button>
+          <button id="share-insta" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg">📲 Partager sur Instagram</button>
+        </div>
+        <div class="mt-6 text-center">
+          <button id="new-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle Partie</button>
+        </div>
+      </div>
+    </main>
+  </div>
 
-                </div>
-                
-                <div class="flex justify-between mt-8">
-                    <button id="prev-hole-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-                        Trou précédent
-                    </button>
-                    <button id="next-hole-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-                        Trou suivant
-                    </button>
-                </div>
-            </div>
-        </main>
-
-        <main id="objectives" class="page">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                    <h2 class="text-2xl font-bold mb-4">Mes Objectifs</h2>
-                    <div id="personal-objectives-content" class="text-gray-300">
-                        <p>Veuillez d'abord saisir votre index sur la page d'accueil pour voir vos objectifs personnalisés.</p>
-                    </div>
-                </div>
-                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold">Table des Objectifs</h2>
-                        <button id="save-objectives" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            Sauvegarder
-                        </button>
-                    </div>
-                     <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-700">
-                                <tr>
-                                    <th class="p-3">Index</th>
-                                    <th class="p-3">GIR %</th>
-                                    <th class="p-3">Putts / tour</th>
-                                    <th class="p-3">Fairway %</th>
-                                </tr>
-                            </thead>
-                            <tbody id="objectives-table-body">
-                            </tbody>
-                        </table>
-                    </div>
-                    <p id="save-feedback" class="text-green-400 mt-4 text-sm h-4"></p>
-                </div>
-            </div>
-        </main>
-        <main id="summary" class="page">
-  <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-    <h2 class="text-2xl font-bold mb-6 text-center">Résumé de la partie</h2>
-    <div id="summary-content" class="text-gray-300"></div>
-    <div class="mt-6 text-center">
-      <button data-page="home" class="nav-btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">
-        Nouvelle Partie
-      </button>
+  <!-- Modal choix 9 ou 18 trous -->
+  <div id="holes-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+      <h3 class="text-xl font-bold mb-4">Choisissez le nombre de trous</h3>
+      <div class="flex justify-center space-x-4">
+        <button data-holes="9" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">9 trous</button>
+        <button data-holes="18" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">18 trous</button>
+      </div>
     </div>
   </div>
-</main>
 
-        
-    </div>
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
+    <p>&copy; 2025 Parfect.golfr —
+      <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a>
+      — v3.0
+    </p>
+  </footer>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- State Management & DOM Elements ---
-        const pages = document.querySelectorAll('.page');
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const startGameBtn = document.getElementById('start-game');
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    let currentHole = 1;
+    let totalHoles = 18;
+    let gameData = [];
+    let history = JSON.parse(localStorage.getItem('parfectHistory') || '[]');
+    let selectedIndex = 12;
 
-        const p1NameInput = document.getElementById('player1-name');
-        const p1IndexInput = document.getElementById('player1-index');
-        const p2NameInput = document.getElementById('player2-name');
-        const p2IndexInput = document.getElementById('player2-index');
-        const golfCourseInput = document.getElementById('golf-course');
-        
-        const scorecardTitle = document.getElementById('scorecard-title');
-        const holeIndicator = document.getElementById('hole-indicator');
-        const cumulativeScoreEl = document.getElementById('cumulative-score');
-        const scoreInput = document.getElementById('score-input');
-        const scoreTypeSelect = document.getElementById('score-type-select');
-        const puttsInput = document.getElementById('putts-input');
-        const puttDistanceInput = document.getElementById('putt-distance-input');
-        const fairwayHitCheckbox = document.getElementById('fairway-hit');
-        const girHitCheckbox = document.getElementById('gir-hit');
-        const routineFollowedCheckbox = document.getElementById('routine-followed');
-        const planFollowedCheckbox = document.getElementById('plan-followed');
-        const parfaitMessage = document.getElementById('parfait-message');
-        const prevHoleBtn = document.getElementById('prev-hole-btn');
-        const nextHoleBtn = document.getElementById('next-hole-btn');
-        const p1Tab = document.getElementById('p1-tab');
-        const p2Tab = document.getElementById('p2-tab');
-        
-        const objectivesTableBody = document.getElementById('objectives-table-body');
-        const saveObjectivesBtn = document.getElementById('save-objectives');
-        const personalObjectivesContent = document.getElementById('personal-objectives-content');
-        const saveFeedback = document.getElementById('save-feedback');
+    const objectives = {
+      0: {fairways:79, gir:67, putts:29, pars:15, fw:11, gr:12},
+      5: {fairways:71, gir:56, putts:30, pars:12, fw:10, gr:10},
+      7: {fairways:64, gir:50, putts:31, pars:11, fw:9, gr:9},
+      9: {fairways:57, gir:44, putts:32, pars:10, fw:8, gr:8},
+      12:{fairways:50, gir:33, putts:33, pars:8, fw:7, gr:6},
+      15:{fairways:43, gir:22, putts:34, pars:6, fw:6, gr:4},
+      18:{fairways:36, gir:17, putts:35, pars:5, fw:5, gr:3},
+      21:{fairways:29, gir:11, putts:36, pars:4, fw:4, gr:2}
+    };
 
-        // Game State
-        let currentUser = { name: '', index: null };
-        let currentHole = 1;
-        let currentPlayer = 1; // 1 or 2
-        let gameData = { player1: [], player2: [] };
+    // Navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => showPage(btn.dataset.page));
+    });
 
-        function populateIndexDropdowns() {
-            const fragment = document.createDocumentFragment();
-            for (let i = 0; i <= 54; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i;
-                fragment.appendChild(option);
-            }
-            p1IndexInput.appendChild(fragment.cloneNode(true));
-            p2IndexInput.appendChild(fragment.cloneNode(true));
-        }
+    // Start game buttons
+    document.getElementById('start-game').addEventListener('click', () => {
+      document.getElementById('holes-modal').classList.remove('hidden');
+    });
+    document.getElementById('new-game').addEventListener('click', () => {
+      document.getElementById('holes-modal').classList.remove('hidden');
+    });
 
-        const defaultObjectives = [
-            { indexRange: "0 - 4.4", gir: "75%", putts: "29", fairway: "70%" },
-            { indexRange: "4.5 - 9.4", gir: "65%", putts: "30", fairway: "65%" },
-            { indexRange: "9.5 - 14.4", gir: "55%", putts: "31", fairway: "60%" },
-            { indexRange: "14.5 - 19.4", gir: "45%", putts: "32", fairway: "55%" },
-            { indexRange: "19.5 - 24.4", gir: "35%", putts: "34", fairway: "50%" },
-            { indexRange: "24.5 - 30+", gir: "25%", putts: "36", fairway: "45%" }
-        ];
+    // Choose holes
+    document.querySelectorAll('.choose-holes').forEach(btn => {
+      btn.addEventListener('click', () => {
+        totalHoles = parseInt(btn.dataset.holes);
+        gameData = [];
+        currentHole = 1;
+        document.getElementById('holes-modal').classList.add('hidden');
+        showPage('scorecard');
+        renderHole();
+      });
+    });
 
-        function showPage(pageId) {
-            pages.forEach(page => page.classList.toggle('active', page.id === pageId));
-        }
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if(pageId === 'scorecard') renderHole();
+      if(pageId === 'history') renderHistory();
+      if(pageId === 'summary') renderSummary();
+      if(pageId === 'objectives') renderObjectives();
+    }
 
-        navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
+    function renderProgress() {
+      const container = document.getElementById('hole-progress');
+      container.innerHTML = '';
+      for (let i = 1; i <= totalHoles; i++) {
+        const div = document.createElement('div');
+        div.className = 'hole-indicator ' + (i === currentHole ? 'active' : (gameData[i-1] ? 'done' : ''));
+        div.textContent = i;
+        div.addEventListener('click', () => { currentHole = i; renderHole(); });
+        container.appendChild(div);
+      }
+    }
 
-        function loadFromLocalStorage() {
-            p1NameInput.value = localStorage.getItem('lastP1Name') || '';
-            p1IndexInput.value = localStorage.getItem('lastP1Index') || '18';
-            p2NameInput.value = localStorage.getItem('lastP2Name') || '';
-            p2IndexInput.value = localStorage.getItem('lastP2Index') || '18';
-            golfCourseInput.value = localStorage.getItem('lastGolfCourse') || '';
+    function renderHole() {
+      renderProgress();
+      const form = document.getElementById('hole-form');
+      const holeData = gameData[currentHole-1] || {};
+      form.innerHTML = `
+        <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <label>Score : <input type="number" id="score" value="${holeData.score ?? ''}" class="text-black px-2 w-full"></label>
+          <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
+          <label class="col-span-2">Type :
+            <select id="scoreType" class="text-black px-2 w-full">
+              <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
+              <option ${holeData.scoreType==='BIRDIE'?'selected':''}>BIRDIE</option>
+              <option ${holeData.scoreType==='ALBATROS'?'selected':''}>ALBATROS</option>
+              <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
+              <option ${holeData.scoreType==='DOUBLE BOGEY'?'selected':''}>DOUBLE BOGEY</option>
+              <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
+            </select>
+          </label>
+          <label>1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" class="text-black px-2 w-full"></label>
+          <label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway</label>
+          <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
+          <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
+          <label><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
+        </div>`;
+      document.getElementById('score').addEventListener('input', saveHole);
+      document.getElementById('scoreType').addEventListener('change', saveHole);
+      document.getElementById('putts').addEventListener('input', saveHole);
+      document.getElementById('puttDistance').addEventListener('input', saveHole);
+      ['fairway','gir','routine','plan'].forEach(id => document.getElementById(id).addEventListener('change', saveHole));
+    }
 
-            if (p1NameInput.value && p1IndexInput.value) {
-                currentUser.name = p1NameInput.value;
-                currentUser.index = parseFloat(p1IndexInput.value);
-                updatePersonalObjectives();
-            }
-        }
+    function saveHole() {
+      gameData[currentHole-1] = {
+        hole: currentHole,
+        score: parseInt(document.getElementById('score').value) || 0,
+        scoreType: document.getElementById('scoreType').value,
+        putts: parseInt(document.getElementById('putts').value) || 0,
+        puttDistance: parseFloat(document.getElementById('puttDistance').value) || 0,
+        fairway: document.getElementById('fairway').checked,
+        gir: document.getElementById('gir').checked,
+        routine: document.getElementById('routine').checked,
+        plan: document.getElementById('plan').checked
+      };
+      renderProgress();
+    }
 
-        function saveToLocalStorage() {
-            localStorage.setItem('lastP1Name', p1NameInput.value);
-            localStorage.setItem('lastP1Index', p1IndexInput.value);
-            localStorage.setItem('lastP2Name', p2NameInput.value);
-            localStorage.setItem('lastP2Index', p2IndexInput.value);
-            localStorage.setItem('lastGolfCourse', golfCourseInput.value);
-        }
+    document.getElementById('next-hole').addEventListener('click', () => {
+      if(currentHole < totalHoles) { currentHole++; renderHole(); }
+      else { endGame(); }
+    });
+    document.getElementById('prev-hole').addEventListener('click', () => {
+      if(currentHole > 1) { currentHole--; renderHole(); }
+    });
 
-        function initializeGameData() {
-            ['player1', 'player2'].forEach(playerKey => {
-                gameData[playerKey] = Array.from({ length: 18 }, (_, i) => ({
-                    hole: i + 1,
-                    score: null,
-                    scoreType: 'PAR',
-                    putts: null,
-                    puttDistance: null,
-                    fairway: false,
-                    gir: false,
-                    routine: false,
-                    plan: false,
-                }));
-            });
-        }
-        
-        function startGame() {
-            const p1Name = p1NameInput.value.trim() || 'Joueur 1';
-            const p2Name = p2NameInput.value.trim();
+    function endGame() {
+      history.push({ date: new Date().toLocaleString(), holes: gameData, index: selectedIndex });
+      localStorage.setItem('parfectHistory', JSON.stringify(history));
+      showPage('summary');
+    }
 
-            saveToLocalStorage();
-            currentUser.name = p1Name;
-            currentUser.index = parseFloat(p1IndexInput.value);
-            
-            scorecardTitle.textContent = `Carte de Score - ${golfCourseInput.value || 'Golf'}`;
-            p1Tab.textContent = p1Name;
-            
-            if (p2Name) {
-                p2Tab.textContent = p2Name;
-                p2Tab.classList.remove('hidden');
-            } else {
-                p2Tab.classList.add('hidden');
-            }
-            
-            initializeGameData();
-            currentHole = 1;
-            switchPlayer(1);
-            updatePersonalObjectives();
-            showPage('scorecard');
-        }
-        
-        startGameBtn.addEventListener('click', startGame);
+    function renderSummary() {
+      const container = document.getElementById('summary-content');
+      let totalScore = 0, fairways=0, girs=0, routines=0, plans=0, parfect=0, totalPutts=0, pars=0;
+      gameData.forEach(h => {
+        totalScore += h.score;
+        fairways += h.fairway?1:0;
+        girs += h.gir?1:0;
+        routines += h.routine?1:0;
+        plans += h.plan?1:0;
+        totalPutts += h.putts;
+        if(h.scoreType==='PAR') pars++;
+        if(h.fairway && h.gir && h.putts<=2) parfect++;
+      });
 
-      
-        
-        function renderCurrentHole() {
-    const data = gameData['player' + currentPlayer][currentHole - 1];
-    if (!data) return;
+      const obj = objectives[selectedIndex];
+      function check(val, target, betterIsLess=false) {
+        if (betterIsLess) return val <= target ? '✅' : '❌';
+        return val >= target ? '✅' : '❌';
+      }
 
-    holeIndicator.textContent = `Trou ${currentHole} / 18`;
-    scoreInput.value = data.score ?? '';
-    scoreTypeSelect.value = data.scoreType ?? 'PAR';
-    puttsInput.value = data.putts ?? '';
-    puttDistanceInput.value = data.puttDistance ?? '';
-    fairwayHitCheckbox.checked = data.fairway;
-    girHitCheckbox.checked = data.gir;
-    routineFollowedCheckbox.checked = data.routine;
-    planFollowedCheckbox.checked = data.plan;
-
-    updateCumulativeScore();
-    checkParfait();
-
-    prevHoleBtn.disabled = currentHole === 1;
-    prevHoleBtn.classList.toggle('opacity-50', currentHole === 1);
-
-    // Le bouton "Suivant" mène à la synthèse au trou 18
-    nextHoleBtn.textContent = (currentHole === 18) ? "Voir la synthèse" : "Trou suivant";
-        }
-
-
-        function saveCurrentHoleData() {
-            const data = gameData['player' + currentPlayer][currentHole - 1];
-            data.score = Number(scoreInput.value) || null;
-            data.scoreType = scoreTypeSelect.value;
-            data.putts = Number(puttsInput.value) || null;
-            data.puttDistance = Number(puttDistanceInput.value) || null;
-            data.fairway = fairwayHitCheckbox.checked;
-            data.gir = girHitCheckbox.checked;
-            data.routine = routineFollowedCheckbox.checked;
-            data.plan = planFollowedCheckbox.checked;
-        }
-        
-        function switchPlayer(playerNum) {
-            currentPlayer = playerNum;
-            p1Tab.classList.toggle('active', currentPlayer === 1);
-            p2Tab.classList.toggle('active', currentPlayer === 2);
-            renderCurrentHole();
-        }
-
-        p1Tab.addEventListener('click', () => switchPlayer(1));
-        p2Tab.addEventListener('click', () => switchPlayer(2));
-
-        function updateCumulativeScore() {
-            saveCurrentHoleData(); // Save before calculating to include current input
-            const total = gameData['player' + currentPlayer].reduce((sum, holeData) => sum + (holeData.score || 0), 0);
-            cumulativeScoreEl.textContent = total;
-        }
-        
-        function checkParfait() {
-             parfaitMessage.classList.toggle(
-                'hidden',
-                !(fairwayHitCheckbox.checked && girHitCheckbox.checked && parseInt(puttsInput.value, 10) === 2)
-            );
-        }
-        
-        
-        function navigateHoles(direction) {
-    saveCurrentHoleData();
-
-    if (currentHole === 18 && direction === 1) {
-        renderSummary();
-        showPage('summary');
-        return;
-        }
-
-    currentHole = Math.max(1, Math.min(18, currentHole + direction));
-    renderCurrentHole();
-        }
-
-
-        prevHoleBtn.addEventListener('click', () => navigateHoles(-1));
-        nextHoleBtn.addEventListener('click', () => navigateHoles(1));
-        
-        scoreInput.addEventListener('input', updateCumulativeScore);
-        [fairwayHitCheckbox, girHitCheckbox, puttsInput].forEach(el => el.addEventListener('input', checkParfait));
-
-        function getObjectivesData() {
-            const storedData = localStorage.getItem('golfObjectives');
-            return storedData ? JSON.parse(storedData) : defaultObjectives;
-        }
-
-        function renderObjectivesTable() {
-            const objectives = getObjectivesData();
-            objectivesTableBody.innerHTML = '';
-            objectives.forEach(obj => {
-                const row = document.createElement('tr');
-                row.className = 'border-b border-gray-700';
-                row.innerHTML = `
-                    <td class="p-3">${obj.indexRange}</td>
-                    <td class="p-3" contenteditable="true">${obj.gir}</td>
-                    <td class="p-3" contenteditable="true">${obj.putts}</td>
-                    <td class="p-3" contenteditable="true">${obj.fairway}</td>
-                `;
-                objectivesTableBody.appendChild(row);
-            });
-        }
-        
-   
-            
-          function renderSummary() {
-    const container = document.getElementById('summary-content');
-    let html = '';
-
-    ['player1', 'player2'].forEach((playerKey, idx) => {
-        const playerData = gameData[playerKey];
-        if (!playerData || !playerData.length) return;
-
-        const name = (idx === 0 ? p1NameInput.value : p2NameInput.value) || `Joueur ${idx+1}`;
-        const fairways = playerData.filter(h => h.fairway).length;
-        const girs = playerData.filter(h => h.gir).length;
-        const routines = playerData.filter(h => h.routine).length;
-        const plans = playerData.filter(h => h.plan).length;
-        const totalPutts = playerData.reduce((sum,h) => sum + (h.putts || 0), 0);
-        const totalScore = playerData.reduce((sum,h) => sum + (h.score || 0), 0);
-        const nbPar = playerData.filter(h => h.scoreType === 'PAR').length;
-        const totalPuttDistance = playerData.reduce((sum,h) => sum + (h.puttDistance || 0), 0);
-        const avgPuttDistance = playerData.filter(h => h.puttDistance).length > 0 ?
-            (totalPuttDistance / playerData.filter(h => h.puttDistance).length).toFixed(1) : 0;
-
-        // Stats globales
-        html += `
-          <div class="mb-8">
-            <h3 class="text-xl font-semibold text-green-400 mb-3">${name}</h3>
-            <ul class="space-y-2 mb-4">
+            container.innerHTML = `
+        <div id="summary-box" class="grid md:grid-cols-2 gap-4 relative">
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="font-bold text-green-400 mb-2">Stats globales</h3>
+            <ul class="space-y-1">
               <li><strong>Score total :</strong> ${totalScore}</li>
-              <li><strong>Nombre de PAR :</strong> ${nbPar}</li>
-              <li><strong>Nombre total de putts :</strong> ${totalPutts}</li>
-              <li><strong>Distance moyenne 1er putt :</strong> ${avgPuttDistance} m</li>
-              <li><strong>Fairways touchés :</strong> ${fairways} / 18</li>
-              <li><strong>Greens en régulation :</strong> ${girs} / 18</li>
-              <li><strong>Routines respectées :</strong> ${routines} / 18</li>
-              <li><strong>Plans de jeu respectés :</strong> ${plans} / 18</li>
+              <li><strong>Fairways :</strong> ${fairways}/${totalHoles}</li>
+              <li><strong>GIR :</strong> ${girs}/${totalHoles}</li>
+              <li><strong>Putts :</strong> ${totalPutts}</li>
+              <li><strong>Pars :</strong> ${pars}</li>
+              <li><strong>Routines :</strong> ${routines}</li>
+              <li><strong>Plans :</strong> ${plans}</li>
+              <li><strong>PARFECT :</strong> ${parfect}</li>
             </ul>
-
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm text-left border border-gray-700">
-                <thead class="bg-gray-700">
-                  <tr>
-                    <th class="p-2">Trou</th>
-                    <th class="p-2">Score</th>
-                    <th class="p-2">Type</th>
-                    <th class="p-2">Putts</th>
-                    <th class="p-2">Dist. 1er putt</th>
-                    <th class="p-2">Fairway</th>
-                    <th class="p-2">GIR</th>
-                    <th class="p-2">Routine</th>
-                    <th class="p-2">Plan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${playerData.map(h => {
-                      let bgClass = '';
-                      let symbol = '';
-
-                      switch(h.scoreType) {
-                          case 'PAR':
-                              bgClass = 'bg-green-900';
-                              symbol = '⚪'; // rond
-                              break;
-                          case 'BIRDIE':
-                          case 'ALBATROS':
-                              bgClass = 'bg-blue-900';
-                              symbol = '◎'; // double rond
-                              break;
-                          case 'BOGEY':
-                          case 'DOUBLE BOGEY':
-                          case 'TRIPLE+':
-                              bgClass = 'bg-red-900';
-                              symbol = '■'; // carré
-                              break;
-                          default:
-                              bgClass = '';
-                              symbol = '';
-                      }
-
-                      return `
-                        <tr class="border-b border-gray-700 ${bgClass}">
-                          <td class="p-2">${h.hole}</td>
-                          <td class="p-2">${h.score ?? ''}</td>
-                          <td class="p-2">${h.scoreType ?? ''} ${symbol}</td>
-                          <td class="p-2">${h.putts ?? ''}</td>
-                          <td class="p-2">${h.puttDistance ?? ''}</td>
-                          <td class="p-2 ${h.fairway ? 'bg-green-800 text-white' : ''}">${h.fairway ? '✓' : ''}</td>
-                          <td class="p-2 ${h.gir ? 'bg-green-800 text-white' : ''}">${h.gir ? '✓' : ''}</td>
-                          <td class="p-2 ${h.routine ? 'bg-green-800 text-white' : ''}">${h.routine ? '✓' : ''}</td>
-                          <td class="p-2 ${h.plan ? 'bg-green-800 text-white' : ''}">${h.plan ? '✓' : ''}</td>
-                        </tr>`;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
           </div>
-        `;
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="font-bold text-green-400 mb-2">Vs Objectifs (Index ${selectedIndex})</h3>
+            <ul class="space-y-1">
+              <li>Fairways : ${fairways} / objectif ${obj.fw} ${check(fairways,obj.fw)}</li>
+              <li>GIR : ${girs} / objectif ${obj.gr} ${check(girs,obj.gr)}</li>
+              <li>Putts : ${totalPutts} / objectif ${obj.putts} ${check(totalPutts,obj.putts,true)}</li>
+              <li>Pars : ${pars} / objectif ${obj.pars} ${check(pars,obj.pars)}</li>
+            </ul>
+          </div>
+        </div>`;
+    }
+
+    function renderObjectives() {
+      const container = document.getElementById('objectives-table');
+      const idx = selectedIndex;
+      const obj = objectives[idx];
+      container.innerHTML = `
+        <table class="table-auto w-full text-sm text-left border border-gray-600">
+          <thead class="bg-gray-700 text-green-400">
+            <tr>
+              <th class="px-2 py-1">Index</th>
+              <th class="px-2 py-1">Fairways %</th>
+              <th class="px-2 py-1">GIR %</th>
+              <th class="px-2 py-1">Putts</th>
+              <th class="px-2 py-1">Pars</th>
+              <th class="px-2 py-1">FW</th>
+              <th class="px-2 py-1">GR</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-gray-800">
+              <td class="px-2 py-1">${idx}</td>
+              <td class="px-2 py-1">${obj.fairways}%</td>
+              <td class="px-2 py-1">${obj.gir}%</td>
+              <td class="px-2 py-1">${obj.putts}</td>
+              <td class="px-2 py-1">${obj.pars}</td>
+              <td class="px-2 py-1">${obj.fw}</td>
+              <td class="px-2 py-1">${obj.gr}</td>
+            </tr>
+          </tbody>
+        </table>`;
+    }
+
+    // Gestion changement index
+    document.getElementById('index-select').addEventListener('change', (e) => {
+      selectedIndex = parseInt(e.target.value);
+      renderObjectives();
     });
 
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      container.innerHTML = history.map((g,i) => `
+        <div class="bg-gray-700 p-3 rounded-lg">
+          <p><strong>Partie ${i+1}</strong> — ${g.date}</p>
+          <p>${g.holes.length} trous enregistrés — Index ${g.index ?? '-'}</p>
+        </div>`).join('') || '<p>Aucune partie enregistrée.</p>';
+    }
 
-    container.innerHTML = html || '<p>Aucune donnée saisie.</p>';
-}
-
-        
-        
-
-        function saveObjectives() {
-            const newObjectives = Array.from(objectivesTableBody.querySelectorAll('tr')).map(row => {
-                const cells = row.querySelectorAll('td');
-                return {
-                    indexRange: cells[0].textContent,
-                    gir: cells[1].textContent,
-                    putts: cells[2].textContent,
-                    fairway: cells[3].textContent,
-                };
-            });
-            localStorage.setItem('golfObjectives', JSON.stringify(newObjectives));
-            saveFeedback.textContent = 'Objectifs sauvegardés !';
-            setTimeout(() => { saveFeedback.textContent = ''; }, 3000);
-        }
-        
-        saveObjectivesBtn.addEventListener('click', saveObjectives);
-        
-        function updatePersonalObjectives() {
-            if (currentUser.index === null || isNaN(currentUser.index)) {
-                 personalObjectivesContent.innerHTML = `<p>Veuillez d'abord saisir votre nom et index sur la page d'accueil.</p>`;
-                 return;
-            }
-
-            const objectives = getObjectivesData();
-            let personalObj = objectives.find(obj => {
-                const range = obj.indexRange.replace('+', '').split(' - ');
-                const min = parseFloat(range[0]);
-                const max = parseFloat(range[1]) || 99;
-                return currentUser.index >= min && currentUser.index <= max;
-            });
-
-            if (personalObj) {
-                personalObjectivesContent.innerHTML = `
-                    <p class="mb-2">Basé sur votre index de <strong>${currentUser.index}</strong>, voici vos objectifs de performance :</p>
-                    <ul class="space-y-3 list-disc list-inside bg-gray-700 p-4 rounded-lg">
-                        <li><strong>Greens en Régulation (GIR) :</strong> ${personalObj.gir}</li>
-                        <li><strong>Putts par tour :</strong> ${personalObj.putts}</li>
-                        <li><strong>Fairways touchés :</strong> ${personalObj.fairway}</li>
-                    </ul>`;
-            } else {
-                personalObjectivesContent.innerHTML = `<p>Aucun objectif trouvé pour un index de ${currentUser.index}.</p>`;
-            }
-        }
-
-        function init() {
-            populateIndexDropdowns();
-            loadFromLocalStorage();
-            renderObjectivesTable();
-            showPage('home');
-        }
-
-        init();
+    // Export PDF
+    document.getElementById('export-pdf').addEventListener('click', () => {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      pdf.text("Résumé de partie Parfect.golfr", 10, 10);
+      let y = 20;
+      gameData.forEach(h => {
+        pdf.text(`Trou ${h.hole} - Score: ${h.score}, Putts: ${h.putts}, FW: ${h.fairway?"✓":"-"}, GIR: ${h.gir?"✓":"-"}`, 10, y);
+        y += 8;
+      });
+      pdf.text(`© Parfect.golfr — Index ${selectedIndex}`, 10, y+10);
+      pdf.save("parfect-score.pdf");
     });
-    </script>
+
+    // Partage Instagram (image)
+    document.getElementById('share-insta').addEventListener('click', () => {
+      const box = document.getElementById('summary-box');
+      html2canvas(box).then(canvas => {
+        const ctx = canvas.getContext("2d");
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "rgba(255,255,255,0.7)";
+        ctx.fillText("© Parfect.golfr", canvas.width - 160, canvas.height - 20);
+
+        canvas.toBlob(blob => {
+          const file = new File([blob], "parfect.png", { type: "image/png" });
+          if (navigator.share) {
+            navigator.share({
+              title: "Mes stats Parfect.golfr",
+              text: "Stats générées avec Parfect.golfr ⛳️ 👉 @parfect.golfr",
+              files: [file]
+            });
+          } else {
+            alert("Le partage direct n'est pas supporté par ce navigateur.");
+          }
+        });
+      });
+    });
+
+  });
+  </script>
 </body>
 </html>
