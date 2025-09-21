@@ -397,7 +397,7 @@ function showPage(pageId) {
         <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en Régul..</label>
         <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
         <label><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
-        <label>Type :
+        <label>Score :
           <select id="scoreType" class="text-black px-2 w-full">
             <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
             <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
@@ -407,7 +407,7 @@ function showPage(pageId) {
             <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
           </select>
         </label>
-         <label>Score : <input type="number" id="score" value="${holeData.score ?? ''}" min="1" max="10" class="text-black px-2 w-full"></label>
+         <label>Coups : <input type="number" id="score" value="${holeData.score ?? ''}" min="1" max="10" class="text-black px-2 w-full"></label>
         <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" min="0" max="4" class="text-black px-2 w-full"></label>
         <label>1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" min="0" max="30"class="text-black px-2 w-full"></label>
         
