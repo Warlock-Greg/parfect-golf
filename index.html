@@ -394,7 +394,7 @@ function showPage(pageId) {
       <div class="grid grid-cols-2 gap-4">
         <label>Score : <input type="number" id="score" value="${holeData.score ?? ''}" class="text-black px-2 w-full"></label>
         <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
-        <label class="col-span-2">Type :
+        <label>Type :
           <select id="scoreType" class="text-black px-2 w-full">
             <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
             <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
