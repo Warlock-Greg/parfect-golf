@@ -407,7 +407,17 @@ function showPage(pageId) {
             <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
           </select>
         </label>
-         <label>Coups : <input type="number" id="score" value="${holeData.score ?? ''}" min="1" max="10" class="text-black px-2 w-full"></label>
+         <label>Shots vs par : <input type="number" id="score" value="${holeData.score ?? ''}" min="1" max="10" class="text-black px-2 w-full"><select id="score" class="text-black px-2 w-full">
+    <option value="1">-2</option>
+    <option value="2">-1</option>
+    <option value="3">0</option>
+    <option value="4">1</option>
+    <option value="5">2</option>
+    <option value="6">3</option>
+    <option value="7">4</option>
+    <option value="8">5</option>
+    <option value="9">6</option>
+  </select></label>
         <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" min="0" max="4" class="text-black px-2 w-full"></label>
         <label>1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" min="0" max="30"class="text-black px-2 w-full"></label>
         
