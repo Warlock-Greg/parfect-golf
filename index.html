@@ -19,6 +19,16 @@
     .hole-indicator.done{background:#4ade80;}
     #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index:60;
       display:none; padding:12px 18px; border-radius:8px; background: rgba(17,24,39,0.95); color:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.4); }
+ /* Animation slide */
+#menu {
+  max-height: 0;
+}
+#menu.open {
+  display: flex;
+  max-height: 500px; /* assez grand pour tout contenir */
+}
+
+  
   </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
@@ -38,13 +48,14 @@
     <button id="menu-toggle" class="md:hidden bg-gray-700 p-2 rounded-lg">☰</button>
 
     <!-- menu -->
-    <div id="menu" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-2 md:mt-0">
-      <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
-      <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
-      <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
-      <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
-      <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
-    </div>
+    <div id="menu" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-2 md:mt-0 transition-all duration-300 ease-in-out overflow-hidden">
+  <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
+  <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+  <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
+  <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
+  <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
+</div>
+
   </nav>
 </header>
 
@@ -386,9 +397,9 @@ function showPage(pageId) {
         <label class="col-span-2">Type :
           <select id="scoreType" class="text-black px-2 w-full">
             <option ${holeData.scoreType==='PAR'?'selected':''}>PAR</option>
-            <option ${holeData.scoreType==='BIRDIE'?'selected':''}>BIRDIE</option>
-            <option ${holeData.scoreType==='ALBATROS'?'selected':''}>ALBATROS</option>
             <option ${holeData.scoreType==='BOGEY'?'selected':''}>BOGEY</option>
+            <option ${holeData.scoreType==='BIRDIE'?'selected':''}>BIRDIE</option>
+            <option ${holeData.scoreType==='EAGLE'?'selected':''}>EAGLE</option>
             <option ${holeData.scoreType==='DOUBLE BOGEY'?'selected':''}>DOUBLE BOGEY</option>
             <option ${holeData.scoreType==='TRIPLE+'?'selected':''}>TRIPLE+</option>
           </select>
@@ -407,6 +418,26 @@ function showPage(pageId) {
     document.getElementById('puttDistance').addEventListener('input', onFieldChange);
     ['fairway','gir','routine','plan'].forEach(id => document.getElementById(id).addEventListener('change', onFieldChange));
   }
+
+
+  // Menu burger toggle avec animation + fermeture auto
+const menuToggle = document.getElementById('menu-toggle');
+const menu = document.getElementById('menu');
+
+menuToggle.addEventListener('click', () => {
+  menu.classList.toggle('hidden');
+  setTimeout(() => menu.classList.toggle('open'), 10);
+});
+
+// Fermeture auto quand on clique sur un bouton du menu (mobile uniquement)
+menu.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (window.innerWidth < 768) { // breakpoint md
+      menu.classList.remove('open');
+      setTimeout(() => menu.classList.add('hidden'), 300); // temps = durée anim
+    }
+  });
+});
 
   function onFieldChange(){
     saveHole();
