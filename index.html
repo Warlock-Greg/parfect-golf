@@ -301,16 +301,29 @@ document.addEventListener('DOMContentLoaded', () => {
   /* -------------------------
      Gameplay / scorecard logic
      ------------------------- */
-  function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-    // render appropriate parts
-    if (pageId === 'scorecard') renderHole();
-    if (pageId === 'history') renderHistory();
-    if (pageId === 'summary') renderSummary();
-    if (pageId === 'objectives') renderObjectives();
+  function showPage(pageId) 
+  function isLoggedIn() {
+  return !!localStorage.getItem('parfect_license');
+}
+
+function showPage(pageId) {
+  // sécurité : si pas connecté et qu’on veut accéder à autre chose que login
+  if (!isLoggedIn() && pageId !== 'login') {
+    pageId = 'login';
   }
 
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+
+  // rendu conditionnel selon la page
+  if (pageId === 'scorecard') renderHole();
+  if (pageId === 'history') renderHistory();
+  if (pageId === 'summary') renderSummary();
+  if (pageId === 'objectives') renderObjectives();
+}
+
+  
+  
   // start/new game triggers modal for 9/18
   document.getElementById('start-game').addEventListener('click', () => {
     document.getElementById('holes-modal').classList.remove('hidden');
