@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parfect v4.3</title>
+  <title>Parfect v4.3b</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -16,8 +16,20 @@
       font-size:0.75rem;background:#374151;color:#fff; cursor:pointer; }
     .hole-indicator.active{background:#10B981;font-weight:bold;}
     .hole-indicator.done{background:#4ade80;}
-    #toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 24px; z-index:60;
-      display:none; padding:12px 18px; border-radius:8px; background: rgba(17,24,39,0.95); color:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.4); white-space:pre-line; text-align:center; }
+   
+    #toast { position: fixed;
+  inset: 0; /* prend toute la page */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: rgba(17,24,39,0.95);
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  white-space: pre-line;
+  display: none; }
     /* slide menu */
     #menu { max-height:0; overflow:hidden; transition: max-height 300ms ease-in-out; }
     #menu.open { max-height: 500px; }
@@ -402,8 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
               <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
             </select>
           </label>
-          <label>Putts : <input type="number" id="putts" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
-          <label>Distance 1er putt (m) : <input type="number" id="puttDistance" value="${holeData.puttDistance ?? ''}" class="text-black px-2 w-full"></label>
+          <label>Putts : <input type="number" id="putts" min="0" max="6" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
+          <label>Distance 1er putt (m) : <input type="number" id="puttDistance" min="0" max="40" value="${holeData.puttDistance ?? ''}" class="text-black px-2 w-full"></label>
           <label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
           <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
           <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
