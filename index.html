@@ -79,7 +79,9 @@
         <div class="flex items-center space-x-3">
   <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png" 
        alt="Parfect Golfr" class="header-image" style="max-width: 70px">
-  <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect • v4.3</h1>
+  <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect_Golfr•v4.32</h1>
+  <span id="game-status" class="ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200">Nouvelle partie</span>
+
 </div>
 
         <!-- burger -->
@@ -408,6 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
       renderHole();
     });
   });
+function updateGameStatus() {
+  const statusEl = document.getElementById('game-status');
+  if (!statusEl) return;
+  if (gameData.length > 0) {
+    statusEl.textContent = "En cours";
+    statusEl.className = "ml-3 px-3 py-1 text-xs rounded-full bg-green-700 text-green-100";
+  } else {
+    statusEl.textContent = "Nouvelle partie";
+    statusEl.className = "ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200";
+  }
+}
 
   function renderProgress() {
     const container = document.getElementById('hole-progress');
@@ -437,30 +450,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.innerHTML = `
     <div class="${bgClass} p-4 rounded-lg">
-      <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
+      <h3 class="text-lg font-semibold mb-3 text-center">
+  Trou ${currentHole} 
+  <span id="holeScore" class="ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold"></span>
+</h3>
       <div class="grid grid-cols-2 gap-4">
-        <label>Résultat vs Par :
-          <select id="result" class="text-black px-2 w-full">
-            <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
-            <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
-            <option value="0" ${holeData.result===0||holeData.result===undefined?'selected':''}>Par (0)</option>
-            <option value="1" ${holeData.result===1?'selected':''}>Bogey (+1)</option>
-            <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
-            <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
-          </select>
-        </label>
+        <label class="flex items-center space-x-2">Résultat :
+  <select id="result" class="text-black px-2">
+    <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
+    <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
+    <option value="0" ${(holeData.result===0 || (!holeData.result && currentHole<=9))?'selected':''}>Par (0)</option>
+    <option value="1" ${(holeData.result===1 || (!holeData.result && currentHole>9))?'selected':''}>Bogey (+1)</option>
+    <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
+    <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
+  </select>
+</label>
 
         <!-- Putts & Distance sur la même ligne -->
-        <label>Putts :
-          <select id="putts" class="text-black px-2 w-full">
-            ${[...Array(7).keys()].map(v => `<option value="${v}" ${holeData.putts===v?'selected':''}>${v}</option>`).join('')}
-          </select>
-        </label>
-        <label>Distance 1er putt (m) :
-          <select id="puttDistance" class="text-black px-2 w-full">
-            ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
-          </select>
-        </label>
+       <label class="flex items-center space-x-2">Putts :
+  <select id="putts" class="text-black px-2">
+    ${[...Array(7).keys()].map(v => 
+      `<option value="${v}" ${(holeData.putts===v || (!holeData.putts && v===2))?'selected':''}>${v}</option>`
+    ).join('')}
+  </select>
+</label>
+
+<label class="flex items-center space-x-2">Distance 1er putt (m) :
+  <select id="puttDistance" class="text-black px-2">
+    ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
+  </select>
+</label>
 
         <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
         <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
@@ -470,6 +489,25 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
   `;
 
+   // calcul du score cumulé jusqu'à ce trou
+let cumulative = 0;
+for (let i = 0; i < currentHole; i++) {
+  cumulative += (gameData[i]?.result || 0);
+}
+
+const holeScoreEl = document.getElementById('holeScore');
+if (holeScoreEl) {
+  if (cumulative > 0) {
+    holeScoreEl.textContent = `+${cumulative}`;
+    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-red-700 text-sm font-bold";
+  } else if (cumulative < 0) {
+    holeScoreEl.textContent = `${cumulative}`;
+    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-green-700 text-sm font-bold";
+  } else {
+    holeScoreEl.textContent = "E";
+    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold";
+  }
+}
   // attach events
   document.getElementById('result').addEventListener('change', onFieldChange);
   document.getElementById('putts').addEventListener('change', onFieldChange);
