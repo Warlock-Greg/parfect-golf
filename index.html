@@ -17,6 +17,16 @@
     .hole-indicator.active{background:#10B981;font-weight:bold;}
     .hole-indicator.done{background:#4ade80;}
    
+    body {
+  background: url("https://images.unsplash.com/photo-1508780709619-79562169bc64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80") no-repeat center center fixed;
+  background-size: cover;
+}
+
+.page {
+  background: rgba(17,24,39,0.8); /* un fond semi-transparent gris foncé */
+  border-radius: 12px;
+  padding: 10px;
+}
     #toast {
   position: fixed;
   top: 35%; /* environ 30-35% hauteur écran */
@@ -58,7 +68,16 @@
   background: #064e3b; /* vert sombre */
   color: #6ee7b7;
 }
+input[type="checkbox"] {
+  width: 1.4rem;
+  height: 1.4rem;
+  transform: scale(1.2);
+  accent-color: #22c55e; /* joli vert */
+}
 
+label {
+  margin-bottom: 0.5rem; /* espace vertical */
+}
     /* slide menu */
     #menu { max-height:0; overflow:hidden; transition: max-height 300ms ease-in-out; }
     #menu.open { max-height: 500px; }
@@ -445,82 +464,100 @@ function updateGameStatus() {
   renderProgress();
   const form = document.getElementById('hole-form');
   const holeData = gameData[currentHole-1] || {};
-  // bg alternation: pair -> lighter
   const bgClass = (currentHole % 2 === 0) ? "bg-gray-700" : "bg-gray-800";
 
   form.innerHTML = `
     <div class="${bgClass} p-4 rounded-lg">
       <h3 class="text-lg font-semibold mb-3 text-center">
-  Trou ${currentHole} 
-  <span id="holeScore" class="ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold"></span>
-</h3>
-      <div class="col-span-2 flex flex-wrap justify-around items-center gap-2">
-  <label class="flex items-center space-x-2">
-    <span>Résultat</span>
-    <select id="result" class="text-black px-2">
-      <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
-      <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
-      <option value="0" ${(holeData.result===0 || (!holeData.result && currentHole<=9))?'selected':''}>Par (0)</option>
-      <option value="1" ${(holeData.result===1 || (!holeData.result && currentHole>9))?'selected':''}>Bogey (+1)</option>
-      <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
-      <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
-    </select>
-  </label>
+        Trou ${currentHole}
+        <span id="holeScore" class="ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold"></span>
+      </h3>
 
-  <label class="flex items-center space-x-2">
-    <span>Putts</span>
-    <select id="putts" class="text-black px-2">
-      ${[...Array(7).keys()].map(v => 
-        `<option value="${v}" ${(holeData.putts===v || (!holeData.putts && v===2))?'selected':''}>${v}</option>`
-      ).join('')}
-    </select>
-  </label>
+      <div class="grid grid-cols-2 gap-4 space-y-3">
 
-  <label class="flex items-center space-x-2">
-    <span>Distance</span>
-    <select id="puttDistance" class="text-black px-2">
-      ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
-    </select>
-    <span class="text-sm">m</span>
-  </label>
-</div>
+        <!-- Résultat -->
+        <label class="flex items-center space-x-2">
+          <span>Résultat</span>
+          <select id="result" class="text-black px-2">
+            <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
+            <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
+            <option value="0" ${(holeData.result===0 || (!holeData.result && currentHole<=9))?'selected':''}>Par (0)</option>
+            <option value="1" ${(holeData.result===1 || (!holeData.result && currentHole>9))?'selected':''}>Bogey (+1)</option>
+            <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
+            <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
+          </select>
+        </label>
 
+        <!-- Putts -->
+        <label class="flex items-center space-x-2">
+          <span>Putts</span>
+          <select id="putts" class="text-black px-2">
+            ${[...Array(7).keys()].map(v => 
+              `<option value="${v}" ${(holeData.putts===v || (!holeData.putts && v===2))?'selected':''}>${v}</option>`
+            ).join('')}
+          </select>
+        </label>
 
-        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
-        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
-        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
-        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
+        <!-- Distance -->
+        <label class="flex items-center space-x-2">
+          <span>Distance</span>
+          <select id="puttDistance" class="text-black px-2">
+            ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
+          </select>
+          <span class="text-sm">m</span>
+        </label>
+<!-- Séparateur visuel -->
+<div class="col-span-2 border-t border-gray-500 my-2"></div>
+
+        <!-- Checkboxes -->
+        <label class="col-span-2 flex justify-center items-center space-x-2">
+          <input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}>
+          <span>Fairway touché</span>
+        </label>
+        <label class="col-span-2 flex justify-center items-center space-x-2">
+          <input type="checkbox" id="gir" ${holeData.gir?'checked':''}>
+          <span>Green en régulation</span>
+        </label>
+        <label class="col-span-2 flex justify-center items-center space-x-2">
+          <input type="checkbox" id="routine" ${holeData.routine?'checked':''}>
+          <span>Routine respectée</span>
+        </label>
+        <label class="col-span-2 flex justify-center items-center space-x-2">
+          <input type="checkbox" id="plan" ${holeData.plan?'checked':''}>
+          <span>Plan de jeu respecté</span>
+        </label>
       </div>
     </div>
   `;
 
-   // calcul du score cumulé jusqu'à ce trou
-let cumulative = 0;
-for (let i = 0; i < currentHole; i++) {
-  cumulative += (gameData[i]?.result || 0);
-}
-
-const holeScoreEl = document.getElementById('holeScore');
-if (holeScoreEl) {
-  if (cumulative > 0) {
-    holeScoreEl.textContent = `+${cumulative}`;
-    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-red-700 text-sm font-bold";
-  } else if (cumulative < 0) {
-    holeScoreEl.textContent = `${cumulative}`;
-    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-green-700 text-sm font-bold";
-  } else {
-    holeScoreEl.textContent = "E";
-    holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold";
+  // Score cumulé affiché à côté du titre
+  let cumulative = 0;
+  for (let i = 0; i < currentHole; i++) {
+    cumulative += (gameData[i]?.result || 0);
   }
-}
+  const holeScoreEl = document.getElementById('holeScore');
+  if (holeScoreEl) {
+    if (cumulative > 0) {
+      holeScoreEl.textContent = `+${cumulative}`;
+      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-red-700 text-sm font-bold";
+    } else if (cumulative < 0) {
+      holeScoreEl.textContent = `${cumulative}`;
+      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-green-700 text-sm font-bold";
+    } else {
+      holeScoreEl.textContent = "E";
+      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold";
+    }
+  }
+
   // attach events
   document.getElementById('result').addEventListener('change', onFieldChange);
   document.getElementById('putts').addEventListener('change', onFieldChange);
   document.getElementById('puttDistance').addEventListener('change', onFieldChange);
-  ['fairway','gir','routine','plan'].forEach(id =>
+  ['fairway','gir','routine','plan'].forEach(id => 
     document.getElementById(id).addEventListener('change', onFieldChange)
   );
 }
+
 
 
   function onFieldChange(){
