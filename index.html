@@ -17,19 +17,28 @@
     .hole-indicator.active{background:#10B981;font-weight:bold;}
     .hole-indicator.done{background:#4ade80;}
    
-    #toast { position: fixed;
-  inset: 0; /* prend toute la page */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    #toast {
+  position: fixed;
+  top: 35%; /* environ 30-35% hauteur écran */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  text-align: center;
   z-index: 100;
   background: rgba(17,24,39,0.95);
   color: #fff;
   font-size: 1.5rem;
   font-weight: bold;
-  text-align: center;
-  white-space: pre-line;
-  display: none; }
+  padding: 20px 10px;
+  border-radius: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease-in-out;
+}
+#toast.show {
+  opacity: 1;
+}
+
     /* slide menu */
     #menu { max-height:0; overflow:hidden; transition: max-height 300ms ease-in-out; }
     #menu.open { max-height: 500px; }
@@ -47,7 +56,11 @@
     <!-- Header (replace your old header with this) -->
     <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
       <nav class="flex justify-between items-center">
-        <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect • v4.3</h1>
+        <div class="flex items-center space-x-3">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png" 
+       alt="Parfect Golfr" class="header-image" style="max-width: 70px">
+  <h1 class="text-xl md:text-2xl font-bold text-green-400">Parfect • v4.3</h1>
+</div>
 
         <!-- burger -->
         <button id="menu-toggle" class="md:hidden bg-gray-700 p-2 rounded-lg">☰</button>
@@ -204,10 +217,11 @@ document.addEventListener('DOMContentLoaded', () => {
     cata: "😅 Golf is not a game of parfection !"
   };
   function showToast(message, duration=3000) {
-    toastEl.textContent = message;
-    toastEl.style.display = 'block';
-    setTimeout(()=> { toastEl.style.display = 'none'; }, duration);
-  }
+  toastEl.textContent = message;
+  toastEl.classList.add('show');
+  setTimeout(()=> toastEl.classList.remove('show'), duration);
+}
+
 
   function showToastForHole(holeData, nextHole=null) {
     // Compose message "Direction le trou X" + encouragement or parfect/cata
@@ -414,9 +428,17 @@ document.addEventListener('DOMContentLoaded', () => {
               <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
             </select>
           </label>
-          <label>Putts : <input type="number" id="putts" min="0" max="6" value="${holeData.putts ?? ''}" class="text-black px-2 w-full"></label>
-          <label>Distance 1er putt (m) : <input type="number" id="puttDistance" min="0" max="40" value="${holeData.puttDistance ?? ''}" class="text-black px-2 w-full"></label>
-          <label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
+          <label>Putts :
+  <select id="putts" class="text-black px-2 w-full">
+    ${[...Array(7).keys()].map(v => `<option value="${v}" ${holeData.putts===v?'selected':''}>${v}</option>`).join('')}
+  </select>
+</label>
+<label>Distance 1er putt (m) :
+  <select id="puttDistance" class="text-black px-2 w-full">
+    ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
+  </select>
+</label>
+<label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
           <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
           <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
           <label><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
@@ -432,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function onFieldChange(){
     saveHole();
-    showToastForHole(gameData[currentHole-1], currentHole+1 <= totalHoles ? currentHole+1 : (totalHoles+1));
   }
 
   function saveHole(){
