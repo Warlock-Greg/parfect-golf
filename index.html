@@ -38,6 +38,26 @@
 #toast.show {
   opacity: 1;
 }
+.score-badge {
+  min-width: 28px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 9999px; /* rond/ovale */
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+.score-badge.even {
+  background: #374151; /* gris */
+  color: #e5e7eb;
+}
+.score-badge.positive {
+  background: #7f1d1d; /* rouge sombre */
+  color: #fca5a5;
+}
+.score-badge.negative {
+  background: #064e3b; /* vert sombre */
+  color: #6ee7b7;
+}
 
     /* slide menu */
     #menu { max-height:0; overflow:hidden; transition: max-height 300ms ease-in-out; }
@@ -408,49 +428,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function renderHole(){
-    renderProgress();
-    const form = document.getElementById('hole-form');
-    const holeData = gameData[currentHole-1] || {};
-    // bg alternation: pair -> lighter
-    const bgClass = (currentHole % 2 === 0) ? "bg-gray-700" : "bg-gray-800";
-    form.innerHTML = `
-      <div class="${bgClass} p-4 rounded-lg">
-        <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
-        <div class="grid grid-cols-2 gap-4">
-          <label class="col-span-2">Résultat vs Par :
-            <select id="result" class="text-black px-2 w-full">
-              <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
-              <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
-              <option value="0" ${holeData.result===0||holeData.result===undefined?'selected':''}>Par (0)</option>
-              <option value="1" ${holeData.result===1?'selected':''}>Bogey (+1)</option>
-              <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
-              <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
-            </select>
-          </label>
-          <label>Putts :
-  <select id="putts" class="text-black px-2 w-full">
-    ${[...Array(7).keys()].map(v => `<option value="${v}" ${holeData.putts===v?'selected':''}>${v}</option>`).join('')}
-  </select>
-</label>
-<label>Distance 1er putt (m) :
-  <select id="puttDistance" class="text-black px-2 w-full">
-    ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
-  </select>
-</label>
-<label><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
-          <label><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
-          <label><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
-          <label><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
-        </div>
+ function renderHole(){
+  renderProgress();
+  const form = document.getElementById('hole-form');
+  const holeData = gameData[currentHole-1] || {};
+  // bg alternation: pair -> lighter
+  const bgClass = (currentHole % 2 === 0) ? "bg-gray-700" : "bg-gray-800";
+
+  form.innerHTML = `
+    <div class="${bgClass} p-4 rounded-lg">
+      <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <label class="col-span-2">Résultat vs Par :
+          <select id="result" class="text-black px-2 w-full">
+            <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
+            <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
+            <option value="0" ${holeData.result===0||holeData.result===undefined?'selected':''}>Par (0)</option>
+            <option value="1" ${holeData.result===1?'selected':''}>Bogey (+1)</option>
+            <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
+            <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
+          </select>
+        </label>
+
+        <!-- Putts & Distance sur la même ligne -->
+        <label>Putts :
+          <select id="putts" class="text-black px-2 w-full">
+            ${[...Array(7).keys()].map(v => `<option value="${v}" ${holeData.putts===v?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </label>
+        <label>Distance 1er putt (m) :
+          <select id="puttDistance" class="text-black px-2 w-full">
+            ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
+          </select>
+        </label>
+
+        <label class="col-span-2"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
+        <label class="col-span-2"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
+        <label class="col-span-2"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
+        <label class="col-span-2"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
       </div>
-    `;
-    // attach events
-    document.getElementById('result').addEventListener('change', onFieldChange);
-    document.getElementById('putts').addEventListener('input', onFieldChange);
-    document.getElementById('puttDistance').addEventListener('input', onFieldChange);
-    ['fairway','gir','routine','plan'].forEach(id => document.getElementById(id).addEventListener('change', onFieldChange));
-  }
+    </div>
+  `;
+
+  // attach events
+  document.getElementById('result').addEventListener('change', onFieldChange);
+  document.getElementById('putts').addEventListener('change', onFieldChange);
+  document.getElementById('puttDistance').addEventListener('change', onFieldChange);
+  ['fairway','gir','routine','plan'].forEach(id =>
+    document.getElementById(id).addEventListener('change', onFieldChange)
+  );
+}
+
 
   function onFieldChange(){
     saveHole();
