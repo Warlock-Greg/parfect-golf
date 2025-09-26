@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="${bgClass} p-4 rounded-lg">
       <h3 class="text-lg font-semibold mb-3 text-center">Trou ${currentHole}</h3>
       <div class="grid grid-cols-2 gap-4">
-        <label class="col-span-2">Résultat vs Par :
+        <label>Résultat vs Par :
           <select id="result" class="text-black px-2 w-full">
             <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
             <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
@@ -462,10 +462,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </label>
 
-        <label class="col-span-2"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
-        <label class="col-span-2"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
-        <label class="col-span-2"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
-        <label class="col-span-2"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
+        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> Fairway touché</label>
+        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> Green en régulation</label>
+        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> Routine respectée</label>
+        <label class="col-span-2 flex justify-center items-center space-x-2"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> Plan de jeu respecté</label>
       </div>
     </div>
   `;
@@ -556,6 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const obj = objectives[selectedIndex];
+    const scale = totalHoles === 9 ? 0.5 : 1;
     function check(val, target, betterIsLess=false) {
       if (betterIsLess) return val <= target ? '✅' : '❌';
       return val >= target ? '✅' : '❌';
@@ -578,11 +579,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="bg-gray-700 p-4 rounded-lg">
           <h3 class="font-bold text-green-400 mb-2">Vs Objectifs (Index ${selectedIndex})</h3>
           <ul class="space-y-1">
-            <li>Fairways : ${fairways} / objectif ${obj.fw} ${check(fairways,obj.fw)}</li>
-            <li>GIR : ${girs} / objectif ${obj.gr} ${check(girs,obj.gr)}</li>
-            <li>Putts : ${totalPutts} / objectif ${obj.putts} ${check(totalPutts,obj.putts,true)}</li>
-            <li>Pars : (affichés) — objectif ${obj.pars} ${check((gameData.filter(h=>h.result===0).length),obj.pars)}</li>
-          </ul>
+            <li>Fairways : ${fairways} / objectif ${Math.round(obj.fw * scale)} ${check(fairways, obj.fw * scale)}</li>
+<li>GIR : ${girs} / objectif ${Math.round(obj.gr * scale)} ${check(girs, obj.gr * scale)}</li>
+<li>Putts : ${totalPutts} / objectif ${Math.round(obj.putts * scale)} ${check(totalPutts, obj.putts * scale, true)}</li>
+<li>Pars : ${gameData.filter(h=>h.result===0).length} / objectif ${Math.round(obj.pars * scale)} ${check(gameData.filter(h=>h.result===0).length, obj.pars * scale)}</li>
+</ul>
         </div>
       </div>
       <div class="mt-4 bg-gray-800 p-3 rounded-lg">
@@ -723,6 +724,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const left = 40;
     let y = 40;
     pdf.setFontSize(14);
+    pdf.addImage(
+  "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png",
+  "PNG",
+  pdf.internal.pageSize.getWidth() - 120, // position x
+  20, // position y
+  70, // largeur
+  70  // hauteur
+);
+
     pdf.text("Résumé de partie Parfect.golfr", left, y);
     y += 20;
     pdf.setFontSize(10);
