@@ -489,7 +489,7 @@ function updateGameStatus() {
         </label>
 </div>
         <!-- Putts -->
-        <div><label class="flex items-center space-x-2">
+        <div><label class="flex items-center space-x-2" style="width: 194px;">
           <span>Putts</span>
           <select id="putts" class="text-black px-2">
             ${[...Array(7).keys()].map(v => 
@@ -499,7 +499,7 @@ function updateGameStatus() {
         </label>
 </div>
         <!-- Distance -->
-        <label class="flex items-center space-x-2">
+        <label class="flex items-center space-x-2" style="width: 100px;">
           <span>Distance</span>
           <select id="puttDistance" class="text-black px-2">
             ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
