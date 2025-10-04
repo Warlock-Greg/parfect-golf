@@ -1,882 +1,244 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parfect v4.3b</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parfect Golfr</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16a34a"/>
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/icon-192-light.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/icon-512-light.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(() => console.log("Service Worker enregistré."))
+        .catch(err => console.log("SW erreur", err));
+    }
+  </script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <style>
-    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-    .page { display:none; }
-    .page.active { display:block; }
-    .hole-indicator { width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-      font-size:0.75rem;background:#374151;color:#fff; cursor:pointer; }
-    .hole-indicator.active{background:#10B981;font-weight:bold;}
-    .hole-indicator.done{background:#4ade80;}
-   
-    body {
-  background: url("https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png") no-repeat center center fixed;
-  background-size: cover;
-}
-
-.page {
-  background: rgba(17,24,39,0.8); /* un fond semi-transparent gris foncé */
-  border-radius: 12px;
-  padding: 10px;
-}
-    #toast {
-  position: fixed;
-  top: 35%; /* environ 30-35% hauteur écran */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  text-align: center;
-  z-index: 100;
-  background: rgba(17,24,39,0.95);
-  color: #fff;
-  font-size: 1.5rem;
-  font-weight: bold;
-  padding: 20px 10px;
-  border-radius: 12px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease-in-out;
-}
-#toast.show {
-  opacity: 1;
-}
-.score-badge {
-  min-width: 28px;
-  text-align: center;
-  padding: 2px 6px;
-  border-radius: 9999px; /* rond/ovale */
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-.score-badge.even {
-  background: #374151; /* gris */
-  color: #e5e7eb;
-}
-.score-badge.positive {
-  background: #7f1d1d; /* rouge sombre */
-  color: #fca5a5;
-}
-.score-badge.negative {
-  background: #064e3b; /* vert sombre */
-  color: #6ee7b7;
-}
-input[type="checkbox"] {
-  width: 1.4rem;
-  height: 1.4rem;
-  transform: scale(1.2);
-  accent-color: #22c55e; /* joli vert */
-}
-
-label {
-  margin-bottom: 0.5rem; /* espace vertical */
-}
-    /* slide menu */
-    #menu { max-height:0; overflow:hidden; transition: max-height 300ms ease-in-out; }
-    #menu.open { max-height: 500px; }
-    /* history detail modal */
-    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:70; }
-  </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+<body class="bg-gray-900 text-white font-sans">
+  <!-- HEADER -->
+  <header class="flex flex-col items-center justify-center py-4 bg-gray-800 shadow-md">
+    <img src="assets/logo-stylised.svg" alt="Parfect Golfr" class="header-image mb-2" style="max-width:70px">
+    <h1 class="text-green-400 font-bold text-2xl">Parfect Golfr</h1>
+    <p class="text-sm text-gray-400">Break-80 Edition</p>
+  </header>
 
-  <!-- Toast -->
-  <div id="toast"></div>
-
-  <div id="app" class="container mx-auto p-4 md:p-6 max-w-4xl flex-1">
-
-    <!-- Header (replace your old header with this) -->
-    <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-      <nav class="flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png" 
-       alt="Parfect Golfr" class="header-image" style="max-width: 70px">
-  <h1 class="font-bold text-green-400" style="font-size: .5rem;"></h1></br></br>
-  <span id="game-status" class="ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200">Nouvelle partie</span>
-
-</div>
-
-        <!-- burger -->
-        <button id="menu-toggle" class="md:hidden bg-gray-700 p-2 rounded-lg">☰</button>
-
-        <!-- menu -->
-        <div id="menu" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-2 md:mt-0">
-          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
-          <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
-          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
-          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
-          <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
-        </div>
-      </nav>
-    </header>
-
-    <!-- LOGIN PAGE -->
-    <main id="login" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto text-center">
-        <h2 class="text-2xl font-bold mb-4 text-green-400">Parfect.golfr — Connexion</h2>
-        <p class="mb-4">Entrez l'email lié à votre licence et votre code pour accéder à l'application.</p>
-
-        <input id="login-email" type="email" placeholder="Email" class="w-full px-3 py-2 rounded-lg text-black mb-3" />
-        <input id="login-code" type="text" placeholder="Code licence" class="w-full px-3 py-2 rounded-lg text-black mb-3" />
-
-        <div class="flex justify-center gap-3">
-          <button id="login-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold">Se connecter</button>
-          <button id="recover-btn" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-bold">J'ai perdu mon code</button>
-        </div>
-
-        <p id="login-msg" class="mt-4 text-sm"></p>
+  <!-- NAVBAR -->
+  <nav class="bg-gray-700">
+    <div class="max-w-4xl mx-auto flex justify-between items-center px-4 py-2">
+      <div class="md:hidden">
+        <button id="menu-btn" class="text-white focus:outline-none">☰</button>
       </div>
-    </main>
+      <ul id="menu" class="hidden md:flex space-x-4">
+        <li><a href="#" onclick="showPage('home')" class="hover:text-green-400">Accueil</a></li>
+        <li><a href="#" onclick="showPage('scorecard')" class="hover:text-green-400">Carte</a></li>
+        <li><a href="#" onclick="showPage('training')" class="hover:text-green-400">S'entraîner</a></li>
+        <li><a href="#" onclick="showPage('history')" class="hover:text-green-400">Historique</a></li>
+        <li><a href="#" onclick="showPage('objectives')" class="hover:text-green-400">Objectifs</a></li>
+      </ul>
+    </div>
+    <div id="menu-mobile" class="hidden flex-col bg-gray-800 text-center"></div>
+  </nav>
 
+  <!-- MAIN PAGES -->
+  <main class="max-w-4xl mx-auto p-4">
     <!-- HOME -->
-    <main id="home" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-        <h2 class="text-2xl font-bold mb-4">Bienvenue sur  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png" 
-       alt="Parfect Golfr" class="header-image" style="max-width: 200px; margin: 0 auto;"></h2>
-        <p class="mb-4">Connecté en tant que <span id="user-name" class="text-green-300"></span></p>
-        <div class="space-x-2">
-          <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Démarrer une partie</button>
-          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
-        </div>
+    <section id="home" class="page active">
+      <h2 class="text-xl font-bold mb-2">Bienvenue</h2>
+      <button onclick="startNewGame()" class="bg-green-500 hover:bg-green-600 px-4 py-2 rounded">Nouvelle Partie</button>
+      <button onclick="showPage('training')" class="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded ml-2">S'entraîner</button>
+    </section>
+
+    <!-- SCORECARD -->
+    <section id="scorecard" class="page hidden">
+      <h2 class="text-lg font-bold mb-2">Carte de score</h2>
+      <div id="progress" class="mb-2 text-sm text-gray-400"></div>
+      <form id="hole-form"></form>
+      <div class="flex justify-between mt-4">
+        <button onclick="prevHole()" class="bg-gray-600 px-3 py-1 rounded">Précédent</button>
+        <button onclick="nextHole()" class="bg-green-600 px-3 py-1 rounded">Suivant</button>
       </div>
-    </main>
+    </section>
 
-    <!-- Scorecard -->
-    <main id="scorecard" class="page">
-      <div id="scorecard-wrap" class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-center">Carte de Score</h2>
-        <div id="hole-progress" class="flex justify-center space-x-1 mb-4 flex-wrap"></div>
-        <div id="hole-form"></div>
-        <div class="flex justify-between mt-4">
-          <button id="prev-hole" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">⬅️ Précédent</button>
-          <button id="next-hole" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Suivant ➡️</button>
-        </div>
-      </div>
-    </main>
+    <!-- HISTORY -->
+    <section id="history" class="page hidden">
+      <h2 class="text-lg font-bold mb-2">Historique</h2>
+      <div id="history-list"></div>
+    </section>
 
-    <!-- Objectifs -->
-    <main id="objectives" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-center">Objectifs par Index</h2>
-        <label class="block mb-4 text-center">
-          Choisissez votre index :
-          <select id="index-select" class="text-black px-2 ml-2">
-            <option value="0">0</option><option value="5">5</option><option value="7">7</option>
-            <option value="9">9</option><option value="12">12</option><option value="15">15</option>
-            <option value="18">18</option><option value="21">21</option>
-          </select>
-        </label>
-        <div id="objectives-table" class="overflow-x-auto"></div>
-      </div>
-    </main>
+    <!-- OBJECTIVES -->
+    <section id="objectives" class="page hidden">
+      <h2 class="text-lg font-bold mb-2">Mes Objectifs</h2>
+      <p class="text-gray-400">Sélectionnez votre niveau de progression (Break-100 / 90 / 80)</p>
+      <div id="objectives-content" class="mt-4"></div>
+    </section>
 
-    <!-- Historique -->
-    <main id="history" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-center">Historique des Parties</h2>
-        <div id="history-list" class="space-y-4"></div>
-      </div>
-    </main>
+    <!-- TRAINING -->
+    <section id="training" class="page hidden">
+      <h2 class="text-lg font-bold mb-2">Entraînement</h2>
+      <p class="text-gray-400">Sélectionnez un exercice et enregistrez vos scores.</p>
+      <div id="training-content" class="mt-4"></div>
+    </section>
+  </main>
 
-    <!-- Résumé -->
-    <main id="summary" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg relative">
-        <h2 class="text-2xl font-bold mb-6 text-center">Résumé de la Partie</h2>
-        <div id="summary-content" class="text-gray-300"></div>
-        <div class="watermark">© Parfect.golfr</div>
-        <div class="mt-6 text-center space-x-2">
-          <button id="export-pdf" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">📄 Exporter en PDF</button>
-          <button id="share-insta" class="bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg">📲 Partager sur Instagram</button>
-        </div>
-        <div class="mt-6 text-center">
-          <button id="new-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle Partie</button>
-        </div>
-      </div>
-    </main>
-
-  </div>
-
-  <!-- Modal choix 9/18 -->
-  <div id="holes-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-    <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-      <h3 class="text-xl font-bold mb-4">Choisissez le nombre de trous</h3>
-      <div class="flex justify-center space-x-4">
-        <button data-holes="9" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">9 trous</button>
-        <button data-holes="18" class="choose-holes bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg">18 trous</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- History detail modal (hidden) -->
-  <div id="history-modal" class="hidden modal-backdrop">
-    <div class="bg-gray-800 p-4 rounded-lg max-w-3xl w-full">
-      <h3 class="text-lg font-bold mb-2">Détails de la partie</h3>
-      <div id="history-detail-content" class="overflow-auto max-h-96 text-sm"></div>
-      <div class="mt-3 text-right">
-        <button id="close-history-detail" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded">Fermer</button>
-      </div>
-    </div>
-  </div>
-
-  <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
-    <p>&copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a> — v4.3</p>
+  <!-- FOOTER -->
+  <footer class="bg-gray-800 text-gray-400 text-center py-3 mt-6">
+    <p>&copy; 2025 Parfect.golfr · <a href="https://instagram.com/parfect.golfr" target="_blank" class="hover:text-green-400">@parfect.golfr</a> · v5.2</p>
   </footer>
 
-<script>
-/* -------------------------
-   CONFIG - REMPLACEZ ICI
-   ------------------------- */
-const SHEET_JSON_URL = "https://opensheet.elk.sh/1bv_ABhNRuJAfsAgzlobHLkvTsEyYWOTLeRynhhouGGI/Feuille1";
-const EMAILJS_SERVICE_ID = "service_03in3vd";
-const EMAILJS_TEMPLATE_ID = "template_fxjeymy";
-const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
+  <script>
+    // --- STATE ---
+    let currentHole = 1;
+    let totalHoles = 18;
+    let gameData = [];
 
-/* ------------------------- */
-
-emailjs.init(EMAILJS_PUBLIC_KEY);
-
-document.addEventListener('DOMContentLoaded', () => {
-  // State
-  let currentHole = 1;
-  let totalHoles = 18;
-  let gameData = []; // each hole stores { hole, result (vs par: -2..+3), putts, puttDistance, fairway, gir, routine, plan }
-  let history = JSON.parse(localStorage.getItem('parfectHistory') || '[]');
-  let selectedIndex = 12;
-  let currentUser = null;
-
-  // Toasts/messages
-  const toastEl = document.getElementById('toast');
-  const toasts = {
-    parfect: '🎯 PARFECT !!! 🔥⛳️',
-    encourages: ['💪 Keep pushing !','👏 Bien joué !','🔥 Next hole, next chance !','Nice shot!'],
-    cata: "😅 Golf is not a game of parfection !"
-  };
-  function showToast(message, duration=3000) {
-  toastEl.textContent = message;
-  toastEl.classList.add('show');
-  setTimeout(()=> toastEl.classList.remove('show'), duration);
-}
-
-
-  function showToastForHole(holeData, nextHole=null) {
-    // Compose message "Direction le trou X" + encouragement or parfect/cata
-    const target = nextHole || (holeData ? holeData.hole : currentHole);
-    const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
-    const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
-    let msg = `➡️ Direction le trou ${target} !\n`;
-    if (isParfect) msg += toasts.parfect;
-    else if (isCata) msg += toasts.cata;
-    else msg += toasts.encourages[Math.floor(Math.random()*toasts.encourages.length)];
-    showToast(msg, 3000);
-  }
-
-  // Menu burger logic (toggle + auto close on mobile)
-  const menuToggle = document.getElementById('menu-toggle');
-  const menu = document.getElementById('menu');
-  menuToggle.addEventListener('click', () => {
-    // toggle hidden class for md compatibility
-    if (menu.classList.contains('hidden')) {
-      menu.classList.remove('hidden');
-      // trigger open to animate
-      setTimeout(()=> menu.classList.add('open'), 10);
-    } else {
-      menu.classList.remove('open');
-      setTimeout(()=> menu.classList.add('hidden'), 300);
+    // --- NAVIGATION ---
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+      document.getElementById(pageId).classList.remove('hidden');
+      if (pageId === 'scorecard') renderHole();
+      if (pageId === 'history') renderHistory();
+      if (pageId === 'objectives') renderObjectives();
+      if (pageId === 'training') renderTraining();
     }
-  });
-  // auto close when clicking a menu button on mobile
-  menu.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (window.innerWidth < 768) {
-        menu.classList.remove('open');
-        setTimeout(()=> menu.classList.add('hidden'), 300);
-      }
-    });
-  });
 
-  // Navigation (restricted)
-  function isLoggedIn() { return !!localStorage.getItem('parfect_license'); }
-
-  function showPage(pageId) {
-    if (!isLoggedIn() && pageId !== 'login') pageId = 'login';
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const el = document.getElementById(pageId);
-    if (el) el.classList.add('active');
-    // render page-specific
-    if (pageId === 'scorecard') renderHole();
-    if (pageId === 'history') renderHistory();
-    if (pageId === 'summary') renderSummary();
-    if (pageId === 'objectives') renderObjectives();
-  }
-
-  // Hook nav buttons
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => showPage(btn.dataset.page));
-  });
-
-  // Logout
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    localStorage.removeItem('parfect_license');
-    currentUser = null;
-    showPage('login');
-  });
-
-  // Auto-login if present
-  const stored = localStorage.getItem('parfect_license');
-  if (stored) {
-    try {
-      currentUser = JSON.parse(stored);
-      document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
-      showPage('home');
-    } catch(e) {
-      console.warn('Licence parse error', e);
-      showPage('login');
-    }
-  } else {
-    showPage('login');
-  }
-
-  /* -------------------------
-     Licence / Login / Recover
-     ------------------------- */
-  async function fetchSheetRows() {
-    const res = await fetch(SHEET_JSON_URL);
-    if (!res.ok) throw new Error('Impossible de lire le sheet: ' + res.statusText);
-    const rows = await res.json();
-    return rows.map(r => ({
-      licence: (r.licence || r.license || '').trim(),
-      email: ((r.email || '') + '').trim().toLowerCase(),
-      name: (r.name || '').trim()
-    }));
-  }
-
-  async function checkLicenseWithEmail(code, email) {
-    const rows = await fetchSheetRows();
-    return rows.find(r => r.licence === code && r.email === email) || null;
-  }
-  async function findLicenceByEmail(email) {
-    const rows = await fetchSheetRows();
-    return rows.find(r => r.email === email) || null;
-  }
-
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const code = document.getElementById('login-code').value.trim();
-    const msgEl = document.getElementById('login-msg');
-    msgEl.style.color = '#fff';
-    if (!email || !code) { msgEl.style.color='tomato'; msgEl.textContent='Email et code requis.'; return; }
-    msgEl.style.color='#ffefc7'; msgEl.textContent='Vérification...';
-    try {
-      const user = await checkLicenseWithEmail(code, email);
-      if (user) {
-        currentUser = { licence: user.licence, email: user.email, name: user.name || '' };
-        localStorage.setItem('parfect_license', JSON.stringify(currentUser));
-        document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
-        msgEl.style.color='lightgreen'; msgEl.textContent='Connexion réussie 🎉';
-        setTimeout(()=> { msgEl.textContent=''; showPage('home'); }, 600);
-      } else {
-        msgEl.style.color='tomato'; msgEl.textContent="Licence / email invalides.";
-      }
-    } catch (e) {
-      console.error(e);
-      msgEl.style.color='tomato'; msgEl.textContent="Erreur de connexion, vérifie ton URL SHEET_JSON_URL et ta connexion.";
-    }
-  });
-
-  // Recover -> find license and send via EmailJS
-  document.getElementById('recover-btn').addEventListener('click', async () => {
-    const email = document.getElementById('login-email').value.trim().toLowerCase();
-    const msgEl = document.getElementById('login-msg');
-    if (!email) { msgEl.style.color='tomato'; msgEl.textContent='Entrez votre email pour récupération.'; return; }
-    msgEl.style.color='#ffefc7'; msgEl.textContent='Recherche...';
-    try {
-      const found = await findLicenceByEmail(email);
-      if (!found) { msgEl.style.color='tomato'; msgEl.textContent='Aucune licence trouvée pour cet email.'; return; }
-      const templateParams = { to_email: found.email, license_code: found.licence, user_name: found.name || '' };
-      msgEl.textContent = 'Envoi de l\'email...';
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
-      msgEl.style.color='lightgreen';
-      msgEl.textContent = 'Email envoyé avec votre code (vérifiez votre boîte).';
-    } catch (err) {
-      console.error(err);
-      msgEl.style.color='tomato';
-      msgEl.textContent = 'Erreur lors de l\'envoi de l\'email. Vérifie la configuration EmailJS.';
-    }
-  });
-
-  /* -------------------------
-     Scorecard logic
-     ------------------------- */
-  document.getElementById('start-game').addEventListener('click', () => {
-    document.getElementById('holes-modal').classList.remove('hidden');
-  });
-  document.getElementById('new-game').addEventListener('click', () => {
-    document.getElementById('holes-modal').classList.remove('hidden');
-  });
-  document.querySelectorAll('.choose-holes').forEach(btn => {
-    btn.addEventListener('click', () => {
-      totalHoles = parseInt(btn.dataset.holes);
-      gameData = [];
+    // --- NEW GAME ---
+    function startNewGame() {
       currentHole = 1;
-      document.getElementById('holes-modal').classList.add('hidden');
+      gameData = [];
+      totalHoles = confirm("Voulez-vous jouer 18 trous ? (Annuler = 9)") ? 18 : 9;
       showPage('scorecard');
-      renderHole();
-    });
-  });
-function updateGameStatus() {
-  const statusEl = document.getElementById('game-status');
-  if (!statusEl) return;
-  if (gameData.length > 0) {
-    statusEl.textContent = "En cours";
-    statusEl.className = "ml-3 px-3 py-1 text-xs rounded-full bg-green-700 text-green-100";
-  } else {
-    statusEl.textContent = "Nouvelle partie";
-    statusEl.className = "ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200";
-  }
-}
+    }
 
-  function renderProgress() {
-    const container = document.getElementById('hole-progress');
-    container.innerHTML = '';
-    for (let i=1;i<=totalHoles;i++){
-      const div = document.createElement('div');
-      div.className = 'hole-indicator ' + (i===currentHole ? 'active' : (gameData[i-1] ? 'done' : ''));
-      div.textContent = i;
-      div.addEventListener('click', ()=> {
-        // save current before jumping
-        saveHole();
-        const prevHole = currentHole;
-        currentHole = i;
-        showToastForHole(gameData[prevHole-1], currentHole);
+    // --- HOLE RENDER ---
+    function renderHole() {
+      renderProgress();
+      const form = document.getElementById('hole-form');
+      const holeData = gameData[currentHole-1] || {};
+      const bgClass = (currentHole % 2 === 0) ? "bg-gray-700" : "bg-gray-800";
+      form.innerHTML = `
+        <div class="${bgClass} p-4 rounded-lg space-y-2">
+          <h3 class="text-lg font-semibold mb-2 text-center">Trou ${currentHole}</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center space-x-2">
+              <span>Résultat :</span>
+              <select id="result" class="text-black px-2 flex-1">
+                <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
+                <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
+                <option value="0" ${holeData.result===0||holeData.result===undefined?'selected':''}>Par (0)</option>
+                <option value="1" ${holeData.result===1?'selected':''}>Bogey (+1)</option>
+                <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
+                <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
+              </select>
+            </label>
+            <label class="flex items-center space-x-2">
+              <span>Putts :</span>
+              <select id="putts" class="text-black px-2 flex-1">
+                ${[...Array(7).keys()].map(v => `<option value="${v}" ${holeData.putts===v?'selected':''}>${v}</option>`).join('')}
+              </select>
+            </label>
+            <label class="flex items-center space-x-2 col-span-2">
+              <span>Distance 1er putt (m):</span>
+              <select id="puttDistance" class="text-black px-2 flex-1">
+                ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
+              </select>
+            </label>
+            <label class="flex items-center"><input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}> <span class="ml-2">Fairway touché</span></label>
+            <label class="flex items-center"><input type="checkbox" id="gir" ${holeData.gir?'checked':''}> <span class="ml-2">Green en régulation</span></label>
+            <label class="flex items-center"><input type="checkbox" id="routine" ${holeData.routine?'checked':''}> <span class="ml-2">Routine respectée</span></label>
+            <label class="flex items-center"><input type="checkbox" id="plan" ${holeData.plan?'checked':''}> <span class="ml-2">Plan de jeu respecté</span></label>
+          </div>
+        </div>
+      `;
+      document.getElementById('result').addEventListener('change', onFieldChange);
+      document.getElementById('putts').addEventListener('input', onFieldChange);
+      document.getElementById('puttDistance').addEventListener('input', onFieldChange);
+      ['fairway','gir','routine','plan'].forEach(id => document.getElementById(id).addEventListener('change', onFieldChange));
+    }
+
+    // --- UPDATE DATA ---
+    function onFieldChange() {
+      const hole = {
+        result: parseInt(document.getElementById('result').value),
+        putts: parseInt(document.getElementById('putts').value),
+        puttDistance: parseInt(document.getElementById('puttDistance').value),
+        fairway: document.getElementById('fairway').checked,
+        gir: document.getElementById('gir').checked,
+        routine: document.getElementById('routine').checked,
+        plan: document.getElementById('plan').checked
+      };
+      gameData[currentHole-1] = hole;
+    }
+
+    // --- HOLE NAV ---
+    function nextHole() {
+      if (currentHole < totalHoles) {
+        currentHole++;
         renderHole();
-      });
-      container.appendChild(div);
+        toast(`➡️ Direction le trou ${currentHole}`);
+      } else {
+        toast(`🏁 Direction le 19ème trou !`);
+        showPage('history');
+      }
     }
-  }
-
- function renderHole(){
-  renderProgress();
-  const form = document.getElementById('hole-form');
-  const holeData = gameData[currentHole-1] || {};
-  const bgClass = (currentHole % 2 === 0) ? "bg-gray-700" : "bg-gray-800";
-
-  form.innerHTML = `
-    <div class="${bgClass} p-4 rounded-lg">
-      <h3 class="text-lg font-semibold mb-3 text-center">
-        Trou ${currentHole}
-        <span id="holeScore" class="ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold"></span>
-      </h3>
-
-      <div class="space-y-3">
-
-        <!-- Résultat -->
-        <div><label class="flex items-center space-x-2">
-          <span>Résultat</span>
-          <select id="result" class="text-black px-2">
-            <option value="-2" ${holeData.result===-2?'selected':''}>Eagle (-2)</option>
-            <option value="-1" ${holeData.result===-1?'selected':''}>Birdie (-1)</option>
-            <option value="0" ${(holeData.result===0 || (!holeData.result && currentHole<=9))?'selected':''}>Par (0)</option>
-            <option value="1" ${(holeData.result===1 || (!holeData.result && currentHole>9))?'selected':''}>Bogey (+1)</option>
-            <option value="2" ${holeData.result===2?'selected':''}>Double Bogey (+2)</option>
-            <option value="3" ${holeData.result===3?'selected':''}>Triple+ (+3)</option>
-          </select>
-        </label>
-</div>
-        <!-- Putts -->
-        <div><label class="flex items-center space-x-2" style="width: 194px;">
-          <span>Putts</span>
-          <select id="putts" class="text-black px-2">
-            ${[...Array(7).keys()].map(v => 
-              `<option value="${v}" ${(holeData.putts===v || (!holeData.putts && v===2))?'selected':''}>${v}</option>`
-            ).join('')}
-          </select>
-        </label>
-</div>
-        <!-- Distance -->
-        <label class="flex items-center space-x-2" style="width: 100px;">
-          <span>Distance</span>
-          <select id="puttDistance" class="text-black px-2">
-            ${Array.from({length:41}, (_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
-          </select>
-          <span class="text-sm">m</span>
-        </label>
-<!-- Séparateur visuel -->
-<div class="col-span-2 border-t border-gray-500 my-2"></div>
-
-        <!-- Checkboxes -->
-        <label class="col-span-2 flex justify-center items-center space-x-2">
-          <input type="checkbox" id="fairway" ${holeData.fairway?'checked':''}>
-          <span>Fairway touché</span>
-        </label>
-        <label class="col-span-2 flex justify-center items-center space-x-2">
-          <input type="checkbox" id="gir" ${holeData.gir?'checked':''}>
-          <span>Green en régulation</span>
-        </label>
-        <label class="col-span-2 flex justify-center items-center space-x-2">
-          <input type="checkbox" id="routine" ${holeData.routine?'checked':''}>
-          <span>Routine respectée</span>
-        </label>
-        <label class="col-span-2 flex justify-center items-center space-x-2">
-          <input type="checkbox" id="plan" ${holeData.plan?'checked':''}>
-          <span>Plan de jeu respecté</span>
-        </label>
-      </div>
-    </div>
-  `;
-
-  // Score cumulé affiché à côté du titre
-  let cumulative = 0;
-  for (let i = 0; i < currentHole; i++) {
-    cumulative += (gameData[i]?.result || 0);
-  }
-  const holeScoreEl = document.getElementById('holeScore');
-  if (holeScoreEl) {
-    if (cumulative > 0) {
-      holeScoreEl.textContent = `+${cumulative}`;
-      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-red-700 text-sm font-bold";
-    } else if (cumulative < 0) {
-      holeScoreEl.textContent = `${cumulative}`;
-      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-green-700 text-sm font-bold";
-    } else {
-      holeScoreEl.textContent = "E";
-      holeScoreEl.className = "ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold";
-    }
-  }
-
-  // attach events
-  document.getElementById('result').addEventListener('change', onFieldChange);
-  document.getElementById('putts').addEventListener('change', onFieldChange);
-  document.getElementById('puttDistance').addEventListener('change', onFieldChange);
-  ['fairway','gir','routine','plan'].forEach(id => 
-    document.getElementById(id).addEventListener('change', onFieldChange)
-  );
-}
-
-
-
-  function onFieldChange(){
-    saveHole();
-  }
-
-  function saveHole(){
-    const resultVal = parseInt(document.getElementById('result').value) || 0;
-    const puttsVal = parseInt(document.getElementById('putts').value) || 0;
-    const puttDistanceVal = parseFloat(document.getElementById('puttDistance').value) || 0;
-    gameData[currentHole-1] = {
-      hole: currentHole,
-      result: resultVal, // vs par
-      putts: puttsVal,
-      puttDistance: puttDistanceVal,
-      fairway: document.getElementById('fairway').checked,
-      gir: document.getElementById('gir').checked,
-      routine: document.getElementById('routine').checked,
-      plan: document.getElementById('plan').checked
-    };
-    renderProgress();
-  }
-
-  document.getElementById('next-hole').addEventListener('click', ()=> {
-    saveHole();
-    if (currentHole < totalHoles) {
-      const thisHole = currentHole;
-      currentHole++;
-      showToastForHole(gameData[thisHole-1], currentHole);
-      renderHole();
-    } else {
-      endGame();
-    }
-  });
-  document.getElementById('prev-hole').addEventListener('click', ()=> {
-    saveHole();
-    if (currentHole > 1) { currentHole--; renderHole(); }
-  });
-
-  function endGame(){
-    // compute totals
-    let totalScoreVsPar = 0;
-    let parfectCount = 0;
-    let totalPutts = 0;
-    gameData.forEach(h => {
-      totalScoreVsPar += (h.result || 0);
-      if (h.fairway && h.gir && (h.putts <= 2)) parfectCount++;
-      totalPutts += (h.putts || 0);
-    });
-
-    // show final toast with summary (Direction 19ème)
-    const finalMsg = `🏁 Direction le ${totalHoles+1}ème trou !\nParfects : ${parfectCount}\nScore total : ${ totalScoreVsPar >= 0 ? '+'+totalScoreVsPar : totalScoreVsPar }`;
-    showToast(finalMsg, 4200);
-
-    setTimeout(() => {
-      history.push({ date: new Date().toLocaleString(), holes: gameData, index: selectedIndex, user: currentUser, totalScoreVsPar, parfectCount });
-      localStorage.setItem('parfectHistory', JSON.stringify(history));
-      showPage('summary');
-    }, 4400);
-  }
-
-  /* -------------------------
-     Summary / Objectives / History / PDF / Share
-     ------------------------- */
-  function renderSummary(){
-    const container = document.getElementById('summary-content');
-    let totalScoreVsPar = 0, fairways=0, girs=0, routines=0, plans=0, parfect=0, totalPutts=0;
-    gameData.forEach(h => {
-      totalScoreVsPar += (h.result || 0);
-      fairways += h.fairway?1:0;
-      girs += h.gir?1:0;
-      routines += h.routine?1:0;
-      plans += h.plan?1:0;
-      totalPutts += (h.putts || 0);
-      if (h.fairway && h.gir && (h.putts <= 2)) parfect++;
-    });
-
-    const obj = objectives[selectedIndex];
-    const scale = totalHoles === 9 ? 0.5 : 1;
-    function check(val, target, betterIsLess=false) {
-      if (betterIsLess) return val <= target ? '✅' : '❌';
-      return val >= target ? '✅' : '❌';
+    function prevHole() {
+      if (currentHole > 1) {
+        currentHole--;
+        renderHole();
+      }
     }
 
-    container.innerHTML = `
-      <div id="summary-box" class="grid md:grid-cols-2 gap-4 relative">
-        <div class="bg-gray-700 p-4 rounded-lg">
-          <h3 class="font-bold text-green-400 mb-2">Stats globales</h3>
-          <ul class="space-y-1">
-            <li><strong>Score vs Par :</strong> ${ totalScoreVsPar >= 0 ? '+'+totalScoreVsPar : totalScoreVsPar }</li>
-            <li><strong>Fairways :</strong> ${fairways}/${totalHoles}</li>
-            <li><strong>GIR :</strong> ${girs}/${totalHoles}</li>
-            <li><strong>Putts :</strong> ${totalPutts}</li>
-            <li><strong>Routines :</strong> ${routines}/${totalHoles}</li>
-            <li><strong>Plans :</strong> ${plans}/${totalHoles}</li>
-            <li><strong>PARFECT :</strong> ${parfect}</li>
-          </ul>
-        </div>
-        <div class="bg-gray-700 p-4 rounded-lg">
-          <h3 class="font-bold text-green-400 mb-2">Vs Objectifs (Index ${selectedIndex})</h3>
-          <ul class="space-y-1">
-            <li>Fairways : ${fairways} / objectif ${Math.round(obj.fw * scale)} ${check(fairways, obj.fw * scale)}</li>
-<li>GIR : ${girs} / objectif ${Math.round(obj.gr * scale)} ${check(girs, obj.gr * scale)}</li>
-<li>Putts : ${totalPutts} / objectif ${Math.round(obj.putts * scale)} ${check(totalPutts, obj.putts * scale, true)}</li>
-<li>Pars : ${gameData.filter(h=>h.result===0).length} / objectif ${Math.round(obj.pars * scale)} ${check(gameData.filter(h=>h.result===0).length, obj.pars * scale)}</li>
-</ul>
-        </div>
-      </div>
-      <div class="mt-4 bg-gray-800 p-3 rounded-lg">
-        <h4 class="font-bold mb-2">Détail trou par trou</h4>
-        <div class="overflow-auto text-sm">
-          <table class="w-full text-left">
-            <thead class="text-green-400">
-              <tr><th class="px-2">Trou</th><th class="px-2">Résultat</th><th class="px-2">Putts</th><th class="px-2">FW</th><th class="px-2">GIR</th></tr>
-            </thead>
-            <tbody>
-              ${ (gameData || []).map(h => `<tr class="border-t border-gray-600"><td class="px-2 py-1">${h.hole}</td><td class="px-2 py-1">${h.result >= 0 ? '+'+h.result : h.result}</td><td class="px-2 py-1">${h.putts || 0}</td><td class="px-2 py-1">${h.fairway ? '✓' : '-'}</td><td class="px-2 py-1">${h.gir ? '✓' : '-'}</td></tr>`).join('') }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }
+    // --- PROGRESS ---
+    function renderProgress() {
+      const total = gameData.reduce((a,h)=>a+(h?.result||0),0);
+      document.getElementById('progress').innerText = `Score cumulé : ${total >= 0 ? '+'+total : total}`;
+    }
 
-  // objectives data
-  const objectives = {
-    0: {fairways:79, gir:67, putts:29, pars:15, fw:11, gr:12},
-    5: {fairways:71, gir:56, putts:30, pars:12, fw:10, gr:10},
-    7: {fairways:64, gir:50, putts:31, pars:11, fw:9, gr:9},
-    9: {fairways:57, gir:44, putts:32, pars:10, fw:8, gr:8},
-    12:{fairways:50, gir:33, putts:33, pars:8, fw:7, gr:6},
-    15:{fairways:43, gir:22, putts:34, pars:6, fw:6, gr:4},
-    18:{fairways:36, gir:17, putts:35, pars:5, fw:5, gr:3},
-    21:{fairways:29, gir:11, putts:36, pars:4, fw:4, gr:2}
-  };
+    // --- TOAST ---
+    function toast(msg) {
+      const el = document.createElement('div');
+      el.className = "fixed top-1/3 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg text-center";
+      el.innerHTML = msg;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),2500);
+    }
 
-  function renderObjectives() {
-    const container = document.getElementById('objectives-table');
-    const idx = selectedIndex;
-    const obj = objectives[idx];
-    container.innerHTML = `
-      <table class="table-auto w-full text-sm text-left border border-gray-600">
-        <thead class="bg-gray-700 text-green-400">
-          <tr>
-            <th class="px-2 py-1">Index</th>
-            <th class="px-2 py-1">Fairways %</th>
-            <th class="px-2 py-1">GIR %</th>
-            <th class="px-2 py-1">Putts</th>
-            <th class="px-2 py-1">Pars</th>
-            <th class="px-2 py-1">FW</th>
-            <th class="px-2 py-1">GR</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="bg-gray-800">
-            <td class="px-2 py-1">${idx}</td>
-            <td class="px-2 py-1">${obj.fairways}%</td>
-            <td class="px-2 py-1">${obj.gir}%</td>
-            <td class="px-2 py-1">${obj.putts}</td>
-            <td class="px-2 py-1">${obj.pars}</td>
-            <td class="px-2 py-1">${obj.fw}</td>
-            <td class="px-2 py-1">${obj.gr}</td>
-          </tr>
-        </tbody>
-      </table>`;
-  }
-  document.getElementById('index-select').addEventListener('change', (e) => {
-    selectedIndex = parseInt(e.target.value);
-    renderObjectives();
-  });
-
-  // history list and details
-  function renderHistory() {
-    const container = document.getElementById('history-list');
-    container.innerHTML = history.length ? history.map((g,i) => `
-      <div class="bg-gray-700 p-3 rounded-lg">
-        <div class="flex justify-between items-center">
-          <div>
-            <p><strong>Partie ${i+1}</strong> — ${g.date}</p>
-            <p>${(g.holes||[]).length} trous — Index ${g.index ?? '-'}</p>
-          </div>
-          <div class="space-x-2">
-            <button class="view-detail bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded" data-idx="${i}">Voir détails</button>
-            <button class="delete-game bg-red-600 hover:bg-red-700 px-3 py-1 rounded" data-idx="${i}">Supprimer</button>
-          </div>
-        </div>
-      </div>
-    `).join('') : '<p>Aucune partie enregistrée.</p>';
-
-    // bind detail buttons
-    container.querySelectorAll('.view-detail').forEach(b => {
-      b.addEventListener('click', (ev) => {
-        const idx = parseInt(ev.currentTarget.dataset.idx);
-        openHistoryDetail(idx);
+    // --- HISTORY ---
+    function renderHistory() {
+      let html = "<ul class='space-y-1'>";
+      let total = 0;
+      gameData.forEach((h,i)=>{
+        const r = h?.result||0;
+        total += r;
+        html += `<li>Trou ${i+1}: ${r >=0? '+'+r : r} (${h.putts||0} putts)</li>`;
       });
-    });
-    container.querySelectorAll('.delete-game').forEach(b => {
-      b.addEventListener('click', (ev) => {
-        const idx = parseInt(ev.currentTarget.dataset.idx);
-        if (confirm('Supprimer cette partie ?')) {
-          history.splice(idx,1);
-          localStorage.setItem('parfectHistory', JSON.stringify(history));
-          renderHistory();
-        }
-      });
-    });
-  }
+      html += "</ul>";
+      html += `<p class="mt-2 font-bold">Total: ${total >=0? '+'+total : total}</p>`;
+      document.getElementById('history-list').innerHTML = html;
+    }
 
-  function openHistoryDetail(idx) {
-    const modal = document.getElementById('history-modal');
-    const content = document.getElementById('history-detail-content');
-    const game = history[idx];
-    if (!game) return;
-    const rowsHtml = (game.holes || []).map(h => `
-      <tr class="border-b border-gray-600">
-        <td class="px-2 py-1">${h.hole}</td>
-        <td class="px-2 py-1">${h.result >= 0 ? '+'+h.result : h.result}</td>
-        <td class="px-2 py-1">${h.putts||0}</td>
-        <td class="px-2 py-1">${h.fairway? '✓':'-'}</td>
-        <td class="px-2 py-1">${h.gir? '✓':'-'}</td>
-        <td class="px-2 py-1">${h.routine? '✓':'-'}</td>
-        <td class="px-2 py-1">${h.plan? '✓':'-'}</td>
-      </tr>
-    `).join('');
-    content.innerHTML = `
-      <p class="mb-2"><strong>Partie ${idx+1}</strong> — ${game.date}</p>
-      <table class="w-full text-sm">
-        <thead class="text-green-400">
-          <tr><th class="px-2">Trou</th><th class="px-2">Résultat</th><th class="px-2">Putts</th><th class="px-2">FW</th><th class="px-2">GIR</th><th class="px-2">R</th><th class="px-2">Plan</th></tr>
-        </thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
-    `;
-    modal.classList.remove('hidden');
-  }
-  document.getElementById('close-history-detail').addEventListener('click', ()=> {
-    document.getElementById('history-modal').classList.add('hidden');
-  });
+    // --- OBJECTIVES ---
+    function renderObjectives() {
+      document.getElementById('objectives-content').innerHTML = `
+        <ul class="space-y-2">
+          <li><strong>Break 100</strong>: 29% Fairways · 11% GIR · 36 putts</li>
+          <li><strong>Break 90</strong>: 57% Fairways · 44% GIR · 32 putts</li>
+          <li><strong>Break 80</strong>: 79% Fairways · 67% GIR · 29 putts</li>
+        </ul>
+      `;
+    }
 
-  // Export PDF (fixed, single page, no blank)
-  document.getElementById('export-pdf').addEventListener('click', () => {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-    const left = 40;
-    let y = 40;
-    pdf.setFontSize(14);
-    pdf.addImage(
-  "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png",
-  "PNG",
-  pdf.internal.pageSize.getWidth() - 120, // position x
-  20, // position y
-  70, // largeur
-  70  // hauteur
-);
-
-    pdf.text("Résumé de partie Parfect.golfr", left, y);
-    y += 20;
-    pdf.setFontSize(10);
-    pdf.text("Date: " + new Date().toLocaleString(), left, y);
-    y += 18;
-    pdf.text("Index: " + (selectedIndex||'-'), left, y);
-    y += 18;
-    pdf.text("Score vs Par (total): " + ((gameData.reduce((s,h)=> s + (h.result||0),0)) >=0 ? '+'+gameData.reduce((s,h)=> s + (h.result||0),0) : gameData.reduce((s,h)=> s + (h.result||0),0)), left, y);
-    y += 22;
-    pdf.text("Détail trou par trou :", left, y);
-    y += 16;
-    // table header
-    pdf.text("Trou", left, y);
-    pdf.text("Résultat", left + 60, y);
-    pdf.text("Putts", left + 140, y);
-    pdf.text("FW", left + 200, y);
-    pdf.text("GIR", left + 240, y);
-    y += 12;
-    // rows
-    gameData.forEach(h => {
-      if (y > 750) { pdf.addPage(); y = 40; } // prevent overflow
-      pdf.text(String(h.hole), left, y);
-      pdf.text((h.result >= 0 ? '+'+h.result : String(h.result)), left + 60, y);
-      pdf.text(String(h.putts || 0), left + 140, y);
-      pdf.text(h.fairway ? '✓' : '-', left + 200, y);
-      pdf.text(h.gir ? '✓' : '-', left + 240, y);
-      y += 14;
-    });
-    pdf.text("© Parfect.golfr", left, y + 20);
-    pdf.save("parfect-score.pdf");
-  });
-
-  // Share Instagram (image)
-  document.getElementById('share-insta').addEventListener('click', () => {
-    const box = document.getElementById('summary-box');
-    if (!box) { alert('Génère d\'abord le résumé.'); return; }
-    html2canvas(box).then(canvas => {
-      const ctx = canvas.getContext("2d");
-      ctx.font = "16px Arial";
-      ctx.fillStyle = "rgba(255,255,255,0.7)";
-      ctx.fillText("© Parfect.golfr", canvas.width - 160, canvas.height - 20);
-      canvas.toBlob(blob => {
-        const file = new File([blob], "parfect.png", { type: "image/png" });
-        if (navigator.share) {
-          navigator.share({
-            title: "Mes stats Parfect.golfr",
-            text: "Stats générées avec Parfect.golfr ⛳️ 👉 @parfect.golfr",
-            files: [file]
-          });
-        } else {
-          alert("Le partage direct n'est pas supporté par ce navigateur.");
-        }
-      });
-    });
-  });
-
-  // Ensure index page render on start
-  renderObjectives();
-
-  /***************************************
-   *  Fin du DOMContentLoaded
-   ***************************************/
-});
-</script>
+    // --- TRAINING ---
+    function renderTraining() {
+      document.getElementById('training-content').innerHTML = `
+        <button onclick="toast('Exercice putting: 10 balles à 2m')" class="bg-blue-500 px-3 py-1 rounded">Putting</button>
+        <button onclick="toast('Exercice chipping: 5 approches au drapeau')" class="bg-yellow-500 px-3 py-1 rounded ml-2">Chipping</button>
+        <button onclick="toast('Exercice driver: 10 balles sur fairway')" class="bg-red-500 px-3 py-1 rounded ml-2">Driver</button>
+      `;
+    }
+  </script>
 </body>
 </html>
