@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="95" fill="#111827" stroke="#16a34a" stroke-width="8"></circle>
+  <text x="50%" y="50%" text-anchor="middle" dy=".35em" font-size="42" font-family="Arial Black, sans-serif" fill="#16a34a">
+    P⛳
+  </text>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>

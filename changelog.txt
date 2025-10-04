@@ -1,0 +1,19 @@
+Parfect Golfr - Break-80 Edition (v5.2)
+---------------------------------------
+
+✅ Nouveau design avec logo stylisé et favicon clair/sombre
+✅ Ajout du mode Entraînement (Putting / Chipping / Driver)
+✅ Objectifs Break 100 / 90 / 80 ajoutés dans Objectifs et Training
+✅ Service Worker pour support offline
+✅ Export PDF avec watermark logo seul
+✅ UI améliorée (résultats vs par, cases à cocher plus lisibles)
+✅ Toasts animés lors du changement de trou
+✅ Score cumulé affiché trou par trou
+✅ Footer avec copyright + lien Instagram
+✅ Préparation pour vente/licence future (login + contrôle possible via Google Sheet)
+
+---
+Prochaine étape envisagée :
+- Coaching mental + messages dynamiques pendant la partie
+- Défis personnalisés pour l’entraînement
+- Sauvegarde cloud via Google Sheet
