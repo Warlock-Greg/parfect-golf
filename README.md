@@ -34,3 +34,44 @@
 ```bash
 git clone https://github.com/<ton-username>/parfect-golfr.git
 cd parfect-golfr
+
+
+le 3 octobre
+# Parfect Golfr - Break-80 Edition
+
+## 🚀 Installation sur GitHub Pages
+
+1. Crée un dépôt sur GitHub (ex: `parfect-golf`).
+2. Ajoute les fichiers suivants à la racine :
+   - `index.html`
+   - `training.html`
+   - `manifest.json`
+   - `service-worker.js`
+   - `README.md`
+   - `changelog.txt`
+   - dossier `/assets` (icônes + logo + favicon)
+3. Push sur `main` ou `master`.
+4. Dans **Settings > Pages**, sélectionne :
+   - Source : `Deploy from branch`
+   - Branch : `main` / dossier `/root`
+5. Ton app sera dispo à l’adresse :
+https://warlock-greg.github.io/parfect-golf/
+
+## 📱 Installation en PWA
+
+- Sur iOS (Safari) :  
+1. Ouvre l’URL.  
+2. Clique sur `Partager` > `Ajouter à l’écran d’accueil`.  
+
+- Sur Android (Chrome) :  
+1. Ouvre l’URL.  
+2. Clique sur `⋮` > `Installer l’application`.  
+
+## 📝 Notes
+
+- L’app fonctionne **offline** via `service-worker.js`.  
+- Les icônes clair/sombre sont prévues pour s’adapter.  
+- Historique et entraînement sauvegardés côté navigateur.  
+
+---
+
