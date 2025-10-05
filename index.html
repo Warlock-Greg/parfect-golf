@@ -72,6 +72,9 @@
                alt="Parfect Golfr" class="header-image" style="max-width: 70px">
           <h1 class="font-bold text-green-400" style="font-size: .5rem;"></h1></br></br>
           <span id="game-status" class="ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200">Nouvelle partie</span>
+        <button id="coach-toggle" class="ml-2 px-3 py-1 text-xs rounded bg-purple-600 hover:bg-purple-700">
+        Coach: ON
+        </button>
         </div>
 
         <!-- burger -->
@@ -336,21 +339,69 @@ document.addEventListener('DOMContentLoaded', () => {
     encourages: ['💪 Keep pushing !','👏 Bien joué !','🔥 Next hole, next chance !','Nice shot!'],
     cata: "😅 Golf is not a game of parfection !"
   };
+let coachOn = true;
+const coach = {
+  neutral: [
+    "Un trou à la fois. 🧘",
+    "Routine > swing. Respire.",
+    "Focus cible, rythme smooth.",
+    "Petit jeu, grand score 😉",
+  ],
+  parfect: [
+    "PARFECT ! Garde ce mojo 🔥",
+    "Chef-d’œuvre. Même Rory applaudit 👏",
+    "Tempo zen, cible touchée 🎯",
+  ],
+  threePutts: [
+    "3 putts ? Ça arrive. Lis + rythme. Tu sais faire. 😌",
+    "Regarde la pente, regarde la vitesse. Un putt à la fois.",
+  ],
+  missedFW: [
+    "Pas de fairway ? Club + sage au prochain. Plan > ego 😉",
+    "Respire. Vise large. Le green viendra.",
+  ],
+  noGIR: [
+    "Pas de GIR ? Monte un club, swing tranquille.",
+    "Approche & putt: c’est là qu’on score 🧠",
+  ],
+  bogeyStreak: [
+    "Série de bogeys ? On coupe la spirale: fairway + green simple.",
+    "Reboot mental. Cible safe, 2 putts max. 😎",
+  ],
+  routineMiss: [
+    "Routine zappée ? Reprends-la, c’est ton super-pouvoir 💫",
+    "Alignement, respiration, intention. Puis swing.",
+  ],
+};
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+function coachMsg(hd) {
+  if (!coachOn || !hd) return pick(coach.neutral);
+  const recent = gameData.slice(Math.max(0, currentHole-3), currentHole).map(h=>h?.result ?? 0);
+  if ((hd.putts||0) >= 3) return pick(coach.threePutts);
+  if (recent.length===3 && recent.every(v => v>=1)) return pick(coach.bogeyStreak);
+  if (!hd.routine) return pick(coach.routineMiss);
+  if (!hd.fairway) return pick(coach.missedFW);
+  if (!hd.gir) return pick(coach.noGIR);
+  return pick(coach.neutral);
+}
+
+  
   function showToast(message, duration=3000) {
     toastEl.textContent = message;
     toastEl.classList.add('show');
     setTimeout(()=> toastEl.classList.remove('show'), duration);
   }
-  function showToastForHole(holeData, nextHole=null) {
-    const target = nextHole || (holeData ? holeData.hole : currentHole);
-    const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
-    const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
-    let msg = `➡️ Direction le trou ${target} !\n`;
-    if (isParfect) msg += toasts.parfect;
-    else if (isCata) msg += toasts.cata;
-    else msg += toasts.encourages[Math.floor(Math.random()*toasts.encourages.length)];
-    showToast(msg, 3000);
-  }
+ function showToastForHole(holeData, nextHole=null) {
+  const target = nextHole || (holeData ? holeData.hole : currentHole);
+  const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
+  const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
+  let msg = `➡️ Direction le trou ${target} !\n`;
+  if (isParfect) msg += pick(coach.parfect);
+  else if (isCata) msg += toasts.cata + "\n" + coachMsg(holeData);
+  else msg += coachMsg(holeData);
+  showToast(msg, 3200);
+}
+
 
   // Menu burger logic (toggle + auto close on mobile)
   const menuToggle = document.getElementById('menu-toggle');
@@ -374,6 +425,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+const coachBtn = document.getElementById('coach-toggle');
+if (coachBtn) {
+  coachBtn.addEventListener('click', ()=>{
+    coachOn = !coachOn;
+    coachBtn.textContent = coachOn ? "Coach: ON" : "Coach: OFF";
+    coachBtn.classList.toggle('bg-purple-600', coachOn);
+    coachBtn.classList.toggle('hover:bg-purple-700', coachOn);
+    coachBtn.classList.toggle('bg-gray-600', !coachOn);
+    coachBtn.classList.toggle('hover:bg-gray-700', !coachOn);
+  });
+}
+
+  
   // Navigation (restricted)
   function isLoggedIn() { return !!localStorage.getItem('parfect_license'); }
 
