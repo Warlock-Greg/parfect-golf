@@ -280,10 +280,12 @@
       <label class="block mb-3">Nom du golf
         <input id="golf-name" class="w-full text-black px-2 py-1 rounded" placeholder="ex: Cicé Blossac">
       </label>
-      <div class="flex justify-between">
-        <button id="golf-gps" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded">📍 Me géolocaliser</button>
-        <button id="golf-continue" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Continuer</button>
-      </div>
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-between">
+  <button id="golf-gps" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded">📍 Me géolocaliser</button>
+  <button id="golf-start" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded font-bold">🎯 Commencer une partie</button>
+  <button id="golf-train" class="bg-purple-600 hover:bg-purple-700 px-3 py-2 rounded">🏋️ S’entraîner</button>
+</div>
+
       <p id="golf-hint" class="text-xs text-gray-300 mt-3">Astuce: autorise la position pour pré-remplir le golf (OpenStreetMap).</p>
     </div>
   </div>
@@ -651,12 +653,23 @@ if (coachBtn) {
       hint.textContent = 'GPS non dispo sur ce device.';
     }
   });
-  document.getElementById('golf-continue').addEventListener('click', ()=> {
+ // Démarrer une partie depuis la modal Golf
+document.getElementById('golf-start')?.addEventListener('click', () => {
   currentGolfName = (document.getElementById('golf-name').value || '').trim();
   if (!currentGolfName) currentGolfName = 'Golf (non précisé)';
-  // On ne montre plus 9/18 tant qu’on n’a pas checké le parcours en cloud
+  // Vérifie s'il existe un parcours, sinon ouvre la création (pars 9/18)
   handleCourseFlow();
 });
+
+// Aller s'entraîner depuis la modal Golf
+document.getElementById('golf-train')?.addEventListener('click', () => {
+  currentGolfName = (document.getElementById('golf-name').value || '').trim();
+  document.getElementById('golf-modal').classList.add('hidden');
+  showPage('training');
+  // charge la liste d’exos si besoin
+  if (typeof loadExercisesIfNeeded === 'function') loadExercisesIfNeeded();
+});
+
 /* =========================
    COURSES: API + UI helpers
    ========================= */
