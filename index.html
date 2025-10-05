@@ -377,6 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // State
   let currentHole = 1;
   let totalHoles = 18;
+  let currentCoursePars = []; // ex: [4,5,4,...]
   let gameData = []; // each hole stores { hole, result (vs par: -2..+3), putts, puttDistance, fairway, gir, routine, plan }
   let history = JSON.parse(localStorage.getItem('parfectHistory') || '[]');
   let selectedIndex = 12;
@@ -986,50 +987,38 @@ document.getElementById('course-save')?.addEventListener('click', async ()=>{
   });
 
   function endGame(){
-    // compute totals
-    let totalScoreVsPar = 0;
-    let parfectCount = 0;
-    let totalPutts = 0;
-    gameData.forEach(h => {
-      totalScoreVsPar += (h.result || 0);
-      if (h.fairway && h.gir && (h.putts <= 2)) parfectCount++;
-      totalPutts += (h.putts || 0);
-    });
+  // compute totals
+  let totalScoreVsPar = 0;
+  let parfectCount = 0;
+  let totalPutts = 0;
+  gameData.forEach(h => {
+    totalScoreVsPar += (h.result || 0);
+    if (h.fairway && h.gir && (h.putts <= 2)) parfectCount++;
+    totalPutts += (h.putts || 0);
+  });
 
-    // toast final
-    const finalMsg = `🏁 Direction le ${totalHoles+1}ème trou !\nParfects : ${parfectCount}\nScore total : ${ totalScoreVsPar >= 0 ? '+'+totalScoreVsPar : totalScoreVsPar }`;
-    showToast(finalMsg, 4200);
+  // show final toast with summary (Direction 19ème)
+  const finalMsg = `🏁 Direction le ${totalHoles+1}ème trou !\nParfects : ${parfectCount}\nScore total : ${ totalScoreVsPar >= 0 ? '+'+totalScoreVsPar : totalScoreVsPar }`;
+  showToast(finalMsg, 4200);
 
-    setTimeout(() => {
-      // push partie + golf
-      const record = {
-        date: new Date().toLocaleString(),
-        holes: gameData,
-        index: selectedIndex,
-        user: currentUser,
-        totalScoreVsPar,
-        parfectCount,
-        golf: currentGolfName || 'Golf (non précisé)'
-        coursePars: (currentCoursePars && currentCoursePars.length) ? currentCoursePars.slice() : null,
-      };
-      history.push(record);
-      localStorage.setItem('parfectHistory', JSON.stringify(history));
+  setTimeout(() => {
+    // 🔴 IMPORTANT : virgules correctes avant coursePars
+    const record = {
+      date: new Date().toLocaleString(),
+      holes: gameData,
+      index: selectedIndex,
+      user: currentUser,
+      totalScoreVsPar: totalScoreVsPar,
+      parfectCount: parfectCount,
+      coursePars: (currentCoursePars && currentCoursePars.length) ? currentCoursePars.slice() : null
+    };
 
-      // historiser le golf
-      const name = record.golf;
-      const now  = new Date().toISOString();
-      const idx  = golfHistory.findIndex(g => g.name === name);
-      if (idx >= 0) {
-        golfHistory[idx].lastDate = now;
-        golfHistory[idx].count    = (golfHistory[idx].count || 0) + 1;
-      } else {
-        golfHistory.push({ name, lastDate: now, count: 1 });
-      }
-      localStorage.setItem('parfectGolfHistory', JSON.stringify(golfHistory));
+    history.push(record);
+    localStorage.setItem('parfectHistory', JSON.stringify(history));
+    showPage('summary');
+  }, 4400);
+}
 
-      showPage('summary');
-    }, 4400);
-  }
 
   /* -------------------------
      Summary / Objectives / History / PDF / Share
