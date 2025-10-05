@@ -152,31 +152,31 @@
       </div>
     </main>
 
-    <!-- HISTORIQUE (tabs) -->
-    <main id="history" class="page">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-center">Historique</h2>
+    <!-- Historique: Parties / Practice / Golfs -->
+<main id="history" class="page">
+  <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+    <h2 class="text-xl font-bold mb-4 text-center">Historique</h2>
 
-        <!-- Tabs -->
-        <div class="flex justify-center space-x-2 mb-4">
-          <button class="hist-tab bg-green-700 px-3 py-1 rounded" data-target="hist-games">📘 Parties</button>
-          <button class="hist-tab bg-gray-700 px-3 py-1 rounded" data-target="hist-training">📗 Practice</button>
-          <button class="hist-tab bg-gray-700 px-3 py-1 rounded" data-target="hist-golfs">📍 Golfs joués</button>
-        </div>
+    <!-- Tabs -->
+    <div class="flex justify-center space-x-2 mb-4">
+      <button class="hist-tab bg-green-700 px-3 py-1 rounded" data-target="hist-games">📘 Parties</button>
+      <button class="hist-tab bg-gray-700 px-3 py-1 rounded" data-target="hist-training">📗 Practice</button>
+      <button class="hist-tab bg-gray-700 px-3 py-1 rounded" data-target="hist-golfs">📍 Golfs joués</button>
+    </div>
 
-        <div id="hist-games" class="hist-pane">
-          <div id="history-list" class="space-y-4"></div>
-        </div>
+    <div id="hist-games" class="hist-pane">
+      <div id="history-list" class="space-y-4"></div>
+    </div>
 
-        <div id="hist-training" class="hist-pane hidden">
-          <div id="history-training" class="space-y-3 text-sm"></div>
-        </div>
+    <div id="hist-training" class="hist-pane hidden">
+      <div id="history-training" class="space-y-3 text-sm"></div>
+    </div>
 
-        <div id="hist-golfs" class="hist-pane hidden">
-          <div id="history-golfs" class="space-y-3 text-sm"></div>
-        </div>
-      </div>
-    </main>
+    <div id="hist-golfs" class="hist-pane hidden">
+      <div id="history-golfs" class="space-y-3 text-sm"></div>
+    </div>
+  </div>
+</main>
 
     <!-- RÉSUMÉ -->
     <main id="summary" class="page">
@@ -1045,16 +1045,61 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Tabs historique
-  document.addEventListener('click', (e)=> {
-    if (!e.target.classList.contains('hist-tab')) return;
-    document.querySelectorAll('.hist-tab').forEach(t=>{
-      t.classList.remove('bg-green-700'); t.classList.add('bg-gray-700');
-    });
-    e.target.classList.remove('bg-gray-700'); e.target.classList.add('bg-green-700');
-    const target = e.target.dataset.target;
-    document.querySelectorAll('.hist-pane').forEach(p=> p.classList.add('hidden'));
-    document.getElementById(target).classList.remove('hidden');
+document.addEventListener('click', (e)=> {
+  if (!e.target.classList.contains('hist-tab')) return;
+  document.querySelectorAll('.hist-tab').forEach(t=>{
+    t.classList.remove('bg-green-700'); t.classList.add('bg-gray-700');
   });
+  e.target.classList.remove('bg-gray-700'); e.target.classList.add('bg-green-700');
+  const target = e.target.dataset.target;
+  document.querySelectorAll('.hist-pane').forEach(p=> p.classList.add('hidden'));
+  document.getElementById(target).classList.remove('hidden');
+});
+
+// Rendu historique Practice (CLOUD) + local cache
+async function renderPracticeHistory() {
+  // LOCAL
+  const localBox = document.getElementById('training-local');
+  localBox.innerHTML = trainingLocal.length ? trainingLocal.map(t=> `
+    <div class="bg-gray-800 p-2 rounded">
+      <div><strong>${t.type}</strong> — ${t.level} — score: ${t.score}</div>
+      <div class="text-xs text-gray-300">${t.date} · ${t.notes || ''} ${t.sent?'· ☁️':'· ⏳'}</div>
+    </div>
+  `).join('') : '<p class="text-gray-300">Aucune session locale.</p>';
+
+  // CLOUD
+  const cloudBox = document.getElementById('training-cloud');
+  cloudBox.textContent = 'Chargement…';
+  try {
+    const email = (currentUser?.email || '').toLowerCase();
+    const url = `${TRAINING_API}?action=list&sheet=${encodeURIComponent(TRAINING_SHEET)}&email=${encodeURIComponent(email)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Cloud error');
+    const rows = await res.json();
+    cloudBox.innerHTML = rows.length ? rows.map(r=> `
+      <div class="bg-gray-800 p-2 rounded">
+        <div><strong>${r.type}</strong> — ${r.level} — score: ${r.score}</div>
+        <div class="text-xs text-gray-300">${r.date} · ${r.notes || ''}</div>
+      </div>
+    `).join('') : '<p class="text-gray-300">Aucune session distante.</p>';
+  } catch(e) {
+    cloudBox.innerHTML = '<p class="text-red-300">Impossible de charger le cloud (vérifie l’Apps Script).</p>';
+  }
+}
+
+// Rendu liste des golfs
+function renderGolfHistory() {
+  const box = document.getElementById('history-golfs');
+  box.innerHTML = golfHistory.length ? golfHistory
+    .sort((a,b)=> (b.lastDate||'').localeCompare(a.lastDate||''))
+    .map(g=> `
+      <div class="bg-gray-700 p-2 rounded flex justify-between">
+        <div><strong>${g.name}</strong><div class="text-xs text-gray-300">Dernière: ${new Date(g.lastDate).toLocaleString()}</div></div>
+        <div class="text-sm">Parties: <strong>${g.count||1}</strong></div>
+      </div>
+    `).join('') : '<p class="text-gray-300">Aucun golf historisé pour l’instant.</p>';
+}
+
 
   // Training save
   document.getElementById('tr-save')?.addEventListener('click', async ()=> {
