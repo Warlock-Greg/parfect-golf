@@ -335,22 +335,23 @@
 
   </div>
 
-  <!-- Modal Golf -->
+<!-- Modal Golf -->
 <div id="golf-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-  <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center w-full max-w-lg">
-    <h3 class="text-2xl font-bold mb-4 text-green-400">Choisissez votre golf</h3>
-    <input id="golf-name" type="text" placeholder="Nom du golf" class="w-full px-3 py-2 rounded-lg text-black mb-3" />
+  <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center w-96">
+    <h3 class="text-xl font-bold mb-4 text-green-400">Choisissez votre golf</h3>
 
-    <div class="flex justify-center space-x-4 mb-4">
-      <label class="flex items-center space-x-2">
-        <input type="radio" name="golf-type" value="existing" checked>
-        <span>Golf existant</span>
-      </label>
-      <label class="flex items-center space-x-2">
-        <input type="radio" name="golf-type" value="new">
-        <span>Nouveau golf</span>
-      </label>
+    <!-- Liste des golfs -->
+    <div id="golf-list" class="space-y-2 mb-4">
+      <!-- Ici seront injectés les boutons par populateGolfList() -->
     </div>
+
+    <div class="flex justify-center space-x-4">
+      <button id="golf-start" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Commencer</button>
+      <button id="golf-train" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">S'entraîner</button>
+    </div>
+    <button id="new-golf-btn" class="mt-4 text-sm text-green-400 underline">🆕 Nouveau golf</button>
+  </div>
+</div>
 
     <div id="new-golf-form" class="hidden bg-gray-700 p-4 rounded-lg mb-4">
       <h4 class="text-lg font-semibold mb-2 text-green-300">Créer un parcours</h4>
@@ -771,18 +772,18 @@ if (coachBtn) {
 document.getElementById('golf-start')?.addEventListener('click', () => {
   currentGolfName = (document.getElementById('golf-name').value || '').trim();
   if (!currentGolfName) currentGolfName = 'Golf (non précisé)';
-  // Vérifie s'il existe un parcours, sinon ouvre la création (pars 9/18)
   handleCourseFlow();
 });
+
 
 // Aller s'entraîner depuis la modal Golf
 document.getElementById('golf-train')?.addEventListener('click', () => {
   currentGolfName = (document.getElementById('golf-name').value || '').trim();
   document.getElementById('golf-modal').classList.add('hidden');
   showPage('training');
-  // charge la liste d’exos si besoin
   if (typeof loadExercisesIfNeeded === 'function') loadExercisesIfNeeded();
 });
+
 
 /* =========================
    COURSES: API + UI helpers
