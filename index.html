@@ -657,6 +657,150 @@ if (coachBtn) {
   // On ne montre plus 9/18 tant qu’on n’a pas checké le parcours en cloud
   handleCourseFlow();
 });
+/* =========================
+   COURSES: API + UI helpers
+   ========================= */
+
+// GET course by golf_name
+async function apiGetCourseByName(golfName) {
+  const url = `${COURSE_API}?action=get&sheet=${encodeURIComponent(COURSE_SHEET)}&golf_name=${encodeURIComponent(golfName)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Course GET error');
+  const data = await res.json();
+  return data && data.hole_pars ? data : null;
+}
+
+// POST save new course
+async function apiSaveCourse(payload) {
+  const res = await fetch(COURSE_API, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ action:'add', sheet: COURSE_SHEET, payload })
+  });
+  if (!res.ok) throw new Error('Course SAVE error');
+  return await res.json().catch(()=> ({}));
+}
+
+// Build grid of selects for holes
+function buildCourseGrid(holes = 18, pars = []) {
+  const grid = document.getElementById('course-grid');
+  grid.innerHTML = '';
+  for (let i=1;i<=holes;i++) {
+    const p = pars[i-1] || 4;
+    const box = document.createElement('div');
+    box.className = 'bg-gray-700 p-3 rounded';
+    box.innerHTML = `
+      <div class="text-xs text-gray-300 mb-1">Trou ${i}</div>
+      <select class="course-par text-black w-full px-2 py-1 rounded" data-hole="${i}">
+        <option value="3" ${p==3?'selected':''}>Par 3</option>
+        <option value="4" ${p==4?'selected':''}>Par 4</option>
+        <option value="5" ${p==5?'selected':''}>Par 5</option>
+        <option value="6" ${p==6?'selected':''}>Par 6</option>
+      </select>
+    `;
+    grid.appendChild(box);
+  }
+}
+
+// Open modal create course
+function openCourseModal(defaultHoles = 18) {
+  document.getElementById('course-golfname').textContent = currentGolfName || '';
+  document.getElementById('course-h18').checked = (defaultHoles === 18);
+  document.getElementById('course-h9').checked  = (defaultHoles === 9);
+  buildCourseGrid(defaultHoles, []);
+  document.getElementById('course-modal').classList.remove('hidden');
+}
+
+// Read UI -> pars array
+function readCourseParsFromUI() {
+  return Array.from(document.querySelectorAll('#course-grid .course-par'))
+    .map(sel => parseInt(sel.value,10) || 4);
+}
+
+// handle holes radio change
+function connectCourseHolesRadios() {
+  const h9  = document.getElementById('course-h9');
+  const h18 = document.getElementById('course-h18');
+  [h9,h18].forEach(r => r.addEventListener('change', ()=>{
+    const holes = h9.checked ? 9 : 18;
+    buildCourseGrid(holes, []);
+  }));
+}
+
+// After choosing a golf: try fetch course, else ask to create
+async function handleCourseFlow() {
+  // Try cloud
+  try {
+    const found = await apiGetCourseByName(currentGolfName);
+    if (found) {
+      // parse pars
+      const pars = (found.hole_pars || '')
+        .split(',')
+        .map(s => parseInt(s.trim(),10))
+        .filter(n => !isNaN(n) && n>0);
+      currentCoursePars = pars;
+      totalHoles = parseInt(found.holes,10) || pars.length || 18;
+      document.getElementById('golf-modal').classList.add('hidden');
+      // skip 9/18 modal since course is known
+      showPage('scorecard');
+      renderHole();
+      return;
+    }
+  } catch(e) {
+    console.warn('Course fetch failed, fallback to manual creation.', e);
+  }
+
+  // Not found -> open creation modal
+  document.getElementById('golf-modal').classList.add('hidden');
+  openCourseModal(18);
+  connectCourseHolesRadios();
+}
+
+/* course modal buttons */
+document.getElementById('course-cancel')?.addEventListener('click', ()=>{
+  // revenir à modal golf
+  document.getElementById('course-modal').classList.add('hidden');
+  document.getElementById('golf-modal').classList.remove('hidden');
+});
+
+document.getElementById('course-skip')?.addEventListener('click', ()=>{
+  // utiliser pars choisis sans enregistrer
+  const holes = document.getElementById('course-h9').checked ? 9 : 18;
+  currentCoursePars = readCourseParsFromUI().slice(0, holes);
+  totalHoles = holes;
+  document.getElementById('course-modal').classList.add('hidden');
+  showPage('scorecard');
+  renderHole();
+});
+
+document.getElementById('course-save')?.addEventListener('click', async ()=>{
+  const msg = document.getElementById('course-msg');
+  msg.textContent = 'Enregistrement…';
+  try {
+    const holes = document.getElementById('course-h9').checked ? 9 : 18;
+    const pars  = readCourseParsFromUI().slice(0, holes);
+    const payload = {
+      golf_name: currentGolfName || 'Golf',
+      holes,
+      hole_pars: pars.join(','),
+      created_by: (currentUser?.email || '').toLowerCase(),
+      created_at: new Date().toISOString()
+    };
+    await apiSaveCourse(payload);
+    currentCoursePars = pars;
+    totalHoles = holes;
+    msg.textContent = '✅ Parcours enregistré';
+    setTimeout(()=>{
+      document.getElementById('course-modal').classList.add('hidden');
+      showPage('scorecard');
+      renderHole();
+    }, 400);
+  } catch(e) {
+    console.error(e);
+    msg.textContent = '❌ Erreur d’enregistrement (Apps Script). Tu peux “Utiliser sans enregistrer”.';
+  }
+});
+
 
 
   document.querySelectorAll('.choose-holes').forEach(btn => {
