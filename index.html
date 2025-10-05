@@ -75,7 +75,41 @@
   opacity: 0 !important;
 }
 
-  
+  /* Menu mobile responsive fix */
+#menu {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  background-color: #1f2937; /* gris foncé */
+  border-radius: 8px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+#menu.open {
+  display: flex;
+}
+#menu button {
+  text-align: center;
+  width: 100%;
+  border-bottom: 1px solid #374151;
+  padding: 0.75rem 0;
+}
+@media (min-width: 768px) {
+  #menu {
+    display: flex !important;
+    flex-direction: row;
+    background: none;
+    width: auto;
+    border: none;
+  }
+  #menu button {
+    width: auto;
+    border: none;
+    padding: 0.5rem 1rem;
+  }
+}
+
   
   </style>
 </head>
@@ -539,14 +573,8 @@ function coachMsg(hd) {
   const menuToggle = document.getElementById('menu-toggle');
   const menu = document.getElementById('menu');
   menuToggle.addEventListener('click', () => {
-    if (menu.classList.contains('hidden')) {
-      menu.classList.remove('hidden');
-      setTimeout(()=> menu.classList.add('open'), 10);
-    } else {
-      menu.classList.remove('open');
-      setTimeout(()=> menu.classList.add('hidden'), 300);
-    }
-  });
+  menu.classList.toggle('open');
+});
   // auto close when clicking a menu button on mobile
   menu.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
