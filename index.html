@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Golf history
   let golfHistory   = JSON.parse(localStorage.getItem('parfectGolfHistory') || '[]');
-  let currentGolfName = "";
+  
 
   // Toasts/messages
   const toastEl = document.getElementById('toast');
@@ -1683,8 +1683,7 @@ async function loadExercisesIfNeeded() {
 
   /* -------- MODAL GOLF AVANCÉE -------- */
 
-let currentGolfName = '';
-let currentCoursePars = [];
+
 
 function generateParForm(count=9) {
   const container = document.getElementById('par-table');
@@ -1776,9 +1775,7 @@ document.getElementById('close-golf-modal')?.addEventListener('click', () => {
    🟢 GESTION DES GOLFS - MODAL + FORMULAIRE DE PARCOURS
    =================================================== */
 
-// Variables globales
-let currentGolfName = "";
-let currentCoursePars = [];
+
 
 /**
  * Affiche la modal de choix du golf
