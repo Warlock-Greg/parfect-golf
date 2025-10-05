@@ -1194,24 +1194,59 @@ function renderGolfHistory() {
 
 
   // Training save
-  document.getElementById('tr-save')?.addEventListener('click', async ()=> {
-    const type  = document.getElementById('tr-type').value;
-    const level = document.getElementById('tr-level').value;
-    const score = document.getElementById('tr-score').value.trim();
-    const notes = document.getElementById('tr-notes').value.trim();
-    if (!score) { showToast('Indique un score (ex: 7/10)'); return; }
-    const rec = {
-      email: (currentUser?.email || '').toLowerCase(),
-      date: new Date().toLocaleString(),
-      type, level, score, notes,
-      sent: false
-    };
-    trainingLocal.unshift(rec);
-    localStorage.setItem('parfectTraining', JSON.stringify(trainingLocal));
-    showToast('🧘 Training enregistré — Well done!');
-    renderPracticeHistory();
-    trySyncOne(rec);
-  });
+  // === Remplacer TOUT le bloc existant par ceci ===
+document.getElementById('tr-save')?.addEventListener('click', async () => {
+  const category = document.getElementById('tr-type').value;
+
+  // Exercice choisi (chargé depuis la Sheet)
+  const exoSel  = document.getElementById('tr-exo');
+  const exoId   = exoSel && !exoSel.disabled ? (exoSel.value || '') : '';
+  const exoName = (exoSel && exoSel.options && exoSel.selectedIndex >= 0)
+    ? exoSel.options[exoSel.selectedIndex].text
+    : '';
+
+  const level = document.getElementById('tr-level').value;
+  const score = document.getElementById('tr-score').value.trim();
+  const notes = document.getElementById('tr-notes').value.trim();
+
+  if (!score) { showToast('Indique un score (ex: 7/10)'); return; }
+
+  // Retrouve les métadonnées de l’exo (objectif, niveau suggéré…) si dispo
+  const exo = (typeof EXOS !== 'undefined')
+    ? (EXOS.find(e => (e.id || e.name) === exoId) || {})
+    : {};
+
+  const rec = {
+    // Identité
+    email: (currentUser?.email || '').toLowerCase(),
+    date: new Date().toLocaleString(),
+
+    // Catégorie / Exercice
+    category,                  // nouveau champ
+    type: category,            // compat rétro si tu utilisais "type"
+    exoId,                     // id de l’exo (si ta Sheet en a un)
+    exoName,                   // nom lisible de l’exo
+
+    // Performance
+    level: level || exo.level_hint || '',
+    score,
+    goal: exo.goal || '',      // objectif proposé par l’exo (si dispo)
+    notes,
+
+    // Sync
+    sent: false
+  };
+
+  // Offline d’abord
+  trainingLocal.unshift(rec);
+  localStorage.setItem('parfectTraining', JSON.stringify(trainingLocal));
+  showToast('🧘 Training enregistré — Well done!');
+  renderPracticeHistory();
+
+  // Cloud ensuite
+  trySyncOne(rec);
+});
+
 
   // Sync now
   document.getElementById('tr-sync-now')?.addEventListener('click', ()=> {
