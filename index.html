@@ -335,41 +335,34 @@
 
   </div>
 
-<!-- Modal Golf -->
+<!-- 🏌️ Modal Choix du Golf -->
 <div id="golf-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-  <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center w-96">
+  <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center max-w-md w-full">
     <h3 class="text-xl font-bold mb-4 text-green-400">Choisissez votre golf</h3>
 
-    <!-- Liste des golfs -->
-    <div id="golf-list" class="space-y-2 mb-4">
-      <!-- Ici seront injectés les boutons par populateGolfList() -->
+    <!-- Liste des golfs connus -->
+    <div id="golf-list" class="bg-gray-700 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto text-left">
+      <p class="text-sm text-gray-400 italic">Chargement des golfs...</p>
     </div>
 
-    <div class="flex justify-center space-x-4">
-      <button id="golf-start" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Commencer</button>
-      <button id="golf-train" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">S'entraîner</button>
+    <!-- Ajouter un golf manuellement -->
+    <input id="golf-name" type="text" placeholder="Autre golf..." 
+           class="w-full px-3 py-2 mb-3 rounded-lg text-black" />
+
+    <div class="flex flex-col sm:flex-row justify-center gap-3 mt-4">
+      <button id="golf-start" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto">
+        Commencer une partie
+      </button>
+      <button id="golf-train" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto">
+        S'entraîner
+      </button>
+      <button id="golf-cancel" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg w-full sm:w-auto">
+        Annuler
+      </button>
     </div>
-    <button id="new-golf-btn" class="mt-4 text-sm text-green-400 underline">🆕 Nouveau golf</button>
   </div>
 </div>
 
-    <div id="new-golf-form" class="hidden bg-gray-700 p-4 rounded-lg mb-4">
-      <h4 class="text-lg font-semibold mb-2 text-green-300">Créer un parcours</h4>
-      <div class="flex justify-center space-x-3 mb-3">
-        <label><input type="radio" name="hole-count" value="9" checked> 9 trous</label>
-        <label><input type="radio" name="hole-count" value="18"> 18 trous</label>
-      </div>
-      <div id="par-table" class="grid grid-cols-3 gap-2 text-sm"></div>
-      <button id="save-golf-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold mt-3">💾 Enregistrer le parcours</button>
-    </div>
-
-    <div class="flex justify-center gap-3 mt-4">
-      <button id="golf-start" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold">Démarrer une partie</button>
-      <button id="golf-train" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded-lg font-bold">S'entraîner</button>
-      <button id="close-golf-modal" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg">Annuler</button>
-    </div>
-  </div>
-</div>
 
   <!-- Modal Création Parcours (pars 9/18) -->
 <div id="course-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
@@ -1907,6 +1900,83 @@ async function saveNewGolf() {
   }
 }
 
+/* === 🏌️ Gestion du choix du Golf === */
+
+let currentGolfName = null;
+let currentCoursePars = [];
+
+async function showGolfModal() {
+  const modal = document.getElementById('golf-modal');
+  if (!modal) return;
+
+  // Efface le champ texte
+  document.getElementById('golf-name').value = '';
+
+  // Ouvre la modal
+  modal.classList.remove('hidden');
+
+  // Charge les golfs depuis la feuille Google
+  await populateGolfList();
+}
+
+async function populateGolfList() {
+  const container = document.getElementById('golf-list');
+  if (!container) return;
+
+  container.innerHTML = `<p class="text-sm text-gray-400 italic">Chargement...</p>`;
+  try {
+    const res = await fetch(SHEET_JSON_URL + '?type=golfList');
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun golf enregistré pour le moment.</p>`;
+      return;
+    }
+
+    container.innerHTML = data.map(g => `
+      <div class="golf-item cursor-pointer hover:bg-gray-600 p-2 rounded" data-name="${g.name}">
+        🏌️ ${g.name}
+      </div>
+    `).join('');
+
+    // Bind des clics
+    container.querySelectorAll('.golf-item').forEach(div => {
+      div.addEventListener('click', () => {
+        document.getElementById('golf-name').value = div.dataset.name;
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p class="text-red-400">Erreur lors du chargement de la liste.</p>`;
+  }
+}
+
+// Démarrer une partie depuis la modal Golf
+document.addEventListener('DOMContentLoaded', () => {
+  const startBtn = document.getElementById('golf-start');
+  const trainBtn = document.getElementById('golf-train');
+  const cancelBtn = document.getElementById('golf-cancel');
+
+  startBtn?.addEventListener('click', () => {
+    currentGolfName = (document.getElementById('golf-name').value || '').trim();
+    if (!currentGolfName) currentGolfName = 'Golf (non précisé)';
+    document.getElementById('golf-modal').classList.add('hidden');
+    handleCourseFlow(); // Appelle la logique de parcours (pars 3/4/5)
+  });
+
+  trainBtn?.addEventListener('click', () => {
+    currentGolfName = (document.getElementById('golf-name').value || '').trim();
+    document.getElementById('golf-modal').classList.add('hidden');
+    showPage('training');
+    if (typeof loadExercisesIfNeeded === 'function') loadExercisesIfNeeded();
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    document.getElementById('golf-modal').classList.add('hidden');
+  });
+});
+
+  
 /**
  * Gestion des boutons de la modal golf
  */
