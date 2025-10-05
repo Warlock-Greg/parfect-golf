@@ -205,39 +205,55 @@
 
         <div class="grid md:grid-cols-2 gap-4">
           <!-- Formulaire -->
-          <div class="bg-gray-700 p-4 rounded-lg">
-            <h3 class="font-bold mb-2">Nouvelle session</h3>
-            <label class="block mb-2">Type d'exercice
-              <select id="tr-type" class="w-full text-black px-2 py-1 rounded">
-                <option>Putting</option>
-                <option>Chipping</option>
-                <option>Approche</option>
-                <option>Driver</option>
-              </select>
-            </label>
+<div class="bg-gray-700 p-4 rounded-lg">
+  <h3 class="font-bold mb-2">Nouvelle session</h3>
 
-            <label class="block mb-2">Niveau (objectif)
-              <select id="tr-level" class="w-full text-black px-2 py-1 rounded">
-                <option>Break 100</option>
-                <option>Break 90</option>
-                <option>Break 80</option>
-              </select>
-            </label>
+  <!-- Catégorie -->
+  <label class="block mb-2">Catégorie
+    <select id="tr-type" class="w-full text-black px-2 py-1 rounded">
+      <option>Putting</option>
+      <option>Chipping</option>
+      <option>Approche</option>
+      <option>Driver</option>
+    </select>
+  </label>
 
-            <label class="block mb-2">Score (ex: 7/10 ou %)
-              <input id="tr-score" type="text" placeholder="ex: 7/10" class="w-full text-black px-2 py-1 rounded">
-            </label>
+  <!-- Exercice (chargé depuis la Sheet) -->
+  <label class="block mb-2">Exercice
+    <select id="tr-exo" class="w-full text-black px-2 py-1 rounded" disabled>
+      <option>Chargement…</option>
+    </select>
+  </label>
+  <div id="tr-exo-desc" class="text-xs text-gray-300 mb-3"></div>
 
-            <label class="block mb-2">Commentaire (optionnel)
-              <input id="tr-notes" type="text" placeholder="ressenti, routine, focus..." class="w-full text-black px-2 py-1 rounded">
-            </label>
+  <!-- Niveau -->
+  <label class="block mb-2">Niveau (objectif)
+    <select id="tr-level" class="w-full text-black px-2 py-1 rounded">
+      <option>Break 100</option>
+      <option>Break 90</option>
+      <option>Break 80</option>
+    </select>
+  </label>
 
-            <button id="tr-save" class="mt-3 bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-bold w-full">Enregistrer l'exercice</button>
+  <!-- Score -->
+  <label class="block mb-2">Score (ex: 7/10 ou %)
+    <input id="tr-score" type="text" placeholder="ex: 7/10" class="w-full text-black px-2 py-1 rounded">
+  </label>
 
-            <div class="mt-3 text-center">
-              <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">🏠 Retour à l'accueil</button>
-            </div>
-          </div>
+  <!-- Commentaire -->
+  <label class="block mb-2">Commentaire (optionnel)
+    <input id="tr-notes" type="text" placeholder="ressenti, routine, focus..." class="w-full text-black px-2 py-1 rounded">
+  </label>
+
+  <button id="tr-save" class="mt-3 bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-bold w-full">
+    Enregistrer l'exercice
+  </button>
+
+  <div class="mt-3 text-center">
+    <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">🏠 Retour à l'accueil</button>
+  </div>
+</div>
+
 
           <!-- Historique côté app (offline cache) -->
           <div class="bg-gray-700 p-4 rounded-lg">
@@ -311,6 +327,11 @@ const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
 const TRAINING_API   = "https://script.google.com/macros/s/AKfycbzUprG8qiKfYrEtVtpab94fLotdJo3aZezqOMkIDXPwZCNL8Kmc2tttjFFoOAWivK3ffg/exec";
 const TRAINING_SHEET = "Training_log";
 
+/* --- Feuille des EXERCICES (liste d’exos) --- */
+/* Remplace "Training" par le nom exact de l’onglet où tu as tes exercices. */
+const TRAINING_EXOS_SHEET = "Exercices";
+
+
 /* ------------------------- */
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -327,7 +348,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Training state
   let trainingLocal = JSON.parse(localStorage.getItem('parfectTraining') || '[]');
   let trainingQueue = JSON.parse(localStorage.getItem('parfectTrainingQueue') || '[]');
-
+  const catSel = document.getElementById('tr-type');
+  if (catSel) {
+  catSel.addEventListener('change', () => {
+    populateExerciseSelect(catSel.value);
+  });
+  }
+  
   // Golf history
   let golfHistory   = JSON.parse(localStorage.getItem('parfectGolfHistory') || '[]');
   let currentGolfName = "";
@@ -451,7 +478,8 @@ if (coachBtn) {
     if (pageId === 'history') { renderHistory(); renderPracticeHistory(); renderGolfHistory(); }
     if (pageId === 'summary') renderSummary();
     if (pageId === 'objectives') renderObjectives();
-    if (pageId === 'training') { renderPracticeHistory(); }
+    if (pageId === 'training') { renderPracticeHistory(); loadExercisesIfNeeded();}
+
   }
 
   // Hook nav buttons
@@ -992,12 +1020,12 @@ if (coachBtn) {
     const localBox = document.getElementById('training-local');
     if (localBox) {
       localBox.innerHTML = trainingLocal.length ? trainingLocal.map(t=> `
-        <div class="bg-gray-800 p-2 rounded">
-          <div><strong>${t.type}</strong> — ${t.level} — score: ${t.score}</div>
-          <div class="text-xs text-gray-300">${t.date} · ${t.notes || ''} ${t.sent?'· ☁️':'· ⏳'}</div>
-        </div>
-      `).join('') : '<p class="text-gray-300">Aucune session locale.</p>';
-    }
+  <div class="bg-gray-800 p-2 rounded">
+    <div><strong>${t.category || '-'}</strong> — ${t.exoName || '(exo)'} — ${t.level || ''} — score: ${t.score}</div>
+    <div class="text-xs text-gray-300">${t.date} · ${t.notes || ''} ${t.goal ? '· Obj: '+t.goal : ''} ${t.sent?'· ☁️':'· ⏳'}</div>
+  </div>
+`).join('') : '<p class="text-gray-300">Aucune session locale.</p>';
+}
 
     // CLOUD
     const cloudBox = document.getElementById('history-training') || document.getElementById('training-cloud');
@@ -1010,12 +1038,12 @@ if (coachBtn) {
         if (!res.ok) throw new Error('Cloud error');
         const rows = await res.json();
         cloudBox.innerHTML = rows.length ? rows.map(r=> `
-          <div class="bg-gray-800 p-2 rounded">
-            <div><strong>${r.type}</strong> — ${r.level} — score: ${r.score}</div>
-            <div class="text-xs text-gray-300">${r.date} · ${r.notes || ''}</div>
-          </div>
-        `).join('') : '<p class="text-gray-300">Aucune session distante.</p>';
-      } catch(e) {
+  <div class="bg-gray-800 p-2 rounded">
+    <div><strong>${r.category || '-'}</strong> — ${r.exoName || r.exo || '(exo)'} — ${r.level || ''} — score: ${r.score}</div>
+    <div class="text-xs text-gray-300">${r.date} · ${r.notes || ''} ${r.goal ? '· Obj: '+r.goal : ''}</div>
+  </div>
+`).join('') : '<p class="text-gray-300">Aucune session distante.</p>';
+ } catch(e) {
         cloudBox.innerHTML = '<p class="text-red-300">Impossible de charger le cloud (vérifie l’Apps Script).</p>';
       }
     }
@@ -1232,6 +1260,95 @@ function renderGolfHistory() {
     showToast(remain.length ? 'Sync partielle. Réessaie plus tard.' : '✅ Sync terminée');
     renderPracticeHistory();
   }
+
+  /* =============================
+   EXERCICES (liste depuis Sheet)
+   ============================= */
+let EXOS = [];            // tous les exos de la Sheet
+let exosLoaded = false;   // évite rechargements
+
+// Mappe des clés possibles -> structure normalisée
+function normRow(row) {
+  const get = (names) => {
+    for (const n of names) {
+      const k = Object.keys(row).find(
+        kk => kk && kk.toString().trim().toLowerCase() === n
+      );
+      if (k) return (row[k] ?? '').toString().trim();
+    }
+    return '';
+  };
+  return {
+    id:          get(['id','identifiant','exo_id']),
+    name:        get(['name','nom','exercice','titre']),
+    category:    get(['category','categorie','cat']),
+    level_hint:  get(['level','niveau','objectif']),
+    goal:        get(['goal','objectif','target','cible']),
+    description: get(['description','desc','consigne','details'])
+  };
+}
+
+// Charge tous les exos depuis la Sheet
+async function fetchExercisesFromSheet() {
+  const url = `${TRAINING_API}?action=list&sheet=${encodeURIComponent(TRAINING_EXOS_SHEET)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Impossible de lire la liste des exercices (Apps Script).');
+  const rows = await res.json();
+  return rows.map(normRow).filter(r => r.name);
+}
+
+// Fallback si la Sheet n'est pas prête
+const FALLBACK_EXOS = [
+  { id:'P-1', name:'Lignes & vitesse 10x', category:'Putting', level_hint:'Break 90', goal:'7/10', description:'10 putts à 2m — viser au-delà du trou.' },
+  { id:'C-1', name:'Chipping 3 zones',     category:'Chipping', level_hint:'Break 90', goal:'6/9',  description:'3 cibles à 5/10/15m, 3 balles/cible.' },
+  { id:'A-1', name:'Approches 30–70m',     category:'Approche', level_hint:'Break 80', goal:'6/10', description:'4 distances (30/40/50/70m), viser green.' },
+  { id:'D-1', name:'Fairway finder',       category:'Driver',   level_hint:'Break 90', goal:'6/10', description:'Driver tenu à 70%, objectif dispersion faible.' },
+];
+
+// Filtre et alimente la liste d’exos selon la catégorie
+function populateExerciseSelect(category) {
+  const exoSel = document.getElementById('tr-exo');
+  const descEl = document.getElementById('tr-exo-desc');
+  const pool = EXOS.filter(e => (e.category || '').toLowerCase() === category.toLowerCase());
+  exoSel.innerHTML = pool.length
+    ? pool.map(e => `<option value="${e.id || e.name}">${e.name}</option>`).join('')
+    : `<option>Aucun exercice dans "${category}"</option>`;
+  exoSel.disabled = !pool.length;
+
+  // Desc par défaut
+  if (pool.length) {
+    const first = pool[0];
+    descEl.textContent = [first.description, first.goal ? `Objectif: ${first.goal}` : '', first.level_hint ? `Niveau: ${first.level_hint}` : '']
+      .filter(Boolean).join(' · ');
+  } else {
+    descEl.textContent = '';
+  }
+
+  // évènement : maj desc quand on change d’exercice
+  exoSel.onchange = () => {
+    const chosen = pool.find(e => (e.id || e.name) === exoSel.value) || null;
+    if (!chosen) { descEl.textContent = ''; return; }
+    descEl.textContent = [chosen.description, chosen.goal ? `Objectif: ${chosen.goal}` : '', chosen.level_hint ? `Niveau: ${chosen.level_hint}` : '']
+      .filter(Boolean).join(' · ');
+  };
+}
+
+// Charge une fois au premier accès à la page Training
+async function loadExercisesIfNeeded() {
+  if (exosLoaded) return;
+  try {
+    EXOS = await fetchExercisesFromSheet();
+    exosLoaded = true;
+  } catch(e) {
+    console.warn('Exo Sheet KO, fallback local:', e);
+    EXOS = FALLBACK_EXOS;
+    exosLoaded = true;
+  }
+  // Initialiser la liste selon la catégorie courante
+  const cat = document.getElementById('tr-type')?.value || 'Putting';
+  populateExerciseSelect(cat);
+}
+
 
   // Initial renders
   renderObjectives();
