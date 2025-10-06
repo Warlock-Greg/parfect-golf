@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parfect.golfr — v4.5 (Training + Fix)</title>
+  <title>Parfect.golfr — v4.9</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -33,9 +33,21 @@
       opacity:0; pointer-events:none; transition:opacity .4s ease-in-out; }
     #toast.show{ opacity:1; }
 
+    /* Coach bubble */
+    #coach-bubble {
+      position: fixed; right: 14px; bottom: 14px; z-index: 110;
+      background: rgba(22,163,74,.95); color: #fff; border-radius: 14px;
+      padding: 12px 14px; max-width: 86vw; box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      transform: translateY(20px); opacity: 0; transition: all .28s ease;
+      font-weight: 700;
+    }
+    #coach-bubble.show { transform: translateY(0); opacity: 1; }
+    #coach-bubble small { display:block; font-weight:600; opacity:.9; }
+
     input[type="checkbox"]{ width:1.4rem; height:1.4rem; transform:scale(1.2); accent-color:#22c55e; }
     label{ margin-bottom:.5rem; }
 
+    /* Burger */
     #menu{ display:none; flex-direction:column; width:100%; background-color:#1f2937; border-radius:8px; margin-top:.5rem; overflow:hidden; transition:max-height .3s ease-in-out; }
     #menu.open{ display:flex; }
     #menu button{ text-align:center; width:100%; border-bottom:1px solid #374151; padding:.75rem 0; }
@@ -44,6 +56,7 @@
       #menu button{ width:auto; border:none; padding:.5rem 1rem; }
     }
 
+    /* Intro overlay */
     #intro-bg{
       background-image:url("https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png");
       background-attachment:fixed; background-size:cover; background-position:center;
@@ -51,6 +64,14 @@
     }
     #intro-overlay .fade-in{opacity:1!important;transition:opacity .6s ease}
     #intro-overlay .fade-out{opacity:0!important;transition:opacity .6s ease}
+
+    /* Generic modal */
+    .modal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:120; }
+    .modal.show { display:flex; }
+    .modal .panel { background:#1f2937; border-radius:16px; padding:16px; width:92%; max-width:560px; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+
+    /* History detail modal */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:70; }
   </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
@@ -60,13 +81,14 @@
     <div id="intro-bg" class="absolute inset-0 bg-cover bg-center"></div>
     <div class="absolute inset-0 bg-gray-900/80"></div>
     <div class="relative z-10 text-center px-6">
-      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png"
+      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
            alt="Parfect Golfr" class="mx-auto mb-5 w-28 h-auto drop-shadow-lg"/>
       <h2 id="intro-line" class="text-green-200 font-bold text-2xl sm:text-3xl leading-snug opacity-0"></h2>
     </div>
   </div>
 
   <div id="toast"></div>
+  <div id="coach-bubble"></div>
 
   <div id="app" class="container mx-auto p-4 md:p-6 max-w-4xl flex-1">
     <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
@@ -79,10 +101,12 @@
         <button id="menu-toggle" class="md:hidden bg-gray-700 p-2 rounded-lg">☰</button>
         <div id="menu" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-2 md:mt-0">
           <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
-          <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+          <!-- Carte: logique spéciale reprise/nouvelle -->
+          <button id="nav-scorecard" class="bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
           <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Training</button>
           <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
           <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
+          <button id="open-coach" class="bg-green-700 hover:bg-green-800 px-3 py-2 rounded-lg">Coach</button>
           <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
         </div>
       </nav>
@@ -111,9 +135,10 @@
                alt="Parfect Golfr" class="header-image" style="max-width:200px; margin:0 auto;">
         </h2>
         <p class="mb-4">Connecté en tant que <span id="user-name" class="text-green-300"></span></p>
-        <div class="space-x-2">
-          <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Démarrer une partie</button>
+        <div class="flex flex-col sm:flex-row gap-2 justify-center">
+          <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Nouvelle partie</button>
           <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">S’entraîner</button>
+          <button id="home-coach" class="bg-green-700 hover:bg-green-800 px-3 py-2 rounded-lg">Coach</button>
           <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
         </div>
       </div>
@@ -142,9 +167,7 @@
             <h3 class="font-semibold mb-2 text-green-300">Nouvelle session</h3>
 
             <label class="block mb-2">Type d’entraînement
-              <select id="tr-type" class="w-full text-black px-2 py-1 rounded">
-                <!-- rempli dynamiquement -->
-              </select>
+              <select id="tr-type" class="w-full text-black px-2 py-1 rounded"></select>
             </label>
 
             <label class="block mb-2">Exercice
@@ -166,7 +189,7 @@
             </label>
 
             <label class="block mb-4">Notes (optionnel)
-              <textarea id="tr-notes" class="w-full text-black px-2 py-1 rounded" rows="2" placeholder="Sent sensations…"></textarea>
+              <textarea id="tr-notes" class="w-full text-black px-2 py-1 rounded" rows="2" placeholder="Sensations…"></textarea>
             </label>
 
             <button id="tr-save" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Enregistrer</button>
@@ -234,10 +257,14 @@
       </div>
       <input id="golf-name" type="text" placeholder="Autre golf (ou tapez un nom)…"
              class="w-full px-3 py-2 mb-3 rounded-lg text-black" />
-      <div class="flex flex-col sm:flex-row justify-center gap-3 mt-4">
+      <div class="flex flex-col sm:flex-row justify-center gap-3 mt-2">
         <button id="golf-start" disabled
                 class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto opacity-50 cursor-not-allowed">
           Commencer une partie
+        </button>
+        <button id="golf-skip"
+                class="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg w-full sm:w-auto">
+          Passer
         </button>
         <button id="golf-cancel"
                 class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg w-full sm:w-auto">
@@ -247,7 +274,85 @@
     </div>
   </div>
 
-  <div id="history-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+  <!-- Modal Création Parcours -->
+  <div id="course-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-2xl w-full">
+      <h3 class="text-xl font-bold mb-2 text-green-400">Créer la carte du parcours</h3>
+      <p class="text-sm text-gray-300 mb-3">Choisis PAR 3 / 4 / 5 pour chaque trou.</p>
+
+      <div class="flex items-center gap-4 mb-4">
+        <label class="flex items-center gap-2">
+          <input type="radio" name="course-len" value="9">
+          <span>9 trous</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="radio" name="course-len" value="18" checked>
+          <span>18 trous</span>
+        </label>
+      </div>
+
+      <div id="course-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3"></div>
+
+      <div class="flex flex-col sm:flex-row justify-end gap-3 mt-5">
+        <button id="course-save" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">
+          Enregistrer ce parcours
+        </button>
+        <button id="course-skip" class="bg-yellow-600 hover:bg-yellow-700 text-white py-2 px-4 rounded-lg">
+          Passer
+        </button>
+        <button id="course-cancel" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg">
+          Annuler
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Reprendre/Nouvelle -->
+  <div id="resume-modal" class="hidden fixed inset-0 bg-black/70 z-50 items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center max-w-md w-full">
+      <h3 class="text-xl font-bold mb-4 text-green-400">Carte de score</h3>
+      <p class="text-gray-300 mb-4">Une partie semble être en cours. Que souhaites-tu faire ?</p>
+      <div class="flex flex-col sm:flex-row justify-center gap-3">
+        <button id="resume-game" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg">Reprendre</button>
+        <button id="fresh-game" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg">Nouvelle</button>
+        <button id="resume-cancel" class="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coach Modal -->
+  <div id="coach-modal" class="modal">
+    <div class="panel">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-green-300 font-bold text-lg">Coach — réglages</h3>
+        <button id="coach-close" class="bg-gray-700 hover:bg-gray-600 rounded px-2 py-1">✖</button>
+      </div>
+      <div class="space-y-3">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="coach-play" checked>
+          <span>Conseils pendant la partie</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="checkbox" id="coach-practice" checked>
+          <span>Conseils après un training</span>
+        </label>
+        <label class="block">
+          Ton :
+          <select id="coach-tone" class="text-black px-2 py-1 rounded ml-2">
+            <option value="fun">Fun</option>
+            <option value="taquin">Taquin</option>
+            <option value="sobre">Sobre</option>
+          </select>
+        </label>
+        <div class="text-sm text-gray-300">
+          Aperçu : <span id="coach-preview" class="font-semibold"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History detail modal -->
+  <div id="history-modal" class="hidden modal-backdrop">
     <div class="bg-gray-800 p-4 rounded-lg max-w-3xl w-full">
       <h3 class="text-lg font-bold mb-2">Détails de la partie</h3>
       <div id="history-detail-content" class="overflow-auto max-h-96 text-sm"></div>
@@ -258,11 +363,13 @@
   </div>
 
   <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
-    <p>&copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a> — v4.5</p>
+    <p>&copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a> — v4.9</p>
   </footer>
 
 <script>
-// INTRO
+/* =========================
+   INTRO (3 messages)
+   ========================= */
 window.addEventListener('load', () => {
   const overlay = document.getElementById('intro-overlay');
   const lineEl  = document.getElementById('intro-line');
@@ -287,24 +394,52 @@ window.addEventListener('load', () => {
       i++; setTimeout(showMsg, 250);
     }, 2000);
   };
-  const bg = document.getElementById('intro-bg');
-  const img = new Image();
-  img.onload = showMsg; img.onerror = showMsg;
-  img.src = getComputedStyle(bg).backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+
+    
+    const bg = document.getElementById('intro-bg');
+const img = new Image();
+img.onload = showMsg;
+img.onerror = showMsg;
+
+try {
+  const bgStyle = getComputedStyle(bg).backgroundImage || '';
+  let url = '';
+
+  // bgStyle ressemble à: url("https://.../background.png")
+  if (bgStyle.startsWith('url(')) {
+    url = bgStyle.slice(4, -1).trim(); // enlève 'url(' et ')'
+    // enlève les guillemets éventuels
+    if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
+      url = url.slice(1, -1);
+    }
+  }
+
+  img.src = url || "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png";
+} catch (e) {
+  img.src = "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png";
+}
+
+    
+    
 });
 
-// CONFIG (unique)
+/* =========================
+   CONFIG
+   ========================= */
 const SHEET_JSON_URL     = "https://opensheet.elk.sh/1bv_ABhNRuJAfsAgzlobHLkvTsEyYWOTLeRynhhouGGI/Feuille1";
 const EMAILJS_SERVICE_ID = "service_03in3vd";
 const EMAILJS_TEMPLATE_ID= "template_fxjeymy";
 const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
 
-// Apps Script (même URL pour exercices/golfs/training)
-const EXERCISE_API_URL   = "https://script.google.com/macros/s/AKfycbzUprG8qiKfYrEtVtpab94fLotdJo3aZezqOMkIDXPwZCNL8Kmc2tttjFFoOAWivK3ffg/exec";
+// Apps Script (exercices + golfs + training)
+const EXERCISE_API_URL   = "https://script.google.com/macros/s/AKfycbzW8ZOi_bdEER5v7ABh-h6WXqGp7zPcGmXyqFHhbGKH8j9nDZm-o7zSuCuOE0srAMOShg/exec";
 const COURSE_API         = EXERCISE_API_URL;
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
+/* =========================
+   APP
+   ========================= */
 document.addEventListener('DOMContentLoaded', () => {
   // STATE
   let currentHole = 1;
@@ -316,24 +451,30 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = null;
   let currentGolfName = '';
   let currentCoursePars = [];
-  let _exCache = null; // cache exercices
+  let _exCache = null;
 
-  // TOAST
+  // Coach state
+  let coachEnabledPlay     = JSON.parse(localStorage.getItem('coachEnabledPlay') || 'true');
+  let coachEnabledPractice = JSON.parse(localStorage.getItem('coachEnabledPractice') || 'true');
+  let coachTone            = localStorage.getItem('coachTone') || 'fun';
+
+  // TOAST + COACH
   const toastEl = document.getElementById('toast');
   function showToast(msg, duration=3000){ toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), duration); }
-  function showToastForHole(holeData, nextHole=null){
-    const target = nextHole || (holeData ? holeData.hole : currentHole);
-    const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
-    const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
-    let msg = `➡️ Direction le trou ${target} !\n`;
-    if (isParfect) msg += '🎯 PARFECT !!! 🔥⛳️';
-    else if (isCata) msg += '😅 Golf is not a game of parfection !';
-    else msg += ['💪 Keep pushing !','👏 Bien joué !','🔥 Next hole, next chance !','Nice shot!'][Math.floor(Math.random()*4)];
-    showToast(msg, 2600);
+  const coachBubble = document.getElementById('coach-bubble');
+  function showCoach(msg, duration=3000){
+    if (!coachBubble) return;
+    coachBubble.innerHTML = `<small>Coach</small>\${msg}`;
+    coachBubble.classList.add('show');
+    setTimeout(()=> coachBubble.classList.remove('show'), duration);
   }
 
   // MENU
-  document.getElementById('menu-toggle').addEventListener('click', ()=> document.getElementById('menu').classList.toggle('open'));
+  document.getElementById('menu-toggle').addEventListener('click', ()=>{
+    const menu = document.getElementById('menu');
+    menu.classList.toggle('open');
+    menu.classList.toggle('hidden');
+  });
 
   // NAV
   function isLoggedIn(){ return !!localStorage.getItem('parfect_license'); }
@@ -350,6 +491,35 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-btn').forEach(btn=> btn.addEventListener('click', ()=> showPage(btn.dataset.page)));
   document.getElementById('logout-btn').addEventListener('click', ()=>{ localStorage.removeItem('parfect_license'); currentUser=null; showPage('login'); });
 
+  // BOUTON MENU "CARTE" — Reprendre/Nouvelle
+  document.getElementById('nav-scorecard').addEventListener('click', () => {
+    if (!isLoggedIn()) { showPage('login'); return; }
+    if (gameData && gameData.some(Boolean)) {
+      document.getElementById('resume-modal').classList.remove('hidden');
+      document.getElementById('resume-modal').classList.add('flex');
+    } else {
+      showGolfModal();
+    }
+  });
+
+  // Modal Reprendre/Nouvelle handlers
+  document.getElementById('resume-game').addEventListener('click', ()=>{
+    document.getElementById('resume-modal').classList.add('hidden');
+    document.getElementById('resume-modal').classList.remove('flex');
+    showPage('scorecard');
+  });
+  document.getElementById('fresh-game').addEventListener('click', ()=>{
+    document.getElementById('resume-modal').classList.add('hidden');
+    document.getElementById('resume-modal').classList.remove('flex');
+    gameData = []; currentHole=1; currentCoursePars=[]; currentGolfName='';
+    showGolfModal();
+  });
+  document.getElementById('resume-cancel').addEventListener('click', ()=>{
+    document.getElementById('resume-modal').classList.add('hidden');
+    document.getElementById('resume-modal').classList.remove('flex');
+  });
+
+  // Auto-login
   const stored = localStorage.getItem('parfect_license');
   if (stored) { try { currentUser = JSON.parse(stored); document.getElementById('user-name').textContent = currentUser.name || currentUser.email; showPage('home'); } catch(e){ showPage('login'); } }
   else { showPage('login'); }
@@ -395,10 +565,13 @@ document.addEventListener('DOMContentLoaded', () => {
     else { el.textContent='Nouvelle partie'; el.className="ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200"; }
   }
 
-  // START / MODAL GOLF
-  document.getElementById('start-game')?.addEventListener('click', showGolfModal);
-  document.getElementById('new-game')?.addEventListener('click', showGolfModal);
+  // Démarrer une partie depuis l’accueil
+  document.getElementById('start-game')?.addEventListener('click', ()=>{
+    gameData=[]; currentHole=1; currentCoursePars=[]; currentGolfName='';
+    showGolfModal();
+  });
 
+  // Modal Golf
   function validateGolfStartButton(){
     const start = document.getElementById('golf-start');
     const name = (document.getElementById('golf-name')?.value || '').trim();
@@ -420,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try{
       const res = await fetch(`${COURSE_API}?mode=getGolfs`);
       const data = await res.json();
-      const golfs = Array.isArray(data.golfs) ? data.golfs : [];
+      const golfs = Array.isArray(data.golfs) ? data.golfs : (Array.isArray(data) ? data : []);
       if (!golfs.length){ container.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun golf enregistré.</p>`; validateGolfStartButton(); return; }
       container.innerHTML = golfs.map(g=>`
         <button type="button"
@@ -451,30 +624,114 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(err){ console.error('Erreur chargement golfs:', err); container.innerHTML='<p class="text-red-400">Erreur lors du chargement.</p>'; }
   }
   document.getElementById('golf-name')?.addEventListener('input', validateGolfStartButton);
+
+  // Démarrer avec golf choisi
   document.getElementById('golf-start')?.addEventListener('click', ()=> handleCourseFlow());
+  // Passer (aucun golf)
+  document.getElementById('golf-skip')?.addEventListener('click', ()=>{
+    currentGolfName=''; currentCoursePars=[]; totalHoles=18;
+    document.getElementById('golf-modal')?.classList.add('hidden');
+    showPage('scorecard'); renderHole();
+  });
+  // Annuler
   document.getElementById('golf-cancel')?.addEventListener('click', ()=> document.getElementById('golf-modal')?.classList.add('hidden'));
 
+  // Vérifie le parcours et ouvre créa si manquant
   async function handleCourseFlow(){
     const chosen = (document.getElementById('golf-name')?.value || '').trim();
     if (!chosen){ showToast("Choisis (ou saisis) un golf d'abord"); return; }
     currentGolfName = chosen;
+
     try{
       const res = await fetch(`${COURSE_API}?mode=getGolfs`);
       const data = await res.json();
-      const golfs = Array.isArray(data.golfs) ? data.golfs : [];
+      const golfs = Array.isArray(data.golfs) ? data.golfs : (Array.isArray(data) ? data : []);
       const found = golfs.find(g => (g.name||'').toLowerCase().trim() === chosen.toLowerCase().trim());
+
       if (found && Array.isArray(found.pars) && found.pars.filter(Boolean).length){
         currentCoursePars = found.pars.map(v=>parseInt(v,10)).filter(n=>!isNaN(n)&&n>0);
         totalHoles = currentCoursePars.length || 18;
-      } else {
-        currentCoursePars = []; totalHoles = 18; // fallback
+        document.getElementById('golf-modal')?.classList.add('hidden');
+        showPage('scorecard'); renderHole();
+        return;
       }
-    }catch(e){ console.error(e); currentCoursePars=[]; totalHoles=18; }
+    }catch(e){ console.warn('getGolfs error', e); }
+
+    // Pas trouvé ou pas de PARs ➜ ouvrir la création rapide
     document.getElementById('golf-modal')?.classList.add('hidden');
-    showPage('scorecard'); renderHole();
+    openCourseModal(18);
   }
 
-  // SCORECARD (identique à avant)
+  /* ===== Création rapide de parcours ===== */
+  function openCourseModal(initialLen = 18){
+    const radios = document.getElementsByName('course-len');
+    radios.forEach(r => r.checked = (r.value === String(initialLen)));
+    buildCourseGrid(initialLen);
+    radios.forEach(r => { r.onchange = () => buildCourseGrid(parseInt(r.value,10)); });
+    document.getElementById('course-modal')?.classList.remove('hidden');
+  }
+  function buildCourseGrid(n){
+    const grid = document.getElementById('course-grid');
+    if (!grid) return;
+    grid.innerHTML = Array.from({length:n}, (_,i)=>{
+      const hole = i+1;
+      return `
+        <div class="bg-gray-700 rounded p-2">
+          <div class="text-sm font-semibold mb-1">Trou ${hole}</div>
+          <div class="flex items-center gap-2">
+            ${[3,4,5].map(p => `
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="radio" name="par-${hole}" value="${p}" ${p===4?'checked':''}>
+                <span>PAR ${p}</span>
+              </label>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  function getCourseParsFromUI(){
+    const radios = document.getElementsByName('course-len');
+    const len = Array.from(radios).find(r => r.checked)?.value === '9' ? 9 : 18;
+    const pars = [];
+    for (let i=1; i<=len; i++){
+      const group = document.getElementsByName(`par-${i}`);
+      const checked = Array.from(group).find(r => r.checked);
+      pars.push( parseInt(checked?.value || '4', 10) );
+    }
+    return pars;
+  }
+  async function saveCourseToCloud(golfName, pars){
+    try{
+      await fetch(COURSE_API, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ mode:'addGolf', golf:golfName, pars })
+      });
+    }catch(e){ console.warn('addGolf failed (offline?) — parcours restera local', e); }
+  }
+  document.getElementById('course-save')?.addEventListener('click', async ()=>{
+    const pars = getCourseParsFromUI();
+    currentCoursePars = pars.slice();
+    totalHoles = pars.length;
+    await saveCourseToCloud(currentGolfName || 'Golf', pars);
+    document.getElementById('course-modal')?.classList.add('hidden');
+    showPage('scorecard'); renderHole();
+  });
+  document.getElementById('course-skip')?.addEventListener('click', ()=>{
+    const radios = document.getElementsByName('course-len');
+    const len = Array.from(radios).find(r => r.checked)?.value === '9' ? 9 : 18;
+    currentCoursePars = Array.from({length:len}, ()=>4);
+    totalHoles = len;
+    document.getElementById('course-modal')?.classList.add('hidden');
+    showPage('scorecard'); renderHole();
+  });
+  document.getElementById('course-cancel')?.addEventListener('click', ()=>{
+    document.getElementById('course-modal')?.classList.add('hidden');
+    showGolfModal();
+  });
+
+  // SCORECARD
   function renderProgress(){
     const container = document.getElementById('hole-progress'); container.innerHTML='';
     for(let i=1;i<=totalHoles;i++){
@@ -485,6 +742,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevHole = currentHole;
         currentHole = i;
         showToastForHole(gameData[prevHole-1], currentHole);
+        if (coachEnabledPlay) {
+          const tip = coachTipForHole(gameData[prevHole-1], currentHole-1);
+          if (tip) showCoach(tip, 3200);
+        }
         renderHole();
       });
       container.appendChild(div);
@@ -519,7 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${[...Array(7).keys()].map(v=> `<option value="${v}" ${(holeData.putts===v || (!holeData.putts && v===2))?'selected':''}>${v}</option>`).join('')}
             </select>
           </label></div>
-          <label class="flex items-center space-x-2" style="width:100px;">
+          <label class="flex items-center space-x-2" style="width:120px;">
             <span>Distance</span>
             <select id="puttDistance" class="text-black px-2">
               ${Array.from({length:41},(_,i)=>`<option value="${i}" ${holeData.puttDistance===i?'selected':''}>${i}</option>`).join('')}
@@ -569,8 +830,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('next-hole').addEventListener('click', ()=>{
     saveHole();
-    if (currentHole < totalHoles){ const thisHole=currentHole; currentHole++; showToastForHole(gameData[thisHole-1], currentHole); renderHole(); }
-    else { endGame(); }
+    if (currentHole < totalHoles){
+      const thisHole=currentHole; currentHole++;
+      showToastForHole(gameData[thisHole-1], currentHole);
+      if (coachEnabledPlay) {
+        const tip = coachTipForHole(gameData[thisHole-1], thisHole);
+        if (tip) showCoach(tip, 3200);
+      }
+      renderHole();
+    } else { endGame(); }
   });
   document.getElementById('prev-hole').addEventListener('click', ()=>{
     saveHole(); if (currentHole>1){ currentHole--; renderHole(); }
@@ -580,6 +848,12 @@ document.addEventListener('DOMContentLoaded', () => {
     gameData.forEach(h=>{ totalScoreVsPar += (h.result||0); if (h.fairway&&h.gir&&(h.putts<=2)) parfectCount++; totalPutts += (h.putts||0); });
     const finalMsg = `🏁 Direction le ${totalHoles+1}ème trou !\nParfects : ${parfectCount}\nScore total : ${ totalScoreVsPar>=0? '+'+totalScoreVsPar : totalScoreVsPar }`;
     showToast(finalMsg, 4200);
+    if (coachEnabledPlay) {
+      const finetip = totalScoreVsPar<=0
+        ? "Mojo on 🔥 — tu surfes la vague. Respire, même routine, même tempo."
+        : "Score positif ? Pas grave. Choisis des cibles sages et joue le coup d'après.";
+      setTimeout(()=> showCoach(finetip, 4000), 800);
+    }
     setTimeout(()=>{
       const record = {
         date: new Date().toLocaleString(),
@@ -590,6 +864,25 @@ document.addEventListener('DOMContentLoaded', () => {
       history.push(record); localStorage.setItem('parfectHistory', JSON.stringify(history));
       showPage('summary');
     }, 4400);
+  }
+
+  // Coach logic
+  function coachTipForHole(h){
+    if (!h) return null;
+    const tone = coachTone;
+    const pick = (arr)=> arr[Math.floor(Math.random()*arr.length)];
+    const stylize=(m)=>{
+      if (tone==='taquin') m = "😉 " + m.replace(/\.$/,' !');
+      if (tone==='sobre')  m = m.replace(/[✨😉🔥]/g,'').replace('baby ','');
+      else m = "🔥 " + m;
+      return m;
+    };
+    if (h.putts>=3) return stylize("3 putts ? Respire. Lis la pente, vise court-side. Rythme > force.");
+    if (!h.fairway && !h.gir) return stylize("Zéro FW/GIR ? Objectif simple : balle en jeu, cible large, zéro héroïsme.");
+    if (!h.fairway) return stylize("FW manqué : cible plus large et tempo 7/10.");
+    if (!h.gir) return stylize("Pas de GIR ? Milieu de green, club de plus, routine courte.");
+    if (h.putts<=2 && h.fairway && h.gir) return stylize("PARFECT ✨ — garde la même recette !");
+    return stylize("Prochaine balle = nouvelle histoire. Focus ici & maintenant.");
   }
 
   // SUMMARY / OBJECTIVES / HISTORY
@@ -732,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('close-history-detail').addEventListener('click', ()=> document.getElementById('history-modal').classList.add('hidden'));
 
-  // TRAINING — chargement exercices, rendu, enregistrement
+  // TRAINING — exercices & enregistrement
   async function loadExercisesIfNeeded(){
     if (_exCache){ renderExercisesUI(_exCache); return; }
     try{
@@ -740,6 +1033,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       _exCache = Array.isArray(data.exercises) ? data.exercises : [];
       renderExercisesUI(_exCache);
+      const prev = previewPracticeTip();
+      if (prev) document.getElementById('coach-preview').textContent = prev;
     }catch(e){ console.error('getExercises error', e); showToast('Erreur de chargement des exercices 😅'); }
   }
   function renderExercisesUI(list){
@@ -747,13 +1042,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const exSel   = document.getElementById('tr-exercise');
     if (!typeSel || !exSel) return;
 
-    // Types uniques
     const types = [...new Set(list.map(x=>x.type).filter(Boolean))];
-    // si vide, proposer un fallback
-    if (!typeSel.options.length){
-      typeSel.innerHTML = types.length ? types.map(t=>`<option value="${t}">${t}</option>`).join('')
-                                       : `<option value="Putting">Putting</option><option value="Chipping">Chipping</option><option value="Approches">Approches</option><option value="Driver">Driver</option>`;
-    }
+    typeSel.innerHTML = types.length
+      ? types.map(t=>`<option value="${t}">${t}</option>`).join('')
+      : `<option value="Putting">Putting</option><option value="Chipping">Chipping</option><option value="Approches">Approches</option><option value="Driver">Driver</option>`;
 
     const t = typeSel.value;
     const filtered = list.filter(x=> x.type === t);
@@ -766,13 +1058,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPracticeHistory(){
     const box = document.getElementById('practice-history');
     if (!box) return;
-    const rows = trainingLocal.map((r,i)=> `
-      <div class="bg-gray-800 p-2 rounded flex justify-between">
-        <div>
-          <div class="font-semibold">${r.type} — ${r.exercise_label||r.exercise_id||''}</div>
-          <div class="text-xs text-gray-300">${r.date} · ${r.level||''}</div>
-          <div class="text-sm">Score: ${r.score}${r.notes? ' · '+r.notes:''}</div>
-        </div>
+    const rows = trainingLocal.map((r)=> `
+      <div class="bg-gray-800 p-2 rounded">
+        <div class="font-semibold">${r.type} — ${r.exercise_label||r.exercise_id||''}</div>
+        <div class="text-xs text-gray-300">${r.date} · ${r.level||''}</div>
+        <div class="text-sm">Score: ${r.score}${r.notes? ' · '+r.notes:''}</div>
       </div>
     `).join('');
     box.innerHTML = rows || '<p class="text-gray-300">Aucun training enregistré pour le moment.</p>';
@@ -806,13 +1096,16 @@ document.addEventListener('DOMContentLoaded', () => {
       type, exercise_id: exId, exercise_label: exLbl,
       level, score, notes
     };
-    // Local
     trainingLocal.unshift(rec);
     localStorage.setItem('parfectTraining', JSON.stringify(trainingLocal));
     renderPracticeHistory(); renderPracticeHistoryGlobal();
     showToast('🧘 Training enregistré — bien joué !');
 
-    // Cloud (best effort)
+    if (coachEnabledPractice) {
+      const tip = coachTipForPractice(type, score);
+      if (tip) showCoach(tip, 3200);
+    }
+
     try{
       await fetch(EXERCISE_API_URL, {
         method:'POST',
@@ -824,52 +1117,76 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       });
     }catch(e){ console.warn('Sync training failed', e); }
-    // reset léger
     document.getElementById('tr-score').value=''; document.getElementById('tr-notes').value='';
   });
 
-  // EXPORT / SHARE
-  document.getElementById('export-pdf').addEventListener('click', ()=>{
-    const { jsPDF } = window.jspdf; const pdf = new jsPDF({ unit:'pt', format:'a4' });
-    const left=40; let y=40;
-    pdf.setFontSize(14);
-    pdf.addImage("https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect_logo.png","PNG", pdf.internal.pageSize.getWidth()-120, 20, 70, 70);
-    pdf.text("Résumé de partie Parfect.golfr", left, y); y+=20;
-    pdf.setFontSize(10);
-    pdf.text("Date: "+new Date().toLocaleString(), left, y); y+=18;
-    pdf.text("Index: "+(selectedIndex||'-'), left, y); y+=18;
-    const total = gameData.reduce((s,h)=> s+(h.result||0),0);
-    pdf.text("Score vs Par (total): "+(total>=0? '+'+total: total), left, y); y+=22;
-    pdf.text("Détail trou par trou :", left, y); y+=14;
-    pdf.text("Trou", left, y); pdf.text("Résultat", left+60, y); pdf.text("Putts", left+140, y); pdf.text("FW", left+200, y); pdf.text("GIR", left+240, y); y+=12;
-    gameData.forEach(h=>{ if(y>750){ pdf.addPage(); y=40; }
-      pdf.text(String(h.hole), left, y);
-      pdf.text((h.result>=0? '+'+h.result: String(h.result)), left+60, y);
-      pdf.text(String(h.putts||0), left+140, y);
-      pdf.text(h.fairway?'✓':'-', left+200, y);
-      pdf.text(h.gir?'✓':'-', left+240, y);
-      y+=14;
-    });
-    pdf.text("© Parfect.golfr", left, y+20);
-    pdf.save("parfect-score.pdf");
-  });
-  document.getElementById('share-insta').addEventListener('click', ()=>{
-    const box = document.getElementById('summary-box'); if(!box){ alert('Génère d\'abord le résumé.'); return; }
-    html2canvas(box).then(canvas=>{
-      const ctx = canvas.getContext("2d");
-      ctx.font = "16px Arial"; ctx.fillStyle="rgba(255,255,255,0.7)";
-      ctx.fillText("© Parfect.golfr", canvas.width-160, canvas.height-20);
-      canvas.toBlob(blob=>{
-        const file = new File([blob], "parfect.png", { type:"image/png" });
-        if (navigator.share){
-          navigator.share({ title:"Mes stats Parfect.golfr", text:"Stats générées avec Parfect.golfr ⛳️ 👉 @parfect.golfr", files:[file] });
-        } else { alert("Le partage direct n'est pas supporté."); }
-      });
-    });
-  });
+  function previewPracticeTip(){ return coachTipForPractice('Putting', '7/10'); }
+ function coachTipForPractice(type, scoreStr = '') {
+  let ratio = null;
+  // ✅ REGEX corrigée : pas de doubles antislash
+  const m = String(scoreStr).match(/(\d+)\s*\/\s*(\d+)/);
+  if (m) {
+    const a = +m[1], b = +m[2];
+    if (b > 0) ratio = a / b;
+  }
 
-  // INIT
+  const tone = coachTone;
+  const s = (arr) => {
+    let msg = Array.isArray(arr) ? arr[Math.floor(Math.random() * arr.length)] : arr;
+    if (tone === 'taquin') msg = "😉 " + msg.replace(/\.$/, ' !');
+    if (tone === 'sobre')  msg = msg.replace(/[✨😉🔥]/g, '').replace('baby ', '');
+    else msg = "🔥 " + msg;
+    return msg;
+  };
+
+  if (type.toLowerCase().includes('putt')) {
+    if (ratio !== null && ratio < 0.6) return s(["Putting : focus rythme & lecture. Respire, vise petit, exécution douce."]);
+    if (ratio !== null && ratio >= 0.8) return s(["Putting on fire ✨ — garde la routine courte et confiante."]);
+    return s(["Putting : 10 balles, 1 routine. Même regard-cible, même tempo."]);
+  }
+  if (type.toLowerCase().includes('chip')) {
+    return s(["Chipping : contact avant sol. Cible large, poids avant, finish court."]);
+  }
+  if (type.toLowerCase().includes('driver')) {
+    return s(["Driver : balle en jeu d'abord. 70% de puissance, cible large."]);
+  }
+  return s(["Exo validé. Tu construis des briques de confiance 🧱"]);
+}
+
+  // Coach UI
+  const coachModal = document.getElementById('coach-modal');
+  function openCoach(){ coachModal.classList.add('show'); updateCoachUI(); }
+  function closeCoach(){ coachModal.classList.remove('show'); }
+  document.getElementById('open-coach').addEventListener('click', openCoach);
+  document.getElementById('home-coach').addEventListener('click', openCoach);
+  document.getElementById('coach-close')?.addEventListener('click', closeCoach);
+
+  function updateCoachUI(){
+    document.getElementById('coach-play').checked = !!coachEnabledPlay;
+    document.getElementById('coach-practice').checked = !!coachEnabledPractice;
+    document.getElementById('coach-tone').value = coachTone;
+    const prev = previewPracticeTip();
+    if (prev && document.getElementById('coach-preview')) document.getElementById('coach-preview').textContent = prev;
+  }
+  document.getElementById('coach-play')?.addEventListener('change', (e)=>{ coachEnabledPlay = e.target.checked; localStorage.setItem('coachEnabledPlay', JSON.stringify(coachEnabledPlay)); });
+  document.getElementById('coach-practice')?.addEventListener('change', (e)=>{ coachEnabledPractice = e.target.checked; localStorage.setItem('coachEnabledPractice', JSON.stringify(coachEnabledPractice)); });
+  document.getElementById('coach-tone')?.addEventListener('change', (e)=>{ coachTone = e.target.value; localStorage.setItem('coachTone', coachTone); updateCoachUI(); });
+
+  // OBJECTIFS & SUMMARY
   renderObjectives();
+
+  // ======= helpers =======
+  function showToastForHole(holeData, nextHole=null){
+    const target = nextHole || (holeData ? holeData.hole : currentHole);
+    const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
+    const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
+    let msg = `➡️ Direction le trou ${target} !\\n`;
+    if (isParfect) msg += '🎯 PARFECT !!! 🔥⛳️';
+    else if (isCata) msg += '😅 Golf is not a game of parfection !';
+    else msg += ['💪 Keep pushing !','👏 Bien joué !','🔥 Next hole, next chance !','Nice shot!'][Math.floor(Math.random()*4)];
+    showToast(msg, 2600);
+  }
+
 });
 </script>
 </body>
