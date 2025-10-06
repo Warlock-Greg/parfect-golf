@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Parfect.golfr — v4.4 clean</title>
+  <title>Parfect.golfr — v4.5 (Training + Fix)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -23,23 +23,19 @@
       padding: 10px;
     }
 
-    /* Hole indicators */
     .hole-indicator { width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;
       font-size:0.75rem;background:#374151;color:#fff; cursor:pointer; }
     .hole-indicator.active{background:#10B981;font-weight:bold;}
     .hole-indicator.done{background:#4ade80;}
 
-    /* Toast */
     #toast{ position:fixed; top:35%; left:50%; transform:translateX(-50%); width:100%; text-align:center; z-index:100;
       background:rgba(17,24,39,0.95); color:#fff; font-size:1.25rem; font-weight:700; padding:18px 10px; border-radius:12px;
       opacity:0; pointer-events:none; transition:opacity .4s ease-in-out; }
     #toast.show{ opacity:1; }
 
-    /* Inputs/checkbox */
     input[type="checkbox"]{ width:1.4rem; height:1.4rem; transform:scale(1.2); accent-color:#22c55e; }
     label{ margin-bottom:.5rem; }
 
-    /* Burger menu */
     #menu{ display:none; flex-direction:column; width:100%; background-color:#1f2937; border-radius:8px; margin-top:.5rem; overflow:hidden; transition:max-height .3s ease-in-out; }
     #menu.open{ display:flex; }
     #menu button{ text-align:center; width:100%; border-bottom:1px solid #374151; padding:.75rem 0; }
@@ -48,7 +44,6 @@
       #menu button{ width:auto; border:none; padding:.5rem 1rem; }
     }
 
-    /* Intro overlay */
     #intro-bg{
       background-image:url("https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png");
       background-attachment:fixed; background-size:cover; background-position:center;
@@ -71,13 +66,9 @@
     </div>
   </div>
 
-  <!-- Toast -->
   <div id="toast"></div>
 
-  <!-- APP -->
   <div id="app" class="container mx-auto p-4 md:p-6 max-w-4xl flex-1">
-
-    <!-- Header -->
     <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
       <nav class="flex justify-between items-center">
         <div class="flex items-center space-x-3">
@@ -89,6 +80,7 @@
         <div id="menu" class="hidden md:flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 mt-2 md:mt-0">
           <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
           <button data-page="scorecard" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+          <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Training</button>
           <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
           <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
           <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
@@ -121,6 +113,7 @@
         <p class="mb-4">Connecté en tant que <span id="user-name" class="text-green-300"></span></p>
         <div class="space-x-2">
           <button id="start-game" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Démarrer une partie</button>
+          <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">S’entraîner</button>
           <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
         </div>
       </div>
@@ -135,6 +128,54 @@
         <div class="flex justify-between mt-4">
           <button id="prev-hole" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">⬅️ Précédent</button>
           <button id="next-hole" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Suivant ➡️</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- TRAINING -->
+    <main id="training" class="page">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-xl font-bold mb-4 text-center">Training • Suivi & progrès</h2>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="font-semibold mb-2 text-green-300">Nouvelle session</h3>
+
+            <label class="block mb-2">Type d’entraînement
+              <select id="tr-type" class="w-full text-black px-2 py-1 rounded">
+                <!-- rempli dynamiquement -->
+              </select>
+            </label>
+
+            <label class="block mb-2">Exercice
+              <select id="tr-exercise" class="w-full text-black px-2 py-1 rounded">
+                <option value="">—</option>
+              </select>
+            </label>
+
+            <label class="block mb-2">Niveau
+              <select id="tr-level" class="w-full text-black px-2 py-1 rounded">
+                <option value="Break 100">Break 100</option>
+                <option value="Break 90">Break 90</option>
+                <option value="Break 80">Break 80</option>
+              </select>
+            </label>
+
+            <label class="block mb-2">Score (ex: 7/10 ou 18 putts)
+              <input id="tr-score" type="text" class="w-full text-black px-2 py-1 rounded" placeholder="ex: 7/10" />
+            </label>
+
+            <label class="block mb-4">Notes (optionnel)
+              <textarea id="tr-notes" class="w-full text-black px-2 py-1 rounded" rows="2" placeholder="Sent sensations…"></textarea>
+            </label>
+
+            <button id="tr-save" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">Enregistrer</button>
+          </div>
+
+          <div class="bg-gray-700 p-4 rounded-lg">
+            <h3 class="font-semibold mb-2 text-green-300">Historique Practice (local)</h3>
+            <div id="practice-history" class="space-y-2 text-sm"></div>
+          </div>
         </div>
       </div>
     </main>
@@ -158,8 +199,12 @@
     <!-- HISTORY -->
     <main id="history" class="page">
       <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-xl font-bold mb-4 text-center">Historique des Parties</h2>
-        <div id="history-list" class="space-y-4"></div>
+        <h2 class="text-xl font-bold mb-4 text-center">Historique</h2>
+        <h3 class="font-semibold text-green-300 mb-2">Parties</h3>
+        <div id="history-list" class="space-y-4 mb-6"></div>
+
+        <h3 class="font-semibold text-green-300 mb-2">Practice</h3>
+        <div id="history-practice" class="space-y-2 text-sm"></div>
       </div>
     </main>
 
@@ -180,7 +225,7 @@
 
   </div>
 
-  <!-- 🏌️ Modal Choix du Golf -->
+  <!-- Modal Choix du Golf -->
   <div id="golf-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center max-w-md w-full">
       <h3 class="text-xl font-bold mb-4 text-green-400">Choisissez votre golf</h3>
@@ -202,7 +247,6 @@
     </div>
   </div>
 
-  <!-- History detail modal -->
   <div id="history-modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
     <div class="bg-gray-800 p-4 rounded-lg max-w-3xl w-full">
       <h3 class="text-lg font-bold mb-2">Détails de la partie</h3>
@@ -214,13 +258,11 @@
   </div>
 
   <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
-    <p>&copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a> — v4.4</p>
+    <p>&copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a> — v4.5</p>
   </footer>
 
 <script>
-// =====================
-//  INTRO ANIMATION
-// =====================
+// INTRO
 window.addEventListener('load', () => {
   const overlay = document.getElementById('intro-overlay');
   const lineEl  = document.getElementById('intro-line');
@@ -251,42 +293,35 @@ window.addEventListener('load', () => {
   img.src = getComputedStyle(bg).backgroundImage.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
 });
 
-// =====================
-//  CONFIG (unique !)
-// =====================
+// CONFIG (unique)
 const SHEET_JSON_URL     = "https://opensheet.elk.sh/1bv_ABhNRuJAfsAgzlobHLkvTsEyYWOTLeRynhhouGGI/Feuille1";
 const EMAILJS_SERVICE_ID = "service_03in3vd";
 const EMAILJS_TEMPLATE_ID= "template_fxjeymy";
 const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
 
-// Apps Script (même URL pour exos/golfs si tu as un seul script)
+// Apps Script (même URL pour exercices/golfs/training)
 const EXERCISE_API_URL   = "https://script.google.com/macros/s/AKfycbzUprG8qiKfYrEtVtpab94fLotdJo3aZezqOMkIDXPwZCNL8Kmc2tttjFFoOAWivK3ffg/exec";
 const COURSE_API         = EXERCISE_API_URL;
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-  // =====================
-  //  STATE
-  // =====================
+  // STATE
   let currentHole = 1;
   let totalHoles = 18;
-  let gameData = []; // [{hole,result,putts,puttDistance,fairway,gir,routine,plan}]
+  let gameData = [];
   let history = JSON.parse(localStorage.getItem('parfectHistory') || '[]');
+  let trainingLocal = JSON.parse(localStorage.getItem('parfectTraining') || '[]');
   let selectedIndex = 12;
   let currentUser = null;
   let currentGolfName = '';
   let currentCoursePars = [];
+  let _exCache = null; // cache exercices
 
-  // =====================
-  //  TOAST
-  // =====================
+  // TOAST
   const toastEl = document.getElementById('toast');
-  function showToast(msg, duration=3000){
-    toastEl.textContent = msg; toastEl.classList.add('show');
-    setTimeout(()=> toastEl.classList.remove('show'), duration);
-  }
-  function showToastForHole(holeData, nextHole=null) {
+  function showToast(msg, duration=3000){ toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), duration); }
+  function showToastForHole(holeData, nextHole=null){
     const target = nextHole || (holeData ? holeData.hole : currentHole);
     const isParfect = holeData && holeData.fairway && holeData.gir && (holeData.putts <= 2);
     const isCata = holeData && ((holeData.result >= 3) || (!holeData.fairway && !holeData.gir && holeData.putts > 3));
@@ -297,57 +332,32 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(msg, 2600);
   }
 
-  // =====================
-  //  MENU BURGER
-  // =====================
-  const menuToggle = document.getElementById('menu-toggle');
-  const menu = document.getElementById('menu');
-  menuToggle.addEventListener('click', () => { menu.classList.toggle('open'); });
+  // MENU
+  document.getElementById('menu-toggle').addEventListener('click', ()=> document.getElementById('menu').classList.toggle('open'));
 
-  // =====================
-  //  NAV / AUTH
-  // =====================
+  // NAV
   function isLoggedIn(){ return !!localStorage.getItem('parfect_license'); }
   function showPage(pageId){
     if (!isLoggedIn() && pageId !== 'login') pageId = 'login';
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById(pageId)?.classList.add('active');
     if (pageId==='scorecard') renderHole();
-    if (pageId==='history') renderHistory();
+    if (pageId==='history') { renderHistory(); renderPracticeHistoryGlobal(); }
     if (pageId==='summary') renderSummary();
     if (pageId==='objectives') renderObjectives();
+    if (pageId==='training') loadExercisesIfNeeded().then(()=> renderPracticeHistory());
   }
-  document.querySelectorAll('.nav-btn').forEach(btn=>{
-    btn.addEventListener('click',()=> showPage(btn.dataset.page));
-  });
-  document.getElementById('logout-btn').addEventListener('click', ()=>{
-    localStorage.removeItem('parfect_license'); currentUser=null; showPage('login');
-  });
+  document.querySelectorAll('.nav-btn').forEach(btn=> btn.addEventListener('click', ()=> showPage(btn.dataset.page)));
+  document.getElementById('logout-btn').addEventListener('click', ()=>{ localStorage.removeItem('parfect_license'); currentUser=null; showPage('login'); });
 
-  // Auto-login if present
   const stored = localStorage.getItem('parfect_license');
-  if (stored) {
-    try { currentUser = JSON.parse(stored); document.getElementById('user-name').textContent = currentUser.name || currentUser.email; showPage('home'); }
-    catch(e){ console.warn('Licence parse error', e); showPage('login'); }
-  } else { showPage('login'); }
+  if (stored) { try { currentUser = JSON.parse(stored); document.getElementById('user-name').textContent = currentUser.name || currentUser.email; showPage('home'); } catch(e){ showPage('login'); } }
+  else { showPage('login'); }
 
-  // =====================
-  //  LOGIN / RECOVER
-  // =====================
-  async function fetchSheetRows() {
-    const res = await fetch(SHEET_JSON_URL);
-    if (!res.ok) throw new Error('Sheet unreachable');
-    const rows = await res.json();
-    return rows.map(r=>({ licence:(r.licence||r.license||'').trim(), email:((r.email||'')+'').trim().toLowerCase(), name:(r.name||'').trim() }));
-  }
-  async function checkLicenseWithEmail(code,email){
-    const rows = await fetchSheetRows();
-    return rows.find(r=> r.licence===code && r.email===email) || null;
-  }
-  async function findLicenceByEmail(email){
-    const rows = await fetchSheetRows();
-    return rows.find(r=> r.email===email) || null;
-  }
+  // LOGIN
+  async function fetchSheetRows(){ const r=await fetch(SHEET_JSON_URL); if(!r.ok) throw new Error('Sheet unreachable'); const rows=await r.json(); return rows.map(x=>({ licence:(x.licence||x.license||'').trim(), email:((x.email||'')+'').trim().toLowerCase(), name:(x.name||'').trim() })); }
+  async function checkLicenseWithEmail(code,email){ const rows=await fetchSheetRows(); return rows.find(r=> r.licence===code && r.email===email) || null; }
+  async function findLicenceByEmail(email){ const rows=await fetchSheetRows(); return rows.find(r=> r.email===email) || null; }
   document.getElementById('login-btn').addEventListener('click', async ()=>{
     const email = document.getElementById('login-email').value.trim().toLowerCase();
     const code  = document.getElementById('login-code').value.trim();
@@ -378,18 +388,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }catch(err){ console.error(err); msgEl.style.color='tomato'; msgEl.textContent="Erreur d'envoi d'email."; }
   });
 
-  // =====================
-  //  GAME STATUS
-  // =====================
+  // GAME STATUS
   function updateGameStatus(){
     const el = document.getElementById('game-status'); if(!el) return;
     if (gameData.length>0){ el.textContent='En cours'; el.className="ml-3 px-3 py-1 text-xs rounded-full bg-green-700 text-green-100"; }
     else { el.textContent='Nouvelle partie'; el.className="ml-3 px-3 py-1 text-xs rounded-full bg-gray-700 text-gray-200"; }
   }
 
-  // =====================
-  //  START / MODAL GOLF
-  // =====================
+  // START / MODAL GOLF
   document.getElementById('start-game')?.addEventListener('click', showGolfModal);
   document.getElementById('new-game')?.addEventListener('click', showGolfModal);
 
@@ -411,14 +417,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   async function populateGolfList(){
     const container = document.getElementById('golf-list'); if(!container) return;
-    try {
+    try{
       const res = await fetch(`${COURSE_API}?mode=getGolfs`);
       const data = await res.json();
       const golfs = Array.isArray(data.golfs) ? data.golfs : [];
-      if (!golfs.length){
-        container.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun golf enregistré.</p>`;
-        validateGolfStartButton(); return;
-      }
+      if (!golfs.length){ container.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun golf enregistré.</p>`; validateGolfStartButton(); return; }
       container.innerHTML = golfs.map(g=>`
         <button type="button"
           class="golf-item w-full text-left bg-gray-700 hover:bg-gray-600 rounded px-3 py-2 mb-2 transition"
@@ -426,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
       const input = document.getElementById('golf-name');
       const items = Array.from(container.querySelectorAll('.golf-item'));
-      // Pré-sélection du 1er golf
       if (items.length){
         const first = items[0];
         items.forEach(b=>b.classList.remove('ring-2','ring-green-400','bg-green-700','text-white'));
@@ -434,7 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (input) input.value = first.dataset.name || '';
         validateGolfStartButton();
       }
-      // Sélection rapide
       items.forEach(btn=>{
         btn.addEventListener('click', ()=>{
           items.forEach(b=>{
@@ -447,13 +448,12 @@ document.addEventListener('DOMContentLoaded', () => {
           validateGolfStartButton();
         });
       });
-    } catch(err){ console.error('Erreur chargement golfs:', err); container.innerHTML='<p class="text-red-400">Erreur lors du chargement.</p>'; }
+    }catch(err){ console.error('Erreur chargement golfs:', err); container.innerHTML='<p class="text-red-400">Erreur lors du chargement.</p>'; }
   }
   document.getElementById('golf-name')?.addEventListener('input', validateGolfStartButton);
   document.getElementById('golf-start')?.addEventListener('click', ()=> handleCourseFlow());
   document.getElementById('golf-cancel')?.addEventListener('click', ()=> document.getElementById('golf-modal')?.classList.add('hidden'));
 
-  // Charge parcours si existe, sinon ouvre création
   async function handleCourseFlow(){
     const chosen = (document.getElementById('golf-name')?.value || '').trim();
     if (!chosen){ showToast("Choisis (ou saisis) un golf d'abord"); return; }
@@ -466,22 +466,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (found && Array.isArray(found.pars) && found.pars.filter(Boolean).length){
         currentCoursePars = found.pars.map(v=>parseInt(v,10)).filter(n=>!isNaN(n)&&n>0);
         totalHoles = currentCoursePars.length || 18;
-        document.getElementById('golf-modal')?.classList.add('hidden');
-        showPage('scorecard'); renderHole(); return;
+      } else {
+        currentCoursePars = []; totalHoles = 18; // fallback
       }
-      // sinon -> simple message, on part quand même (créa parcours pourra venir plus tard)
-      document.getElementById('golf-modal')?.classList.add('hidden');
-      showPage('scorecard'); renderHole();
-    }catch(e){
-      console.error(e);
-      document.getElementById('golf-modal')?.classList.add('hidden');
-      showPage('scorecard'); renderHole();
-    }
+    }catch(e){ console.error(e); currentCoursePars=[]; totalHoles=18; }
+    document.getElementById('golf-modal')?.classList.add('hidden');
+    showPage('scorecard'); renderHole();
   }
 
-  // =====================
-  //  SCORECARD
-  // =====================
+  // SCORECARD (identique à avant)
   function renderProgress(){
     const container = document.getElementById('hole-progress'); container.innerHTML='';
     for(let i=1;i<=totalHoles;i++){
@@ -548,7 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </label>
         </div>
       </div>`;
-    // cumulé affiché
     let cumulative = 0; for(let i=0;i<currentHole;i++){ cumulative += (gameData[i]?.result || 0); }
     const holeScoreEl = document.getElementById('holeScore');
     if (holeScoreEl){
@@ -556,7 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (cumulative<0){ holeScoreEl.textContent = `${cumulative}`; holeScoreEl.className="ml-2 px-2 py-1 rounded bg-green-700 text-sm font-bold"; }
       else { holeScoreEl.textContent = "E"; holeScoreEl.className="ml-2 px-2 py-1 rounded bg-gray-600 text-sm font-bold"; }
     }
-    // events
     document.getElementById('result').addEventListener('change', onFieldChange);
     document.getElementById('putts').addEventListener('change', onFieldChange);
     document.getElementById('puttDistance').addEventListener('change', onFieldChange);
@@ -584,7 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('prev-hole').addEventListener('click', ()=>{
     saveHole(); if (currentHole>1){ currentHole--; renderHole(); }
   });
-
   function endGame(){
     let totalScoreVsPar=0, parfectCount=0, totalPutts=0;
     gameData.forEach(h=>{ totalScoreVsPar += (h.result||0); if (h.fairway&&h.gir&&(h.putts<=2)) parfectCount++; totalPutts += (h.putts||0); });
@@ -602,9 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 4400);
   }
 
-  // =====================
-  //  SUMMARY / OBJECTIVES / HISTORY
-  // =====================
+  // SUMMARY / OBJECTIVES / HISTORY
   const objectives = {
     0:{fairways:79,gir:67,putts:29,pars:15,fw:11,gr:12},
     5:{fairways:71,gir:56,putts:30,pars:12,fw:10,gr:10},
@@ -744,9 +732,103 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   document.getElementById('close-history-detail').addEventListener('click', ()=> document.getElementById('history-modal').classList.add('hidden'));
 
-  // =====================
-  //  EXPORT PDF & SHARE
-  // =====================
+  // TRAINING — chargement exercices, rendu, enregistrement
+  async function loadExercisesIfNeeded(){
+    if (_exCache){ renderExercisesUI(_exCache); return; }
+    try{
+      const res = await fetch(`${EXERCISE_API_URL}?mode=getExercises`);
+      const data = await res.json();
+      _exCache = Array.isArray(data.exercises) ? data.exercises : [];
+      renderExercisesUI(_exCache);
+    }catch(e){ console.error('getExercises error', e); showToast('Erreur de chargement des exercices 😅'); }
+  }
+  function renderExercisesUI(list){
+    const typeSel = document.getElementById('tr-type');
+    const exSel   = document.getElementById('tr-exercise');
+    if (!typeSel || !exSel) return;
+
+    // Types uniques
+    const types = [...new Set(list.map(x=>x.type).filter(Boolean))];
+    // si vide, proposer un fallback
+    if (!typeSel.options.length){
+      typeSel.innerHTML = types.length ? types.map(t=>`<option value="${t}">${t}</option>`).join('')
+                                       : `<option value="Putting">Putting</option><option value="Chipping">Chipping</option><option value="Approches">Approches</option><option value="Driver">Driver</option>`;
+    }
+
+    const t = typeSel.value;
+    const filtered = list.filter(x=> x.type === t);
+    exSel.innerHTML = filtered.length
+      ? filtered.map(x=> `<option value="${x.id||x.title}">${x.title}${x.level? ' — '+x.level:''}</option>`).join('')
+      : `<option value="">Aucun exercice pour "${t}"</option>`;
+  }
+  document.getElementById('tr-type')?.addEventListener('change', ()=>{ if (_exCache) renderExercisesUI(_exCache); });
+
+  function renderPracticeHistory(){
+    const box = document.getElementById('practice-history');
+    if (!box) return;
+    const rows = trainingLocal.map((r,i)=> `
+      <div class="bg-gray-800 p-2 rounded flex justify-between">
+        <div>
+          <div class="font-semibold">${r.type} — ${r.exercise_label||r.exercise_id||''}</div>
+          <div class="text-xs text-gray-300">${r.date} · ${r.level||''}</div>
+          <div class="text-sm">Score: ${r.score}${r.notes? ' · '+r.notes:''}</div>
+        </div>
+      </div>
+    `).join('');
+    box.innerHTML = rows || '<p class="text-gray-300">Aucun training enregistré pour le moment.</p>';
+  }
+  function renderPracticeHistoryGlobal(){
+    const box = document.getElementById('history-practice'); if(!box) return;
+    const rows = trainingLocal.map(r=> `
+      <div class="bg-gray-700 p-2 rounded">
+        <div class="flex justify-between">
+          <div class="font-semibold">${r.type} — ${r.exercise_label||r.exercise_id||''}</div>
+          <div class="text-xs text-gray-300">${r.date}</div>
+        </div>
+        <div class="text-sm">Niveau: ${r.level||'-'} · Score: ${r.score}${r.notes? ' · '+r.notes:''}</div>
+      </div>
+    `).join('');
+    box.innerHTML = rows || '<p class="text-gray-300">Aucun training enregistré.</p>';
+  }
+
+  document.getElementById('tr-save')?.addEventListener('click', async ()=>{
+    const type   = document.getElementById('tr-type')?.value || '';
+    const exId   = document.getElementById('tr-exercise')?.value || '';
+    const exLbl  = document.getElementById('tr-exercise')?.selectedOptions?.[0]?.text || '';
+    const level  = document.getElementById('tr-level')?.value || '';
+    const score  = document.getElementById('tr-score')?.value.trim();
+    const notes  = document.getElementById('tr-notes')?.value.trim();
+    if (!score){ showToast('Indique un score (ex: 7/10)'); return; }
+
+    const rec = {
+      email: (currentUser?.email || '').toLowerCase(),
+      date: new Date().toLocaleString(),
+      type, exercise_id: exId, exercise_label: exLbl,
+      level, score, notes
+    };
+    // Local
+    trainingLocal.unshift(rec);
+    localStorage.setItem('parfectTraining', JSON.stringify(trainingLocal));
+    renderPracticeHistory(); renderPracticeHistoryGlobal();
+    showToast('🧘 Training enregistré — bien joué !');
+
+    // Cloud (best effort)
+    try{
+      await fetch(EXERCISE_API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          mode:'addTraining',
+          email: rec.email, type: rec.type, exercise_id: rec.exercise_id,
+          exercise_label: rec.exercise_label, level: rec.level, score: rec.score, notes: rec.notes, date: rec.date
+        })
+      });
+    }catch(e){ console.warn('Sync training failed', e); }
+    // reset léger
+    document.getElementById('tr-score').value=''; document.getElementById('tr-notes').value='';
+  });
+
+  // EXPORT / SHARE
   document.getElementById('export-pdf').addEventListener('click', ()=>{
     const { jsPDF } = window.jspdf; const pdf = new jsPDF({ unit:'pt', format:'a4' });
     const left=40; let y=40;
@@ -786,9 +868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // =====================
-  //  INIT
-  // =====================
+  // INIT
   renderObjectives();
 });
 </script>
