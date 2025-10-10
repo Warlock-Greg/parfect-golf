@@ -18,16 +18,7 @@ const routineTips = [
   "Respire, cible large, un swing, une intention.",
 ];
 
-export function tipAfterHole(h, tone="fun"){
-  // ... ton code existant
-  if (h && h.fairway && h.gir && (h.putts<=2)){
-    return tones[tone]("💚 Parfect baby — FW + GIR + ≤2 putts. Smart golf.");
-  }
-  if (h && !h.routine){
-    return tones[tone]("⏱️ Routine zappée. Même les pros ne la sautent jamais.");
-  }
-  // ...
-}
+
 
 
 
@@ -43,11 +34,14 @@ export function tipAfterHole(h, tone = "fun") {
   else msg = pick(mindset);
   return tones[tone](msg);
 }
-
-export function tipAfterPractice(type, tone = "fun") {
-  let msg = "Nice training bro! À swing égal, prends du plaisir.";
-  if (/putt/i.test(type)) msg = "Putting vibes — roll it smooth, feel the pace.";
-  if (/driver/i.test(type)) msg = "Driver mode — cible large, full balance.";
-  if (/chip|approch/i.test(type)) msg = "Chip zone — land spot clear, easy tempo.";
-  return tones[tone](msg);
+{
+  // ... ton code existant
+  if (h && h.fairway && h.gir && (h.putts<=2)){
+    return tones[tone]("💚 Parfect baby — FW + GIR + ≤2 putts. Smart golf.");
+  }
+  if (h && !h.routine){
+    return tones[tone]("⏱️ Routine zappée. Même les pros ne la sautent jamais.");
+  }
+  // ...
 }
+
