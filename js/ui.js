@@ -117,20 +117,6 @@ $("open-coach")?.addEventListener("click", () => {
   showToast(`Coach en mode ${coachTone}`);
 });
 
-/* === Intro === */
-const introLines = [
-  "Forge ton mental 🧠",
-  "Pas ton swing 🏌️",
-  "Become a Parfect Golfr ⛳"
-];
-(async function intro() {
-  const line = $("intro-line");
-  for (const l of introLines) {
-    line.textContent = l;
-    await new Promise(r => setTimeout(r, 1200));
-  }
-  $("intro-overlay").style.display = "none";
-})();
 
 /* === Initialisation === */
 window.addEventListener("DOMContentLoaded", () => {
