@@ -167,6 +167,35 @@ function endRound(){
   open($("summary-modal"));
 }
 
+// === Sauvegarde locale de la partie ===
+  const round = {
+    date: new Date().toISOString(),
+    golf: currentGolf?.name || "Parcours inconnu",
+    objective,
+    totalHoles,
+    holes,
+    summary: {
+      totalVsPar,
+      fwCount, fwTotal,
+      girCount,
+      puttsTotal,
+      routineCount,
+      parfectCount
+    }
+  };
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem("parfectHistory") || "[]");
+  } catch {
+    history = [];
+  }
+
+  history.push(round);
+  // garde seulement les 10 dernières
+  if (history.length > 10) history = history.slice(history.length - 10);
+  localStorage.setItem("parfectHistory", JSON.stringify(history));
+
 function renderSummary(s){
   const el = $("summary-stats");
   el.innerHTML = `
