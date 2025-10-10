@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parfect.golfr — v5 (JSON GitHub)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+</head>
+
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+  <!-- Intro -->
+  <div id="intro-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+    <div class="text-center">
+      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" alt="Parfect" class="mx-auto w-28 mb-4"/>
+      <h2 id="intro-line" class="text-green-300 text-xl font-bold"></h2>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed top-1/3 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition"></div>
+  <div id="coach-bubble" class="fixed right-3 bottom-3 bg-green-700 text-white p-3 rounded-xl opacity-0 transition"></div>
+
+  <div id="app" class="container mx-auto p-4 max-w-4xl flex-1">
+    <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
+      <nav class="flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+          <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" class="w-14" />
+          <span id="game-status" class="px-3 py-1 rounded-full bg-gray-700 text-gray-200 text-xs">Nouvelle partie</span>
+        </div>
+        <div class="space-x-2 hidden md:flex">
+          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
+          <button id="nav-scorecard" class="bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
+          <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Training</button>
+          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
+          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
+          <button id="open-coach" class="bg-green-700 hover:bg-green-800 px-3 py-2 rounded-lg">Coach</button>
+          <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
+        </div>
+      </nav>
+    </header>
+
+    <main id="login" class="page active">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto text-center">
+        <h2 class="text-2xl font-bold mb-4 text-green-400">Connexion</h2>
+        <input id="login-email" type="email" placeholder="Email" class="w-full text-black px-2 py-2 rounded mb-3">
+        <input id="login-code" type="text" placeholder="Code licence" class="w-full text-black px-2 py-2 rounded mb-3">
+        <button id="login-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-bold">Se connecter</button>
+        <p id="login-msg" class="mt-4 text-sm"></p>
+      </div>
+    </main>
+
+    <main id="home" class="page hidden">
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4 text-green-400">Bienvenue</h2>
+        <p>Connecté en tant que <span id="user-name" class="text-green-300"></span></p>
+        <button id="start-game" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Nouvelle partie</button>
+      </div>
+    </main>
+  </div>
+
+  <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
+    &copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="./js/config.js"></script>
+  <script type="module" src="./js/data.js"></script>
+  <script type="module" src="./js/coach.js"></script>
+  <script type="module" src="./js/ui.js"></script>
+  <script type="module" src="./js/play.js"></script>
+  <script type="module" src="./js/training.js"></script>
+</body>
+</html>
