@@ -138,18 +138,24 @@ function openHoleModal(){
   };
 }
 
-// 4) FIN DE PARTIE — STATS + BADGE
-function endRound(){
-  const totalVsPar = holes.reduce((acc,h)=> acc + (h.score - h.par), 0);
+// 4) FIN DE PARTIE — STATS + BADGE + SAUVEGARDE LOCALE
+function endRound() {
+  // ✅ Calculs statistiques
+  const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
   const fairwayHoles = holes.filter(h => h.par !== 3); // FW mesurables
   const fwCount = fairwayHoles.filter(h => h.fairway === "yes").length;
   const fwTotal = fairwayHoles.length;
   const girCount = holes.filter(h => h.gir).length;
-  const puttsTotal = holes.reduce((a,h)=> a + (h.putts||0), 0);
+  const puttsTotal = holes.reduce((a, h) => a + (h.putts || 0), 0);
   const routineCount = holes.filter(h => h.routine).length;
+  const parfectCount = holes.filter(h =>
+    (h.score - h.par) === 0 &&
+    h.fairway === "yes" &&
+    h.gir &&
+    h.putts <= 2
+  ).length;
 
-  const parfectCount = holes.filter(h => (h.score - h.par) === 0 && (h.fairway==="yes") && h.gir && (h.putts<=2)).length;
-
+  // ✅ Création du résumé de la partie
   const summary = {
     golf: currentGolf?.name || "Parcours inconnu",
     date: new Date().toLocaleString(),
@@ -162,26 +168,14 @@ function endRound(){
     parfectCount,
   };
 
-  renderSummary(summary);
-  generateBadge(summary);
-  open($("summary-modal"));
-}
-
-// === Sauvegarde locale de la partie ===
+  // ✅ Sauvegarde locale
   const round = {
     date: new Date().toISOString(),
     golf: currentGolf?.name || "Parcours inconnu",
     objective,
     totalHoles,
     holes,
-    summary: {
-      totalVsPar,
-      fwCount, fwTotal,
-      girCount,
-      puttsTotal,
-      routineCount,
-      parfectCount
-    }
+    summary,
   };
 
   let history = [];
@@ -190,11 +184,16 @@ function endRound(){
   } catch {
     history = [];
   }
-
   history.push(round);
-  // garde seulement les 10 dernières
   if (history.length > 10) history = history.slice(history.length - 10);
   localStorage.setItem("parfectHistory", JSON.stringify(history));
+
+  // ✅ Affichage du résumé + badge
+  renderSummary(summary);
+  generateBadge(summary);
+  open($("summary-modal"));
+}
+
 
 function renderSummary(s){
   const el = $("summary-stats");
