@@ -12,6 +12,25 @@ const mindset = [
   "Focus sur la cible, pas sur la technique. Easy golf, easy joy."
 ];
 
+// À ajouter dans tes messages (existant)
+const routineTips = [
+  "Routine first. Tu peux rater un coup, pas ta routine.",
+  "Respire, cible large, un swing, une intention.",
+];
+
+export function tipAfterHole(h, tone="fun"){
+  // ... ton code existant
+  if (h && h.fairway && h.gir && (h.putts<=2)){
+    return tones[tone]("💚 Parfect baby — FW + GIR + ≤2 putts. Smart golf.");
+  }
+  if (h && !h.routine){
+    return tones[tone]("⏱️ Routine zappée. Même les pros ne la sautent jamais.");
+  }
+  // ...
+}
+
+
+
 function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
 export function tipAfterHole(h, tone = "fun") {
