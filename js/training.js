@@ -15,7 +15,7 @@ async function loadExercises() {
 }
 
 function renderExercises() {
-  const zone = document.getElementById("app");
+  const zone = document.getElementById("training-zone");
   zone.innerHTML = `
   <div class="bg-gray-800 p-4 rounded-xl shadow">
     <h2 class="text-lg font-bold text-green-400 mb-3">Training</h2>
