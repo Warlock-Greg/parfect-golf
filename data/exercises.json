@@ -1,1 +1,5 @@
+[
+  { "id": "P1", "title": "10 putts inside 1m", "type": "Putting",  "level": "Break 90",  "active": true },
+  { "id": "D1", "title": "Fairway Finder (8/10)", "type": "Driver", "level": "Break 100", "active": true }
+]
 
