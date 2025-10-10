@@ -67,6 +67,101 @@
     &copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a>
   </footer>
 
+<!-- MODALE 1 — Objectif du jour -->
+<div id="objective-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[90%] max-w-md">
+    <h2 class="text-green-400 text-xl font-bold mb-4 text-center">🎯 Objectif du jour</h2>
+    <p class="text-sm text-gray-300 mb-3 text-center">Sois malin, vise simple, un seul focus.</p>
+    <select id="objective-select" class="w-full text-black rounded mb-4 p-2">
+      <option>No 3-putts</option>
+      <option>Fairway first</option>
+      <option>GIR mindset</option>
+      <option>Break 90</option>
+      <option>Routine fidèle</option>
+      <option>Enjoy only</option>
+    </select>
+    <div class="text-right">
+      <button id="objective-confirm" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Continuer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE 2 — Choix du golf -->
+<div id="golf-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[90%] max-w-md">
+    <h2 class="text-green-400 text-xl font-bold mb-4 text-center">⛳ Choisis ton golf</h2>
+    <select id="golf-select" class="w-full text-black rounded mb-3 p-2"></select>
+    <label class="block mb-4">Nombre de trous
+      <select id="holes-select" class="w-full text-black rounded p-2">
+        <option value="9">9 trous</option>
+        <option value="18" selected>18 trous</option>
+      </select>
+    </label>
+    <div class="flex justify-end gap-2">
+      <button id="golf-cancel" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">Annuler</button>
+      <button id="golf-confirm" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Démarrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE 3 — Saisie trou par trou -->
+<div id="hole-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[92%] max-w-lg">
+    <h2 id="hole-title" class="text-green-400 text-xl font-bold mb-2 text-center">Trou</h2>
+    <p id="hole-sub" class="text-center text-sm text-gray-300 mb-4"></p>
+    <div class="grid sm:grid-cols-2 gap-3">
+      <label class="block">Score brut
+        <input id="f-score" type="number" min="1" class="w-full text-black rounded p-2" placeholder="Ex: 5">
+      </label>
+      <label class="block">Putts
+        <input id="f-putts" type="number" min="0" class="w-full text-black rounded p-2" placeholder="Ex: 2">
+      </label>
+      <label class="block">Fairway
+        <select id="f-fairway" class="w-full text-black rounded p-2">
+          <option value="na">N/A (par 3)</option>
+          <option value="yes">✅ Oui</option>
+          <option value="no">❌ Non</option>
+        </select>
+      </label>
+      <label class="block">GIR (Green en régulation)
+        <select id="f-gir" class="w-full text-black rounded p-2">
+          <option value="no">❌ Non</option>
+          <option value="yes">✅ Oui</option>
+        </select>
+      </label>
+      <label class="block sm:col-span-2">Distance 1er putt (m)
+        <input id="f-firstputt" type="number" min="0" class="w-full text-black rounded p-2" placeholder="Ex: 6">
+      </label>
+      <label class="block sm:col-span-2">
+        <input id="f-routine" type="checkbox" class="mr-2">
+        <span>Routine faite ✅ (Coach Greg: “Tu peux rater un coup, pas ta routine.”)</span>
+      </label>
+    </div>
+    <div class="flex justify-between mt-5">
+      <button id="hole-prev" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">← Précédent</button>
+      <button id="hole-next" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Valider →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE 4 — Résumé & Badge -->
+<div id="summary-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
+  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[92%] max-w-2xl">
+    <h2 class="text-green-400 text-xl font-bold mb-3 text-center">🏁 Résumé de la partie</h2>
+    <div id="summary-stats" class="text-gray-200 text-sm mb-4"></div>
+    <div class="text-center mb-4">
+      <canvas id="badge-canvas" width="720" height="720" class="mx-auto rounded-lg shadow"></canvas>
+    </div>
+    <div class="flex flex-wrap justify-center gap-2">
+      <a id="badge-download" download="parfect-badge.png" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-white">📥 Télécharger le badge</a>
+      <a href="https://instagram.com/parfect.golfr" target="_blank" class="bg-pink-600 hover:bg-pink-700 px-3 py-2 rounded text-white">📲 Ouvrir Instagram</a>
+      <button id="summary-close" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">Fermer</button>
+    </div>
+  </div>
+</div>
+
+
+  
   <!-- Scripts -->
   <script type="module" src="./js/config.js"></script>
   <script type="module" src="./js/data.js"></script>
