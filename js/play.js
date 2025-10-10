@@ -278,3 +278,66 @@ async function generateBadge(s){
   const a = $("badge-download");
   a.href = url;
 }
+
+
+// === HISTORIQUE LOCAL ===
+document.getElementById("view-history")?.addEventListener("click", showHistory);
+document.getElementById("close-history")?.addEventListener("click", () => {
+  $("history-section").classList.add("hidden");
+});
+
+function showHistory(){
+  const section = $("history-section");
+  const list = $("history-list");
+  const coachZone = $("history-coach");
+  section.classList.remove("hidden");
+
+  let history = [];
+  try {
+    history = JSON.parse(localStorage.getItem("parfectHistory") || "[]");
+  } catch { history = []; }
+
+  if (!history.length){
+    list.innerHTML = `<p class="text-gray-300 italic">Aucune partie enregistrée encore 🙃</p>`;
+    coachZone.textContent = "";
+    return;
+  }
+
+  // Tri par date desc
+  history.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  list.innerHTML = history.map(h => {
+    const vs = h.summary?.totalVsPar || 0;
+    const parfects = h.summary?.parfectCount || 0;
+    const routinePct = h.summary ? Math.round((h.summary.routineCount / h.totalHoles) * 100) : 0;
+    const date = new Date(h.date).toLocaleDateString("fr-FR", { day:"2-digit", month:"short", year:"2-digit" });
+    return `
+      <div class="bg-gray-900 p-3 rounded-lg flex justify-between items-center">
+        <div>
+          <div class="font-semibold text-green-300">${date} — ${h.golf}</div>
+          <div class="text-gray-400 text-sm">${h.objective}</div>
+        </div>
+        <div class="text-right text-sm">
+          <div><strong>${vs >= 0 ? "+"+vs : vs}</strong> vs Par</div>
+          <div>💚 ${parfects} Parfects</div>
+          <div>⏱️ ${routinePct}% routine</div>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Coach summary
+  const avgParfect = Math.round(history.reduce((a,h)=>a+(h.summary?.parfectCount||0),0) / history.length);
+  const avgRoutine = Math.round(history.reduce((a,h)=>a+(h.summary?.routineCount||0)/(h.totalHoles||1),0) / history.length * 100);
+
+  let message = "";
+  if (avgParfect > 3){
+    message = `🔥 Bro, ${avgParfect} Parfects de moyenne. Tu joues smart, mental first.`;
+  } else if (avgRoutine >= 90){
+    message = `🧘 Routine master — ${avgRoutine}% de constance. Tu peux rater un coup, pas ta routine.`;
+  } else {
+    message = `😉 Keep building. ${avgParfect} Parfects / ${avgRoutine}% routine, c’est déjà une belle base.`;
+  }
+
+  coachZone.textContent = message;
+}
