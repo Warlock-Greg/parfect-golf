@@ -53,5 +53,5 @@ function saveTraining() {
   showToast("Training saved 💪");
   showCoach(tipAfterPractice(type, localStorage.getItem("coachTone") || "fun"));
 }
-
-document.addEventListener("DOMContentLoaded", loadExercises);
+// Attente d'un événement personnalisé déclenché par le menu
+window.addEventListener("openTraining", loadExercises);
