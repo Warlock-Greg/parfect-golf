@@ -1,77 +1,251 @@
-
-import { LS_KEYS } from "./config.js";
+import { fetchGolfs } from "./data.js";
 import { showToast, showCoach } from "./ui.js";
 import { tipAfterHole } from "./coach.js";
 
-let currentHole = 1;
+let objective = "Enjoy only";
+let golfs = [];
+let currentGolf = null;        // { id, name, pars[] }
 let totalHoles = 18;
-let scoreData = [];
+let currentHole = 1;
+let holes = [];                // [{score, putts, fairway:'yes|no|na', gir:bool, firstPutt:number, routine:bool, par:int}]
 
-function saveHistory(round) {
-  const history = JSON.parse(localStorage.getItem(LS_KEYS.HISTORY) || "[]");
-  history.push(round);
-  localStorage.setItem(LS_KEYS.HISTORY, JSON.stringify(history));
-}
+const $ = (id) => document.getElementById(id);
 
-export function startRound() {
-  scoreData = [];
+// === FLOW ENTRY (depuis index: bouton “Nouvelle partie”) ===
+document.getElementById("start-game")?.addEventListener("click", startGameFlow);
+
+async function startGameFlow(){
+  holes = [];
   currentHole = 1;
-  totalHoles = 18;
-  showToast("Nouvelle partie — let's go!");
-  renderHole();
+  await openObjectiveModal();
 }
 
-function renderHole() {
-  const zone = document.getElementById("app");
-  if (!zone) return;
-  zone.innerHTML = `
-  <div class="bg-gray-800 p-4 rounded-xl shadow">
-    <h2 class="text-lg font-bold text-green-400 mb-3">Trou ${currentHole}/${totalHoles}</h2>
-    <div class="space-y-2">
-      <input id="hole-score" type="number" placeholder="Score" class="w-full text-black rounded px-2 py-1" />
-      <input id="hole-putts" type="number" placeholder="Putts" class="w-full text-black rounded px-2 py-1" />
-      <div class="flex gap-2 justify-end mt-3">
-        <button id="prev-hole" class="bg-gray-600 px-3 py-2 rounded">← Précédent</button>
-        <button id="next-hole" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Suivant →</button>
+function open(el){ el.classList.remove("hidden"); el.classList.add("flex"); }
+function close(el){ el.classList.add("hidden"); el.classList.remove("flex"); }
+
+// 1) OBJECTIF DU JOUR
+async function openObjectiveModal(){
+  const modal = $("objective-modal");
+  const select = $("objective-select");
+  const confirm = $("objective-confirm");
+  open(modal);
+  confirm.onclick = async () => {
+    objective = select.value || "Enjoy only";
+    close(modal);
+    await openGolfModal();
+  };
+}
+
+// 2) CHOIX DU GOLF
+async function openGolfModal(){
+  const modal = $("golf-modal");
+  const selGolf = $("golf-select");
+  const selHoles = $("holes-select");
+  const btnConfirm = $("golf-confirm");
+  const btnCancel = $("golf-cancel");
+
+  open(modal);
+  try{
+    golfs = await fetchGolfs();
+  }catch{ golfs = []; }
+  if (!Array.isArray(golfs)) golfs = [];
+
+  selGolf.innerHTML = golfs.length
+    ? golfs.map(g => `<option value="${g.id}">${g.name}</option>`).join("")
+    : `<option value="">— Aucun golf défini —</option>`;
+
+  btnConfirm.onclick = () => {
+    const id = selGolf.value;
+    currentGolf = golfs.find(g => String(g.id) === String(id)) || null;
+    totalHoles = parseInt(selHoles.value, 10) || 18;
+    close(modal);
+    showToast(currentGolf ? `Golf sélectionné : ${currentGolf.name}` : "Parcours sans modèle — PAR 4 par défaut");
+    openHoleModal();
+  };
+  btnCancel.onclick = () => close(modal);
+}
+
+// 3) SAISIE TROU PAR TROU (MODALE)
+function openHoleModal(){
+  const modal = $("hole-modal");
+  const title = $("hole-title");
+  const sub = $("hole-sub");
+
+  const par = (Array.isArray(currentGolf?.pars) && currentGolf.pars[currentHole-1]) ? parseInt(currentGolf.pars[currentHole-1],10) : 4;
+
+  title.textContent = `${currentGolf ? currentGolf.name + " — " : ""}Trou ${currentHole}/${totalHoles}`;
+  sub.textContent = `Par ${par} · Objectif: ${objective}`;
+
+  // reset champs
+  $("f-score").value = "";
+  $("f-putts").value = "2";
+  $("f-fairway").value = par === 3 ? "na" : "no"; // Par3 -> N/A par défaut
+  $("f-gir").value = "no";
+  $("f-firstputt").value = "";
+  $("f-routine").checked = false; // routine par défaut décochée
+
+  open(modal);
+
+  $("hole-prev").onclick = () => {
+    if (currentHole > 1){ currentHole--; openHoleModal(); }
+    else showToast("Premier trou déjà 😉");
+  };
+
+  $("hole-next").onclick = () => {
+    const score = parseInt($("f-score").value,10);
+    const putts = parseInt($("f-putts").value,10);
+    const fairway = $("f-fairway").value;  // yes/no/na
+    const gir = $("f-gir").value === "yes";
+    const firstPutt = parseFloat($("f-firstputt").value || "0");
+    const routine = $("f-routine").checked === true;
+
+    if (isNaN(score) || isNaN(putts)){
+      showToast("Indique score brut et putts 🙏");
+      return;
+    }
+
+    const holeObj = { hole: currentHole, par, score, putts, fairway, gir, firstPutt, routine };
+    holes[currentHole-1] = holeObj;
+
+    // Coach (live)
+    const vsPar = score - par; // 0 = Par
+    const isFairway = (fairway === "yes");
+    const parfect = (vsPar === 0) && isFairway && gir && (putts <= 2);
+
+    // Message coach personnalisé
+    let tip = tipAfterHole({
+      putts,
+      fairway: isFairway,
+      gir,
+      routine
+    }, localStorage.getItem("coachTone") || "fun");
+
+    if (parfect){
+      tip = "💚 Parfect baby! Fairway + GIR + ≤2 putts — that’s smart golf.";
+    } else if (!routine){
+      tip = "⏱️ Routine zappée… Tu peux rater un coup, mais jamais ta routine.";
+    }
+    if (tip) showCoach(tip);
+
+    // Trou suivant ou fin
+    if (currentHole < totalHoles){
+      currentHole++;
+      openHoleModal();
+    } else {
+      close(modal);
+      endRound();
+    }
+  };
+}
+
+// 4) FIN DE PARTIE — STATS + BADGE
+function endRound(){
+  const totalVsPar = holes.reduce((acc,h)=> acc + (h.score - h.par), 0);
+  const fairwayHoles = holes.filter(h => h.par !== 3); // FW mesurables
+  const fwCount = fairwayHoles.filter(h => h.fairway === "yes").length;
+  const fwTotal = fairwayHoles.length;
+  const girCount = holes.filter(h => h.gir).length;
+  const puttsTotal = holes.reduce((a,h)=> a + (h.putts||0), 0);
+  const routineCount = holes.filter(h => h.routine).length;
+
+  const parfectCount = holes.filter(h => (h.score - h.par) === 0 && (h.fairway==="yes") && h.gir && (h.putts<=2)).length;
+
+  const summary = {
+    golf: currentGolf?.name || "Parcours inconnu",
+    date: new Date().toLocaleString(),
+    totalHoles,
+    totalVsPar,
+    fwCount, fwTotal,
+    girCount,
+    puttsTotal,
+    routineCount,
+    parfectCount,
+  };
+
+  renderSummary(summary);
+  generateBadge(summary);
+  open($("summary-modal"));
+}
+
+function renderSummary(s){
+  const el = $("summary-stats");
+  el.innerHTML = `
+    <div class="grid sm:grid-cols-2 gap-3">
+      <div class="bg-gray-800 p-3 rounded">
+        <div><strong>Golf :</strong> ${s.golf}</div>
+        <div><strong>Date :</strong> ${s.date}</div>
+        <div><strong>Trous :</strong> ${s.totalHoles}</div>
+      </div>
+      <div class="bg-gray-800 p-3 rounded">
+        <div><strong>Score vs Par :</strong> ${s.totalVsPar>=0? '+'+s.totalVsPar : s.totalVsPar}</div>
+        <div><strong>Parfects :</strong> ${s.parfectCount}</div>
+        <div><strong>Routine :</strong> ${Math.round((s.routineCount/s.totalHoles)*100)}%</div>
+      </div>
+      <div class="bg-gray-800 p-3 rounded">
+        <div><strong>Fairways :</strong> ${s.fwCount}/${s.fwTotal}</div>
+        <div><strong>GIR :</strong> ${s.girCount}/${s.totalHoles}</div>
+        <div><strong>Putts :</strong> ${s.puttsTotal}</div>
+      </div>
+      <div class="bg-gray-800 p-3 rounded">
+        <div><strong>Objectif du jour :</strong> ${objective}</div>
+        <div class="text-green-300 mt-1">Sois malin, sois stratégie. Vise l’objectif facile à chaque coup.</div>
       </div>
     </div>
-  </div>`;
-  document.getElementById("next-hole").addEventListener("click", saveHole);
-  document.getElementById("prev-hole").addEventListener("click", prevHole);
+  `;
+
+  $("summary-close").onclick = () => close($("summary-modal"));
 }
 
-function saveHole() {
-  const score = parseInt(document.getElementById("hole-score").value);
-  const putts = parseInt(document.getElementById("hole-putts").value);
-  if (isNaN(score) || isNaN(putts)) {
-    showToast("Remplis score + putts !");
-    return;
-  }
-  scoreData.push({ hole: currentHole, score, putts });
-  const tip = tipAfterHole({ putts, score }, localStorage.getItem("coachTone") || "fun");
-  if (tip) showCoach(tip);
-  if (currentHole < totalHoles) {
-    currentHole++;
-    renderHole();
-  } else {
-    endRound();
-  }
-}
+// 5) BADGE — Canvas 720x720 vert Parfect + logo
+async function generateBadge(s){
+  const canvas = $("badge-canvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
 
-function prevHole() {
-  if (currentHole > 1) {
-    currentHole--;
-    renderHole();
-  } else {
-    showToast("Premier trou déjà 😉");
-  }
-}
+  // Fond vert Parfect
+  ctx.fillStyle = "#16a34a";
+  ctx.fillRect(0,0,W,H);
 
-function endRound() {
-  const total = scoreData.reduce((a, h) => a + h.score, 0);
-  saveHistory({ date: new Date().toISOString(), total, holes: scoreData });
-  showToast(`Partie terminée (${total}) — Nice job bro!`);
-  setTimeout(() => location.reload(), 2000);
-}
+  // Logo
+  const logo = new Image();
+  logo.crossOrigin = "anonymous";
+  logo.src = "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png";
 
-document.getElementById("start-game")?.addEventListener("click", startRound);
+  await new Promise(res => { logo.onload = res; logo.onerror = res; });
+
+  const logoW = 180, logoH = 180;
+  ctx.drawImage(logo, (W-logoW)/2, 40, logoW, logoH);
+
+  // Titre
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 36px Poppins, Inter, Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Parfect.golfr", W/2, 260);
+
+  // Lignes stats
+  ctx.font = "28px Poppins, Inter, Arial";
+  const lines = [
+    `${s.golf}`,
+    `Score vs Par : ${s.totalVsPar>=0? '+'+s.totalVsPar : s.totalVsPar}`,
+    `Parfects : ${s.parfectCount}`,
+    `Routine : ${Math.round((s.routineCount/s.totalHoles)*100)}%`,
+    `GIR : ${s.girCount}/${s.totalHoles}   ·   FW : ${s.fwCount}/${s.fwTotal}`,
+    `Putts total : ${s.puttsTotal}`
+  ];
+  let y = 310;
+  lines.forEach(t => { ctx.fillText(t, W/2, y); y += 40; });
+
+  // Punchline coach
+  ctx.font = "italic 24px Poppins, Inter, Arial";
+  ctx.fillText("“Anywhere on the green + two putts.”", W/2, 560);
+  ctx.fillText("“À swing égal, prends du plaisir.”", W/2, 595);
+
+  // Hashtag
+  ctx.font = "bold 24px Poppins, Inter, Arial";
+  ctx.fillText("#parfectgolfr", W/2, 640);
+
+  // Lien de téléchargement
+  const url = canvas.toDataURL("image/png");
+  const a = $("badge-download");
+  a.href = url;
+}
