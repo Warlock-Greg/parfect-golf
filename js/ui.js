@@ -111,6 +111,12 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
   btn.addEventListener("click", () => showPage(btn.dataset.page));
 });
 
+document.querySelector('[data-page="training"]')?.addEventListener("click", () => {
+  showPage("home"); // ou showPage("training") si tu crées un vrai <main id="training">
+  window.dispatchEvent(new Event("openTraining"));
+});
+
+
 $("open-coach")?.addEventListener("click", () => {
   coachTone = prompt("Choisis le ton du coach (fun, taquin, focus)", coachTone) || coachTone;
   localStorage.setItem(LS_KEYS.COACH_TONE, coachTone);
