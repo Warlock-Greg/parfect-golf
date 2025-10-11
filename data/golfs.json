@@ -1,5 +1,28 @@
 [
-  { "id": "GOLF001", "name": "Golf National - Albatros", "pars": [4,4,3,5,4,4,3,5,4,4,3,5,4,4,3,5,4,5] }
-  { "id": "GOLF002", "name": "Golf Cicé Blossac", "pars": [4,5,3,4,4,3,5,4,4,4,3,4,5,3,4,5,4,4] }
-]
+  {
+    "id": "GOLF001",
+    "name": "Golf National - Albatros",
+    "location": "Guyancourt, France",
+    "pars": [4,4,3,5,4,4,3,4,5,4,4,3,5,4,4,3,4,5]
+  },
+  {
+    "id": "GOLF002",
+    "name": "Saint Andrews - Old Course",
+    "location": "Fife, Scotland",
+    "pars": [4,4,4,4,5,4,4,3,4,4,4,4,5,4,3,4,4,4]
+  },
+  {
+    "id": "GOLF003",
+    "name": "Terre Blanche - Le Château",
+    "location": "Tourrettes, France",
+    "pars": [4,5,4,3,4,5,4,3,4,5,4,4,3,5,4,3,4,5]
+  }
 
+  { 
+    "id": "GOLF004", 
+    "name": "Golf Cicé Blossac", 
+    "location": "Bruz, France",
+    "pars": [4,5,3,4,4,3,5,4,4,4,3,4,5,3,4,5,4,4] 
+  }
+
+]
