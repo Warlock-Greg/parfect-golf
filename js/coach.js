@@ -8,7 +8,7 @@ const tones = {
   tough: (msg) => `🔥 ${msg}`,
 };
 
-// Liste de messages aléatoires selon le contexte
+// === Messages par thèmes ===
 const baseTips = [
   "Anywhere on the green + two putts... that’s Parfect golf.",
   "À swing égal, prends du plaisir.",
@@ -21,12 +21,14 @@ const parfectTips = [
   "💚 Parfect baby! Fairway + GIR + ≤2 putts. Smart golf.",
   "🔥 That’s a Parfect shot — simple, clean, efficace.",
   "Bro, that’s mental gold. FW + GIR + calm putting.",
+  "💎 Pure Parfect. La routine, le calme, le flow.",
 ];
 
 const missTips = [
   "Next hole, new mindset.",
   "Tu peux rater ton swing, pas ton mental.",
   "Reset. Respire. Easy up & down next time.",
+  "Forget le coup, garde la routine.",
 ];
 
 const routineTips = [
@@ -47,7 +49,7 @@ const puttingTips = [
   "Trust ton stroke, laisse rouler.",
 ];
 
-// Fonction utilitaire pour choisir un message aléatoire
+// === Utilitaire aléatoire ===
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -59,12 +61,14 @@ function pick(arr) {
  * @returns {string|null}
  */
 export function tipAfterHole(h, tone = "fun") {
+  if (!h) return tones[tone](pick(baseTips));
+
   // Routine oubliée
   if (h && !h.routine) {
     return tones[tone](pick(routineTips));
   }
 
-  // Parfect : par + fairway + GIR + 2 putts ou moins
+  // Parfect
   if (h && h.fairway && h.gir && h.putts <= 2) {
     return tones[tone](pick(parfectTips));
   }
@@ -79,23 +83,40 @@ export function tipAfterHole(h, tone = "fun") {
     return tones[tone](pick(puttingTips));
   }
 
-  // Coup manqué
+  // Sinon message neutre / motivant
   return tones[tone](pick([...missTips, ...baseTips]));
 }
 
-// === Coach Post-Round (résumé) ===
+/**
+ * Message de résumé après la partie
+ */
 export function coachSummary(summary) {
   const { parfectCount, routineCount, totalHoles } = summary;
   const routinePct = Math.round((routineCount / totalHoles) * 100);
-  let msg = "";
+  if (parfectCount >= 4) return `🔥 ${parfectCount} Parfects — smart golf mindset.`;
+  if (routinePct >= 90) return `🧘 Routine master — ${routinePct}% constance.`;
+  return `😉 ${parfectCount} Parfects / ${routinePct}% routine. Build petit à petit.`;
+}
 
-  if (parfectCount >= 4) {
-    msg = `🔥 ${parfectCount} Parfects today. Tu joues smart, mental first.`;
-  } else if (routinePct >= 90) {
-    msg = `🧘 Routine master — ${routinePct}% de constance. Tu peux rater un coup, pas ta routine.`;
-  } else {
-    msg = `😉 ${parfectCount} Parfects / ${routinePct}% routine — build ton mindset petit à petit.`;
-  }
-
-  return msg;
+/**
+ * Message d'encouragement pour un exercice d'entraînement
+ */
+export function tipAfterPractice(type, tone = "fun") {
+  let msg = "Nice training bro! À swing égal, prends du plaisir.";
+  if (/putt/i.test(type)) msg = pick([
+    "Putting vibes — roll it smooth, feel the pace.",
+    "Trust ton stroke, feel the tempo.",
+    "Calm hands, steady mind. Easy putt bro."
+  ]);
+  if (/driver/i.test(type)) msg = pick([
+    "Driver mode — cible large, full balance.",
+    "Big stick, petit stress. Smooth swing only.",
+    "Smash tempo, not force."
+  ]);
+  if (/chip|approch/i.test(type)) msg = pick([
+    "Chip zone — land spot clear, easy tempo.",
+    "Petit coup, grande intention.",
+    "Vision, spin, calme — short game magic."
+  ]);
+  return tones[tone](msg);
 }
