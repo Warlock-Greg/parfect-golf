@@ -1,0 +1,176 @@
+/* === Parfect.golfr v6 — Style global === */
+
+/* Base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  background-color: #0a0a0a;
+  color: #f1f1f1;
+  text-align: center;
+  min-height: 100vh;
+}
+
+/* Header & menu */
+header {
+  background-color: #111;
+  color: #00ff99;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #222;
+}
+
+header h1 {
+  font-size: 1.3rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+#menu-toggle {
+  font-size: 1.5rem;
+  background: none;
+  color: #00ff99;
+  border: none;
+  cursor: pointer;
+}
+
+#menu {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  top: 58px;
+  right: 10px;
+  background: #1a1a1a;
+  border-radius: 10px;
+  overflow: hidden;
+  min-width: 160px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
+
+#menu button {
+  border: none;
+  background: none;
+  color: #fff;
+  text-align: left;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+#menu button:hover {
+  background-color: #00ff99;
+  color: #000;
+}
+
+/* Sections */
+main {
+  padding: 1.2rem;
+}
+
+section {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
+/* Boutons */
+.btn {
+  background-color: #00ff99;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 0.9rem 1.4rem;
+  font-weight: 600;
+  margin: 0.5rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background-color: #00cc7a;
+  transform: scale(1.02);
+}
+
+/* Inputs & labels */
+input[type="number"] {
+  width: 80px;
+  padding: 0.4rem;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #111;
+  color: #fff;
+  text-align: center;
+  font-size: 1rem;
+  margin: 0.3rem;
+}
+
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+/* Score feedback */
+.text-blue-400 { color: #3aa6ff; }
+.text-blue-300 { color: #60b3ff; }
+.text-green-400 { color: #38ff85; }
+.text-gray-300 { color: #bbb; }
+.text-orange-400 { color: #ffa63a; }
+.text-red-500 { color: #ff4d4d; }
+
+/* Table recap */
+table {
+  width: 90%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+  background: #111;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #222;
+}
+
+th {
+  background: #00ff99;
+  color: #000;
+  font-weight: 700;
+}
+
+td {
+  color: #f1f1f1;
+}
+
+/* Mobile adaptation */
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 1rem;
+  }
+  .btn {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+  input[type="number"] {
+    width: 70px;
+  }
+}
