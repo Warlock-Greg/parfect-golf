@@ -5,107 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Parfect.golfr</title>
   <link rel="stylesheet" href="css/style.css" />
-  <link rel="icon" href="assets/logo.png" />
-  <style>
-    /* --- Mobile-first clean style --- */
-    body {
-      font-family: "Poppins", sans-serif;
-      background-color: #0a0a0a;
-      color: #f1f1f1;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
-    header {
-      background: #111;
-      padding: 0.8rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header h1 {
-      color: #00ff99;
-      font-size: 1.3rem;
-      margin: 0;
-    }
-    nav button {
-      background: none;
-      border: none;
-      color: #00ff99;
-      font-size: 1.3rem;
-      cursor: pointer;
-    }
-    #menu {
-      display: none;
-      flex-direction: column;
-      background: #1a1a1a;
-      position: absolute;
-      top: 60px;
-      right: 10px;
-      border-radius: 10px;
-      overflow: hidden;
-      z-index: 100;
-    }
-    #menu button {
-      background: none;
-      border: none;
-      padding: 0.8rem;
-      color: #fff;
-      text-align: left;
-      cursor: pointer;
-    }
-    #menu button:hover {
-      background: #00ff99;
-      color: #000;
-    }
-    main {
-      padding: 1rem;
-    }
-    section {
-      display: none;
-      margin-top: 1rem;
-    }
-    section.active {
-      display: block;
-    }
-    .btn {
-      background: #00ff99;
-      border: none;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      color: #000;
-      font-weight: 600;
-      margin: 0.5rem;
-      cursor: pointer;
-    }
-    .btn:hover {
-      background: #00cc7a;
-    }
-    .score-label {
-      font-weight: 600;
-    }
-  </style>
 </head>
 
 <body>
   <header>
     <h1>Parfect.golfr</h1>
-    <nav>
-      <button id="menu-toggle">☰</button>
-      <div id="menu">
-        <button data-target="home">🏠 Accueil</button>
-        <button data-target="training">🏋️ Entraînement</button>
-        <button data-target="play">⛳ Partie</button>
-        <button data-target="history">📜 Historique</button>
-      </div>
+    <button id="menu-toggle">☰</button>
+    <nav id="menu">
+      <button data-target="home">🏠 Accueil</button>
+      <button data-target="training">🏋️ Entraînement</button>
+      <button data-target="play">⛳ Partie</button>
+      <button data-target="history">📜 Historique</button>
     </nav>
   </header>
 
   <main>
     <!-- HOME -->
     <section id="home" class="active">
-      <h2>Bienvenue Coach Greg 💚</h2>
-      <p>Smart golf, easy mindset.</p>
+      <h2>Smart golf, easy mindset 💚</h2>
       <button class="btn" id="new-round-btn">Démarrer une partie</button>
       <button class="btn" id="training-btn">Entraînement</button>
       <button class="btn" id="view-history">Historique</button>
@@ -115,7 +32,8 @@
     <section id="play">
       <h2>Nouvelle partie</h2>
       <div id="golf-select"></div>
-      <div id="score-zone"></div>
+      <div id="hole-card"></div>
+      <div id="score-summary"></div>
     </section>
 
     <!-- TRAINING -->
@@ -126,12 +44,11 @@
 
     <!-- HISTORY -->
     <section id="history">
-      <h2>Historique des parties</h2>
+      <h2>Historique</h2>
       <div id="history-list"></div>
     </section>
   </main>
 
-  <!-- Scripts -->
   <script type="module" src="js/config.js"></script>
   <script type="module" src="js/main.js"></script>
 </body>
