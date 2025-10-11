@@ -232,6 +232,27 @@ td {
 #reset-rounds:hover {
   background: #ff1f1f;
 }
+/* === SUMMARY DASHBOARD === */
+.summary-box {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  background: rgba(40, 40, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  margin: 0 auto 1rem auto;
+  max-width: 520px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 20px rgba(68, 255, 170, 0.1);
+}
+.summary-item {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
 
   
 }
