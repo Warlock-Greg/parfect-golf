@@ -173,4 +173,13 @@ td {
   input[type="number"] {
     width: 70px;
   }
+
+  #reset-history {
+  background: #ff4d4d;
+  color: #fff;
+}
+#reset-history:hover {
+  background: #ff1f1f;
+}
+
 }
