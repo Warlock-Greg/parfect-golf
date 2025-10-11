@@ -126,11 +126,16 @@ $("open-coach")?.addEventListener("click", () => {
 
 /* === Initialisation === */
 window.addEventListener("DOMContentLoaded", () => {
-  const lic = localStorage.getItem(LS_KEYS.LICENSE);
+  const lic = localStorage.getItem(LS_KEYS.LICENSE); // Vérifie si une licence existe
   if (lic) {
     const l = JSON.parse(lic);
     currentUser = l;
-    $("user-name").textContent = l.name || l.email;
-    showPage("home");
+
+    // ✅ Sécurisation : n'affiche le nom que si l'élément existe
+    const userName = document.getElementById("user-name");
+    if (userName) userName.textContent = l.name || l.email;
+
+    showPage("home"); // ✅ Licence toujours vérifiée, on reste sur la home
   }
 });
+
