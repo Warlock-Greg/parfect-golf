@@ -1,5 +1,44 @@
 [
-  { "id": "P1", "title": "10 putts inside 1m", "type": "Putting",  "level": "Break 90",  "active": true },
-  { "id": "D1", "title": "Fairway Finder (8/10)", "type": "Driver", "level": "Break 100", "active": true }
+  {
+    "id": "EX001",
+    "name": "Putting Distance Control",
+    "type": "putting",
+    "goal": "10 putts à 3m avec bon tempo",
+    "level": "easy"
+  },
+  {
+    "id": "EX002",
+    "name": "Chip Landing Spot",
+    "type": "chipping",
+    "goal": "10 chips sur zone 2m",
+    "level": "medium"
+  },
+  {
+    "id": "EX003",
+    "name": "Driver Fairway Finder",
+    "type": "driving",
+    "goal": "8/10 fairways touchés",
+    "level": "medium"
+  },
+  {
+    "id": "EX004",
+    "name": "Iron Target Practice",
+    "type": "irons",
+    "goal": "10 balles sur cible 7m",
+    "level": "medium"
+  },
+  {
+    "id": "EX005",
+    "name": "Lag Putting Challenge",
+    "type": "putting",
+    "goal": "5 putts à 8m dans rayon 50cm",
+    "level": "hard"
+  },
+  {
+    "id": "EX006",
+    "name": "Routine Focus Drill",
+    "type": "mental",
+    "goal": "5 coups avec routine complète",
+    "level": "easy"
+  }
 ]
-
