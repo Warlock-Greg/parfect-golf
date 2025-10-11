@@ -4,12 +4,17 @@ export const EMAILJS_TEMPLATE_ID = "template_fxjeymy";
 export const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
 
 export const OWNER = "Warlock-Greg";
-export const REPO  = "parfect-golf";
+export const REPO = "parfect-golf";
 export const BRANCH = "main";
 export const GH_RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/data`;
 
+export const GOLFS_JSON_URL = `${GH_RAW_BASE}/golfs.json`;
 export const EXERCISE_JSON_URL = `${GH_RAW_BASE}/exercises.json`;
-export const GOLFS_JSON_URL    = `${GH_RAW_BASE}/golfs.json`;
+
+if (typeof window !== "undefined") {
+  window.GOLFS_JSON_URL = GOLFS_JSON_URL;
+  window.EXERCISE_JSON_URL = EXERCISE_JSON_URL;
+}
 
 export const LS_KEYS = {
   LICENSE: 'parfect_license',
