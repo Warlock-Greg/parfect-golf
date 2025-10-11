@@ -1,184 +1,138 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Parfect.golfr — v5 (JSON GitHub)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parfect.golfr</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="assets/logo.png" />
+  <style>
+    /* --- Mobile-first clean style --- */
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #0a0a0a;
+      color: #f1f1f1;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      background: #111;
+      padding: 0.8rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 {
+      color: #00ff99;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: #00ff99;
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+    #menu {
+      display: none;
+      flex-direction: column;
+      background: #1a1a1a;
+      position: absolute;
+      top: 60px;
+      right: 10px;
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 100;
+    }
+    #menu button {
+      background: none;
+      border: none;
+      padding: 0.8rem;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+    #menu button:hover {
+      background: #00ff99;
+      color: #000;
+    }
+    main {
+      padding: 1rem;
+    }
+    section {
+      display: none;
+      margin-top: 1rem;
+    }
+    section.active {
+      display: block;
+    }
+    .btn {
+      background: #00ff99;
+      border: none;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      color: #000;
+      font-weight: 600;
+      margin: 0.5rem;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: #00cc7a;
+    }
+    .score-label {
+      font-weight: 600;
+    }
+  </style>
 </head>
 
-<body class="bg-gray-900 text-white min-h-screen flex flex-col">
-
-  <!-- Intro -->
-  <div id="intro-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-    <div class="text-center">
-      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" alt="Parfect" class="mx-auto w-28 mb-4"/>
-      <h2 id="intro-line" class="text-green-300 text-xl font-bold"></h2>
-    </div>
-  </div>
-
-  <div id="toast" class="fixed top-1/3 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition"></div>
-  <div id="coach-bubble" class="fixed right-3 bottom-3 bg-green-700 text-white p-3 rounded-xl opacity-0 transition"></div>
-
-  <div id="app" class="container mx-auto p-4 max-w-4xl flex-1">
-    <header class="bg-gray-800 rounded-xl shadow-lg p-4 mb-6">
-      <nav class="flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-          <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" class="w-14" />
-          <span id="game-status" class="px-3 py-1 rounded-full bg-gray-700 text-gray-200 text-xs">Nouvelle partie</span>
-        </div>
-        <div class="space-x-2 hidden md:flex">
-          <button data-page="home" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Accueil</button>
-          <button id="nav-scorecard" class="bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Carte</button>
-          <button data-page="training" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Training</button>
-          <button data-page="objectives" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Objectifs</button>
-          <button data-page="history" class="nav-btn bg-gray-700 hover:bg-green-600 px-3 py-2 rounded-lg">Historique</button>
-          <button id="open-coach" class="bg-green-700 hover:bg-green-800 px-3 py-2 rounded-lg">Coach</button>
-          <button id="logout-btn" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-lg">Déconnexion</button>
-        </div>
-      </nav>
-    </header>
-
-    <main id="login" class="page active">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg max-w-md mx-auto text-center">
-        <h2 class="text-2xl font-bold mb-4 text-green-400">Connexion</h2>
-        <input id="login-email" type="email" placeholder="Email" class="w-full text-black px-2 py-2 rounded mb-3">
-        <input id="login-code" type="text" placeholder="Code licence" class="w-full text-black px-2 py-2 rounded mb-3">
-        <button id="login-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-bold">Se connecter</button>
-        <p id="login-msg" class="mt-4 text-sm"></p>
+<body>
+  <header>
+    <h1>Parfect.golfr</h1>
+    <nav>
+      <button id="menu-toggle">☰</button>
+      <div id="menu">
+        <button data-target="home">🏠 Accueil</button>
+        <button data-target="training">🏋️ Entraînement</button>
+        <button data-target="play">⛳ Partie</button>
+        <button data-target="history">📜 Historique</button>
       </div>
-    </main>
+    </nav>
+  </header>
 
-    <main id="home" class="page hidden">
-      <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-        <h2 class="text-2xl font-bold mb-4 text-green-400">Bienvenue</h2>
-        <p>Connecté en tant que <span id="user-name" class="text-green-300"></span></p>
-        <button id="start-game" class="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Nouvelle partie</button>
-      <button id="view-history" class="mt-2 bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded">📜 Historique</button>
+  <main>
+    <!-- HOME -->
+    <section id="home" class="active">
+      <h2>Bienvenue Coach Greg 💚</h2>
+      <p>Smart golf, easy mindset.</p>
+      <button class="btn" id="new-round-btn">Démarrer une partie</button>
+      <button class="btn" id="training-btn">Entraînement</button>
+      <button class="btn" id="view-history">Historique</button>
+    </section>
 
-<!-- Section Historique -->
-<div id="history-section" class="hidden mt-6 bg-gray-800 p-5 rounded-xl shadow-lg">
-  <h3 class="text-green-400 text-xl font-bold mb-3">🕓 Historique des parties</h3>
-  <div id="history-list" class="space-y-3"></div>
-  <div id="history-coach" class="mt-4 text-green-300 italic"></div>
-  <button id="close-history" class="mt-4 bg-gray-700 hover:bg-gray-800 px-3 py-2 rounded">Fermer</button>
-</div>
-  
-      </div>
-      
-      <!-- 🧠 Zone vide pour afficher les entraînements -->
-  <div id="training-zone" class="mt-6"></div>
-    </main>
-  </div>
+    <!-- PLAY -->
+    <section id="play">
+      <h2>Nouvelle partie</h2>
+      <div id="golf-select"></div>
+      <div id="score-zone"></div>
+    </section>
 
-  <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-8">
-    &copy; 2025 Parfect.golfr — <a href="https://instagram.com/parfect.golfr" target="_blank" class="text-green-400 hover:underline">@parfect.golfr</a>
-  </footer>
+    <!-- TRAINING -->
+    <section id="training">
+      <h2>Training Zone</h2>
+      <div id="exercise-list"></div>
+    </section>
 
-<!-- MODALE 1 — Objectif du jour -->
-<div id="objective-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
-  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[90%] max-w-md">
-    <h2 class="text-green-400 text-xl font-bold mb-4 text-center">🎯 Objectif du jour</h2>
-    <p class="text-sm text-gray-300 mb-3 text-center">Sois malin, vise simple, un seul focus.</p>
-    <select id="objective-select" class="w-full text-black rounded mb-4 p-2">
-      <option>No 3-putts</option>
-      <option>Fairway first</option>
-      <option>GIR mindset</option>
-      <option>Break 90</option>
-      <option>Routine fidèle</option>
-      <option>Enjoy only</option>
-    </select>
-    <div class="text-right">
-      <button id="objective-confirm" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Continuer</button>
-    </div>
-  </div>
-</div>
+    <!-- HISTORY -->
+    <section id="history">
+      <h2>Historique des parties</h2>
+      <div id="history-list"></div>
+    </section>
+  </main>
 
-<!-- MODALE 2 — Choix du golf -->
-<div id="golf-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
-  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[90%] max-w-md">
-    <h2 class="text-green-400 text-xl font-bold mb-4 text-center">⛳ Choisis ton golf</h2>
-    <select id="golf-select" class="w-full text-black rounded mb-3 p-2"></select>
-    <label class="block mb-4">Nombre de trous
-      <select id="holes-select" class="w-full text-black rounded p-2">
-        <option value="9">9 trous</option>
-        <option value="18" selected>18 trous</option>
-      </select>
-    </label>
-    <div class="flex justify-end gap-2">
-      <button id="golf-cancel" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">Annuler</button>
-      <button id="golf-confirm" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Démarrer</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODALE 3 — Saisie trou par trou -->
-<div id="hole-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
-  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[92%] max-w-lg">
-    <h2 id="hole-title" class="text-green-400 text-xl font-bold mb-2 text-center">Trou</h2>
-    <p id="hole-sub" class="text-center text-sm text-gray-300 mb-4"></p>
-    <div class="grid sm:grid-cols-2 gap-3">
-      <label class="block">Score brut
-        <input id="f-score" type="number" min="1" class="w-full text-black rounded p-2" placeholder="Ex: 5">
-      </label>
-      <label class="block">Putts
-        <input id="f-putts" type="number" min="0" class="w-full text-black rounded p-2" placeholder="Ex: 2">
-      </label>
-      <label class="block">Fairway
-        <select id="f-fairway" class="w-full text-black rounded p-2">
-          <option value="na">N/A (par 3)</option>
-          <option value="yes">✅ Oui</option>
-          <option value="no">❌ Non</option>
-        </select>
-      </label>
-      <label class="block">GIR (Green en régulation)
-        <select id="f-gir" class="w-full text-black rounded p-2">
-          <option value="no">❌ Non</option>
-          <option value="yes">✅ Oui</option>
-        </select>
-      </label>
-      <label class="block sm:col-span-2">Distance 1er putt (m)
-        <input id="f-firstputt" type="number" min="0" class="w-full text-black rounded p-2" placeholder="Ex: 6">
-      </label>
-      <label class="block sm:col-span-2">
-        <input id="f-routine" type="checkbox" class="mr-2">
-        <span>Routine faite ✅ (Coach Greg: “Tu peux rater un coup, pas ta routine.”)</span>
-      </label>
-    </div>
-    <div class="flex justify-between mt-5">
-      <button id="hole-prev" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">← Précédent</button>
-      <button id="hole-next" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded">Valider →</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODALE 4 — Résumé & Badge -->
-<div id="summary-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center z-50">
-  <div class="bg-gray-900 p-6 rounded-xl shadow-lg w-[92%] max-w-2xl">
-    <h2 class="text-green-400 text-xl font-bold mb-3 text-center">🏁 Résumé de la partie</h2>
-    <div id="summary-stats" class="text-gray-200 text-sm mb-4"></div>
-    <div class="text-center mb-4">
-      <canvas id="badge-canvas" width="720" height="720" class="mx-auto rounded-lg shadow"></canvas>
-    </div>
-    <div class="flex flex-wrap justify-center gap-2">
-      <a id="badge-download" download="parfect-badge.png" class="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-white">📥 Télécharger le badge</a>
-      <a href="https://instagram.com/parfect.golfr" target="_blank" class="bg-pink-600 hover:bg-pink-700 px-3 py-2 rounded text-white">📲 Ouvrir Instagram</a>
-      <button id="summary-close" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded">Fermer</button>
-    </div>
-  </div>
-</div>
-
-
-  
   <!-- Scripts -->
-  <script type="module" src="./js/config.js"></script>
-  <script type="module" src="./js/data.js"></script>
-  <script type="module" src="./js/coach.js"></script>
-  <script type="module" src="./js/ui.js"></script>
-  <script type="module" src="./js/play.js"></script>
-  <script type="module" src="./js/training.js"></script>
+  <script type="module" src="js/config.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
