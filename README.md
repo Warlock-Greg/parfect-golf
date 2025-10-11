@@ -1,3 +1,26 @@
+# ⛳ Parfect.golfr v6
+**Smart golf. Easy mindset.**
+
+Une web app simple et fluide pour suivre ses parties, ses routines et progresser avec la philosophie Parfect :
+> _“À swing égal, prends du plaisir. Sois smart, pas fort.”_
+
+---
+
+## 🚀 Fonctionnalités
+- 🎯 **Saisie trou par trou** avec affichage dynamique du score vs par  
+- 💚 **Bouton Parfect** → coche automatiquement *Fairway + GIR + ≤2 putts*  
+- 🧮 **Calcul cumulatif** du score vs par en direct  
+- 🏋️ **Mode Entraînement** avec tips du Coach Greg  
+- 📊 **Récapitulatif clair** avec colonne *Score vs Par*  
+- 📱 **Interface mobile-first** (menu burger, fond sombre, lisible au soleil)
+
+---
+
+## 🗂️ Structure du projet
+
+
+OLD >>>>>>>>
+
 # ⛳️ Parfect.golfr v3
 
 **Parfect.golfr** est une webapp de suivi des statistiques de golf, pensée pour les joueurs qui veulent progresser et comparer leurs performances à leurs objectifs selon leur index.
