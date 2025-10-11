@@ -13,12 +13,32 @@ function renderHistory() {
   if (!zone) return;
   if (!rounds.length) {
     zone.innerHTML = "<p style='opacity:.6'>Aucune partie enregistrée pour le moment.</p>";
+    $("history-summary").innerHTML = "";
     return;
   }
 
-  // On trie du plus récent au plus ancien
-  rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // --- CALCULS DU COMPTEUR ---
+  const totalRounds = rounds.length;
+  const totalParfects = rounds.reduce((acc, r) => acc + (r.parfects || 0), 0);
+  const totalBogeyfects = rounds.reduce((acc, r) => acc + (r.bogeyfects || 0), 0);
+  const avgScore =
+    Math.round(
+      (rounds.reduce((acc, r) => acc + (r.totalVsPar || 0), 0) / totalRounds) * 10
+    ) / 10;
 
+  $("history-summary").innerHTML = `
+    <div class="summary-box">
+      <div class="summary-item">📊 <strong>${totalRounds}</strong> parties</div>
+      <div class="summary-item">Moyenne : <strong style="color:${
+        avgScore < 0 ? "#44ffaa" : avgScore > 0 ? "#ff5555" : "#fff"
+      }">${avgScore > 0 ? "+" + avgScore : avgScore}</strong></div>
+      <div class="summary-item">💚 <strong>${totalParfects}</strong> Parfects</div>
+      <div class="summary-item">💙 <strong>${totalBogeyfects}</strong> Bogey’fects</div>
+    </div>
+  `;
+
+  // --- AFFICHAGE DES CARTES ---
+  rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
   zone.innerHTML = rounds
     .map((r) => {
       const d = new Date(r.date).toLocaleDateString("fr-FR", {
