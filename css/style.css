@@ -182,4 +182,56 @@ td {
   background: #ff1f1f;
 }
 
+/* === HISTORY CARDS === */
+#history {
+  padding-bottom: 2rem;
+}
+
+.history-card {
+  background: rgba(30, 30, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 1rem;
+  margin: 1rem auto;
+  max-width: 520px;
+  color: #fff;
+  box-shadow: 0 0 20px rgba(0, 255, 153, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.history-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 25px rgba(68, 255, 170, 0.2);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #00ff99;
+}
+
+.history-stats {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.history-coach {
+  font-style: italic;
+  color: #44ffaa;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+#reset-rounds {
+  background: #ff4d4d;
+  color: #fff;
+}
+#reset-rounds:hover {
+  background: #ff1f1f;
+}
+
+  
 }
