@@ -1,42 +1,40 @@
-const menu = document.getElementById("menu");
-const toggle = document.getElementById("menu-toggle");
-const sections = document.querySelectorAll("main section");
+// === Helper global pour récupérer les éléments ===
+window.$ = (id) => document.getElementById(id);
 
-toggle.addEventListener("click", () => {
-  menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-});
-
-menu.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const target = btn.dataset.target;
-    sections.forEach(s => s.classList.remove("active"));
-    document.getElementById(target).classList.add("active");
-    menu.style.display = "none";
-  });
-});
-
-// Boutons accueil
-document.getElementById("new-round-btn").addEventListener("click", () => {
-  sections.forEach(s => s.classList.remove("active"));
-  document.getElementById("play").classList.add("active");
-});
-document.getElementById("training-btn").addEventListener("click", () => {
-  sections.forEach(s => s.classList.remove("active"));
-  document.getElementById("training").classList.add("active");
-});
+// === Animation de transition douce ===
+function fadeIn(el, duration = 300) {
+  el.style.opacity = 0;
+  el.style.display = "block";
+  let last = +new Date();
+  const tick = function () {
+    el.style.opacity = +el.style.opacity + (new Date() - last) / duration;
+    last = +new Date();
+    if (+el.style.opacity < 1) {
+      (window.requestAnimationFrame && requestAnimationFrame(tick)) ||
+        setTimeout(tick, 16);
+    }
+  };
+  tick();
+}
 
 // === Navigation entre les pages via menu burger ===
 document.addEventListener("DOMContentLoaded", () => {
   const menuLinks = document.querySelectorAll("#menu a[data-page]");
   const sections = document.querySelectorAll("section");
+  const burger = document.getElementById("burger");
+  const menu = document.getElementById("menu");
 
+  // Fonction principale d’affichage
   function showPage(pageId) {
     sections.forEach((s) => (s.style.display = "none"));
     const target = document.getElementById(pageId);
-    if (target) target.style.display = "block";
+    if (target) {
+      fadeIn(target, 250);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
-  // Gère le clic sur chaque lien du menu
+  // Gestion des liens du menu
   menuLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -44,34 +42,36 @@ document.addEventListener("DOMContentLoaded", () => {
       showPage(target);
 
       // Ferme le menu burger s’il est ouvert
-      const burger = document.getElementById("burger");
-      if (burger && burger.classList.contains("open")) burger.classList.remove("open");
+      if (burger && burger.classList.contains("open")) {
+        burger.classList.remove("open");
+        menu.classList.remove("visible");
+      }
     });
   });
 
-  // Page d’accueil par défaut
-  showPage("home");
-});
-
-
-// === Animation d'accueil quotidienne ===
-document.addEventListener("DOMContentLoaded", () => {
-  const today = new Date().toDateString();
-  const lastAnim = localStorage.getItem("homeAnimationDate");
-
-  const playBtn = document.getElementById("new-round-btn");
-  const trainBtn = document.getElementById("training-btn");
-
-  if (!playBtn || !trainBtn) return;
-
-  if (lastAnim !== today) {
-    // 💥 Lance l'animation une seule fois par jour
-    playBtn.classList.add("animate-once");
-    trainBtn.classList.add("animate-once");
-    localStorage.setItem("homeAnimationDate", today);
-  } else {
-    // pas d'animation
-    playBtn.style.opacity = 1;
-    trainBtn.style.opacity = 1;
+  // === Gestion du bouton burger (mobile) ===
+  if (burger) {
+    burger.addEventListener("click", () => {
+      burger.classList.toggle("open");
+      menu.classList.toggle("visible");
+    });
   }
+
+  // === Gestion des boutons d'accueil ===
+  const playBtn = $("new-round-btn");
+  const trainBtn = $("training-btn");
+  const historyBtn = $("view-history");
+
+  if (playBtn) {
+    playBtn.addEventListener("click", () => showPage("play"));
+  }
+  if (trainBtn) {
+    trainBtn.addEventListener("click", () => showPage("training"));
+  }
+  if (historyBtn) {
+    historyBtn.addEventListener("click", () => showPage("history"));
+  }
+
+  // === Page d’accueil par défaut ===
+  showPage("home");
 });
