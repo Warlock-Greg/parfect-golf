@@ -1,56 +1,206 @@
 [
   {
-    "id": "EX001",
-    "name": "Putting Distance Control",
+    "id": "putt1",
     "type": "putting",
-    "goal": "10 putts à 3m avec bon tempo",
-    "level": "easy",
-    "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "name": "Short Putts Routine (Break 100)",
+    "goal": "Rentrer 5 putts d’affilée à 1 mètre.",
+    "objectif": 5,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_short.mp4"
   },
   {
-    "id": "EX002",
-    "name": "Chip Landing Spot",
+    "id": "putt2",
+    "type": "putting",
+    "name": "Lag Putting (Break 100)",
+    "goal": "10 putts à 10 m avec moins de 3 putts.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_lag.mp4"
+  },
+  {
+    "id": "putt3",
+    "type": "putting",
+    "name": "Pace & Rhythm (Break 90)",
+    "goal": "Maintenir 8 putts consécutifs avec bon tempo.",
+    "objectif": 8,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_rhythm.mp4"
+  },
+  {
+    "id": "putt4",
+    "type": "putting",
+    "name": "Pressure Circle (Break 80)",
+    "goal": "10 putts d’1,5 m en cercle – objectif 8 réussis.",
+    "objectif": 8,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_circle.mp4"
+  },
+  {
+    "id": "putt5",
+    "type": "putting",
+    "name": "One Ball Challenge (Break 80)",
+    "goal": "1 balle, 9 trous d’entraînement sans 3 putts.",
+    "objectif": 9,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_oneball.mp4"
+  },
+
+  {
+    "id": "chip1",
     "type": "chipping",
-    "goal": "10 chips sur zone 2m",
-    "level": "medium",
+    "name": "Basic Chip Landing Zone (Break 100)",
+    "goal": "10 chips qui roulent dans une zone de 2 m.",
     "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_zone.jpg"
   },
   {
-    "id": "EX003",
-    "name": "Driver Fairway Finder",
+    "id": "chip2",
+    "type": "chipping",
+    "name": "Up & Down Routine (Break 100)",
+    "goal": "Faire 5 up & down sur 10 situations.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_updown.jpg"
+  },
+  {
+    "id": "chip3",
+    "type": "chipping",
+    "name": "Landing Spot Focus (Break 90)",
+    "goal": "8 chips où la balle atterrit dans la zone ciblée.",
+    "objectif": 8,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_focus.mp4"
+  },
+  {
+    "id": "chip4",
+    "type": "chipping",
+    "name": "Pressure Ladder (Break 80)",
+    "goal": "3 distances, 3 réussites consécutives à chaque palier.",
+    "objectif": 9,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_ladder.mp4"
+  },
+  {
+    "id": "chip5",
+    "type": "chipping",
+    "name": "Bunker Escape (Break 80)",
+    "goal": "Sortir 7 balles sur 10 du bunker en 1 coup.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_bunker.mp4"
+  },
+
+  {
+    "id": "drive1",
     "type": "driving",
-    "goal": "8/10 fairways touchés",
-    "level": "medium",
+    "name": "Fairway Finder (Break 100)",
+    "goal": "Placer 5 drives sur 10 dans le fairway.",
     "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_fairway.mp4"
   },
   {
-    "id": "EX004",
-    "name": "Iron Target Practice",
+    "id": "drive2",
+    "type": "driving",
+    "name": "Tempo Drill (Break 100)",
+    "goal": "10 swings sans forcer, équilibre total à la fin.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_tempo.mp4"
+  },
+  {
+    "id": "drive3",
+    "type": "driving",
+    "name": "Target Zone Challenge (Break 90)",
+    "goal": "Atteindre 7 drives sur 10 dans une zone de 30 m.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_target.mp4"
+  },
+  {
+    "id": "drive4",
+    "type": "driving",
+    "name": "Smart Tee Strategy (Break 80)",
+    "goal": "Jouer 9 drives en privilégiant le contrôle à la puissance.",
+    "objectif": 9,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_strategy.mp4"
+  },
+  {
+    "id": "drive5",
+    "type": "driving",
+    "name": "Wind Control Drill (Break 80)",
+    "goal": "10 drives en adaptant le flight au vent.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_wind.mp4"
+  },
+
+  {
+    "id": "iron1",
     "type": "irons",
-    "goal": "10 balles sur cible 7m",
-    "level": "medium",
+    "name": "Center Contact (Break 100)",
+    "goal": "Toucher le centre de la face 7 fois sur 10.",
     "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_center.mp4"
   },
   {
-    "id": "EX005",
-    "name": "Lag Putting Challenge",
-    "type": "putting",
-    "goal": "5 putts à 8m dans rayon 50cm",
-    "level": "hard",
+    "id": "iron2",
+    "type": "irons",
+    "name": "Alignment Drill (Break 100)",
+    "goal": "10 coups avec setup aligné à la cible.",
     "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_alignment.jpg"
   },
   {
-    "id": "EX006",
-    "name": "Routine Focus Drill",
+    "id": "iron3",
+    "type": "irons",
+    "name": "Green Target Game (Break 90)",
+    "goal": "8 greens touchés sur 10 avec le bon club.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_target.mp4"
+  },
+  {
+    "id": "iron4",
+    "type": "irons",
+    "name": "Distance Control (Break 80)",
+    "goal": "9 coups dont la distance reste dans ±5 m de l’objectif.",
+    "objectif": 9,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_distance.mp4"
+  },
+  {
+    "id": "iron5",
+    "type": "irons",
+    "name": "Trajectory Drill (Break 80)",
+    "goal": "10 coups : 3 bas, 3 moyens, 4 hauts — contrôle total.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_trajectory.mp4"
+  },
+
+  {
+    "id": "mental1",
     "type": "mental",
-    "goal": "5 coups avec routine complète",
-    "level": "easy",
+    "name": "Routine Reset (Break 100)",
+    "goal": "Appliquer 10 routines complètes avant chaque coup.",
     "objectif": 10,
-    "media": "https://.../putting1.mp4"
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_routine.mp4"
+  },
+  {
+    "id": "mental2",
+    "type": "mental",
+    "name": "Breathing Zone (Break 100)",
+    "goal": "Respirer 5 secondes avant chaque swing sur 10 balles.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_breathing.mp4"
+  },
+  {
+    "id": "mental3",
+    "type": "mental",
+    "name": "Pre-shot Focus (Break 90)",
+    "goal": "10 coups où tu visualises la trajectoire avant d’agir.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_focus.mp4"
+  },
+  {
+    "id": "mental4",
+    "type": "mental",
+    "name": "Calm Under Pressure (Break 80)",
+    "goal": "Simuler 5 putts décisifs sous pression — 3 réussis.",
+    "objectif": 5,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_pressure.mp4"
+  },
+  {
+    "id": "mental5",
+    "type": "mental",
+    "name": "Visualization Drill (Break 80)",
+    "goal": "Ferme les yeux 10 secondes avant chaque coup sur 10 swings.",
+    "objectif": 10,
+    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_visual.mp4"
   }
 ]
