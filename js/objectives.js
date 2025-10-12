@@ -32,18 +32,24 @@ const coachBios = {
 
 let currentCoach = localStorage.getItem("coach") || "greg";
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ objectives.js chargé");
+function initObjectives() {
+  const select = document.getElementById("level-select");
+  const statsZone = document.getElementById("objective-stats");
+  const footerIndex = document.getElementById("footer-index");
+  const coachSelect = document.getElementById("coach-select-objectives");
+  const bioZone = document.getElementById("coach-bio");
+  const chatBox = document.getElementById("coach-chat");
+  const openChat = document.getElementById("open-coach-chat-objectives");
 
-  const select = $("level-select");
-  const statsZone = $("objective-stats");
-  const footerIndex = $("footer-index");
-  const coachSelect = $("coach-select-objectives"); // ✅ nouveau bon ID
-  const bioZone = $("coach-bio");
-  const chatBox = $("coach-chat");
-  const openChat = $("open-coach-chat-objectives"); // ✅ nouveau bon ID
+  // Si l’un de ces éléments est absent, on attend et on réessaie
+  if (!coachSelect || !select || !statsZone || !footerIndex) {
+    console.log("⏳ Attente chargement DOM pour objectives.js...");
+    setTimeout(initObjectives, 300); // réessaye dans 300ms
+    return;
+  }
 
-  // === Objectifs ===
+  console.log("✅ objectives.js initialisé");
+
   function renderStats(level) {
     const o = objectives[level];
     if (!o) return;
@@ -59,36 +65,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const saved = localStorage.getItem("parfect_objective") || "9";
-  if (select) {
-    select.value = saved;
-    renderStats(saved);
-    select.addEventListener("change", () => renderStats(select.value));
-  }
+  select.value = saved;
+  renderStats(saved);
+  select.addEventListener("change", () => renderStats(select.value));
 
   // === Coach ===
-  if (coachSelect) {
-    coachSelect.value = currentCoach;
+  coachSelect.value = currentCoach;
+  renderCoachBio(currentCoach);
+  coachSelect.addEventListener("change", () => {
+    currentCoach = coachSelect.value;
+    localStorage.setItem("coach", currentCoach);
     renderCoachBio(currentCoach);
-    coachSelect.addEventListener("change", () => {
-      currentCoach = coachSelect.value;
-      localStorage.setItem("coach", currentCoach);
-      renderCoachBio(currentCoach);
-    });
-  }
+  });
 
   // === Chat ===
-  if (openChat && chatBox) {
-    openChat.addEventListener("click", () => {
-      chatBox.style.display = "block";
-      openChat.style.display = "none";
-    });
-  }
+  openChat?.addEventListener("click", () => {
+    chatBox.style.display = "block";
+    openChat.style.display = "none";
+  });
 
-  $("send-chat")?.addEventListener("click", sendMessage);
-  $("chat-text")?.addEventListener("keypress", e => {
+  document.getElementById("send-chat")?.addEventListener("click", sendMessage);
+  document.getElementById("chat-text")?.addEventListener("keypress", e => {
     if (e.key === "Enter") sendMessage();
   });
-});
+}
+
+// Lance l'initialisation après le chargement du DOM
+document.addEventListener("DOMContentLoaded", initObjectives);
+
 
 
 function renderCoachBio(coachKey) {
