@@ -28,28 +28,14 @@ function sumVsPar(arr) {
 }
 
 function showCoachToast(message) {
-  // toast flottant en bas
-  let toast = document.createElement("div");
-  toast.textContent = message;
-  toast.style.position = "fixed";
-  toast.style.left = "50%";
-  toast.style.bottom = "24px";
-  toast.style.transform = "translateX(-50%)";
-  toast.style.background = "rgba(20,20,20,0.9)";
-  toast.style.color = "#44ffaa";
-  toast.style.border = "1px solid rgba(255,255,255,0.15)";
-  toast.style.padding = "12px 16px";
-  toast.style.borderRadius = "12px";
-  toast.style.fontWeight = "600";
-  toast.style.zIndex = "9999";
-  toast.style.boxShadow = "0 0 18px rgba(68,255,170,0.15)";
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.style.transition = "all .35s ease";
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(-50%) translateY(10px)";
-    setTimeout(() => toast.remove(), 400);
-  }, 1500);
+  const panel = document.createElement("div");
+  panel.className = "coach-panel";
+  panel.innerHTML = `
+    <div class="coach-avatar">😎</div>
+    <div class="coach-text">${message}</div>
+  `;
+  document.body.appendChild(panel);
+  setTimeout(() => panel.remove(), 2800);
 }
 
 // ---- Init golf list ----
