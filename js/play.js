@@ -514,15 +514,27 @@ if (currentHole === 9 || currentHole === 12) {
 
     
   // === PASSAGE AU TROU SUIVANT ===
-  setTimeout(() => {
-    if (currentHole < totalHoles) {
-      currentHole++;
-      currentDiff = null;
-      renderHole();
-    } else {
-      endRound();
-    }
-  }, 2600);
+
+setTimeout(async () => {
+  // ✅ Affiche la modale de distance du 1er putt avant de passer au trou suivant
+  const result = await promptFirstPuttModal();
+  if (result?.value !== null) {
+    holes[currentHole - 1].dist1 = result.value;
+  }
+
+  // ✅ Si on est au trou 9 → fin de partie
+  if (currentHole === 9 || currentHole === totalHoles) {
+    endRound();
+    showCoachToast("👏 Partie sauvegardée et ajoutée à l'historique !");
+    return;
+  }
+
+  // ✅ Sinon, passage fluide au trou suivant
+  currentHole++;
+  currentDiff = null;
+  renderHole();
+}, 2600);
+
 
 
   // ---- Live cumu updater
