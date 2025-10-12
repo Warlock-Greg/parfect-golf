@@ -5,186 +5,269 @@ import { tipAfterHole } from "./coach.js";
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = "golfHistory";
 
+// ---- State ----
 let currentGolf = null;
-let currentHole = 1;
+let currentHole = 1;        // 1..18
 let totalHoles = 18;
-let holes = [];
+let holes = [];             // [{hole, par, score, fairway, gir, putts, dist1, routine}, ...]
+let currentDiff = null;     // score vs par du trou courant (ex: 0, +1, -1, ...)
 
-// === INIT ===
+// ---- Helpers ----
+const SCORE_CHOICES = [
+  { key: "deagle", label: "Double Eagle", diff: -3 },
+  { key: "eagle",  label: "Eagle",        diff: -2 },
+  { key: "birdie", label: "Birdie",       diff: -1 },
+  { key: "par",    label: "Par",          diff:  0 },
+  { key: "bogey",  label: "Bogey",        diff:  1 },
+  { key: "double", label: "Double",       diff:  2 },
+  { key: "triple", label: "Triple",       diff:  3 },
+];
+
+function sumVsPar(arr) {
+  return arr.reduce((acc, h) => acc + ((h?.score ?? h?.par ?? 0) - (h?.par ?? 0)), 0);
+}
+
+function showCoachToast(message) {
+  // toast flottant en bas
+  let toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.position = "fixed";
+  toast.style.left = "50%";
+  toast.style.bottom = "24px";
+  toast.style.transform = "translateX(-50%)";
+  toast.style.background = "rgba(20,20,20,0.9)";
+  toast.style.color = "#44ffaa";
+  toast.style.border = "1px solid rgba(255,255,255,0.15)";
+  toast.style.padding = "12px 16px";
+  toast.style.borderRadius = "12px";
+  toast.style.fontWeight = "600";
+  toast.style.zIndex = "9999";
+  toast.style.boxShadow = "0 0 18px rgba(68,255,170,0.15)";
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.transition = "all .35s ease";
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(10px)";
+    setTimeout(() => toast.remove(), 400);
+  }, 1500);
+}
+
+// ---- Init golf list ----
 (async function initGolfSelect() {
-  const golfs = await fetchGolfs();
   const zone = $("golf-select");
+  const golfs = await fetchGolfs();
   zone.innerHTML =
     "<h3>Choisis ton golf :</h3>" +
-    golfs
-      .map(
-        (g) => `
-      <button class="btn golf-btn" data-id="${g.id}">
-        ⛳ ${g.name}
-      </button>`
-      )
-      .join("");
-  document.querySelectorAll(".golf-btn").forEach((btn) =>
-    btn.addEventListener("click", () =>
-      startRound(golfs.find((g) => g.id === btn.dataset.id))
-    )
-  );
+    golfs.map(g => `<button class="btn golf-btn" data-id="${g.id}">⛳ ${g.name}</button>`).join("");
+  zone.querySelectorAll(".golf-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const g = golfs.find(x => String(x.id) === btn.dataset.id);
+      startRound(g);
+    });
+  });
 })();
 
-// === DÉMARRER UNE PARTIE ===
+// ---- Start / Render Round ----
 function startRound(golf) {
   currentGolf = golf;
+  totalHoles = Array.isArray(currentGolf?.pars) ? currentGolf.pars.length : 18;
   currentHole = 1;
-  holes = [];
-  $("golf-select").style.display = "none"; // cache la sélection
-  $("score-summary").innerHTML = ""; // reset summary
+  holes = new Array(totalHoles).fill(null); // placeholders
+  currentDiff = null;
+  $("golf-select").style.display = "none";
+  $("score-summary").innerHTML = "";
   renderHole();
 }
 
-// === AFFICHER LE TROU COURANT ===
 function renderHole() {
   const zone = $("hole-card");
   const par = currentGolf.pars[currentHole - 1];
-  const cumu = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
 
+  // Récupère valeurs si trou déjà saisi
+  const saved = holes[currentHole - 1];
+  const savedDiff = saved ? (saved.score - saved.par) : null;
+
+  // Par défaut: trou impair => Bogey / trou pair => Par
+  const defaultDiff = savedDiff != null
+    ? savedDiff
+    : (currentHole % 2 === 1 ? 1 : 0);
+
+  currentDiff = defaultDiff;
+
+  // Cumul actuel (trous précédents) + diff courant s'il est défini
+  const prevHoles = holes.slice(0, currentHole - 1).filter(Boolean);
+  const prevSum = sumVsPar(prevHoles);
+  const liveCumu = prevSum + (currentDiff ?? 0);
+
+  // HTML
   zone.innerHTML = `
     <h3>Trou ${currentHole} — Par ${par}</h3>
-    <p>Score cumulé vs Par : <strong>${cumu > 0 ? "+" + cumu : cumu}</strong></p>
+    <p>Score cumulé vs Par : <strong id="live-cumu">${liveCumu > 0 ? "+" + liveCumu : liveCumu}</strong></p>
 
-    <label>Score brut :</label>
-    <input type="number" id="hole-score" min="1" max="12" />
-    <span id="score-feedback" class="ml-2 text-sm font-semibold"></span>
+    <div id="score-buttons" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0;"></div>
 
-    <div class="stats">
+    <div class="stats" style="margin-top:8px;">
       <label><input type="checkbox" id="fairway"> Fairway</label>
       <label><input type="checkbox" id="gir"> GIR</label>
-      <label><input type="number" id="putts" min="0" max="5" placeholder="Putts" /></label>
+
+      <label style="margin-left:8px;">Putts :
+        <select id="putts" style="margin-left:4px;"></select>
+      </label>
+
+      <label style="margin-left:8px;">Distance 1er putt :
+        <select id="dist1" style="margin-left:4px;"></select> m
+      </label>
     </div>
 
-    <div class="flex" style="display:flex;justify-content:center;gap:8px;margin-top:10px;">
+    <div style="display:flex;justify-content:center;gap:8px;margin-top:12px;">
       <button id="btn-parfect" class="btn">💚 Parfect</button>
       <button id="btn-bogeyfect" class="btn" style="background:#44ffaa;">💙 Bogey’fect</button>
     </div>
 
-    <button id="next-hole" class="btn" style="margin-top:10px;">Trou suivant ➡️</button>
-
-    <div id="coach-message" style="margin-top:15px;font-style:italic;opacity:.9;"></div>
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-top:14px;">
+      <button id="prev-hole" class="btn" ${currentHole === 1 ? 'disabled style="opacity:.4;pointer-events:none;"' : ""}>⬅️ Trou précédent</button>
+      <button id="next-hole" class="btn">Trou suivant ➡️</button>
+    </div>
   `;
 
-  const scoreInput = $("hole-score");
-  const feedback = $("score-feedback");
-  const fairway = $("fairway");
-  const gir = $("gir");
-  const putts = $("putts");
-  const parfect = $("btn-parfect");
-  const bogeyfect = $("btn-bogeyfect");
-  const coachBox = $("coach-message");
+  // ---- Score buttons
+  const btnWrap = $("score-buttons");
+  btnWrap.innerHTML = SCORE_CHOICES.map(sc => `
+    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.6rem .8rem;">${sc.label}</button>
+  `).join("");
 
-  // === FEEDBACK DYNAMIQUE ===
-  scoreInput.addEventListener("input", () => {
-    const score = parseInt(scoreInput.value, 10);
-    if (!score) return (feedback.textContent = "");
-    const diff = score - par;
-    let label = "",
-      color = "";
-    switch (diff) {
-      case -3:
-        label = "🦅 Double Eagle";
-        color = "text-blue-400";
-        break;
-      case -2:
-        label = "🦅 Eagle";
-        color = "text-blue-300";
-        break;
-      case -1:
-        label = "💚 Birdie";
-        color = "text-green-400";
-        break;
-      case 0:
-        label = "⚪ Par";
-        color = "text-gray-300";
-        break;
-      case 1:
-        label = "💙 Bogey";
-        color = "text-menthe";
-        break;
-      case 2:
-        label = "🔴 Double Bogey";
-        color = "text-red-500";
-        break;
-      default:
-        label = diff < -3 ? "🤯 Ultra rare" : `+${diff} Over Par`;
-        color = diff < -3 ? "text-blue-500" : "text-red-500";
+  // Active selection
+  function highlightSelection() {
+    btnWrap.querySelectorAll(".score-btn").forEach(b => b.classList.remove("active-score"));
+    const active = btnWrap.querySelector(`.score-btn[data-diff="${currentDiff}"]`);
+    if (active) active.classList.add("active-score");
+  }
+
+  btnWrap.querySelectorAll(".score-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentDiff = parseInt(btn.dataset.diff, 10);
+      highlightSelection();
+      updateLiveCumu();
+    });
+  });
+
+  // ---- Putts (0..4) avec défaut 2
+  const puttsSel = $("putts");
+  for (let i = 0; i <= 4; i++) {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    puttsSel.appendChild(opt);
+  }
+  puttsSel.value = saved?.putts ?? 2;
+
+  // ---- Distance 1er putt (0..30m)
+  const distSel = $("dist1");
+  for (let m = 0; m <= 30; m++) {
+    const opt = document.createElement("option");
+    opt.value = m;
+    opt.textContent = m;
+    distSel.appendChild(opt);
+  }
+  distSel.value = saved?.dist1 ?? 0;
+
+  // ---- Checkboxes FW/GIR
+  $("fairway").checked = saved?.fairway ?? false;
+  $("gir").checked = saved?.gir ?? false;
+
+  // ---- Defaults Par/Bogey (si pas déjà saisi)
+  highlightSelection();
+
+  // ---- Parfect button
+  $("btn-parfect").addEventListener("click", () => {
+    $("fairway").checked = true;
+    $("gir").checked = true;
+    puttsSel.value = 2;
+    currentDiff = 0; // Par
+    highlightSelection();
+    updateLiveCumu();
+  });
+
+  // ---- Bogey’fect button
+  $("btn-bogeyfect").addEventListener("click", () => {
+    $("fairway").checked = true;
+    $("gir").checked = false;
+    puttsSel.value = 2;
+    currentDiff = 1; // Bogey
+    highlightSelection();
+    updateLiveCumu();
+  });
+
+  // ---- Prev / Next
+  $("prev-hole").addEventListener("click", () => {
+    saveCurrentHole(false); // sauvegarde sans coach toast
+    if (currentHole > 1) {
+      currentHole--;
+      currentDiff = null;
+      renderHole();
     }
-    feedback.textContent = label;
-    feedback.className = `ml-2 text-sm font-semibold ${color}`;
   });
 
-  // === BOUTON PARFECT ===
-  parfect.addEventListener("click", () => {
-    fairway.checked = true;
-    gir.checked = true;
-    putts.value = 2;
-    parfect.textContent = "💚 Parfect enregistré !";
-    setTimeout(() => (parfect.textContent = "💚 Parfect"), 2000);
-  });
-
-  // === BOUTON BOGEY’FECT ===
-  bogeyfect.addEventListener("click", () => {
-    fairway.checked = true;
-    gir.checked = false;
-    putts.value = 2;
-    scoreInput.value = par + 1;
-    feedback.textContent = "💙 Bogey’fect — fairway, 2 putts, stratégie smart!";
-    feedback.style.color = "#44ffaa";
-    bogeyfect.textContent = "💙 Bogey’fect enregistré !";
-    bogeyfect.style.background = "#44ffaa";
-    bogeyfect.style.color = "#000";
-    setTimeout(() => {
-      bogeyfect.textContent = "💙 Bogey’fect";
-      bogeyfect.style.background = "";
-      bogeyfect.style.color = "";
-    }, 2000);
-  });
-
-  // === TROU SUIVANT ===
   $("next-hole").addEventListener("click", () => {
+    const savedEntry = saveCurrentHole(true); // sauvegarde + coach
+    if (currentHole < totalHoles) {
+      currentHole++;
+      currentDiff = null;
+      renderHole();
+    } else {
+      endRound();
+    }
+  });
+
+  // ---- Live cumu updater
+  function updateLiveCumu() {
+    const prev = sumVsPar(holes.slice(0, currentHole - 1).filter(Boolean));
+    const tmp = prev + (currentDiff ?? 0);
+    const live = $("live-cumu");
+    if (live) live.textContent = tmp > 0 ? `+${tmp}` : `${tmp}`;
+  }
+
+  // ---- Save current hole
+  function saveCurrentHole(showCoach) {
+    const fairway = $("fairway").checked;
+    const gir = $("gir").checked;
+    const putts = parseInt(puttsSel.value, 10);
+    const dist1 = parseInt(distSel.value, 10);
+
+    // si l'utilisateur n'a pas cliqué de score, prendre défaut actuel
+    const diff = (currentDiff == null) ? (currentHole % 2 === 1 ? 1 : 0) : currentDiff;
+    const score = par + diff;
     const entry = {
       hole: currentHole,
       par,
-      score: parseInt(scoreInput.value, 10),
-      fairway: fairway.checked,
-      gir: gir.checked,
-      putts: parseInt(putts.value, 10),
+      score,
+      fairway,
+      gir,
+      putts,
+      dist1,
       routine: true,
     };
-    holes.push(entry);
+    holes[currentHole - 1] = entry;
 
-    const message = tipAfterHole(entry, "fun");
-    coachBox.textContent = message;
-
-    setTimeout(() => {
-      if (currentHole < totalHoles) {
-        currentHole++;
-        renderHole();
-      } else {
-        endRound();
-      }
-    }, 1800);
-  });
+    if (showCoach) {
+      const msg = tipAfterHole(entry, "fun");
+      showCoachToast(msg);
+    }
+    return entry;
+  }
 }
 
-// === FIN DE PARTIE ===
+// ---- End Round & Save ----
 function endRound() {
-  const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
+  const totalVsPar = sumVsPar(holes.filter(Boolean));
   const parfects = holes.filter(
-    (h) => h.fairway && h.gir && h.putts <= 2 && h.score - h.par === 0
+    (h) => h && h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
   ).length;
   const bogeyfects = holes.filter(
-    (h) => h.fairway && !h.gir && h.putts <= 2 && h.score - h.par === 1
+    (h) => h && h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
   ).length;
 
-  // Sauvegarde locale
+  // Save to localStorage
   saveRound({
     date: new Date().toISOString(),
     golf: currentGolf.name,
@@ -194,36 +277,52 @@ function endRound() {
     holes,
   });
 
-  const summary = `
+  // Summary UI
+  $("hole-card").innerHTML = `
     <h3>Carte terminée 💚</h3>
     <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
     <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
 
     <table style="margin:auto;border-collapse:collapse;">
-      <tr><th>Trou</th><th>Par</th><th>Score</th><th>Vs Par</th></tr>
+      <tr><th>Trou</th><th>Par</th><th>Score</th><th>Vs Par</th><th>FW</th><th>GIR</th><th>Putts</th><th>Dist1 (m)</th></tr>
       ${holes
         .map((h) => {
           const diff = h.score - h.par;
-          const label =
-            diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
-          return `<tr><td>${h.hole}</td><td>${h.par}</td><td>${h.score}</td><td>${label}</td></tr>`;
+          const vs = diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
+          return `<tr>
+            <td>${h.hole}</td><td>${h.par}</td><td>${h.score}</td><td>${vs}</td>
+            <td>${h.fairway ? "✔" : "—"}</td><td>${h.gir ? "✔" : "—"}</td>
+            <td>${h.putts}</td><td>${h.dist1}</td>
+          </tr>`;
         })
         .join("")}
     </table>
 
-    <p style="margin-top:10px;">${tipAfterHole(
-      holes[holes.length - 1],
-      "zen"
-    )}</p>
+    <div style="margin-top:12px;">
+      <button class="btn" id="new-round">🔁 Nouvelle partie</button>
+    </div>
   `;
 
-  $("hole-card").innerHTML = summary;
-  $("golf-select").style.display = "block"; // réaffiche la sélection à la fin
+  $("new-round").addEventListener("click", () => {
+    $("golf-select").style.display = "block";
+    $("score-summary").innerHTML = "";
+    $("hole-card").innerHTML = "";
+  });
 }
 
-// === SAUVEGARDE LOCALSTORAGE ===
 function saveRound(round) {
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   history.push(round);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
+
+// ---- Small style for active score button (optional) ----
+document.addEventListener("DOMContentLoaded", () => {
+  const style = document.createElement("style");
+  style.textContent = `
+    .active-score { outline: 2px solid #00ff99; box-shadow: 0 0 0 2px rgba(0,255,153,0.25) inset; }
+    table th { background:#00ff99; color:#000; padding:.4rem .5rem; }
+    table td { padding:.35rem .5rem; border-bottom:1px solid #222; }
+  `;
+  document.head.appendChild(style);
+});
