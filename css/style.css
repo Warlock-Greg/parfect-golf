@@ -432,6 +432,13 @@ td {
   box-shadow: 0 0 15px rgba(0,255,153,0.25);
 }
 
+  .coach-text {
+  font-size: 1rem;
+  font-weight: 700;
+  text-shadow: 0 0 8px rgba(0,255,153,0.4);
+}
+
+  
 /* === MODAL === */
 .end-modal {
   position: fixed;
