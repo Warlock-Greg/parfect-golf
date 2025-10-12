@@ -98,6 +98,33 @@ body {
 .modal-body { font-size: .98rem; line-height: 1.4; margin: 8px 0 14px; }
 .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; }
 
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 1rem;
+  outline: none;
+}
+.modal-input:focus { border-color: #3cb371; box-shadow: 0 0 0 3px rgba(60,179,113,.15); }
+
+.btn-primary {
+  background: #3cb371; color: #fff; border: none;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 700;
+}
+.btn-ghost {
+  background: transparent; color: #333; border: 1px solid #ccc;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
+}
+.btn-primary:active, .btn-ghost:active { transform: translateY(1px); }
+
+/* animations */
+@keyframes fadeIn { from {opacity:0} to {opacity:1} }
+@keyframes popUp { to { transform: translateY(0) } }
+
+/* Empêche le scroll du fond quand la modale est ouverte */
+.body-lock { overflow: hidden; }
 /* === Contenu principal avec ombre === */
 main, .content {
   background: rgba(255, 255, 255, 0.95);
