@@ -49,6 +49,18 @@ body {
   box-shadow: 0 0 15px rgba(0,255,153,0.15);
 }
 
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* ✅ centrage vertical et horizontal */
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 3000;
+}
+
+
+
 #footer-objective {
   position: fixed;
   bottom: 0;
