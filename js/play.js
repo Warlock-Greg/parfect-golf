@@ -306,8 +306,9 @@ if (currentHole === 9 || currentHole === 12) {
 }
 
 // ---- End Round & Save ----
-function endRound() {
-  const totalVsPar = sumVsPar(holes.filter(Boolean));
+function endRound(showBadge = false) {
+  // === CALCULS ===
+  const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
   const parfects = holes.filter(
     (h) => h && h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
   ).length;
@@ -315,7 +316,7 @@ function endRound() {
     (h) => h && h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
   ).length;
 
-  // Save to localStorage
+  // === SAUVEGARDE DANS LE LOCALSTORAGE ===
   saveRound({
     date: new Date().toISOString(),
     golf: currentGolf.name,
@@ -325,36 +326,73 @@ function endRound() {
     holes,
   });
 
-  // Summary UI
-  $("hole-card").innerHTML = `
-    <h3>Carte terminée 💚</h3>
-    <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
-    <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
+  // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
+  if (showBadge) {
+    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
+    return;
+  }
 
-    <table style="margin:auto;border-collapse:collapse;">
-      <tr><th>Trou</th><th>Par</th><th>Score</th><th>Vs Par</th><th>FW</th><th>GIR</th><th>Putts</th><th>Dist1 (m)</th></tr>
-      ${holes
-        .map((h) => {
-          const diff = h.score - h.par;
-          const vs = diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
-          return `<tr>
-            <td>${h.hole}</td><td>${h.par}</td><td>${h.score}</td><td>${vs}</td>
-            <td>${h.fairway ? "✔" : "—"}</td><td>${h.gir ? "✔" : "—"}</td>
-            <td>${h.putts}</td><td>${h.dist1}</td>
-          </tr>`;
-        })
-        .join("")}
-    </table>
+  // === AFFICHAGE DU RÉSUMÉ STANDARD ===
+  const summary = `
+    <div class="score-summary-card">
+      <h3>Carte terminée 💚</h3>
+      <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+      <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
 
-    <div style="margin-top:12px;">
-      <button class="btn" id="new-round">🔁 Nouvelle partie</button>
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Trou</th>
+            <th>Par</th>
+            <th>Score</th>
+            <th>Vs Par</th>
+            <th>FW</th>
+            <th>GIR</th>
+            <th>Putts</th>
+            <th>Dist1 (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${holes
+            .map((h) => {
+              const diff = h.score - h.par;
+              const vs =
+                diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
+              return `
+                <tr>
+                  <td>${h.hole}</td>
+                  <td>${h.par}</td>
+                  <td>${h.score}</td>
+                  <td>${vs}</td>
+                  <td>${h.fairway ? "✔" : "—"}</td>
+                  <td>${h.gir ? "✔" : "—"}</td>
+                  <td>${h.putts}</td>
+                  <td>${h.dist1}</td>
+                </tr>`;
+            })
+            .join("")}
+        </tbody>
+      </table>
+
+      <div class="end-actions">
+        <button class="btn" id="new-round">🔁 Nouvelle partie</button>
+        <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
+      </div>
     </div>
   `;
 
+  // Injection dans le DOM
+  $("hole-card").innerHTML = summary;
+
+  // === BOUTON NOUVELLE PARTIE ===
   $("new-round").addEventListener("click", () => {
     $("golf-select").style.display = "block";
-    $("score-summary").innerHTML = "";
     $("hole-card").innerHTML = "";
+  });
+
+  // === BOUTON AFFICHER LE BADGE ===
+  $("share-badge").addEventListener("click", () => {
+    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
   });
 }
 
