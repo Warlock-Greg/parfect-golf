@@ -27,6 +27,42 @@ body {
   transform: scale(1.01);
   transition: transform 0.3s ease;
 }
+#objectives {
+  text-align: center;
+  color: #fff;
+  padding: 20px;
+}
+
+.objective-select {
+  margin: 12px auto;
+  color: #00ff99;
+}
+
+.objective-stats {
+  background: rgba(0,255,153,0.1);
+  border: 1px solid rgba(0,255,153,0.3);
+  border-radius: 14px;
+  padding: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+  color: #fff;
+  box-shadow: 0 0 15px rgba(0,255,153,0.15);
+}
+
+#footer-objective {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background: rgba(0,0,0,0.85);
+  color: #00ff99;
+  padding: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-top: 1px solid rgba(0,255,153,0.2);
+  z-index: 999;
+}
 
 
 /* Header & menu */
