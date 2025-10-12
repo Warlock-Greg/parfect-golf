@@ -36,10 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const select = $("level-select");
   const statsZone = $("objective-stats");
   const footerIndex = $("footer-index");
-  const coachSelect = $("coach-select");
+  const coachSelect = $("coach-select-objectives"); // ✅ corrigé ici
   const bioZone = $("coach-bio");
   const chatBox = $("coach-chat");
-  const openChat = $("open-coach-chat");
+  const openChat = $("open-coach-chat-objectives"); // ✅ corrigé aussi
 
   // === Objectifs ===
   function renderStats(level) {
@@ -58,27 +58,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("parfect_objective") || "9";
   select.value = saved;
   renderStats(saved);
-
   select.addEventListener("change", () => renderStats(select.value));
 
   // === Coach ===
-  coachSelect.value = currentCoach;
-  renderCoachBio(currentCoach);
-  coachSelect.addEventListener("change", () => {
-    currentCoach = coachSelect.value;
-    localStorage.setItem("coach", currentCoach);
+  if (coachSelect) { // ✅ sécurité
+    coachSelect.value = currentCoach;
     renderCoachBio(currentCoach);
-  });
+    coachSelect.addEventListener("change", () => {
+      currentCoach = coachSelect.value;
+      localStorage.setItem("coach", currentCoach);
+      renderCoachBio(currentCoach);
+    });
+  }
 
   // === Chat ===
-  openChat.addEventListener("click", () => {
-    chatBox.style.display = "block";
-    openChat.style.display = "none";
-  });
+  if (openChat) {
+    openChat.addEventListener("click", () => {
+      chatBox.style.display = "block";
+      openChat.style.display = "none";
+    });
+  }
 
-  $("send-chat").addEventListener("click", sendMessage);
-  $("chat-text").addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
+  $("send-chat")?.addEventListener("click", sendMessage);
+  $("chat-text")?.addEventListener("keypress", e => {
+    if (e.key === "Enter") sendMessage();
+  });
 });
+
 
 function renderCoachBio(coachKey) {
   const c = coachBios[coachKey];
