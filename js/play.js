@@ -61,6 +61,9 @@ function startRound(golf) {
   currentHole = 1;
   holes = new Array(totalHoles).fill(null); // placeholders
   currentDiff = null;
+
+  // ✅ Remise du score total à 0
+  $("score-summary").textContent = "Score cumulé : 0";
   $("golf-select").style.display = "none";
   $("score-summary").innerHTML = "";
   renderHole();
