@@ -677,6 +677,10 @@ hr {
 .coach-text {
   font-weight: 500;
 }
+.coach-panel button#stop-voice-btn:hover {
+  color: #ff6666 !important;
+  text-shadow: 0 0 4px rgba(255, 0, 0, 0.4);
+}
 
 
 @keyframes coachSlideIn {
