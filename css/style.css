@@ -402,10 +402,7 @@ td {
 }
 
 /* Pour éviter un flash avant animation */
-#home .btn {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
+
 /* === BOUTONS DE SCORE === */
 .score-btn {
   background: #222;
