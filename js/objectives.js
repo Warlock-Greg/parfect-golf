@@ -9,6 +9,27 @@ const objectives = {
   21:{fairways:29,gir:11,putts:36,pars:4,fw:4,gr:2}
 };
 
+const coachBios = {
+  greg: {
+    avatar: "😎",
+    name: "Greg",
+    role: "Mindset & Stratégie",
+    quote: "Smart golf, easy mindset. Reste cool, reste malin."
+  },
+  goathier: {
+    avatar: "🧠",
+    name: "Goathier",
+    role: "Technique & Données",
+    quote: "Le golf, c’est de la physique appliquée à ton swing."
+  },
+  dorothee: {
+    avatar: "💫",
+    name: "Dorothée",
+    role: "Mental & Respiration",
+    quote: "Respire, aligne-toi, laisse le mouvement venir à toi."
+  }
+};
+
 let currentCoach = localStorage.getItem("coach") || "greg";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -16,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsZone = $("objective-stats");
   const footerIndex = $("footer-index");
   const coachSelect = $("coach-select");
+  const bioZone = $("coach-bio");
   const chatBox = $("coach-chat");
   const openChat = $("open-coach-chat");
 
@@ -41,9 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Coach ===
   coachSelect.value = currentCoach;
+  renderCoachBio(currentCoach);
   coachSelect.addEventListener("change", () => {
     currentCoach = coachSelect.value;
     localStorage.setItem("coach", currentCoach);
+    renderCoachBio(currentCoach);
   });
 
   // === Chat ===
@@ -56,18 +80,37 @@ document.addEventListener("DOMContentLoaded", () => {
   $("chat-text").addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
 });
 
-function sendMessage() {
+function renderCoachBio(coachKey) {
+  const c = coachBios[coachKey];
+  $("coach-bio").innerHTML = `
+    <div class="coach-bio-card">
+      <div class="coach-avatar">${c.avatar}</div>
+      <div>
+        <p><strong>${c.name}</strong> — ${c.role}</p>
+        <p class="coach-quote">"${c.quote}"</p>
+      </div>
+    </div>
+  `;
+}
+
+// === Envoi message ===
+async function sendMessage() {
   const input = $("chat-text");
   const msg = input.value.trim();
   if (!msg) return;
   addMessage("user", msg);
   input.value = "";
 
-  // Simulation de réponse du coach (plus tard via API)
-  setTimeout(() => {
-    const reply = coachResponse(msg);
-    addMessage("coach", reply);
-  }, 800);
+  // Essai d'appel API OpenAI
+  const apiResponse = await askCoachAPI(msg, currentCoach);
+  if (apiResponse) {
+    addMessage("coach", apiResponse);
+    return;
+  }
+
+  // Sinon fallback local
+  const reply = coachResponse(msg);
+  addMessage("coach", reply);
 }
 
 function addMessage(role, text) {
@@ -79,13 +122,47 @@ function addMessage(role, text) {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// === Logique simplifiée de réponse (avant API)
+// === Fallback local simple ===
 function coachResponse(msg) {
   if (currentCoach === "goathier") {
-    return "🧠 Goathier : vérifie ton alignement et la position de la balle.";
+    return "🧠 Goathier : vérifie ton alignement et ta vitesse de club.";
   }
   if (currentCoach === "dorothee") {
-    return "💫 Dorothée : respire, reconnecte-toi à ta routine.";
+    return "💫 Dorothée : calme ton souffle, un coup à la fois.";
   }
-  return "😎 Greg : smart golf bro, joue simple et reste chill.";
+  return "😎 Greg : smart golf bro, reste fluide et cool.";
+}
+
+// === Appel OpenAI API (si clé définie) ===
+async function askCoachAPI(message, coach) {
+  const apiKey = localStorage.getItem("openai_key"); // ou ta clé backend
+  if (!apiKey) return null; // pas de clé → pas d'appel
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `Tu es ${coachBios[coach].name}, coach de golf spécialisé en ${coachBios[coach].role}. Sois concis, bienveillant, et motivant.`
+          },
+          { role: "user", content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 100
+      })
+    });
+
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content?.trim() || null;
+  } catch (err) {
+    console.error("Erreur API coach:", err);
+    return null;
+  }
 }
