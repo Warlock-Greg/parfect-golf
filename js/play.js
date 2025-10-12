@@ -396,6 +396,59 @@ function endRound(showBadge = false) {
   });
 }
 
+function showFinalBadge(golfName, totalVsPar, parfects, bogeyfects) {
+  const modal = document.createElement("div");
+  modal.className = "badge-modal";
+  modal.innerHTML = `
+    <div class="badge-content" id="badge-to-share">
+      <h2>🎖️ Parfect Badge</h2>
+      <p>${golfName}</p>
+      <div class="badge-stats">
+        <p>Score total : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+        <p>💚 Parfects : ${parfects}</p>
+        <p>💙 Bogey’fects : ${bogeyfects}</p>
+      </div>
+      <p class="badge-quote">"Smart Golf. Cool Mindset."</p>
+      <button id="share-instagram" class="btn">📸 Partager sur Instagram</button>
+      <button id="close-badge" class="btn secondary">Fermer</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("share-instagram").addEventListener("click", captureBadgeAsImage);
+
+  document.getElementById("close-badge").addEventListener("click", () => {
+    modal.remove();
+    $("golf-select").style.display = "block";
+    $("hole-card").innerHTML = "";
+  });
+}
+
+// === GÉNÉRATION D'IMAGE DU BADGE ===
+async function captureBadgeAsImage() {
+  const badge = document.querySelector(".badge-content");
+  if (!badge) return;
+
+  try {
+    const canvas = await html2canvas(badge, {
+      backgroundColor: "#111", // fond noir élégant
+      scale: 2,                // qualité retina
+      useCORS: true            // support des images distantes
+    });
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "parfect-badge.png";
+    link.click();
+
+    showCoachToast("📸 Badge sauvegardé ! Partage-le sur Instagram 💚", "#00ff99");
+  } catch (e) {
+    console.error("Erreur capture badge :", e);
+    alert("Erreur lors de la capture du badge 😅");
+  }
+}
+
 
 function updateMiniRecap() {
   const recap = document.getElementById("mini-recap");
@@ -456,6 +509,7 @@ function showMidRoundModal(hole, total) {
     endRound(true); // true = badge final
   });
 }
+
 
 
 // ---- Small style for active score button (optional) ----
