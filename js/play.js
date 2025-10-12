@@ -961,3 +961,5 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   document.head.appendChild(style);
 });
+
+window.coachMotivationAuto = coachMotivationAuto;
