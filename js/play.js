@@ -68,6 +68,40 @@ function showCoachToast(message, color) {
   }, 3000);
 }
 
+// === Messages motivationnels aléatoires ===
+function coachMotivationAuto() {
+  const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
+
+  const messages = {
+    greg: [
+      "Reste fluide, chaque coup compte 💚",
+      "Smart golf, pas power golf 😎",
+      "Un trou à la fois, mon ami !",
+      "Focus stratégie, pas technique.",
+      "Respire, aligne, swing naturel."
+    ],
+    goathier: [
+      "Pense tempo et trajectoire 🧠",
+      "Mesure ton swing, optimise ton angle.",
+      "Analyse, ajuste, exécute propre.",
+      "Données > émotions 😉",
+      "Tu joues comme tu planifies, précision avant force."
+    ],
+    dorothee: [
+      "Inspire, relâche, ressens 💫",
+      "Ton calme crée ta précision.",
+      "Chaque souffle prépare ton swing.",
+      "Laisse le mouvement venir, sans forcer.",
+      "Souris avant de frapper — ça change tout."
+    ],
+  };
+
+  const coachMsgs = messages[coachKey] || messages.greg;
+  const randomMsg = coachMsgs[Math.floor(Math.random() * coachMsgs.length)];
+  showCoachToast(randomMsg);
+}
+
+
 // === Messages motivationnels automatiques ===
 function coachMotivationAuto() {
   const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
