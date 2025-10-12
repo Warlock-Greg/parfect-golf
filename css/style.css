@@ -865,6 +865,30 @@ td {
   border-radius: 8px;
 }
 
+
+  .coach-bio-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0,255,153,0.08);
+  border: 1px solid rgba(0,255,153,0.3);
+  border-radius: 12px;
+  padding: 10px;
+  margin: 12px auto;
+  max-width: 400px;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(0,255,153,0.15);
+}
+.coach-avatar {
+  font-size: 2rem;
+}
+.coach-quote {
+  font-style: italic;
+  color: #00ff99;
+  font-size: 0.9rem;
+}
+
+
   /* === COACH TOAST PARFECT STYLE === */
 .coach-toast {
   position: fixed;
