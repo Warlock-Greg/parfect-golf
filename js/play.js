@@ -193,26 +193,52 @@ function renderHole() {
   });
 
   $("next-hole").addEventListener("click", () => {
-  const entry = saveCurrentHole(false); // sauvegarde sans message coach instantané
-
-  // calcul du score total après enregistrement
+  const entry = saveCurrentHole(false);
   holes[currentHole - 1] = entry;
+
+  // === CALCUL DU SCORE TOTAL ===
   const total = holes
     .filter(Boolean)
     .reduce((acc, h) => acc + (h.score - h.par), 0);
 
-  // message d'enregistrement
-  const color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
-  const msg = `Trou ${currentHole} enregistré — ton score est ${
-    total > 0 ? "+" + total : total
-  }`;
+  // === CHECK PARFECT / BOGEY'FECT ===
+  const isParfect = entry.fairway && entry.gir && entry.putts <= 2 && entry.score - entry.par === 0;
+  const isBogeyfect = entry.fairway && !entry.gir && entry.putts <= 2 && entry.score - entry.par === 1;
+
+  // === MESSAGES ALEATOIRES ===
+  const coolMessages = [
+    "Cool tempo bro, next hole easy.",
+    "Smart golf, calm swing.",
+    "Zen swing, big smile.",
+    "Stay chill, enjoy the walk.",
+    "Easy focus, great energy."
+  ];
+
+  const foodEmojis = ["🥤", "🍪", "🥪", "🍩", "🍺", "☕"];
+  const emoji = (currentHole % 3 === 0) ? " " + foodEmojis[Math.floor(Math.random() * foodEmojis.length)] : "";
+
+  let msg = `Trou ${currentHole} enregistré — ton score est ${total > 0 ? "+" + total : total}`;
+  let color = "#00ff99";
+
+  if (isParfect) {
+    msg = `💚 Parfect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
+    color = "#00ff99";
+  } else if (isBogeyfect) {
+    msg = `💙 Bogey’fect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
+    color = "#44ffaa";
+  } else {
+    msg += emoji;
+    color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
+  }
+
+  // === TOAST MESSAGE ===
   showCoachToast(msg, color);
 
-  // message du coach (en second plan)
-  const message = tipAfterHole(entry, "fun");
-  setTimeout(() => showCoachToast(message), 1500);
+  // === MESSAGE COACH GREG APRÈS 1.5s ===
+  const coachMessage = tipAfterHole(entry, "fun");
+  setTimeout(() => showCoachToast(coachMessage), 1600);
 
-  // passage au trou suivant
+  // === PASSAGE AU TROU SUIVANT ===
   setTimeout(() => {
     if (currentHole < totalHoles) {
       currentHole++;
@@ -221,7 +247,7 @@ function renderHole() {
     } else {
       endRound();
     }
-  }, 2500);
+  }, 2600);
 });
 
 
