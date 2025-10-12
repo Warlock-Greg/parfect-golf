@@ -14,13 +14,14 @@ let currentDiff = null;     // score vs par du trou courant (ex: 0, +1, -1, ...)
 
 // ---- Helpers ----
 const SCORE_CHOICES = [
-  { key: "deagle", label: "Double Eagle", diff: -3 },
-  { key: "eagle",  label: "Eagle",        diff: -2 },
-  { key: "birdie", label: "Birdie",       diff: -1 },
-  { key: "par",    label: "Par",          diff:  0 },
+  
   { key: "bogey",  label: "Bogey",        diff:  1 },
+  { key: "par",    label: "Par",          diff:  0 },
+  { key: "birdie", label: "Birdie",       diff: -1 },
   { key: "double", label: "Double",       diff:  2 },
   { key: "triple", label: "Triple",       diff:  3 },
+  { key: "eagle",  label: "Eagle",        diff: -2 },
+  { key: "deagle", label: "Double Eagle", diff: -3 },
 ];
 
 function sumVsPar(arr) {
@@ -125,7 +126,7 @@ function renderHole() {
   // ---- Score buttons
   const btnWrap = $("score-buttons");
   btnWrap.innerHTML = SCORE_CHOICES.map(sc => `
-    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.6rem .8rem;">${sc.label}</button>
+    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.1rem .1rem;">${sc.label}</button>
   `).join("");
 
   // Active selection
