@@ -544,6 +544,98 @@ function endRound(showBadge = false) {
     holes,
   });
 
+
+/**
+ * Ouvre une modale de saisie (facultative) pour la distance du 1er putt.
+ * @returns {Promise<{value: number|null, skipped: boolean}>}
+ */
+function promptFirstPuttModal() {
+  return new Promise((resolve) => {
+    // Évite les doublons
+    if (document.querySelector('.modal-backdrop')) {
+      resolve({ value: null, skipped: true });
+      return;
+    }
+
+    // Backdrop + carte
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.setAttribute('role', 'dialog');
+    backdrop.setAttribute('aria-modal', 'true');
+
+    const card = document.createElement('div');
+    card.className = 'modal-card';
+    card.innerHTML = `
+      <div class="modal-header">
+        <div class="coach-avatar" style="font-size:1.3rem">😎</div>
+        <div class="modal-title">Distance du 1er putt</div>
+      </div>
+      <div class="modal-body">
+        <p>Si tu t’en souviens, indique la distance de ton premier putt (en mètres).<br>
+        <em>Tu peux aussi passer si tu ne veux pas la saisir.</em></p>
+        <input id="first-putt-field" class="modal-input" type="number" inputmode="decimal"
+               min="0" step="0.1" placeholder="ex. 6.5" />
+      </div>
+      <div class="modal-actions">
+        <button id="skip-putt" class="btn-ghost">Passer</button>
+        <button id="ok-putt" class="btn-primary">Valider</button>
+      </div>
+    `;
+
+    backdrop.appendChild(card);
+    document.body.appendChild(backdrop);
+    document.body.classList.add('body-lock');
+
+    const input = card.querySelector('#first-putt-field');
+    const btnOk = card.querySelector('#ok-putt');
+    const btnSkip = card.querySelector('#skip-putt');
+
+    // Focus auto
+    setTimeout(() => input?.focus(), 50);
+
+    const cleanup = () => {
+      document.body.classList.remove('body-lock');
+      backdrop.remove();
+    };
+
+    // Valider (saisie facultative)
+    btnOk.addEventListener('click', () => {
+      const raw = (input.value || '').trim();
+      if (raw === '') {
+        cleanup();
+        resolve({ value: null, skipped: false }); // pas de valeur mais pas une annulation
+        return;
+      }
+      const num = Number(raw.replace(',', '.'));
+      cleanup();
+      resolve({ value: isNaN(num) ? null : num, skipped: false });
+    });
+
+    // Passer
+    btnSkip.addEventListener('click', () => {
+      cleanup();
+      resolve({ value: null, skipped: true });
+    });
+
+    // Fermer via ESC → équivaut à "Passer"
+    document.addEventListener('keydown', function onEsc(e) {
+      if (e.key === 'Escape') {
+        document.removeEventListener('keydown', onEsc);
+        cleanup();
+        resolve({ value: null, skipped: true });
+      }
+    });
+
+    // Clique hors carte → ne ferme pas (pour éviter miss-clicks)
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        // rien
+      }
+    });
+  });
+}
+
+  
   // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
   if (showBadge) {
     showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
