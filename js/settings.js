@@ -1,87 +1,60 @@
-// js/settings.js  — robust against load order & modules
-
-// === Protection par code PIN ===
+// === SETTINGS (sécurisés avec PIN 2914) ===
 document.addEventListener("DOMContentLoaded", () => {
-  const settingsSection = document.getElementById("settings");
-  const pin = "2914";
+  const pinCode = 2914;
+  const section = document.getElementById("settings");
+  const input = document.getElementById("openai-key-input");
+  const saveBtn = document.getElementById("save-openai-key");
+  const currentKey = document.getElementById("current-key");
 
-  // Si on essaie d'ouvrir la page "Settings"
-  const observer = new MutationObserver(() => {
-    if (settingsSection && settingsSection.style.display === "block") {
-      const entered = prompt("🔒 Entrez le code PIN pour accéder aux réglages :");
-      if (entered !== pin) {
-        alert("❌ Code incorrect !");
-        showPage("home");
-      }
+  // 🔒 PIN de sécurité à l’ouverture
+  if (section) {
+    const entered = prompt("🔐 Entre ton code PIN pour accéder aux paramètres :");
+    if (parseInt(entered, 10) !== pinCode) {
+      alert("❌ Code incorrect. Accès refusé.");
+      section.innerHTML = "<h3>🔒 Accès refusé</h3>";
+      return;
     }
+  }
+
+  // 🧠 Vérifie si une clé est déjà enregistrée
+  const savedKey = localStorage.getItem("openai_key");
+  if (savedKey) {
+    currentKey.textContent = "🔑 Clé OpenAI enregistrée ✔️";
+    testOpenAIKey(savedKey, currentKey);
+  } else {
+    currentKey.textContent = "⚠️ Aucune clé enregistrée";
+  }
+
+  // 💾 Sauvegarde de la clé
+  saveBtn.addEventListener("click", () => {
+    const key = input.value.trim();
+    if (!key.startsWith("sk-")) {
+      alert("Clé OpenAI invalide — elle doit commencer par sk-");
+      return;
+    }
+    localStorage.setItem("openai_key", key);
+    input.value = "";
+    currentKey.textContent = "🔑 Clé OpenAI enregistrée ✔️";
+    testOpenAIKey(key, currentKey);
+    alert("✅ Clé OpenAI enregistrée avec succès !");
   });
-
-  observer.observe(settingsSection, { attributes: true, attributeFilter: ["style"] });
 });
 
-
-// 1) Ensure a global coachBios exists (fallback if objectives.js hasn't run yet)
-if (!window.coachBios) {
-  window.coachBios = {
-    greg:     { avatar: "😎", name: "Greg",     role: "Mindset & Stratégie",   quote: "Smart golf, easy mindset. Reste cool, reste malin." },
-    goathier: { avatar: "🧠", name: "Goathier", role: "Technique & Données",   quote: "Le golf, c’est de la physique appliquée à ton swing." },
-    dorothee: { avatar: "💫", name: "Dorothée", role: "Mental & Respiration",  quote: "Respire, aligne-toi, laisse le mouvement venir à toi." }
-  };
+// === Vérifie la validité de la clé via OpenAI ===
+async function testOpenAIKey(apiKey, displayElement) {
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { "Authorization": `Bearer ${apiKey}` }
+    });
+    if (res.ok) {
+      displayElement.textContent = "✅ Clé OpenAI active et valide";
+      displayElement.style.color = "#00c676";
+    } else {
+      displayElement.textContent = "⚠️ Clé OpenAI invalide ou expirée";
+      displayElement.style.color = "#ff6666";
+    }
+  } catch (err) {
+    displayElement.textContent = "⚠️ Erreur réseau ou clé invalide";
+    displayElement.style.color = "#ff6666";
+  }
 }
-
-// 2) Create a local alias so references use a defined identifier
-const coachBios = window.coachBios;
-
-// 3) Safe helper (if you rely on window.$ from main.js it’s fine too)
-const $$ = (id) => document.getElementById(id);
-
-document.addEventListener("DOMContentLoaded", () => {
-  const coachSelect = $$("#coach-select-settings");
-  const keyInput    = $$("#openai-key-input");
-  const saveKeyBtn  = $$("#save-openai-key");
-  const currentKeyDisplay = $$("#current-key");
-
-  // Load saved values
-  const savedCoach = localStorage.getItem("coach") || "greg";
-  const savedKey   = localStorage.getItem("openai_key") || "";
-
-  if (coachSelect) {
-    coachSelect.value = savedCoach;
-    renderCoachBioSettings(savedCoach);
-
-    coachSelect.addEventListener("change", () => {
-      const coach = coachSelect.value;
-      localStorage.setItem("coach", coach);
-      renderCoachBioSettings(savedCoach);
-      // If your toast exists:
-      if (window.showCoachToast) {
-        window.showCoachToast(`👨‍🏫 Coach ${coachBios[coach].name} sélectionné`, "#00ff99");
-      }
-    });
-  }
-
-  if (savedKey && currentKeyDisplay) {
-    const masked = savedKey.slice(0, 6) + "..." + savedKey.slice(-4);
-    currentKeyDisplay.innerHTML = `<p>🔑 Clé actuelle : <strong>${masked}</strong></p>`;
-  }
-
-  if (saveKeyBtn) {
-    saveKeyBtn.addEventListener("click", () => {
-      const key = keyInput?.value.trim();
-      if (!key) {
-        alert("Entre ta clé OpenAI pour activer le chat coach.");
-        return;
-      }
-      localStorage.setItem("openai_key", key);
-      if (currentKeyDisplay) {
-        const masked = key.slice(0, 6) + "..." + key.slice(-4);
-        currentKeyDisplay.innerHTML = `<p>🔑 Clé actuelle : <strong>${masked}</strong></p>`;
-      }
-      if (keyInput) keyInput.value = "";
-      if (window.showCoachToast) {
-        window.showCoachToast("💾 Clé OpenAI enregistrée avec succès", "#00ff99");
-      }
-    });
-  }
-});
-
