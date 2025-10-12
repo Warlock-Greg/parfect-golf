@@ -33,17 +33,20 @@ const coachBios = {
 let currentCoach = localStorage.getItem("coach") || "greg";
 
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ objectives.js chargé");
+
   const select = $("level-select");
   const statsZone = $("objective-stats");
   const footerIndex = $("footer-index");
-  const coachSelect = $("coach-select-objectives"); // ✅ corrigé ici
+  const coachSelect = $("coach-select-objectives"); // ✅ nouveau bon ID
   const bioZone = $("coach-bio");
   const chatBox = $("coach-chat");
-  const openChat = $("open-coach-chat-objectives"); // ✅ corrigé aussi
+  const openChat = $("open-coach-chat-objectives"); // ✅ nouveau bon ID
 
   // === Objectifs ===
   function renderStats(level) {
     const o = objectives[level];
+    if (!o) return;
     statsZone.innerHTML = `
       <div class="objective-card">
         <p><strong>Fairways :</strong> ${o.fairways}% (${o.fw})</p>
@@ -56,12 +59,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const saved = localStorage.getItem("parfect_objective") || "9";
-  select.value = saved;
-  renderStats(saved);
-  select.addEventListener("change", () => renderStats(select.value));
+  if (select) {
+    select.value = saved;
+    renderStats(saved);
+    select.addEventListener("change", () => renderStats(select.value));
+  }
 
   // === Coach ===
-  if (coachSelect) { // ✅ sécurité
+  if (coachSelect) {
     coachSelect.value = currentCoach;
     renderCoachBio(currentCoach);
     coachSelect.addEventListener("change", () => {
@@ -72,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === Chat ===
-  if (openChat) {
+  if (openChat && chatBox) {
     openChat.addEventListener("click", () => {
       chatBox.style.display = "block";
       openChat.style.display = "none";
