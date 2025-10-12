@@ -130,6 +130,32 @@
   </div>
 </section>
 
+<!-- === PARAMÈTRES === -->
+<section id="settings" style="display:none;">
+  <h2>⚙️ Paramètres</h2>
+
+  <div class="settings-card">
+    <h3>Mon Coach</h3>
+    <select id="coach-select-settings">
+      <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
+      <option value="goathier">Goathier 🧠 (Technique & Données)</option>
+      <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
+    </select>
+
+    <div id="settings-coach-bio" class="coach-bio"></div>
+
+    <hr />
+
+    <h3>API OpenAI</h3>
+    <p style="opacity:0.8;font-size:0.9rem;">(nécessaire pour discuter avec le coach IA)</p>
+    <input type="password" id="openai-key-input" placeholder="Colle ta clé OpenAI ici" />
+    <button class="btn" id="save-openai-key">💾 Enregistrer la clé</button>
+
+    <div id="current-key" class="current-key"></div>
+  </div>
+</section>
+
+    
 <footer id="footer-objective">
   Mon objectif : <strong id="footer-index">index 9</strong>
 </footer>
