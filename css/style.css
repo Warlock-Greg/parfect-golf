@@ -320,6 +320,122 @@ td {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
+/* === BOUTONS DE SCORE === */
+.score-btn {
+  background: #222;
+  border: 1px solid #333;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 8px;
+}
+.score-btn:hover {
+  background: #333;
+  border-color: #00ff99;
+  color: #00ff99;
+}
+.active-score {
+  background: #00ff99;
+  color: #000;
+  border-color: #00ff99;
+}
+
+/* === PARFECT / BOGEY'FECT === */
+#btn-parfect {
+  background: #00ff99;
+  color: #000;
+}
+#btn-bogeyfect {
+  background: #44ffaa;
+  color: #000;
+}
+#btn-parfect:hover {
+  background: #00cc7a;
+}
+#btn-bogeyfect:hover {
+  background: #33e0cc;
+}
+
+/* === NAVIGATION TROUS === */
+#prev-hole,
+#next-hole {
+  background: #222;
+  color: #44ffaa;
+  border: 1px solid #44ffaa;
+  font-weight: 600;
+}
+#prev-hole:hover,
+#next-hole:hover {
+  background: #44ffaa;
+  color: #000;
+  transform: scale(1.03);
+}
+/* === COACH GREG PANEL === */
+.coach-panel {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  background: rgba(0, 255, 153, 0.08);
+  border: 1px solid rgba(0, 255, 153, 0.3);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 10px 16px;
+  color: #00ff99;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 25px rgba(0, 255, 153, 0.25);
+  opacity: 0;
+  z-index: 9999;
+  animation: coachSlideIn 2.8s ease forwards;
+}
+
+.coach-avatar {
+  font-size: 1.6rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  padding: 4px 6px;
+}
+
+@keyframes coachSlideIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-15px) scale(0.95); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.95); }
+}
+
+  /* === COACH TOAST PARFECT STYLE === */
+.coach-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: rgba(0, 255, 153, 0.08);
+  border: 1px solid rgba(0, 255, 153, 0.3);
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: #00ff99;
+  font-weight: 600;
+  text-align: center;
+  font-size: 1rem;
+  box-shadow: 0 0 25px rgba(0, 255, 153, 0.2);
+  opacity: 0;
+  z-index: 9999;
+  animation: coachFade 2.2s ease forwards;
+}
+@keyframes coachFade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.95); }
+  15%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  85%  { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.9); }
+}
+
+/* Variante pour ton fun/zen/tough si tu veux plus tard */
+.coach-toast.zen { color: #44ffaa; border-color: #44ffaa; box-shadow: 0 0 25px rgba(68, 255, 170, 0.3); }
+.coach-toast.tough { color: #ff6666; border-color: #ff6666; box-shadow: 0 0 25px rgba(255, 102, 102, 0.25); }
 
   
 }
