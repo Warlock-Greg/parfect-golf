@@ -12,7 +12,7 @@ body {
   color: #f1f1f1;
   text-align: center;
   min-height: 100vh;
-}
+}x
 
 .exo-media {
   width: 100%;
@@ -706,12 +706,21 @@ hr {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* 📱 Ajustements mobile */
+/* 📱 Sur mobile : toast pleine largeur collé en bas */
 @media (max-width: 768px) {
   .coach-panel {
-    font-size: 0.95rem;
+    bottom: 0;
+    left: 0;
+    transform: translateY(100%);
+    width: 100%;
+    max-width: none;
+    border-radius: 12px 12px 0 0;
+    justify-content: space-between;
     padding: 12px;
-    gap: 8px;
+  }
+
+  .coach-panel.show {
+    transform: translateY(0);
   }
   #stop-voice-btn {
     font-size: 0.8rem;
