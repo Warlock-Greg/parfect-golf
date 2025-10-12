@@ -32,6 +32,7 @@ function showCoachToast(message) {
   panel.className = "coach-panel";
   panel.innerHTML = `
     <div class="coach-avatar">😎</div>
+    <strong style="font-size:1.1rem;">Coach Greg</strong> says:
     <div class="coach-text">${message}</div>
   `;
   document.body.appendChild(panel);
