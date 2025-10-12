@@ -662,7 +662,63 @@ td {
   transform: scale(1.03);
 }
 
-  
+  .score-summary-card {
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px auto;
+  max-width: 540px;
+  box-shadow: 0 0 25px rgba(0,255,153,0.15);
+  color: #fff;
+  text-align: center;
+}
+
+.score-summary-card h3 {
+  color: #00ff99;
+}
+
+.score-summary-card strong {
+  color: #44ffaa;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+
+.score-table th {
+  background: rgba(0,255,153,0.2);
+  color: #00ff99;
+  font-weight: 700;
+  padding: 6px;
+}
+
+.score-table td {
+  border-bottom: 1px solid #333;
+  padding: 6px;
+}
+
+.end-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.end-actions .btn.secondary {
+  background: #333;
+  color: #44ffaa;
+  border: 1px solid #44ffaa;
+}
+
+.end-actions .btn.secondary:hover {
+  background: #44ffaa;
+  color: #000;
+}
+
   /* === COACH TOAST PARFECT STYLE === */
 .coach-toast {
   position: fixed;
