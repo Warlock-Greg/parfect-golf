@@ -84,11 +84,21 @@ function startExercise(exo) {
   const objectif = exo.objectif || 10;
   let currentCount = 0;
 
-  const mediaBlock = exo.media
-    ? exo.media.endsWith(".mp4")
-      ? `<video src="${exo.media}" controls class="exo-media"></video>`
-      : `<img src="${exo.media}" alt="${exo.name}" class="exo-media" />`
-    : "";
+  // === Gestion du média avec fallback ===
+const defaultMedia = {
+  putting: "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/defaults/putting_default.jpg",
+  chipping: "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/defaults/chipping_default.jpg",
+  driving: "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/defaults/driving_default.jpg",
+  irons: "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/defaults/irons_default.jpg",
+  mental: "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/defaults/mental_default.jpg"
+};
+
+const mediaUrl = exo.media || defaultMedia[exo.type.toLowerCase()] || defaultMedia.putting;
+
+const mediaBlock = mediaUrl.endsWith(".mp4")
+  ? `<video src="${mediaUrl}" controls class="exo-media"></video>`
+  : `<img src="${mediaUrl}" alt="${exo.name}" class="exo-media" />`;
+
 
   zone.innerHTML = `
     <div class="training-session-card">
