@@ -243,6 +243,14 @@ function renderHole() {
 
   // === PASSAGE AU TROU SUIVANT ===
   setTimeout(() => {
+    // Vérifie si on est au 9 ou 12
+if (currentHole === 9 || currentHole === 12) {
+  if (confirm(`Tu veux terminer ta partie après ${currentHole} trous ?`)) {
+    endRound();
+    return; // stop ici
+  }
+}
+
     if (currentHole < totalHoles) {
       currentHole++;
       currentDiff = null;
