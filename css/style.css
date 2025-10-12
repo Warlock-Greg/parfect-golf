@@ -455,6 +455,45 @@ td {
   font-size: 1rem;
 }
 
+
+  #settings {
+  text-align: center;
+  color: #fff;
+  padding: 1rem;
+}
+
+.settings-card {
+  background: rgba(0,255,153,0.08);
+  border: 1px solid rgba(0,255,153,0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 0 auto;
+  max-width: 420px;
+  box-shadow: 0 0 20px rgba(0,255,153,0.15);
+}
+
+#openai-key-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #111;
+  color: #fff;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.current-key {
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.2);
+  margin: 16px 0;
+}
+
   
 /* === MINI RECAP === */
 .mini-recap {
