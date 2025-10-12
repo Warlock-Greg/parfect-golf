@@ -357,9 +357,68 @@ function renderHole() {
     }
   });
 
-  $("next-hole").addEventListener("click", () => {
+  $("next-hole").addEventListener("click", async () => {
+  // 🔹 Demande la distance du 1er putt via modale
+  const result = await promptFirstPuttModal();
+
+  // 🔹 Sauvegarde du trou courant
   const entry = saveCurrentHole(false);
+  if (result.value !== null) entry.dist1 = result.value;
   holes[currentHole - 1] = entry;
+
+  // 🔹 Score total actuel
+  const total = holes
+    .filter(Boolean)
+    .reduce((acc, h) => acc + (h.score - h.par), 0);
+
+  // 🔹 Détection Parfect / Bogey’fect
+  const isParfect = entry.fairway && entry.gir && entry.putts <= 2 && entry.score - entry.par === 0;
+  const isBogeyfect = entry.fairway && !entry.gir && entry.putts <= 2 && entry.score - entry.par === 1;
+
+  const coolMessages = [
+    "Cool tempo bro, next hole easy.",
+    "Smart golf, calm swing.",
+    "Zen swing, big smile.",
+    "Stay chill, enjoy the walk.",
+    "Easy focus, great energy."
+  ];
+
+  const foodEmojis = ["🥤", "🍪", "🥪", "🍩", "🍺", "☕"];
+  const emoji = (currentHole % 3 === 0) ? " " + foodEmojis[Math.floor(Math.random() * foodEmojis.length)] : "";
+
+  let msg = `Trou ${currentHole} enregistré — ton score est ${total > 0 ? "+" + total : total}`;
+  let color = "#00ff99";
+
+  if (isParfect) {
+    msg = `💚 Parfect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
+    color = "#00ff99";
+  } else if (isBogeyfect) {
+    msg = `💙 Bogey’fect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
+    color = "#44ffaa";
+  } else {
+    msg += emoji;
+    color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
+  }
+
+  showCoachToast(msg, color);
+
+  // 🔹 Dernier trou → sauvegarde et affiche résumé
+  if (currentHole === 9 || currentHole === totalHoles) {
+    setTimeout(() => {
+      endRound();
+      showCoachToast("👏 Partie sauvegardée et ajoutée à l'historique !");
+    }, 2500);
+    return;
+  }
+
+  // 🔹 Sinon → trou suivant
+  setTimeout(() => {
+    currentHole++;
+    currentDiff = null;
+    renderHole();
+  }, 2500);
+});
+
 
   // === CALCUL DU SCORE TOTAL ===
   const total = holes
@@ -666,6 +725,54 @@ function showMidRoundModal(hole, total) {
   document.getElementById("save-round").addEventListener("click", () => {
     modal.remove();
     endRound(true); // true = badge final
+  });
+}
+// === MODALE SAISIE DISTANCE 1ER PUTT ===
+function promptFirstPuttModal() {
+  return new Promise((resolve) => {
+    if (document.querySelector('.modal-backdrop')) {
+      resolve({ value: null, skipped: true });
+      return;
+    }
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal-card">
+        <h3 style="margin-bottom:6px;">Distance du 1er putt</h3>
+        <p style="font-size:0.95rem;">Si tu t’en souviens, indique la distance de ton premier putt (en mètres).<br>
+        <em>Tu peux aussi passer si tu ne veux pas la saisir.</em></p>
+        <input id="first-putt-field" type="number" inputmode="decimal"
+               placeholder="ex. 6.5" min="0" step="0.1"
+               style="width:100%;padding:8px;margin-top:10px;border-radius:8px;border:1px solid #ccc;">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
+          <button id="skip-putt" class="btn" style="background:#ccc;">Passer</button>
+          <button id="ok-putt" class="btn" style="background:#00c676;color:white;">Valider</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    const field = backdrop.querySelector("#first-putt-field");
+    field.focus();
+
+    const cleanup = () => backdrop.remove();
+
+    backdrop.querySelector("#ok-putt").addEventListener("click", () => {
+      const val = field.value.trim();
+      if (val === "") {
+        cleanup();
+        resolve({ value: null, skipped: false });
+        return;
+      }
+      cleanup();
+      resolve({ value: parseFloat(val), skipped: false });
+    });
+
+    backdrop.querySelector("#skip-putt").addEventListener("click", () => {
+      cleanup();
+      resolve({ value: null, skipped: true });
+    });
   });
 }
 
