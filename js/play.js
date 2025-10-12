@@ -244,16 +244,16 @@ function renderHole() {
   const coachMessage = tipAfterHole(entry, "fun");
   setTimeout(() => showCoachToast(coachMessage), 1600);
 
-  // === PASSAGE AU TROU SUIVANT ===
-  setTimeout(() => {
-    // Vérifie si on est au 9 ou 12
+
+// === MODAL DEMI-PARTIE ===
 if (currentHole === 9 || currentHole === 12) {
-  if (confirm(`Tu veux terminer ta partie après ${currentHole} trous ?`)) {
-    endRound();
-    return; // stop ici
-  }
+  showMidRoundModal(currentHole, total);
+  return; // stop ici, la suite sera gérée dans la modal
 }
 
+    
+  // === PASSAGE AU TROU SUIVANT ===
+  setTimeout(() => {
     if (currentHole < totalHoles) {
       currentHole++;
       currentDiff = null;
@@ -357,6 +357,8 @@ function endRound() {
     $("hole-card").innerHTML = "";
   });
 }
+
+
 function updateMiniRecap() {
   const recap = document.getElementById("mini-recap");
   if (!recap) return;
@@ -385,6 +387,38 @@ function saveRound(round) {
   history.push(round);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
+
+function showMidRoundModal(hole, total) {
+  const modal = document.createElement("div");
+  modal.className = "midround-modal";
+  modal.innerHTML = `
+    <div class="midround-content">
+      <h3>Mi-parcours ⛳</h3>
+      <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${
+        total > 0 ? "+" + total : total
+      }.</p>
+      <p>Tu veux continuer ou sauvegarder ta partie maintenant ?</p>
+      <div class="midround-actions">
+        <button id="continue-round" class="btn">Continuer</button>
+        <button id="save-round" class="btn save">💾 Sauvegarder</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("continue-round").addEventListener("click", () => {
+    modal.remove();
+    currentHole++;
+    currentDiff = null;
+    renderHole();
+  });
+
+  document.getElementById("save-round").addEventListener("click", () => {
+    modal.remove();
+    endRound(true); // true = badge final
+  });
+}
+
 
 // ---- Small style for active score button (optional) ----
 document.addEventListener("DOMContentLoaded", () => {
