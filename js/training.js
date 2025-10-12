@@ -79,36 +79,73 @@ function startExercise(exo) {
   const zone = $("training-session");
   const coach = tipAfterPractice(exo.type, "fun");
 
-  $("training-exercises").style.display = "none"; // masque la liste
+  $("training-exercises").style.display = "none";
+
+  const objectif = exo.objectif || 10;
+  let currentCount = 0;
+
+  const mediaBlock = exo.media
+    ? exo.media.endsWith(".mp4")
+      ? `<video src="${exo.media}" controls class="exo-media"></video>`
+      : `<img src="${exo.media}" alt="${exo.name}" class="exo-media" />`
+    : "";
 
   zone.innerHTML = `
-    <div class="exo-session">
+    <div class="training-session-card">
+      <div class="media-container">${mediaBlock}</div>
+
       <h4>${exo.name}</h4>
-      <p>${exo.goal}</p>
+      <p class="goal">${exo.goal}</p>
+
       <div class="coach-panel">
         <div class="coach-avatar">😎</div>
         <div class="coach-text">${coach}</div>
       </div>
 
-      <label>Performance :</label>
-      <input type="text" id="perf-input" placeholder="Ex: 8/10 réussis ou 70%" />
-      <label>Commentaire :</label>
-      <textarea id="note-input" placeholder="Tes sensations..."></textarea>
+      <div class="progress-block">
+        <div id="progress-label">Progression : 0 / ${objectif}</div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <button class="btn" id="btn-add-success">+1 Réussi</button>
+      </div>
 
-      <div class="exo-actions">
+      <div class="inputs">
+        <label>Performance :</label>
+        <input type="text" id="perf-input" placeholder="Ex: 8/10 réussis ou 70%" />
+
+        <label>Commentaire :</label>
+        <textarea id="note-input" placeholder="Tes sensations..."></textarea>
+      </div>
+
+      <div class="actions">
         <button class="btn" id="save-perf">Sauvegarder</button>
-        <button class="btn" id="change-exo">🔁 Changer d'exercice</button>
+        <button class="btn secondary" id="change-exo">🔁 Changer d'exercice</button>
       </div>
     </div>
   `;
 
+  // === CHANGEMENT EXO ===
   $("change-exo").addEventListener("click", () => {
     $("training-exercises").style.display = "block";
-    $("training-session").innerHTML = "";
+    zone.innerHTML = "";
   });
 
+  // === INCREMENTATION SUCCÈS ===
+  $("btn-add-success").addEventListener("click", () => {
+    if (currentCount < objectif) {
+      currentCount++;
+      const percent = (currentCount / objectif) * 100;
+      $("progress-fill").style.width = percent + "%";
+      $("progress-label").textContent = `Progression : ${currentCount} / ${objectif}`;
+    }
+  });
+
+  // === SAUVEGARDE ===
   $("save-perf").addEventListener("click", () => {
-    const perf = $("perf-input").value.trim();
+    const perf =
+      $("perf-input").value.trim() ||
+      `${currentCount}/${objectif} réussis (${Math.round(
+        (currentCount / objectif) * 100
+      )}%)`;
     const note = $("note-input").value.trim();
     if (!perf) return alert("Indique ta performance.");
 
