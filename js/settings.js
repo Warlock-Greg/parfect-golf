@@ -65,17 +65,3 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-function renderCoachBioSettings(coachKey) {
-  const c = coachBios[coachKey]; // <-- uses the local alias defined above
-  const target = document.getElementById("settings-coach-bio");
-  if (!target || !c) return;
-  target.innerHTML = `
-    <div class="coach-bio-card">
-      <div class="coach-avatar">${c.avatar}</div>
-      <div>
-        <p><strong>${c.name}</strong> — ${c.role}</p>
-        <p class="coach-quote">"${c.quote}"</p>
-      </div>
-    </div>
-  `;
-}
