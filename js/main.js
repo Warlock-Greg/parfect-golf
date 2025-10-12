@@ -25,6 +25,34 @@ document.getElementById("training-btn").addEventListener("click", () => {
   document.getElementById("training").classList.add("active");
 });
 
+// === Navigation entre les pages via menu burger ===
+document.addEventListener("DOMContentLoaded", () => {
+  const menuLinks = document.querySelectorAll("#menu a[data-page]");
+  const sections = document.querySelectorAll("section");
+
+  function showPage(pageId) {
+    sections.forEach((s) => (s.style.display = "none"));
+    const target = document.getElementById(pageId);
+    if (target) target.style.display = "block";
+  }
+
+  // Gère le clic sur chaque lien du menu
+  menuLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = link.dataset.page;
+      showPage(target);
+
+      // Ferme le menu burger s’il est ouvert
+      const burger = document.getElementById("burger");
+      if (burger && burger.classList.contains("open")) burger.classList.remove("open");
+    });
+  });
+
+  // Page d’accueil par défaut
+  showPage("home");
+});
+
 
 // === Animation d'accueil quotidienne ===
 document.addEventListener("DOMContentLoaded", () => {
