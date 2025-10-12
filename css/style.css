@@ -466,6 +466,42 @@ td {
   margin-top: 10px;
 }
 
+  /* === PROGRESSION BLOCK === */
+.progress-block {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #222;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px 0 10px;
+  border: 1px solid #333;
+}
+
+#progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00ff99, #44ffaa);
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+#btn-add-success {
+  background: #00ff99;
+  color: #000;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.6rem 1.4rem;
+}
+#btn-add-success:hover {
+  background: #00cc7a;
+  transform: scale(1.03);
+}
+
   
   /* === COACH TOAST PARFECT STYLE === */
 .coach-toast {
