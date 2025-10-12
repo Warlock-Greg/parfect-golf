@@ -91,6 +91,7 @@ function renderHole() {
 
   // HTML
   zone.innerHTML = `
+    <div id="mini-recap" class="mini-recap"></div>
     <h3>Trou ${currentHole} — Par ${par}</h3>
     <p>Score cumulé vs Par : <strong id="live-cumu">${liveCumu > 0 ? "+" + liveCumu : liveCumu}</strong></p>
 
@@ -119,6 +120,8 @@ function renderHole() {
       <button id="next-hole" class="btn">Trou suivant ➡️</button>
     </div>
   `;
+  updateMiniRecap();
+
 
   // ---- Score buttons
   const btnWrap = $("score-buttons");
@@ -296,6 +299,8 @@ if (currentHole === 9 || currentHole === 12) {
       const msg = tipAfterHole(entry, "fun");
       showCoachToast(msg);
     }
+    updateMiniRecap();
+
     return entry;
   }
 }
@@ -352,6 +357,28 @@ function endRound() {
     $("hole-card").innerHTML = "";
   });
 }
+function updateMiniRecap() {
+  const recap = document.getElementById("mini-recap");
+  if (!recap) return;
+
+  const played = holes.filter(Boolean);
+  const totalPlayed = played.length;
+  const totalVsPar = played.reduce((acc, h) => acc + (h.score - h.par), 0);
+  const parfects = played.filter(
+    (h) => h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
+  ).length;
+  const bogeyfects = played.filter(
+    (h) => h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
+  ).length;
+
+  recap.innerHTML = `
+    <span>Trou ${currentHole}/${totalHoles}</span>
+    <span>Score : <strong style="color:${totalVsPar > 0 ? '#ff6666' : totalVsPar < 0 ? '#00ff99' : '#fff'}">${totalVsPar > 0 ? '+' + totalVsPar : totalVsPar}</strong></span>
+    <span>💚 ${parfects}</span>
+    <span>💙 ${bogeyfects}</span>
+  `;
+}
+
 
 function saveRound(round) {
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
