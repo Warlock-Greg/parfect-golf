@@ -63,29 +63,6 @@
   </button>
 </section>
 
-    <section id="objectives">
-  <h2>🎯 Mes Objectifs</h2>
-
-  <div class="objective-select">
-    <label for="level-select">Choisis ton objectif (index) :</label>
-    <select id="level-select">
-      <option value="0">Index 0</option>
-      <option value="5">Index 5</option>
-      <option value="7">Index 7</option>
-      <option value="9" selected>Index 9</option>
-      <option value="12">Index 12</option>
-      <option value="15">Index 15</option>
-      <option value="18">Index 18</option>
-      <option value="21">Index 21</option>
-    </select>
-  </div>
-
-  <div id="objective-stats" class="objective-stats"></div>
-</section>
-
-<footer id="footer-objective">
-  Mon objectif : <strong id="footer-index">index 9</strong>
-</footer>
 
 
     <!-- HISTORIQUE DES PARTIES -->
@@ -97,6 +74,50 @@
     🧹 Réinitialiser l’historique
   </button>
 </section>
+
+
+    <!-- === OBJECTIFS & COACH === -->
+<section id="objectives" style="display:none;">
+  <h2>🎯 Mes Objectifs & Coach</h2>
+
+  <div class="objective-zone">
+    <div class="objective-select">
+      <label for="level-select">Mon objectif (index) :</label>
+      <select id="level-select">
+        <option value="0">Index 0</option>
+        <option value="5">Index 5</option>
+        <option value="7">Index 7</option>
+        <option value="9" selected>Index 9</option>
+        <option value="12">Index 12</option>
+        <option value="15">Index 15</option>
+        <option value="18">Index 18</option>
+        <option value="21">Index 21</option>
+      </select>
+    </div>
+
+    <div id="objective-stats" class="objective-stats"></div>
+
+    <div class="coach-choose">
+      <label for="coach-select">Mon coach :</label>
+      <select id="coach-select">
+        <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
+        <option value="goathier">Goathier 🧠 (Technique & Données)</option>
+        <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
+      </select>
+    </div>
+
+    <button id="open-coach-chat" class="btn">💬 Discuter avec mon coach</button>
+  </div>
+
+  <div id="coach-chat" class="coach-chat" style="display:none;">
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="chat-input">
+      <input id="chat-text" type="text" placeholder="Pose ta question au coach..." />
+      <button id="send-chat" class="btn">Envoyer</button>
+    </div>
+  </div>
+</section>
+
 
   </main>
 
