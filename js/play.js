@@ -159,7 +159,7 @@ function showCoachToast(message, color) {
       panel.style.transform = "translateY(-10px)";
       setTimeout(() => panel.remove(), 300);
     }
-  }, 4000);
+  }, 15000);
 }
 
 
@@ -401,7 +401,7 @@ function renderHole() {
 
   // === MESSAGE COACH GREG APRÈS 1.5s ===
   const coachMessage = tipAfterHole(entry, "fun");
-  setTimeout(() => showCoachToast(coachMessage), 1600);
+  setTimeout(() => showCoachToast(coachMessage), 7000);
 
 
 // === MODAL DEMI-PARTIE ===
