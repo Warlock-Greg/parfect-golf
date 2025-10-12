@@ -72,6 +72,71 @@ body {
   overflow-y: auto;
   z-index: 3000;
 }
+/* === Modal générique === */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 4000;
+  animation: fadeIn .18s ease-out;
+}
+
+.modal-card {
+  width: min(92vw, 420px);
+  background: #fff;
+  color: #222;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  padding: 18px;
+  transform: translateY(8px);
+  animation: popUp .18s ease-out forwards;
+}
+
+.modal-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.modal-title { font-size: 1.15rem; font-weight: 700; }
+.modal-body { font-size: .98rem; line-height: 1.4; margin: 8px 0 14px; }
+.modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 10px; }
+
+/* === Contenu principal avec ombre === */
+main, .content {
+  background: rgba(255, 255, 255, 0.95);
+  color: #222;
+  margin: 20px auto;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  max-width: 900px;
+  backdrop-filter: blur(5px);
+}
+
+
+.modal-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 1rem;
+  outline: none;
+}
+.modal-input:focus { border-color: #3cb371; box-shadow: 0 0 0 3px rgba(60,179,113,.15); }
+
+.btn-primary {
+  background: #3cb371; color: #fff; border: none;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 700;
+}
+.btn-ghost {
+  background: transparent; color: #333; border: 1px solid #ccc;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
+}
+.btn-primary:active, .btn-ghost:active { transform: translateY(1px); }
+
+/* animations */
+@keyframes fadeIn { from {opacity:0} to {opacity:1} }
+@keyframes popUp { to { transform: translateY(0) } }
+
+/* Empêche le scroll du fond quand la modale est ouverte */
+.body-lock { overflow: hidden; }
 
 
 
