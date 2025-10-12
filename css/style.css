@@ -502,6 +502,125 @@ td {
   transform: scale(1.03);
 }
 
+  /* === VISUEL CARTE DE SCORE === */
+#hole-card {
+  background: rgba(25, 25, 25, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 18px;
+  margin: 16px auto;
+  max-width: 520px;
+  box-shadow: 0 0 20px rgba(0,255,153,0.08);
+  color: #fff;
+}
+
+#hole-card h3 {
+  text-align: center;
+  color: #00ff99;
+  margin-bottom: 8px;
+}
+
+#hole-card p strong {
+  color: #44ffaa;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(255,255,255,0.05);
+  padding: 8px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+.stats label {
+  color: #00ff99;
+  font-weight: 600;
+}
+
+#hole-card select,
+#hole-card input[type="number"] {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  padding: 4px 8px;
+}
+
+#score-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.score-btn {
+  background: #222;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.score-btn:hover {
+  background: #333;
+  border-color: #00ff99;
+  color: #00ff99;
+}
+
+.active-score {
+  background: #00ff99;
+  color: #000;
+  border-color: #00ff99;
+  transform: scale(1.05);
+}
+
+#btn-parfect,
+#btn-bogeyfect {
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+}
+
+#btn-parfect {
+  background: #00ff99;
+  color: #000;
+}
+#btn-bogeyfect {
+  background: #44ffaa;
+  color: #000;
+}
+
+#btn-parfect:hover {
+  background: #00cc7a;
+}
+#btn-bogeyfect:hover {
+  background: #33e0cc;
+}
+
+#prev-hole,
+#next-hole {
+  background: #222;
+  border: 1px solid #44ffaa;
+  color: #44ffaa;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  transition: 0.2s;
+}
+
+#prev-hole:hover,
+#next-hole:hover {
+  background: #44ffaa;
+  color: #000;
+  transform: scale(1.03);
+}
+
   
   /* === COACH TOAST PARFECT STYLE === */
 .coach-toast {
