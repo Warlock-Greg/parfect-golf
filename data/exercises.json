@@ -4,7 +4,7 @@
     "name": "Putting Distance Control",
     "type": "putting",
     "goal": "10 putts à 3m avec bon tempo",
-    "level": "easy"
+    "level": "easy",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   },
@@ -13,7 +13,7 @@
     "name": "Chip Landing Spot",
     "type": "chipping",
     "goal": "10 chips sur zone 2m",
-    "level": "medium"
+    "level": "medium",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   },
@@ -22,7 +22,7 @@
     "name": "Driver Fairway Finder",
     "type": "driving",
     "goal": "8/10 fairways touchés",
-    "level": "medium"
+    "level": "medium",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   },
@@ -31,7 +31,7 @@
     "name": "Iron Target Practice",
     "type": "irons",
     "goal": "10 balles sur cible 7m",
-    "level": "medium"
+    "level": "medium",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   },
@@ -40,7 +40,7 @@
     "name": "Lag Putting Challenge",
     "type": "putting",
     "goal": "5 putts à 8m dans rayon 50cm",
-    "level": "hard"
+    "level": "hard",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   },
@@ -49,7 +49,7 @@
     "name": "Routine Focus Drill",
     "type": "mental",
     "goal": "5 coups avec routine complète",
-    "level": "easy"
+    "level": "easy",
     "objectif": 10,
     "media": "https://.../putting1.mp4"
   }
