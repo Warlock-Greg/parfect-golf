@@ -23,6 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       console.warn("⚠️ Section introuvable :", pageId);
     }
+    if (pageId === "play") coachMotivationAuto();
+
   }
 
   // === Navigation via le menu principal ===
