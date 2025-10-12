@@ -213,38 +213,136 @@ td {
 }
 
 /* ======= MENU BURGER ======= */
+
+/* --- Bouton burger --- */
 #menu-toggle {
-  font-size: 1.8rem;
+  position: relative;
+  width: 30px;
+  height: 22px;
   background: none;
   border: none;
   cursor: pointer;
+  z-index: 110;
 }
 
-/* menu desktop */
+/* Les trois barres du burger */
+#menu-toggle::before,
+#menu-toggle::after,
+#menu-toggle span {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #333;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Barre du milieu */
+#menu-toggle span {
+  top: 9px;
+}
+
+/* Barre du haut */
+#menu-toggle::before {
+  top: 0;
+}
+
+/* Barre du bas */
+#menu-toggle::after {
+  bottom: 0;
+}
+
+/* --- Animation burger → croix --- */
+#menu-toggle.open::before {
+  transform: rotate(45deg);
+  top: 9px;
+}
+
+#menu-toggle.open::after {
+  transform: rotate(-45deg);
+  bottom: 9px;
+}
+
+#menu-toggle.open span {
+  opacity: 0;
+}
+
+/* --- Navigation (menu) --- */
 #menu {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 
-/* menu mobile : masqué par défaut */
+/* Boutons du menu */
+#menu button {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 1rem;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+#menu button:hover {
+  background: #3cb371;
+  color: white;
+  border-radius: 6px;
+}
+
+/* === Mode mobile === */
 @media (max-width: 768px) {
   #menu {
     display: none;
     flex-direction: column;
     position: absolute;
-    top: 60px; /* juste sous le header */
+    top: 60px;
     left: 0;
     width: 100%;
-    background: white;
-    border-top: 1px solid #ddd;
-    padding: 12px;
+    background: rgba(30, 30, 30, 0.95);
+    border-top: 1px solid #222;
+    padding: 12px 0;
     z-index: 100;
   }
 
   #menu.visible {
-    display: flex; /* ✅ affiché quand .visible est ajouté */
+    display: flex;
+    animation: slideDown 0.3s ease forwards;
+  }
+
+  #menu button {
+    color: #f0f0f0;
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    width: 100%;
+    text-align: left;
+  }
+
+  #menu button:hover {
+    background: #3cb371;
+    color: #fff;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
+
+/* === Visible aussi sur desktop quand actif === */
+#menu.visible {
+  display: flex !important;
+}
+
 
 
 /* Mobile adaptation */
