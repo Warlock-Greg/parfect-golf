@@ -24,3 +24,26 @@ document.getElementById("training-btn").addEventListener("click", () => {
   sections.forEach(s => s.classList.remove("active"));
   document.getElementById("training").classList.add("active");
 });
+
+
+// === Animation d'accueil quotidienne ===
+document.addEventListener("DOMContentLoaded", () => {
+  const today = new Date().toDateString();
+  const lastAnim = localStorage.getItem("homeAnimationDate");
+
+  const playBtn = document.getElementById("new-round-btn");
+  const trainBtn = document.getElementById("training-btn");
+
+  if (!playBtn || !trainBtn) return;
+
+  if (lastAnim !== today) {
+    // 💥 Lance l'animation une seule fois par jour
+    playBtn.classList.add("animate-once");
+    trainBtn.classList.add("animate-once");
+    localStorage.setItem("homeAnimationDate", today);
+  } else {
+    // pas d'animation
+    playBtn.style.opacity = 1;
+    trainBtn.style.opacity = 1;
+  }
+});
