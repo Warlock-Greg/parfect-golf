@@ -523,7 +523,6 @@ if (currentHole === 9 || currentHole === 12) {
       endRound();
     }
   }, 2600);
-});
 
 
   // ---- Live cumu updater
