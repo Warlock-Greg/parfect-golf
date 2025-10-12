@@ -93,7 +93,6 @@ function renderHole() {
   zone.innerHTML = `
     <div id="mini-recap" class="mini-recap"></div>
     <h3>Trou ${currentHole} — Par ${par}</h3>
-    <p>Score cumulé vs Par : <strong id="live-cumu">${liveCumu > 0 ? "+" + liveCumu : liveCumu}</strong></p>
 
     <div id="score-buttons" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0;"></div>
 
