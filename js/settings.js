@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
     coachSelect.addEventListener("change", () => {
       const coach = coachSelect.value;
       localStorage.setItem("coach", coach);
-      renderCoachBioSettings(coach);
+      renderCoachBioSettings(savedCoach);
       // If your toast exists:
       if (window.showCoachToast) {
         window.showCoachToast(`👨‍🏫 Coach ${coachBios[coach].name} sélectionné`, "#00ff99");
