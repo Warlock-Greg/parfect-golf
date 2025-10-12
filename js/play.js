@@ -27,13 +27,13 @@ function sumVsPar(arr) {
   return arr.reduce((acc, h) => acc + ((h?.score ?? h?.par ?? 0) - (h?.par ?? 0)), 0);
 }
 
-function showCoachToast(message) {
+function showCoachToast(message, color = "#00ff99") {
   const panel = document.createElement("div");
   panel.className = "coach-panel";
   panel.innerHTML = `
     <div class="coach-avatar">😎</div>
     <strong style="font-size:1.1rem;">Coach Greg</strong> says:
-    <div class="coach-text">${message}</div>
+    <div class="coach-text" style="color:${color}>${message}</div>
   `;
   document.body.appendChild(panel);
   setTimeout(() => panel.remove(), 2800);
@@ -134,7 +134,6 @@ function renderHole() {
     btn.addEventListener("click", () => {
       currentDiff = parseInt(btn.dataset.diff, 10);
       highlightSelection();
-      updateLiveCumu();
     });
   });
 
@@ -172,7 +171,6 @@ function renderHole() {
     puttsSel.value = 2;
     currentDiff = 0; // Par
     highlightSelection();
-    updateLiveCumu();
   });
 
   // ---- Bogey’fect button
@@ -182,7 +180,6 @@ function renderHole() {
     puttsSel.value = 2;
     currentDiff = 1; // Bogey
     highlightSelection();
-    updateLiveCumu();
   });
 
   // ---- Prev / Next
@@ -196,7 +193,27 @@ function renderHole() {
   });
 
   $("next-hole").addEventListener("click", () => {
-    const savedEntry = saveCurrentHole(true); // sauvegarde + coach
+  const entry = saveCurrentHole(false); // sauvegarde sans message coach instantané
+
+  // calcul du score total après enregistrement
+  holes[currentHole - 1] = entry;
+  const total = holes
+    .filter(Boolean)
+    .reduce((acc, h) => acc + (h.score - h.par), 0);
+
+  // message d'enregistrement
+  const color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
+  const msg = `Trou ${currentHole} enregistré — ton score est ${
+    total > 0 ? "+" + total : total
+  }`;
+  showCoachToast(msg, color);
+
+  // message du coach (en second plan)
+  const message = tipAfterHole(entry, "fun");
+  setTimeout(() => showCoachToast(message), 1500);
+
+  // passage au trou suivant
+  setTimeout(() => {
     if (currentHole < totalHoles) {
       currentHole++;
       currentDiff = null;
@@ -204,7 +221,9 @@ function renderHole() {
     } else {
       endRound();
     }
-  });
+  }, 2500);
+});
+
 
   // ---- Live cumu updater
   function updateLiveCumu() {
