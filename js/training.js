@@ -7,6 +7,7 @@ const TRAINING_KEY = "trainingHistory";
 
 let exercises = [];
 let selectedType = null;
+let currentExercise = null;
 
 document.addEventListener("DOMContentLoaded", () => initTraining());
 
@@ -20,21 +21,27 @@ async function initTraining() {
     )
     .join("");
 
+  // écoute des clics type
   document.querySelectorAll(".training-type").forEach((btn) =>
     btn.addEventListener("click", () => {
       selectedType = btn.dataset.type;
+      setActiveTypeButton(selectedType);
       loadExercises(selectedType);
     })
   );
 
   exercises = await fetchExercises();
-
-  // Historique + bouton reset
   renderHistory();
-  $("reset-history")?.addEventListener("click", resetHistory);
 }
 
-// === CHARGEMENT DES EXERCICES ===
+function setActiveTypeButton(type) {
+  document.querySelectorAll(".training-type").forEach((b) =>
+    b.classList.remove("active-type")
+  );
+  const active = document.querySelector(`.training-type[data-type="${type}"]`);
+  if (active) active.classList.add("active-type");
+}
+
 function loadExercises(type) {
   const exZone = $("training-exercises");
   const exos = exercises.filter((e) => e.type?.toLowerCase().includes(type));
@@ -67,35 +74,46 @@ function loadExercises(type) {
   );
 }
 
-// === DÉROULEMENT D’UN EXERCICE ===
 function startExercise(exo) {
+  currentExercise = exo;
   const zone = $("training-session");
   const coach = tipAfterPractice(exo.type, "fun");
+
+  $("training-exercises").style.display = "none"; // masque la liste
 
   zone.innerHTML = `
     <div class="exo-session">
       <h4>${exo.name}</h4>
       <p>${exo.goal}</p>
-      <div class="coach-box" style="background:#111;padding:10px;border-radius:8px;color:#00ff99;margin:10px 0;">
-        ${coach}
+      <div class="coach-panel">
+        <div class="coach-avatar">😎</div>
+        <div class="coach-text">${coach}</div>
       </div>
+
       <label>Performance :</label>
       <input type="text" id="perf-input" placeholder="Ex: 8/10 réussis ou 70%" />
       <label>Commentaire :</label>
       <textarea id="note-input" placeholder="Tes sensations..."></textarea>
-      <button class="btn" id="save-perf">Sauvegarder</button>
+
+      <div class="exo-actions">
+        <button class="btn" id="save-perf">Sauvegarder</button>
+        <button class="btn" id="change-exo">🔁 Changer d'exercice</button>
+      </div>
     </div>
   `;
+
+  $("change-exo").addEventListener("click", () => {
+    $("training-exercises").style.display = "block";
+    $("training-session").innerHTML = "";
+  });
 
   $("save-perf").addEventListener("click", () => {
     const perf = $("perf-input").value.trim();
     const note = $("note-input").value.trim();
     if (!perf) return alert("Indique ta performance.");
+
     savePerformance({ ...exo, perf, note });
-    zone.innerHTML = `
-      <p style="color:#00ff99;">✅ Performance enregistrée !</p>
-      <p>${tipAfterPractice(exo.type, "zen")}</p>
-    `;
+    showEndModal(exo);
     renderHistory();
   });
 }
@@ -110,15 +128,42 @@ function savePerformance(entry) {
   localStorage.setItem(TRAINING_KEY, JSON.stringify(data));
 }
 
-// === AFFICHAGE DE L’HISTORIQUE ===
+// === MODAL FIN D'EXERCICE ===
+function showEndModal(exo) {
+  const modal = document.createElement("div");
+  modal.className = "end-modal";
+  modal.innerHTML = `
+    <div class="end-content">
+      <h3>✅ Bien joué Greg !</h3>
+      <p>Tu veux recommencer l'exercice ou en changer ?</p>
+      <div class="end-actions">
+        <button class="btn" id="restart-exo">🔄 Recommencer</button>
+        <button class="btn" id="new-exo">↩️ Changer d'exercice</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  $("restart-exo").addEventListener("click", () => {
+    modal.remove();
+    startExercise(exo);
+  });
+
+  $("new-exo").addEventListener("click", () => {
+    modal.remove();
+    $("training-session").innerHTML = "";
+    $("training-exercises").style.display = "block";
+  });
+}
+
+// === HISTORIQUE ===
 function renderHistory() {
   const histZone = $("training-history");
   if (!histZone) return;
 
   const data = JSON.parse(localStorage.getItem(TRAINING_KEY) || "[]");
   if (!data.length) {
-    histZone.innerHTML =
-      "<p style='opacity:.6'>Aucun entraînement enregistré pour le moment.</p>";
+    histZone.innerHTML = "<p style='opacity:.6'>Aucun entraînement enregistré pour le moment.</p>";
     return;
   }
 
@@ -129,30 +174,20 @@ function renderHistory() {
     <div class="history-list">
       ${data
         .map((h) => {
-          const d = new Date(h.date);
-          const date = d.toLocaleDateString("fr-FR", {
+          const d = new Date(h.date).toLocaleDateString("fr-FR", {
             day: "2-digit",
             month: "short",
             year: "2-digit",
           });
-          const coach = tipAfterPractice(h.type, "fun");
           return `
-            <div class="history-item" style="background:#111;padding:10px;margin:6px auto;border-radius:8px;max-width:520px;text-align:left">
+            <div class="history-item">
               <div style="color:#00ff99;font-weight:600">${h.name}</div>
-              <div style="font-size:.85rem;opacity:.8">${date} · ${h.type}</div>
+              <div style="font-size:.85rem;opacity:.8">${d} · ${h.type}</div>
               <div style="margin:4px 0;">Perf : <strong>${h.perf}</strong></div>
               ${h.note ? `<div style="font-size:.9rem;opacity:.9;">Note : ${h.note}</div>` : ""}
-              <div style="color:#00ff99;margin-top:4px;font-size:.9rem;">${coach}</div>
             </div>`;
         })
         .join("")}
     </div>
   `;
-}
-
-// === RÉINITIALISATION ===
-function resetHistory() {
-  if (!confirm("🧹 Supprimer tout l’historique d’entraînement ?")) return;
-  localStorage.removeItem(TRAINING_KEY);
-  renderHistory();
 }
