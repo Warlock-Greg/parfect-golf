@@ -1,4 +1,4 @@
-Modale d’explication Carte de Score // js/play.js
+// js/play.js
 import { fetchGolfs } from "./data.js";
 import { tipAfterHole } from "./coach.js";
 
