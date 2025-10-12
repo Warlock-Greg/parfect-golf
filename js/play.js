@@ -1,4 +1,4 @@
-// js/play.js
+Modale d’explication Carte de Score // js/play.js
 import { fetchGolfs } from "./data.js";
 import { tipAfterHole } from "./coach.js";
 
@@ -347,6 +347,49 @@ function renderHole() {
     highlightSelection();
   });
 
+// === Modale d’explication Carte de Score ===
+function showIntroModal() {
+  if (localStorage.getItem("seen_intro_modal")) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal intro";
+  modal.innerHTML = `
+    <div class="modal-content" style="
+      background:white;
+      color:#222;
+      border-radius:12px;
+      max-width:400px;
+      margin:20vh auto;
+      padding:20px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+      text-align:center;">
+      <h2>Ta Carte de Score 💚</h2>
+      <p>Note chaque trou avec précision.<br>
+      <strong>Parfect</strong> = Par parfait, stratégie & sang-froid.<br>
+      <strong>Bogeyfect</strong> (à renommer 💡) = bogey bien géré.</p>
+      <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;">
+        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
+      </label>
+      <button id="close-intro" class="btn" style="margin-top:12px;">C’est parti !</button>
+    </div>`;
+  document.body.appendChild(modal);
+
+  document.getElementById("close-intro").addEventListener("click", () => {
+    if (document.getElementById("hide-intro").checked) {
+      localStorage.setItem("seen_intro_modal", "true");
+    }
+    modal.remove();
+  });
+}
+
+// Appel automatique à l’ouverture de la page Carte de score
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.location.hash.includes("play")) showIntroModal();
+});
+
+
+
+  
   // ---- Prev / Next
   $("prev-hole").addEventListener("click", () => {
     saveCurrentHole(false); // sauvegarde sans coach toast
