@@ -29,8 +29,8 @@ function sumVsPar(arr) {
 }
 
 // === Coach Toast + motivation automatique ===
+// === Coach Toast + audio + vibration + voix personnalisée ===
 function showCoachToast(message, color) {
-  // récupère le coach actif
   const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
 
   const coaches = {
@@ -42,16 +42,28 @@ function showCoachToast(message, color) {
   const coach = coaches[coachKey] || coaches.greg;
   const finalColor = color || coach.color;
 
+  // Supprime tout toast existant avant d’en créer un nouveau
+  document.querySelectorAll(".coach-panel").forEach(p => p.remove());
+
+  // --- Création du toast ---
   const panel = document.createElement("div");
   panel.className = "coach-panel";
   panel.innerHTML = `
     <div class="coach-avatar">${coach.avatar}</div>
     <strong style="font-size:1.1rem;">Coach ${coach.name}</strong> dit :
     <div class="coach-text" style="color:${finalColor};">${message}</div>
+    <button id="stop-voice-btn" style="
+      margin-left:auto;
+      background:none;
+      border:none;
+      color:${finalColor};
+      font-weight:bold;
+      cursor:pointer;
+    ">🛑 Stop</button>
   `;
   document.body.appendChild(panel);
 
-  // animation simple
+  // --- Animation d’apparition ---
   panel.style.opacity = "0";
   panel.style.transition = "opacity 0.3s ease, transform 0.3s ease";
   panel.style.transform = "translateY(10px)";
@@ -60,13 +72,96 @@ function showCoachToast(message, color) {
     panel.style.transform = "translateY(0)";
   });
 
-  // disparition
+  // --- Petit son "ping" ---
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.value = 0.05;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  } catch (err) {
+    console.warn("Audio non supporté :", err);
+  }
+
+  // --- Vibration courte ---
+  if ("vibrate" in navigator) {
+    navigator.vibrate(80);
+  }
+
+  // --- Synthèse vocale personnalisée ---
+  if ("speechSynthesis" in window) {
+    // Stoppe toute voix en cours
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = "fr-FR";
+    utterance.pitch = 1;
+    utterance.rate = 1.0;
+    utterance.volume = 1;
+
+    // Fonction pour choisir une voix spécifique selon le coach
+    const setVoiceForCoach = (voices) => {
+      // On essaye de trouver une voix FR spécifique
+      const frVoices = voices.filter(v => v.lang.startsWith("fr"));
+      let chosenVoice = null;
+
+      if (coachKey === "dorothee") {
+        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("female"))
+          || frVoices.find(v => v.name.toLowerCase().includes("femme"))
+          || frVoices.find(v => v.name.toLowerCase().includes("google français"))
+          || frVoices[0];
+        utterance.pitch = 1.2;
+        utterance.rate = 1.0;
+      } else if (coachKey === "goathier") {
+        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("google français"))
+          || frVoices.find(v => v.name.toLowerCase().includes("male"))
+          || frVoices[0];
+        utterance.pitch = 0.9;
+        utterance.rate = 0.9;
+      } else if (coachKey === "greg") {
+        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("google français"))
+          || frVoices.find(v => v.name.toLowerCase().includes("male"))
+          || frVoices[0];
+        utterance.pitch = 1.0;
+        utterance.rate = 1.05;
+      }
+
+      if (chosenVoice) utterance.voice = chosenVoice;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    // Certains navigateurs chargent les voix de façon asynchrone
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length) {
+      setVoiceForCoach(voices);
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        setVoiceForCoach(window.speechSynthesis.getVoices());
+      };
+    }
+
+    // --- Bouton "Stop" ---
+    document.getElementById("stop-voice-btn")?.addEventListener("click", () => {
+      window.speechSynthesis.cancel();
+      panel.remove();
+    });
+  }
+
+  // --- Disparition automatique du toast (sauf si on stoppe) ---
   setTimeout(() => {
-    panel.style.opacity = "0";
-    panel.style.transform = "translateY(-10px)";
-    setTimeout(() => panel.remove(), 300);
-  }, 3000);
+    if (document.body.contains(panel)) {
+      panel.style.opacity = "0";
+      panel.style.transform = "translateY(-10px)";
+      setTimeout(() => panel.remove(), 300);
+    }
+  }, 4000);
 }
+
 
 // === Messages motivationnels aléatoires ===
 function coachMotivationAuto() {
