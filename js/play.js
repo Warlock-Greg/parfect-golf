@@ -28,17 +28,80 @@ function sumVsPar(arr) {
   return arr.reduce((acc, h) => acc + ((h?.score ?? h?.par ?? 0) - (h?.par ?? 0)), 0);
 }
 
-function showCoachToast(message, color = "#00ff99") {
+// === Coach Toast + motivation automatique ===
+function showCoachToast(message, color) {
+  // récupère le coach actif
+  const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
+
+  const coaches = {
+    greg: { name: "Greg", avatar: "😎", color: "#00ff99" },
+    goathier: { name: "Goathier", avatar: "🧠", color: "#4db8ff" },
+    dorothee: { name: "Dorothée", avatar: "💫", color: "#ff99cc" },
+  };
+
+  const coach = coaches[coachKey] || coaches.greg;
+  const finalColor = color || coach.color;
+
   const panel = document.createElement("div");
   panel.className = "coach-panel";
   panel.innerHTML = `
-    <div class="coach-avatar">😎</div>
-    <strong style="font-size:1.1rem;">Coach Greg</strong> says:
-    <div class="coach-text" style="color:${color}>${message}</div>
+    <div class="coach-avatar">${coach.avatar}</div>
+    <strong style="font-size:1.1rem;">Coach ${coach.name}</strong> dit :
+    <div class="coach-text" style="color:${finalColor};">${message}</div>
   `;
   document.body.appendChild(panel);
-  setTimeout(() => panel.remove(), 2800);
+
+  // animation simple
+  panel.style.opacity = "0";
+  panel.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+  panel.style.transform = "translateY(10px)";
+  requestAnimationFrame(() => {
+    panel.style.opacity = "1";
+    panel.style.transform = "translateY(0)";
+  });
+
+  // disparition
+  setTimeout(() => {
+    panel.style.opacity = "0";
+    panel.style.transform = "translateY(-10px)";
+    setTimeout(() => panel.remove(), 300);
+  }, 3000);
 }
+
+// === Messages motivationnels automatiques ===
+function coachMotivationAuto() {
+  const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
+
+  const messages = {
+    greg: [
+      "Reste fluide, chaque coup compte 💚",
+      "Smart golf, pas power golf 😎",
+      "Un trou à la fois, mon ami !",
+      "Focus stratégie, pas technique.",
+      "Respire, aligne, swing naturel."
+    ],
+    goathier: [
+      "Pense tempo et trajectoire 🧠",
+      "Mesure ton swing, optimise ton angle.",
+      "Analyse, ajuste, exécute propre.",
+      "Données > émotions 😉",
+      "Tu joues comme tu planifies, précision avant force."
+    ],
+    dorothee: [
+      "Inspire, relâche, ressens 💫",
+      "Ton calme crée ta précision.",
+      "Chaque souffle prépare ton swing.",
+      "Laisse le mouvement venir, sans forcer.",
+      "Souris avant de frapper — ça change tout."
+    ],
+  };
+
+  const coachMsgs = messages[coachKey] || messages.greg;
+  const randomMsg = coachMsgs[Math.floor(Math.random() * coachMsgs.length)];
+
+  showCoachToast(randomMsg);
+}
+
 
 // ---- Init golf list ----
 (async function initGolfSelect() {
