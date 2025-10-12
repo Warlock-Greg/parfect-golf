@@ -1,5 +1,25 @@
 // js/settings.js  — robust against load order & modules
 
+// === Protection par code PIN ===
+document.addEventListener("DOMContentLoaded", () => {
+  const settingsSection = document.getElementById("settings");
+  const pin = "2914";
+
+  // Si on essaie d'ouvrir la page "Settings"
+  const observer = new MutationObserver(() => {
+    if (settingsSection && settingsSection.style.display === "block") {
+      const entered = prompt("🔒 Entrez le code PIN pour accéder aux réglages :");
+      if (entered !== pin) {
+        alert("❌ Code incorrect !");
+        showPage("home");
+      }
+    }
+  });
+
+  observer.observe(settingsSection, { attributes: true, attributeFilter: ["style"] });
+});
+
+
 // 1) Ensure a global coachBios exists (fallback if objectives.js hasn't run yet)
 if (!window.coachBios) {
   window.coachBios = {
