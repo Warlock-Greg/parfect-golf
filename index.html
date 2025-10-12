@@ -9,38 +9,43 @@
 
 <body>
   <header>
-    <h1><img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
-               alt="Parfect Golfr" class="header-image" style="max-width:100px; margin:0 auto;">Parfect.golfr</h1>
+    <h1>
+      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
+           alt="Parfect Golfr" class="header-image" style="max-width:100px; margin:0 auto;">
+      Parfect.golfr
+    </h1>
+
+    <!-- ✅ ID corrigé pour correspondre à main.js -->
     <button id="menu-toggle">☰</button>
+
     <nav id="menu">
       <button data-target="home">🏠 Accueil</button>
       <button data-target="training">🏌️‍♂️ Entraînement</button>
       <button data-target="play">⛳ Partie</button>
       <button data-target="history">📜 Historique</button>
       <button data-target="objectives">🎯 Objectifs</button>
-      <button data-target="settings">⚙️ Settings</button>
+      <button data-target="settings">⚙️ Paramètres</button>
     </nav>
   </header>
 
   <main>
-    <!-- HOME -->
-  <!-- ACCUEIL -->
-<section id="home" class="active">
-  <h2>Bienvenue</h2> 
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
-               alt="Parfect Golfr" class="header-image" style="max-width:200px; margin:0 auto;">
-  <h2> Prêt à délivrer le meilleur de ton Golf ? <br>Suis les conseils de Coach Greg 💚! </h2>
-  <p> 🎯 Baisse ton index, <br>sans changer ton swing ⛳️.</p>
+    <!-- === ACCUEIL === -->
+    <section id="home" class="active">
+      <h2>Bienvenue</h2>
+      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
+           alt="Parfect Golfr" class="header-image" style="max-width:200px; margin:0 auto;">
+      <h2>Prêt à délivrer le meilleur de ton Golf ? <br>Suis les conseils de Coach Greg 💚!</h2>
+      <p>🎯 Baisse ton index,<br>sans changer ton swing ⛳️.</p>
 
-  <div class="home-buttons">
-    <button class="btn btn-play" id="new-round-btn">💚 Jouer</button>
-    <button class="btn btn-train" id="training-btn">💙 S’entraîner</button>
-  </div>
+      <div class="home-buttons">
+        <button class="btn btn-play" id="new-round-btn">💚 Jouer</button>
+        <button class="btn btn-train" id="training-btn">💙 S’entraîner</button>
+      </div>
 
-  <button class="btn" id="view-history" style="margin-top:16px;">📜 Historique</button>
-</section>
+      <button class="btn" id="view-history" style="margin-top:16px;">📜 Historique</button>
+    </section>
 
-    <!-- PLAY -->
+    <!-- === PARTIE (PLAY) === -->
     <section id="play">
       <h2>Nouvelle partie</h2>
       <div id="golf-select"></div>
@@ -48,121 +53,108 @@
       <div id="score-summary"></div>
     </section>
 
-    <!-- TRAINING -->
-   <section id="training">
-  <h2>Training Zone</h2>
+    <!-- === ENTRAÎNEMENT (TRAINING) === -->
+    <section id="training">
+      <h2>Training Zone</h2>
+      <div id="training-type" class="training-types"></div>
+      <div id="training-exercises"></div>
+      <div id="training-session"></div>
 
-  <div id="training-type" class="training-types"></div>
-  <div id="training-exercises"></div>
-  <div id="training-session"></div>
+      <hr style="margin:20px auto;width:90%;border:1px solid #222;" />
 
-  <hr style="margin:20px auto;width:90%;border:1px solid #222;" />
+      <div id="training-history"></div>
 
-  <div id="training-history"></div>
+      <button id="reset-history" class="btn" style="background:#ff4d4d;margin-top:12px;">
+        🧹 Réinitialiser l’historique
+      </button>
+    </section>
 
-  <button id="reset-history" class="btn" style="background:#ff4d4d;margin-top:12px;">
-    🧹 Réinitialiser l’historique
-  </button>
-</section>
-
-
-
-    <!-- HISTORIQUE DES PARTIES -->
-<section id="history">
-  <h2>📜 Historique des parties</h2>
-  <div id="history-summary"></div>  <!-- 🧠 le compteur global -->
-  <div id="history-list"></div>
-  <button id="reset-rounds" class="btn" style="background:#ff4d4d;margin-top:12px;">
-    🧹 Réinitialiser l’historique
-  </button>
-</section>
-
+    <!-- === HISTORIQUE DES PARTIES === -->
+    <section id="history">
+      <h2>📜 Historique des parties</h2>
+      <div id="history-summary"></div>
+      <div id="history-list"></div>
+      <button id="reset-rounds" class="btn" style="background:#ff4d4d;margin-top:12px;">
+        🧹 Réinitialiser l’historique
+      </button>
+    </section>
 
     <!-- === OBJECTIFS & COACH === -->
-<section id="objectives" style="display:none;">
-  <h2>🎯 Mes Objectifs & Coach</h2>
+    <section id="objectives">
+      <h2>🎯 Mes Objectifs & Coach</h2>
 
-  <div class="objective-zone">
-    <div class="objective-select">
-      <label for="level-select">Mon objectif (index) :</label>
-      <select id="level-select">
-        <option value="0">Index 0</option>
-        <option value="5">Index 5</option>
-        <option value="7">Index 7</option>
-        <option value="9" selected>Index 9</option>
-        <option value="12">Index 12</option>
-        <option value="15">Index 15</option>
-        <option value="18">Index 18</option>
-        <option value="21">Index 21</option>
-      </select>
-    </div>
+      <div class="objective-zone">
+        <div class="objective-select">
+          <label for="level-select">Mon objectif (index) :</label>
+          <select id="level-select">
+            <option value="0">Index 0</option>
+            <option value="5">Index 5</option>
+            <option value="7">Index 7</option>
+            <option value="9" selected>Index 9</option>
+            <option value="12">Index 12</option>
+            <option value="15">Index 15</option>
+            <option value="18">Index 18</option>
+            <option value="21">Index 21</option>
+          </select>
+        </div>
 
-    <div id="objective-stats" class="objective-stats"></div>
+        <div id="objective-stats" class="objective-stats"></div>
 
-    <div class="coach-choose">
-      <label for="coach-select">Mon coach :</label>
-      <select id="coach-select">
-        <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
-        <option value="goathier">Goathier 🧠 (Technique & Données)</option>
-        <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
-      </select>
-    </div>
-<div class="coach-choose">
-  <label for="coach-select">Mon coach :</label>
-  <select id="coach-select">
-    <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
-    <option value="goathier">Goathier 🧠 (Technique & Données)</option>
-    <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
-  </select>
-</div>
+        <!-- ✅ IDs corrigés pour éviter doublons -->
+        <div class="coach-choose">
+          <label for="coach-select-objectives">Mon coach :</label>
+          <select id="coach-select-objectives">
+            <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
+            <option value="goathier">Goathier 🧠 (Technique & Données)</option>
+            <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
+          </select>
+        </div>
 
-<div id="coach-bio" class="coach-bio"></div>
+        <div id="coach-bio" class="coach-bio"></div>
 
-<button id="open-coach-chat" class="btn">💬 Discuter avec mon coach</button>
+        <button id="open-coach-chat-objectives" class="btn">💬 Discuter avec mon coach</button>
+      </div>
 
-    <button id="open-coach-chat" class="btn">💬 Discuter avec mon coach</button>
-  </div>
+      <div id="coach-chat" class="coach-chat" style="display:none;">
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input">
+          <input id="chat-text" type="text" placeholder="Pose ta question au coach..." />
+          <button id="send-chat" class="btn">Envoyer</button>
+        </div>
+      </div>
+    </section>
 
-  <div id="coach-chat" class="coach-chat" style="display:none;">
-    <div id="chat-messages" class="chat-messages"></div>
-    <div class="chat-input">
-      <input id="chat-text" type="text" placeholder="Pose ta question au coach..." />
-      <button id="send-chat" class="btn">Envoyer</button>
-    </div>
-  </div>
-</section>
+    <!-- === PARAMÈTRES === -->
+    <section id="settings">
+      <h2>⚙️ Paramètres</h2>
 
-<!-- === PARAMÈTRES === -->
-<section id="settings" style="display:none;">
-  <h2>⚙️ Paramètres</h2>
+      <div class="settings-card">
+        <h3>Mon Coach</h3>
+        <select id="coach-select-settings">
+          <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
+          <option value="goathier">Goathier 🧠 (Technique & Données)</option>
+          <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
+        </select>
 
-  <div class="settings-card">
-    <h3>Mon Coach</h3>
-    <select id="coach-select-settings">
-      <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
-      <option value="goathier">Goathier 🧠 (Technique & Données)</option>
-      <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
-    </select>
+        <div id="settings-coach-bio" class="coach-bio"></div>
 
-    <div id="settings-coach-bio" class="coach-bio"></div>
+        <hr />
 
-    <hr />
+        <h3>API OpenAI</h3>
+        <p style="opacity:0.8;font-size:0.9rem;">(nécessaire pour discuter avec le coach IA)</p>
+        <input type="password" id="openai-key-input" placeholder="Colle ta clé OpenAI ici" />
+        <button class="btn" id="save-openai-key">💾 Enregistrer la clé</button>
 
-    <h3>API OpenAI</h3>
-    <p style="opacity:0.8;font-size:0.9rem;">(nécessaire pour discuter avec le coach IA)</p>
-    <input type="password" id="openai-key-input" placeholder="Colle ta clé OpenAI ici" />
-    <button class="btn" id="save-openai-key">💾 Enregistrer la clé</button>
-
-    <div id="current-key" class="current-key"></div>
-  </div>
-</section>
-
-    
-<footer id="footer-objective">
-  Mon objectif : <strong id="footer-index">index 9</strong>
-</footer>
+        <div id="current-key" class="current-key"></div>
+      </div>
+    </section>
   </main>
 
+  <footer id="footer-objective">
+    Mon objectif : <strong id="footer-index">index 9</strong>
+  </footer>
+
+  <!-- === Scripts === -->
   <script type="module" src="js/config.js"></script>
   <script type="module" src="js/play.js"></script>
   <script type="module" src="js/training.js"></script>
@@ -170,8 +162,8 @@
   <script type="module" src="js/objectives.js"></script>
   <script type="module" src="js/settings.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="js/main.js"></script>
 
-
+  <!-- ✅ Corrigé : main.js aussi en module -->
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
