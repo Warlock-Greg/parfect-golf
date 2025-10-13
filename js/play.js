@@ -532,14 +532,16 @@ function showMidRoundModal(hole, total) {
 function endRound(showBadge = false) {
   console.log("🏁 Fin de partie déclenchée");
 
-  // === CALCULS ===
-  const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
-  const parfects = holes.filter(
-    (h) => h && h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
-  ).length;
-  const bogeyfects = holes.filter(
-    (h) => h && h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
-  ).length;
+  // === CALCULS SÉCURISÉS ===
+const validHoles = holes.filter(h => h && typeof h.score === "number");
+const totalVsPar = validHoles.reduce((acc, h) => acc + (h.score - h.par), 0);
+const parfects = validHoles.filter(
+  h => h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
+).length;
+const bogeyfects = validHoles.filter(
+  h => h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
+).length;
+
 
   // === SAUVEGARDE DANS LE LOCALSTORAGE ===
   const roundData = {
