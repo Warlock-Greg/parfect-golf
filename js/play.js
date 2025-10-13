@@ -439,8 +439,7 @@ function showMidRoundModal(hole, total) {
     // ✅ Appel direct de la fin de partie (badge inclus)
     endRound(true);
 
-    // 🎯 Retour visuel sur la page "play"
-    showPage("play");
+    
   });
 }
 
