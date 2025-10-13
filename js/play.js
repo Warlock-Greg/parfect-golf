@@ -569,69 +569,6 @@ function promptFirstPuttModal() {
 }
 
   
-  // === AFFICHAGE DU RÉSUMÉ STANDARD ===
-  const summary = `
-    <div class="score-summary-card">
-      <h3>Carte terminée 💚</h3>
-      <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
-      <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
-
-      <table class="score-table">
-        <thead>
-          <tr>
-            <th>Trou</th>
-            <th>Par</th>
-            <th>Score</th>
-            <th>Vs Par</th>
-            <th>FW</th>
-            <th>GIR</th>
-            <th>Putts</th>
-            <th>Dist1 (m)</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${holes
-            .map((h) => {
-              const diff = h.score - h.par;
-              const vs =
-                diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
-              return `
-                <tr>
-                  <td>${h.hole}</td>
-                  <td>${h.par}</td>
-                  <td>${h.score}</td>
-                  <td>${vs}</td>
-                  <td>${h.fairway ? "✔" : "—"}</td>
-                  <td>${h.gir ? "✔" : "—"}</td>
-                  <td>${h.putts}</td>
-                  <td>${h.dist1}</td>
-                </tr>`;
-            })
-            .join("")}
-        </tbody>
-      </table>
-
-      <div class="end-actions">
-        <button class="btn" id="new-round">🔁 Nouvelle partie</button>
-        <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
-      </div>
-    </div>
-  `;
-
-  // Injection dans le DOM
-  $("hole-card").innerHTML = summary;
-
-  // === BOUTON NOUVELLE PARTIE ===
-  $("new-round").addEventListener("click", () => {
-    $("golf-select").style.display = "block";
-    $("hole-card").innerHTML = "";
-  });
-
-  // === BOUTON AFFICHER LE BADGE ===
-  $("share-badge").addEventListener("click", () => {
-    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
-  });
-}
 
 function showFinalBadge(golfName, totalVsPar, parfects, bogeyfects) {
   const modal = document.createElement("div");
