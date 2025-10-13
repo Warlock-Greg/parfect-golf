@@ -478,10 +478,10 @@ function showMidRoundModal(hole, total) {
   });
 }
 
-
-
-// ---- End Round & Save ----
+// === FIN DE PARTIE ===
 function endRound(showBadge = false) {
+  console.log("🏁 Fin de partie déclenchée");
+
   // === CALCULS ===
   const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
   const parfects = holes.filter(
@@ -492,19 +492,27 @@ function endRound(showBadge = false) {
   ).length;
 
   // === SAUVEGARDE DANS LE LOCALSTORAGE ===
-  saveRound({
+  const roundData = {
     date: new Date().toISOString(),
-    golf: currentGolf.name,
+    golf: currentGolf?.name ?? "Parcours inconnu",
     totalVsPar,
     parfects,
     bogeyfects,
     holes,
-  });
+  };
 
-  // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
+  try {
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    history.push(roundData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch (err) {
+    console.error("❌ Erreur lors de la sauvegarde du round :", err);
+  }
+
+  // === AFFICHAGE DU BADGE DIRECT (si demandé) ===
   if (showBadge) {
-    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
-    return; // ✅ ok, à l'intérieur de la fonction
+    showFinalBadge(roundData);
+    return;
   }
 
   // === AFFICHAGE DU RÉSUMÉ STANDARD ===
@@ -513,53 +521,103 @@ function endRound(showBadge = false) {
       <h3>Carte terminée 💚</h3>
       <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
       <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
+
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Trou</th>
+            <th>Par</th>
+            <th>Score</th>
+            <th>Vs Par</th>
+            <th>FW</th>
+            <th>GIR</th>
+            <th>Putts</th>
+            <th>Dist1 (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${holes
+            .map((h) => {
+              const diff = h.score - h.par;
+              const vs =
+                diff === 0 ? "Par" : diff < 0 ? `${Math.abs(diff)}↓` : `+${diff}`;
+              return `
+                <tr>
+                  <td>${h.hole}</td>
+                  <td>${h.par}</td>
+                  <td>${h.score}</td>
+                  <td>${vs}</td>
+                  <td>${h.fairway ? "✔" : "—"}</td>
+                  <td>${h.gir ? "✔" : "—"}</td>
+                  <td>${h.putts}</td>
+                  <td>${h.dist1}</td>
+                </tr>`;
+            })
+            .join("")}
+        </tbody>
+      </table>
+
       <div class="end-actions">
         <button class="btn" id="new-round">🔁 Nouvelle partie</button>
         <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
       </div>
     </div>
   `;
+
   $("hole-card").innerHTML = summary;
 
+  // === BOUTON NOUVELLE PARTIE ===
   $("new-round").addEventListener("click", () => {
+    localStorage.setItem("roundInProgress", "false");
     $("golf-select").style.display = "block";
     $("hole-card").innerHTML = "";
+    currentHole = 1;
   });
 
+  // === BOUTON AFFICHER LE BADGE ===
   $("share-badge").addEventListener("click", () => {
-    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
+    showFinalBadge(roundData);
   });
 }
 
-// === BADGE FINAL ===
-function showFinalBadge(golfName, totalVsPar, parfects, bogeyfects) {
+
+// === AFFICHAGE DU BADGE FINAL ===
+function showFinalBadge(roundData) {
+  const { golf, totalVsPar, parfects, bogeyfects } = roundData;
+
   const modal = document.createElement("div");
   modal.className = "badge-modal";
   modal.innerHTML = `
     <div class="badge-content" id="badge-to-share">
       <h2>🎖️ Parfect Badge</h2>
-      <p>${golfName}</p>
+      <p>${golf}</p>
       <div class="badge-stats">
         <p>Score total : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
         <p>💚 Parfects : ${parfects}</p>
         <p>💙 Bogey’fects : ${bogeyfects}</p>
       </div>
       <p class="badge-quote">"Smart Golf. Cool Mindset."</p>
-      <button id="share-instagram" class="btn">📸 Partager sur Instagram</button>
-      <button id="close-badge" class="btn secondary">Fermer</button>
+      <div class="badge-actions">
+        <button id="share-instagram" class="btn">📸 Partager sur Instagram</button>
+        <button id="close-badge" class="btn secondary">Fermer</button>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
 
+  // === ACTIONS ===
   document.getElementById("share-instagram").addEventListener("click", captureBadgeAsImage);
+
   document.getElementById("close-badge").addEventListener("click", () => {
     modal.remove();
     $("golf-select").style.display = "block";
     $("hole-card").innerHTML = "";
+    localStorage.setItem("roundInProgress", "false");
   });
 }
 
-// === GÉNÉRATION D'IMAGE DU BADGE ===
+
+// === CAPTURE DU BADGE EN IMAGE (HTML2CANVAS) ===
 async function captureBadgeAsImage() {
   const badge = document.querySelector(".badge-content");
   if (!badge) return;
@@ -580,9 +638,12 @@ async function captureBadgeAsImage() {
     showCoachToast("📸 Badge sauvegardé ! Partage-le sur Instagram 💚", "#00ff99");
   } catch (e) {
     console.error("Erreur capture badge :", e);
-    alert("Erreur lors de la capture du badge 😅");
+    showCoachToast("😅 Erreur lors de la capture du badge", "#ff6666");
   }
 }
+
+
+
 
 // === MINI RECAP ===
 function updateMiniRecap() {
