@@ -444,6 +444,39 @@ function endRound(showBadge = false) {
     holes,
   });
 
+  // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
+  if (showBadge) {
+    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
+    return;
+  }
+
+  // === AFFICHAGE DU RÉSUMÉ STANDARD ===
+  const summary = `
+    <div class="score-summary-card">
+      <h3>Carte terminée 💚</h3>
+      <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+      <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
+
+      <div class="end-actions">
+        <button class="btn" id="new-round">🔁 Nouvelle partie</button>
+        <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
+      </div>
+    </div>
+  `;
+
+  $("hole-card").innerHTML = summary;
+
+  $("new-round").addEventListener("click", () => {
+    $("golf-select").style.display = "block";
+    $("hole-card").innerHTML = "";
+  });
+
+  $("share-badge").addEventListener("click", () => {
+    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
+  });
+}
+
+
 
 /**
  * Ouvre une modale de saisie (facultative) pour la distance du 1er putt.
@@ -698,7 +731,7 @@ function showMidRoundModal(hole, total) {
       <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${
         total > 0 ? "+" + total : total
       }.</p>
-      <p>Tu veux continuer ou sauvegarder ta partie maintenant ?</p>
+      <p>Souhaites-tu continuer ou sauvegarder ta partie maintenant ?</p>
       <div class="midround-actions">
         <button id="continue-round" class="btn">Continuer</button>
         <button id="save-round" class="btn save">💾 Sauvegarder</button>
@@ -707,18 +740,20 @@ function showMidRoundModal(hole, total) {
   `;
   document.body.appendChild(modal);
 
-  document.getElementById("continue-round").addEventListener("click", () => {
+  $("continue-round").addEventListener("click", () => {
     modal.remove();
     currentHole++;
     currentDiff = null;
     renderHole();
   });
 
-  document.getElementById("save-round").addEventListener("click", () => {
+  $("save-round").addEventListener("click", () => {
     modal.remove();
-    endRound(true); // true = badge final
+    endRound(true); // ✅ Appelle fin directe avec badge
   });
 }
+
+
 // === MODALE SAISIE DISTANCE 1ER PUTT ===
 function promptFirstPuttModal() {
   return new Promise((resolve) => {
