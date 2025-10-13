@@ -619,12 +619,8 @@ const bogeyfects = validHoles.filter(
   $("hole-card").innerHTML = summary;
 
   // === BOUTON NOUVELLE PARTIE ===
-  $("new-round").addEventListener("click", () => {
-    localStorage.setItem("roundInProgress", "false");
-    $("golf-select").style.display = "block";
-    $("hole-card").innerHTML = "";
-    currentHole = 1;
-  });
+  $("new-round").addEventListener("click", resetRound);
+
 
   // === BOUTON AFFICHER LE BADGE ===
   $("share-badge").addEventListener("click", () => {
@@ -731,3 +727,51 @@ function saveRound(round) {
 // === EXPORT GLOBAL pour coachMotivationAuto ===
 window.coachMotivationAuto = coachMotivationAuto;
 
+// === 🔄 RESET COMPLET D'UNE PARTIE AVEC CONFIRMATION ===
+function resetRound() {
+  // Empêche les doublons
+  if (document.querySelector(".modal-backdrop")) return;
+
+  // Création de la modale
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal-card" style="max-width:380px;text-align:center;">
+      <h3>♻️ Recommencer une partie ?</h3>
+      <p style="font-size:0.95rem;line-height:1.5;margin-top:6px;">
+        Tu es sur le point de <strong>réinitialiser la carte en cours</strong>.<br>
+        Toutes les données non sauvegardées seront perdues.
+      </p>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
+        <button id="cancel-reset" class="btn" style="background:#bbb;">Annuler</button>
+        <button id="confirm-reset" class="btn" style="background:#00c676;color:white;">Oui, recommencer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  // Gestion des boutons
+  const cancelBtn = backdrop.querySelector("#cancel-reset");
+  const confirmBtn = backdrop.querySelector("#confirm-reset");
+
+  cancelBtn.addEventListener("click", () => backdrop.remove());
+
+  confirmBtn.addEventListener("click", () => {
+    backdrop.remove();
+
+    // 🔁 Réinitialisation complète
+    console.log("♻️ Réinitialisation complète de la partie");
+    currentGolf = null;
+    currentHole = 1;
+    totalHoles = 18;
+    holes = [];
+    currentDiff = null;
+    localStorage.setItem("roundInProgress", "false");
+
+    $("hole-card").innerHTML = "";
+    $("score-summary").innerHTML = "";
+    $("golf-select").style.display = "block";
+
+    showCoachToast("Nouvelle partie prête à démarrer 💚", "#00ff99");
+  });
+}
