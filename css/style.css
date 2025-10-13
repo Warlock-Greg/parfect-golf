@@ -626,6 +626,49 @@ td {
   transform: scale(1.03);
 }
 
+.midround-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn .25s ease-out;
+}
+
+.midround-content {
+  background: #fff;
+  color: #222;
+  border-radius: 16px;
+  width: min(90vw, 420px);
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+  animation: slideUp .3s ease-out;
+}
+
+.midround-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 16px;
+}
+
+.midround-actions .btn {
+  flex: 1;
+  margin: 0 6px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
   
   /* === Animation quotidienne boutons accueil === */
 @keyframes dailyEntrance {
