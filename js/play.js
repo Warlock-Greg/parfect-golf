@@ -569,12 +569,6 @@ function promptFirstPuttModal() {
 }
 
   
-  // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
-  if (showBadge) {
-    showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
-    return;
-  }
-
   // === AFFICHAGE DU RÉSUMÉ STANDARD ===
   const summary = `
     <div class="score-summary-card">
