@@ -229,22 +229,32 @@ function startRound(golf) {
   renderHole();
 }
 
+// === RENDER HOLE ===
 function renderHole() {
+  // 🧱 Sécurité : ne rien rendre si la partie est déjà terminée
+  if (localStorage.getItem("roundInProgress") === "false") {
+    console.log("⛔ Partie déjà terminée, render ignoré");
+    return;
+  }
+
   const zone = $("hole-card");
   const par = currentGolf.pars[currentHole - 1];
 
-  // 🔹 Récupère les valeurs du trou courant s'il existe
+  // Récupère valeurs si trou déjà saisi
   const saved = holes[currentHole - 1];
   const savedDiff = saved ? (saved.score - saved.par) : null;
-  const defaultDiff = savedDiff != null ? savedDiff : (currentHole % 2 === 1 ? 1 : 0);
+
+  const defaultDiff = savedDiff != null
+    ? savedDiff
+    : (currentHole % 2 === 1 ? 1 : 0);
+
   currentDiff = defaultDiff;
 
-  // 🔹 Calcul du cumul
   const prevHoles = holes.slice(0, currentHole - 1).filter(Boolean);
   const prevSum = sumVsPar(prevHoles);
   const liveCumu = prevSum + (currentDiff ?? 0);
 
-  // === CONTENU DU TROU ===
+  // HTML principal
   zone.innerHTML = `
     <div id="mini-recap" class="mini-recap"></div>
     <h3>Trou ${currentHole} — Par ${par}</h3>
@@ -274,16 +284,14 @@ function renderHole() {
       <button id="next-hole" class="btn">Trou suivant ➡️</button>
     </div>
   `;
-
   updateMiniRecap();
 
-  // === BOUTONS SCORE ===
+  // === SCORE BUTTONS ===
   const btnWrap = $("score-buttons");
   btnWrap.innerHTML = SCORE_CHOICES.map(sc => `
-    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.2rem .4rem;">${sc.label}</button>
+    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.1rem .1rem;">${sc.label}</button>
   `).join("");
 
-  // Activation visuelle du bouton choisi
   function highlightSelection() {
     btnWrap.querySelectorAll(".score-btn").forEach(b => b.classList.remove("active-score"));
     const active = btnWrap.querySelector(`.score-btn[data-diff="${currentDiff}"]`);
@@ -297,7 +305,7 @@ function renderHole() {
     });
   });
 
-  // === PUTTS (0–4)
+  // === PUTTS SELECT
   const puttsSel = $("putts");
   for (let i = 0; i <= 4; i++) {
     const opt = document.createElement("option");
@@ -307,7 +315,7 @@ function renderHole() {
   }
   puttsSel.value = saved?.putts ?? 2;
 
-  // === DISTANCE 1ER PUTT (0–30m)
+  // === DISTANCE SELECT
   const distSel = $("dist1");
   for (let m = 0; m <= 30; m++) {
     const opt = document.createElement("option");
@@ -317,13 +325,12 @@ function renderHole() {
   }
   distSel.value = saved?.dist1 ?? 0;
 
-  // === CHECKBOXES FW / GIR
   $("fairway").checked = saved?.fairway ?? false;
   $("gir").checked = saved?.gir ?? false;
 
   highlightSelection();
 
-  // === BOUTONS RAPIDES PARFECT / BOGEY’FECT
+  // === Parfect / Bogeyfect buttons
   $("btn-parfect").addEventListener("click", () => {
     $("fairway").checked = true;
     $("gir").checked = true;
@@ -340,7 +347,7 @@ function renderHole() {
     highlightSelection();
   });
 
-  // === NAVIGATION ENTRE TROUS ===
+  // === Prev / Next hole navigation
   $("prev-hole").addEventListener("click", () => {
     saveCurrentHole(false);
     if (currentHole > 1) {
@@ -350,45 +357,39 @@ function renderHole() {
     }
   });
 
-  $("next-hole").addEventListener("click", () => {
-    const currentData = saveCurrentHole(false);
-    holes[currentHole - 1] = currentData;
+  $("next-hole").addEventListener("click", async () => {
+    const entry = saveCurrentHole(false);
+    holes[currentHole - 1] = entry;
 
-    // 🧮 SCORE TOTAL
+    // ✅ Demande facultative distance 1er putt
+    const result = await promptFirstPuttModal();
+    if (result.value !== null) {
+      entry.dist1 = result.value;
+      holes[currentHole - 1] = entry;
+    }
+
     const total = holes.filter(Boolean).reduce((acc, h) => acc + (h.score - h.par), 0);
 
-    // 💚💙 VERIF PARFECT / BOGEY’FECT
-    const isParfect = currentData.fairway && currentData.gir && currentData.putts <= 2 && (currentData.score - currentData.par === 0);
-    const isBogeyfect = currentData.fairway && !currentData.gir && currentData.putts <= 2 && (currentData.score - currentData.par === 1);
+    const isParfect = entry.fairway && entry.gir && entry.putts <= 2 && entry.score - entry.par === 0;
+    const isBogeyfect = entry.fairway && !entry.gir && entry.putts <= 2 && entry.score - entry.par === 1;
 
-    // 💬 MESSAGE COACH
-    let msg = `Trou ${currentHole} enregistré — total ${total > 0 ? "+" + total : total}`;
+    let msg = `Trou ${currentHole} enregistré — score ${total > 0 ? "+" + total : total}`;
     let color = "#00ff99";
-
     if (isParfect) {
-      msg = `💚 Parfect ! Smart golf et calme mental 😎`;
+      msg = `💚 Parfect enregistré !`;
       color = "#00ff99";
     } else if (isBogeyfect) {
-      msg = `💙 Bogey’fect ! Gestion propre du trou 👏`;
+      msg = `💙 Bogey’fect enregistré !`;
       color = "#44ffaa";
-    } else {
-      color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
     }
-
     showCoachToast(msg, color);
 
-    // 🎯 Coach auto après 6s
-    const coachMessage = tipAfterHole(currentData, "fun");
-    setTimeout(() => showCoachToast(coachMessage), 6000);
-
-    // 🏁 MI-PARCOURS (trou 9 ou 12)
-    if (currentHole === 9 || currentHole === 12) {
-      showCoachToast("🏁 Mi-parcours ! Fais le point avec ton coach 💚");
+    // === MODALES DE FIN PARTIELLE ===
+    if (currentHole === 9 || currentHole === 12 || currentHole === totalHoles) {
       showMidRoundModal(currentHole, total);
-      return; // stoppe ici la progression automatique
+      return; // 🔥 stop ici
     }
 
-    // ▶️ Trou suivant ou fin
     setTimeout(() => {
       if (currentHole < totalHoles) {
         currentHole++;
@@ -399,28 +400,50 @@ function renderHole() {
       }
     }, 2500);
   });
-
-  // === SAUVEGARDE DU TROU ACTUEL ===
-  function saveCurrentHole(showCoach) {
-    const fairway = $("fairway").checked;
-    const gir = $("gir").checked;
-    const putts = parseInt(puttsSel.value, 10);
-    const dist1 = parseInt(distSel.value, 10);
-    const diff = currentDiff == null ? (currentHole % 2 === 1 ? 1 : 0) : currentDiff;
-    const score = par + diff;
-
-    const entry = { hole: currentHole, par, score, fairway, gir, putts, dist1, routine: true };
-    holes[currentHole - 1] = entry;
-
-    if (showCoach) {
-      const msg = tipAfterHole(entry, "fun");
-      showCoachToast(msg);
-    }
-
-    updateMiniRecap();
-    return entry;
-  }
 }
+
+
+// === MODALE DE MI-PARCOURS ===
+function showMidRoundModal(hole, total) {
+  const modal = document.createElement("div");
+  modal.className = "midround-modal";
+  modal.innerHTML = `
+    <div class="midround-content">
+      <h3>Mi-parcours ⛳</h3>
+      <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${total > 0 ? "+" + total : total}.</p>
+      <p>Souhaites-tu continuer ou sauvegarder ta partie maintenant ?</p>
+      <div class="midround-actions">
+        <button id="continue-round" class="btn">Continuer</button>
+        <button id="save-round" class="btn save">💾 Sauvegarder</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  $("continue-round").addEventListener("click", () => {
+    modal.remove();
+    currentHole++;
+    currentDiff = null;
+    renderHole();
+  });
+
+  $("save-round").addEventListener("click", () => {
+    modal.remove();
+
+    // 🚀 Marque la partie comme terminée
+    localStorage.setItem("roundInProgress", "false");
+
+    // 🔥 Vide le contenu avant résumé
+    $("hole-card").innerHTML = "";
+
+    // ✅ Appel direct de la fin de partie (badge inclus)
+    endRound(true);
+
+    // 🎯 Retour visuel sur la page "play"
+    showPage("play");
+  });
+}
+
 
 
 // ---- End Round & Save ----
@@ -557,35 +580,6 @@ function saveRound(round) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
-// === MODALE DE MI-PARCOURS ===
-function showMidRoundModal(hole, total) {
-  const modal = document.createElement("div");
-  modal.className = "midround-modal";
-  modal.innerHTML = `
-    <div class="midround-content">
-      <h3>Mi-parcours ⛳</h3>
-      <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${total > 0 ? "+" + total : total}.</p>
-      <p>Souhaites-tu continuer ou sauvegarder ta partie maintenant ?</p>
-      <div class="midround-actions">
-        <button id="continue-round" class="btn">Continuer</button>
-        <button id="save-round" class="btn save">💾 Sauvegarder</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  $("continue-round").addEventListener("click", () => {
-    modal.remove();
-    currentHole++;
-    currentDiff = null;
-    renderHole();
-  });
-
-  $("save-round").addEventListener("click", () => {
-    modal.remove();
-    endRound(true); // ✅ Affiche directement le badge final
-  });
-}
 
 // === EXPORT GLOBAL pour coachMotivationAuto ===
 window.coachMotivationAuto = coachMotivationAuto;
