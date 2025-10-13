@@ -424,7 +424,7 @@ function renderHole() {
 
 
 // ---- End Round & Save ----
-function endRound(showBadge = false) {
+  function endRound(showBadge = false) {
   // === CALCULS ===
   const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
   const parfects = holes.filter(
