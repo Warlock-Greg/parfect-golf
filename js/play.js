@@ -229,6 +229,41 @@ function startRound(golf) {
   renderHole();
 }
 
+// === SAUVEGARDE DU TROU ACTUEL ===
+function saveCurrentHole(showCoach = false) {
+  const fairway = $("fairway")?.checked ?? false;
+  const gir = $("gir")?.checked ?? false;
+  const putts = parseInt($("putts")?.value ?? 2, 10);
+  const dist1 = parseInt($("dist1")?.value ?? 0, 10);
+  const par = currentGolf.pars[currentHole - 1];
+
+  // Si l’utilisateur n’a pas choisi de score
+  const diff = (currentDiff == null) ? (currentHole % 2 === 1 ? 1 : 0) : currentDiff;
+  const score = par + diff;
+
+  const entry = {
+    hole: currentHole,
+    par,
+    score,
+    fairway,
+    gir,
+    putts,
+    dist1,
+    routine: true,
+  };
+
+  holes[currentHole - 1] = entry;
+
+  if (showCoach) {
+    const msg = tipAfterHole(entry, "fun");
+    showCoachToast(msg);
+  }
+
+  updateMiniRecap();
+  return entry;
+}
+
+
 // === RENDER HOLE ===
 function renderHole() {
   // 🧱 Sécurité : ne rien rendre si la partie est déjà terminée
