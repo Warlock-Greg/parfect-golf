@@ -424,7 +424,7 @@ function renderHole() {
 
 
 // ---- End Round & Save ----
-  function endRound(showBadge = false) {
+function endRound(showBadge = false) {
   // === CALCULS ===
   const totalVsPar = holes.reduce((acc, h) => acc + (h.score - h.par), 0);
   const parfects = holes.filter(
@@ -447,7 +447,7 @@ function renderHole() {
   // === SI BADGE FINAL DEMANDÉ (mode partage Instagram) ===
   if (showBadge) {
     showFinalBadge(currentGolf.name, totalVsPar, parfects, bogeyfects);
-    return;
+    return; // ✅ ok, à l'intérieur de la fonction
   }
 
   // === AFFICHAGE DU RÉSUMÉ STANDARD ===
@@ -456,14 +456,12 @@ function renderHole() {
       <h3>Carte terminée 💚</h3>
       <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
       <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
-
       <div class="end-actions">
         <button class="btn" id="new-round">🔁 Nouvelle partie</button>
         <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
       </div>
     </div>
   `;
-
   $("hole-card").innerHTML = summary;
 
   $("new-round").addEventListener("click", () => {
@@ -476,100 +474,7 @@ function renderHole() {
   });
 }
 
-
-
-/**
- * Ouvre une modale de saisie (facultative) pour la distance du 1er putt.
- * @returns {Promise<{value: number|null, skipped: boolean}>}
- */
-function promptFirstPuttModal() {
-  return new Promise((resolve) => {
-    // Évite les doublons
-    if (document.querySelector('.modal-backdrop')) {
-      resolve({ value: null, skipped: true });
-      return;
-    }
-
-    // Backdrop + carte
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.setAttribute('role', 'dialog');
-    backdrop.setAttribute('aria-modal', 'true');
-
-    const card = document.createElement('div');
-    card.className = 'modal-card';
-    card.innerHTML = `
-      <div class="modal-header">
-        <div class="coach-avatar" style="font-size:1.3rem">😎</div>
-        <div class="modal-title">Distance du 1er putt</div>
-      </div>
-      <div class="modal-body">
-        <p>Si tu t’en souviens, indique la distance de ton premier putt (en mètres).<br>
-        <em>Tu peux aussi passer si tu ne veux pas la saisir.</em></p>
-        <input id="first-putt-field" class="modal-input" type="number" inputmode="decimal"
-               min="0" step="0.1" placeholder="ex. 6.5" />
-      </div>
-      <div class="modal-actions">
-        <button id="skip-putt" class="btn-ghost">Passer</button>
-        <button id="ok-putt" class="btn-primary">Valider</button>
-      </div>
-    `;
-
-    backdrop.appendChild(card);
-    document.body.appendChild(backdrop);
-    document.body.classList.add('body-lock');
-
-    const input = card.querySelector('#first-putt-field');
-    const btnOk = card.querySelector('#ok-putt');
-    const btnSkip = card.querySelector('#skip-putt');
-
-    // Focus auto
-    setTimeout(() => input?.focus(), 50);
-
-    const cleanup = () => {
-      document.body.classList.remove('body-lock');
-      backdrop.remove();
-    };
-
-    // Valider (saisie facultative)
-    btnOk.addEventListener('click', () => {
-      const raw = (input.value || '').trim();
-      if (raw === '') {
-        cleanup();
-        resolve({ value: null, skipped: false }); // pas de valeur mais pas une annulation
-        return;
-      }
-      const num = Number(raw.replace(',', '.'));
-      cleanup();
-      resolve({ value: isNaN(num) ? null : num, skipped: false });
-    });
-
-    // Passer
-    btnSkip.addEventListener('click', () => {
-      cleanup();
-      resolve({ value: null, skipped: true });
-    });
-
-    // Fermer via ESC → équivaut à "Passer"
-    document.addEventListener('keydown', function onEsc(e) {
-      if (e.key === 'Escape') {
-        document.removeEventListener('keydown', onEsc);
-        cleanup();
-        resolve({ value: null, skipped: true });
-      }
-    });
-
-    // Clique hors carte → ne ferme pas (pour éviter miss-clicks)
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) {
-        // rien
-      }
-    });
-  });
-}
-
-  
-
+// === BADGE FINAL ===
 function showFinalBadge(golfName, totalVsPar, parfects, bogeyfects) {
   const modal = document.createElement("div");
   modal.className = "badge-modal";
@@ -590,7 +495,6 @@ function showFinalBadge(golfName, totalVsPar, parfects, bogeyfects) {
   document.body.appendChild(modal);
 
   document.getElementById("share-instagram").addEventListener("click", captureBadgeAsImage);
-
   document.getElementById("close-badge").addEventListener("click", () => {
     modal.remove();
     $("golf-select").style.display = "block";
@@ -605,9 +509,9 @@ async function captureBadgeAsImage() {
 
   try {
     const canvas = await html2canvas(badge, {
-      backgroundColor: "#111", // fond noir élégant
-      scale: 2,                // qualité retina
-      useCORS: true            // support des images distantes
+      backgroundColor: "#111",
+      scale: 2,
+      useCORS: true
     });
 
     const dataUrl = canvas.toDataURL("image/png");
@@ -623,7 +527,7 @@ async function captureBadgeAsImage() {
   }
 }
 
-
+// === MINI RECAP ===
 function updateMiniRecap() {
   const recap = document.getElementById("mini-recap");
   if (!recap) return;
@@ -646,22 +550,21 @@ function updateMiniRecap() {
   `;
 }
 
-
+// === SAUVEGARDE HISTORIQUE ===
 function saveRound(round) {
   const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   history.push(round);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
 }
 
+// === MODALE DE MI-PARCOURS ===
 function showMidRoundModal(hole, total) {
   const modal = document.createElement("div");
   modal.className = "midround-modal";
   modal.innerHTML = `
     <div class="midround-content">
       <h3>Mi-parcours ⛳</h3>
-      <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${
-        total > 0 ? "+" + total : total
-      }.</p>
+      <p>Tu viens de finir le trou ${hole}. Ton score actuel est ${total > 0 ? "+" + total : total}.</p>
       <p>Souhaites-tu continuer ou sauvegarder ta partie maintenant ?</p>
       <div class="midround-actions">
         <button id="continue-round" class="btn">Continuer</button>
@@ -680,110 +583,10 @@ function showMidRoundModal(hole, total) {
 
   $("save-round").addEventListener("click", () => {
     modal.remove();
-    endRound(true); // ✅ Appelle fin directe avec badge
+    endRound(true); // ✅ Affiche directement le badge final
   });
 }
 
-
-// === MODALE SAISIE DISTANCE 1ER PUTT ===
-function promptFirstPuttModal() {
-  return new Promise((resolve) => {
-    if (document.querySelector('.modal-backdrop')) {
-      resolve({ value: null, skipped: true });
-      return;
-    }
-
-    const backdrop = document.createElement('div');
-    backdrop.className = 'modal-backdrop';
-    backdrop.innerHTML = `
-      <div class="modal-card">
-        <h3 style="margin-bottom:6px;">Distance du 1er putt</h3>
-        <p style="font-size:0.95rem;">Si tu t’en souviens, indique la distance de ton premier putt (en mètres).<br>
-        <em>Tu peux aussi passer si tu ne veux pas la saisir.</em></p>
-        <input id="first-putt-field" type="number" inputmode="decimal"
-               placeholder="ex. 6.5" min="0" step="0.1"
-               style="width:100%;padding:8px;margin-top:10px;border-radius:8px;border:1px solid #ccc;">
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">
-          <button id="skip-putt" class="btn" style="background:#ccc;">Passer</button>
-          <button id="ok-putt" class="btn" style="background:#00c676;color:white;">Valider</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(backdrop);
-
-    const field = backdrop.querySelector("#first-putt-field");
-    field.focus();
-
-    const cleanup = () => backdrop.remove();
-
-    backdrop.querySelector("#ok-putt").addEventListener("click", () => {
-      const val = field.value.trim();
-      if (val === "") {
-        cleanup();
-        resolve({ value: null, skipped: false });
-        return;
-      }
-      cleanup();
-      resolve({ value: parseFloat(val), skipped: false });
-    });
-
-    backdrop.querySelector("#skip-putt").addEventListener("click", () => {
-      cleanup();
-      resolve({ value: null, skipped: true });
-    });
-  });
-}
-
-// === MODALE D’EXPLICATION CARTE DE SCORE ===
-function showScorecardIntro() {
-  // Vérifie si l'utilisateur a déjà choisi de ne plus la voir
-  const skip = localStorage.getItem("skipScoreIntro");
-  if (skip === "true") return;
-
-  const modal = document.createElement("div");
-  modal.className = "modal-backdrop";
-  modal.innerHTML = `
-    <div class="modal-card" style="max-width:420px;text-align:left;">
-      <h2 style="margin-bottom:6px;">📋 Carte de Score</h2>
-      <p>
-        Bienvenue sur ta carte de score interactive !  
-        Voici comment l’utiliser :
-      </p>
-      <ul style="margin-left:18px;line-height:1.4;">
-        <li>🟢 <strong>Parfect</strong> = Par + Fairway + GIR + ≤ 2 putts</li>
-        <li>💙 <strong>Bogey’fect</strong> = Bogey + Fairway + ≤ 2 putts</li>
-        <li>✍️ Indique ton score, tes putts, fairway et GIR</li>
-        <li>🎯 Coach Greg t’encourage après chaque trou</li>
-      </ul>
-
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
-      </label>
-
-      <div style="text-align:right;margin-top:16px;">
-        <button id="close-intro" class="btn" style="background:#00c676;color:#fff;">OK, compris 💪</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  document.getElementById("close-intro").addEventListener("click", () => {
-    const dontShow = document.getElementById("hide-intro").checked;
-    if (dontShow) localStorage.setItem("skipScoreIntro", "true");
-    modal.remove();
-  });
-}
-
-
-// ---- Small style for active score button (optional) ----
-document.addEventListener("DOMContentLoaded", () => {
-  const style = document.createElement("style");
-  style.textContent = `
-    .active-score { outline: 2px solid #00ff99; box-shadow: 0 0 0 2px rgba(0,255,153,0.25) inset; }
-    table th { background:#00ff99; color:#000; padding:.4rem .5rem; }
-    table td { padding:.35rem .5rem; border-bottom:1px solid #222; }
-  `;
-  document.head.appendChild(style);
-});
-
+// === EXPORT GLOBAL pour coachMotivationAuto ===
 window.coachMotivationAuto = coachMotivationAuto;
+
