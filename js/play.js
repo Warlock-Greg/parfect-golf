@@ -469,8 +469,9 @@ document.addEventListener("DOMContentLoaded", () => {
     .reduce((acc, h) => acc + (h.score - h.par), 0);
 
   // === CHECK PARFECT / BOGEY'FECT ===
-  const isParfect = entry.fairway && entry.gir && entry.putts <= 2 && entry.score - entry.par === 0;
-  const isBogeyfect = entry.fairway && !entry.gir && entry.putts <= 2 && entry.score - entry.par === 1;
+ const isParfect = saved?.fairway && saved?.gir && saved?.putts <= 2 && (saved?.score - saved?.par) === 0;
+const isBogeyfect = saved?.fairway && !saved?.gir && saved?.putts <= 2 && (saved?.score - saved?.par) === 1;
+
 
   // === MESSAGES ALEATOIRES ===
   const coolMessages = [
