@@ -263,6 +263,56 @@ function saveCurrentHole(showCoach = false) {
   return entry;
 }
 
+// === MODALE SAISIE DISTANCE 1ER PUTT ===
+function promptFirstPuttModal() {
+  return new Promise((resolve) => {
+    // Évite les doublons
+    if (document.querySelector('.modal-backdrop')) {
+      resolve({ value: null, skipped: true });
+      return;
+    }
+
+    // Création du fond et de la carte
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.innerHTML = `
+      <div class="modal-card" style="max-width:360px;text-align:center;">
+        <h3>Distance du 1er putt</h3>
+        <p style="font-size:0.9rem;line-height:1.4;">
+          Si tu t’en souviens, indique la distance de ton premier putt (en mètres).<br>
+          <em>Tu peux aussi passer si tu ne veux pas la saisir.</em>
+        </p>
+        <input id="first-putt-field" type="number" inputmode="decimal"
+               placeholder="ex. 6.5" min="0" step="0.1"
+               style="width:100%;padding:8px;margin-top:10px;border-radius:8px;border:1px solid #ccc;">
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:14px;">
+          <button id="skip-putt" class="btn" style="background:#bbb;">Passer</button>
+          <button id="ok-putt" class="btn" style="background:#00c676;color:white;">Valider</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    const field = backdrop.querySelector("#first-putt-field");
+    field.focus();
+
+    const cleanup = () => backdrop.remove();
+
+    // ✅ Bouton Valider
+    backdrop.querySelector("#ok-putt").addEventListener("click", () => {
+      const val = field.value.trim();
+      cleanup();
+      resolve({ value: val ? parseFloat(val) : null, skipped: !val });
+    });
+
+    // ✅ Bouton Passer
+    backdrop.querySelector("#skip-putt").addEventListener("click", () => {
+      cleanup();
+      resolve({ value: null, skipped: true });
+    });
+  });
+}
+
 
 // === RENDER HOLE ===
 function renderHole() {
