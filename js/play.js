@@ -233,23 +233,18 @@ function renderHole() {
   const zone = $("hole-card");
   const par = currentGolf.pars[currentHole - 1];
 
-  // Récupère valeurs si trou déjà saisi
+  // 🔹 Récupère les valeurs du trou courant s'il existe
   const saved = holes[currentHole - 1];
   const savedDiff = saved ? (saved.score - saved.par) : null;
-
-  // Par défaut: trou impair => Bogey / trou pair => Par
-  const defaultDiff = savedDiff != null
-    ? savedDiff
-    : (currentHole % 2 === 1 ? 1 : 0);
-
+  const defaultDiff = savedDiff != null ? savedDiff : (currentHole % 2 === 1 ? 1 : 0);
   currentDiff = defaultDiff;
 
-  // Cumul actuel (trous précédents) + diff courant s'il est défini
+  // 🔹 Calcul du cumul
   const prevHoles = holes.slice(0, currentHole - 1).filter(Boolean);
   const prevSum = sumVsPar(prevHoles);
   const liveCumu = prevSum + (currentDiff ?? 0);
 
-  // HTML
+  // === CONTENU DU TROU ===
   zone.innerHTML = `
     <div id="mini-recap" class="mini-recap"></div>
     <h3>Trou ${currentHole} — Par ${par}</h3>
@@ -279,16 +274,16 @@ function renderHole() {
       <button id="next-hole" class="btn">Trou suivant ➡️</button>
     </div>
   `;
+
   updateMiniRecap();
 
-
-  // ---- Score buttons
+  // === BOUTONS SCORE ===
   const btnWrap = $("score-buttons");
   btnWrap.innerHTML = SCORE_CHOICES.map(sc => `
-    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.1rem .1rem;">${sc.label}</button>
+    <button class="btn score-btn" data-diff="${sc.diff}" style="padding:.2rem .4rem;">${sc.label}</button>
   `).join("");
 
-  // Active selection
+  // Activation visuelle du bouton choisi
   function highlightSelection() {
     btnWrap.querySelectorAll(".score-btn").forEach(b => b.classList.remove("active-score"));
     const active = btnWrap.querySelector(`.score-btn[data-diff="${currentDiff}"]`);
@@ -302,7 +297,7 @@ function renderHole() {
     });
   });
 
-  // ---- Putts (0..4) avec défaut 2
+  // === PUTTS (0–4)
   const puttsSel = $("putts");
   for (let i = 0; i <= 4; i++) {
     const opt = document.createElement("option");
@@ -312,7 +307,7 @@ function renderHole() {
   }
   puttsSel.value = saved?.putts ?? 2;
 
-  // ---- Distance 1er putt (0..30m)
+  // === DISTANCE 1ER PUTT (0–30m)
   const distSel = $("dist1");
   for (let m = 0; m <= 30; m++) {
     const opt = document.createElement("option");
@@ -322,77 +317,32 @@ function renderHole() {
   }
   distSel.value = saved?.dist1 ?? 0;
 
-  // ---- Checkboxes FW/GIR
+  // === CHECKBOXES FW / GIR
   $("fairway").checked = saved?.fairway ?? false;
   $("gir").checked = saved?.gir ?? false;
 
-  // ---- Defaults Par/Bogey (si pas déjà saisi)
   highlightSelection();
 
-  // ---- Parfect button
+  // === BOUTONS RAPIDES PARFECT / BOGEY’FECT
   $("btn-parfect").addEventListener("click", () => {
     $("fairway").checked = true;
     $("gir").checked = true;
     puttsSel.value = 2;
-    currentDiff = 0; // Par
+    currentDiff = 0;
     highlightSelection();
   });
 
-  // ---- Bogey’fect button
   $("btn-bogeyfect").addEventListener("click", () => {
     $("fairway").checked = true;
     $("gir").checked = false;
     puttsSel.value = 2;
-    currentDiff = 1; // Bogey
+    currentDiff = 1;
     highlightSelection();
   });
 
-// === Modale d’explication Carte de Score ===
-function showIntroModal() {
-  if (localStorage.getItem("seen_intro_modal")) return;
-
-  const modal = document.createElement("div");
-  modal.className = "modal intro";
-  modal.innerHTML = `
-    <div class="modal-content" style="
-      background:white;
-      color:#222;
-      border-radius:12px;
-      max-width:400px;
-      margin:20vh auto;
-      padding:20px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.2);
-      text-align:center;">
-      <h2>Ta Carte de Score 💚</h2>
-      <p>Note chaque trou avec précision.<br>
-      <strong>Parfect</strong> = Par parfait, stratégie & sang-froid.<br>
-      <strong>Bogeyfect</strong> (à renommer 💡) = bogey bien géré.</p>
-      <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;">
-        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
-      </label>
-      <button id="close-intro" class="btn" style="margin-top:12px;">C’est parti !</button>
-    </div>`;
-  document.body.appendChild(modal);
-
-  document.getElementById("close-intro").addEventListener("click", () => {
-    if (document.getElementById("hide-intro").checked) {
-      localStorage.setItem("seen_intro_modal", "true");
-    }
-    modal.remove();
-  });
-}
-
-// Appel automatique à l’ouverture de la page Carte de score
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.location.hash.includes("play")) showIntroModal();
-});
-
-
-
-  
-  // ---- Prev / Next
+  // === NAVIGATION ENTRE TROUS ===
   $("prev-hole").addEventListener("click", () => {
-    saveCurrentHole(false); // sauvegarde sans coach toast
+    saveCurrentHole(false);
     if (currentHole > 1) {
       currentHole--;
       currentDiff = null;
@@ -400,183 +350,78 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  $("next-hole").addEventListener("click", async () => {
-  // 🔹 Demande la distance du 1er putt via modale
-  const result = await promptFirstPuttModal();
+  $("next-hole").addEventListener("click", () => {
+    const currentData = saveCurrentHole(false);
+    holes[currentHole - 1] = currentData;
 
-  // 🔹 Sauvegarde du trou courant
-  const entry = saveCurrentHole(false);
-  if (result.value !== null) entry.dist1 = result.value;
-  holes[currentHole - 1] = entry;
+    // 🧮 SCORE TOTAL
+    const total = holes.filter(Boolean).reduce((acc, h) => acc + (h.score - h.par), 0);
 
-  // 🔹 Score total actuel
-  const total = holes
-    .filter(Boolean)
-    .reduce((acc, h) => acc + (h.score - h.par), 0);
+    // 💚💙 VERIF PARFECT / BOGEY’FECT
+    const isParfect = currentData.fairway && currentData.gir && currentData.putts <= 2 && (currentData.score - currentData.par === 0);
+    const isBogeyfect = currentData.fairway && !currentData.gir && currentData.putts <= 2 && (currentData.score - currentData.par === 1);
 
-  // 🔹 Détection Parfect / Bogey’fect
-  const isParfect = entry.fairway && entry.gir && entry.putts <= 2 && entry.score - entry.par === 0;
-  const isBogeyfect = entry.fairway && !entry.gir && entry.putts <= 2 && entry.score - entry.par === 1;
+    // 💬 MESSAGE COACH
+    let msg = `Trou ${currentHole} enregistré — total ${total > 0 ? "+" + total : total}`;
+    let color = "#00ff99";
 
-  const coolMessages = [
-    "Cool tempo bro, next hole easy.",
-    "Smart golf, calm swing.",
-    "Zen swing, big smile.",
-    "Stay chill, enjoy the walk.",
-    "Easy focus, great energy."
-  ];
+    if (isParfect) {
+      msg = `💚 Parfect ! Smart golf et calme mental 😎`;
+      color = "#00ff99";
+    } else if (isBogeyfect) {
+      msg = `💙 Bogey’fect ! Gestion propre du trou 👏`;
+      color = "#44ffaa";
+    } else {
+      color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
+    }
 
-  const foodEmojis = ["🥤", "🍪", "🥪", "🍩", "🍺", "☕"];
-  const emoji = (currentHole % 3 === 0) ? " " + foodEmojis[Math.floor(Math.random() * foodEmojis.length)] : "";
+    showCoachToast(msg, color);
 
-  let msg = `Trou ${currentHole} enregistré — ton score est ${total > 0 ? "+" + total : total}`;
-  let color = "#00ff99";
+    // 🎯 Coach auto après 6s
+    const coachMessage = tipAfterHole(currentData, "fun");
+    setTimeout(() => showCoachToast(coachMessage), 6000);
 
-  if (isParfect) {
-    msg = `💚 Parfect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
-    color = "#00ff99";
-  } else if (isBogeyfect) {
-    msg = `💙 Bogey’fect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
-    color = "#44ffaa";
-  } else {
-    msg += emoji;
-    color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
-  }
+    // 🏁 MI-PARCOURS (trou 9 ou 12)
+    if (currentHole === 9 || currentHole === 12) {
+      showCoachToast("🏁 Mi-parcours ! Fais le point avec ton coach 💚");
+      showMidRoundModal(currentHole, total);
+      return; // stoppe ici la progression automatique
+    }
 
-  showCoachToast(msg, color);
-
-  // 🔹 Dernier trou → sauvegarde et affiche résumé
-  if (currentHole === 9 || currentHole === totalHoles) {
+    // ▶️ Trou suivant ou fin
     setTimeout(() => {
-      endRound();
-      showCoachToast("👏 Partie sauvegardée et ajoutée à l'historique !");
+      if (currentHole < totalHoles) {
+        currentHole++;
+        currentDiff = null;
+        renderHole();
+      } else {
+        endRound();
+      }
     }, 2500);
-    return;
-  }
+  });
 
-  // 🔹 Sinon → trou suivant
-  setTimeout(() => {
-    currentHole++;
-    currentDiff = null;
-    renderHole();
-  }, 2500);
-});
-
-
-  // === CALCUL DU SCORE TOTAL ===
-  const total = holes
-    .filter(Boolean)
-    .reduce((acc, h) => acc + (h.score - h.par), 0);
-
-  // === CHECK PARFECT / BOGEY'FECT ===
- const isParfect = saved?.fairway && saved?.gir && saved?.putts <= 2 && (saved?.score - saved?.par) === 0;
-const isBogeyfect = saved?.fairway && !saved?.gir && saved?.putts <= 2 && (saved?.score - saved?.par) === 1;
-
-
-  // === MESSAGES ALEATOIRES ===
-  const coolMessages = [
-    "Cool tempo bro, next hole easy.",
-    "Smart golf, calm swing.",
-    "Zen swing, big smile.",
-    "Stay chill, enjoy the walk.",
-    "Easy focus, great energy."
-  ];
-
-  const foodEmojis = ["🥤", "🍪", "🥪", "🍩", "🍺", "☕"];
-  const emoji = (currentHole % 3 === 0) ? " " + foodEmojis[Math.floor(Math.random() * foodEmojis.length)] : "";
-
-  let msg = `Trou ${currentHole} enregistré — ton score est ${total > 0 ? "+" + total : total}`;
-  let color = "#00ff99";
-
-  if (isParfect) {
-    msg = `💚 Parfect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
-    color = "#00ff99";
-  } else if (isBogeyfect) {
-    msg = `💙 Bogey’fect enregistré — ${coolMessages[Math.floor(Math.random() * coolMessages.length)]}${emoji}`;
-    color = "#44ffaa";
-  } else {
-    msg += emoji;
-    color = total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff";
-  }
-
-  // === TOAST MESSAGE ===
-  showCoachToast(msg, color);
-
-  // === MESSAGE COACH GREG APRÈS 1.5s ===
-  const coachMessage = tipAfterHole(entry, "fun");
-  setTimeout(() => showCoachToast(coachMessage), 7000);
-
-
-// === MODAL DEMI-PARTIE ===
-if (currentHole === 9 || currentHole === 12) {
-  showMidRoundModal(currentHole, total);
-  return; // stop ici, la suite sera gérée dans la modal
-}
-
-    
-  // === PASSAGE AU TROU SUIVANT ===
-
-setTimeout(async () => {
-  // ✅ Affiche la modale de distance du 1er putt avant de passer au trou suivant
-  const result = await promptFirstPuttModal();
-  if (result?.value !== null) {
-    holes[currentHole - 1].dist1 = result.value;
-  }
-
-  // ✅ Si on est au trou 9 → fin de partie
-  if (currentHole === 9 || currentHole === totalHoles) {
-    endRound();
-    showCoachToast("👏 Partie sauvegardée et ajoutée à l'historique !");
-    return;
-  }
-
-  // ✅ Sinon, passage fluide au trou suivant
-  currentHole++;
-  currentDiff = null;
-  renderHole();
-}, 2600);
-
-
-
-  // ---- Live cumu updater
-  function updateLiveCumu() {
-    const prev = sumVsPar(holes.slice(0, currentHole - 1).filter(Boolean));
-    const tmp = prev + (currentDiff ?? 0);
-    const live = $("live-cumu");
-    if (live) live.textContent = tmp > 0 ? `+${tmp}` : `${tmp}`;
-  }
-
-  // ---- Save current hole
+  // === SAUVEGARDE DU TROU ACTUEL ===
   function saveCurrentHole(showCoach) {
     const fairway = $("fairway").checked;
     const gir = $("gir").checked;
     const putts = parseInt(puttsSel.value, 10);
     const dist1 = parseInt(distSel.value, 10);
-
-    // si l'utilisateur n'a pas cliqué de score, prendre défaut actuel
-    const diff = (currentDiff == null) ? (currentHole % 2 === 1 ? 1 : 0) : currentDiff;
+    const diff = currentDiff == null ? (currentHole % 2 === 1 ? 1 : 0) : currentDiff;
     const score = par + diff;
-    const entry = {
-      hole: currentHole,
-      par,
-      score,
-      fairway,
-      gir,
-      putts,
-      dist1,
-      routine: true,
-    };
+
+    const entry = { hole: currentHole, par, score, fairway, gir, putts, dist1, routine: true };
     holes[currentHole - 1] = entry;
 
     if (showCoach) {
       const msg = tipAfterHole(entry, "fun");
       showCoachToast(msg);
     }
-    updateMiniRecap();
 
+    updateMiniRecap();
     return entry;
   }
 }
+
 
 // ---- End Round & Save ----
 function endRound(showBadge = false) {
