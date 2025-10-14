@@ -775,7 +775,7 @@ function resetRound() {
   // Empêche les doublons
   if (document.querySelector(".modal-backdrop")) return;
 
-  // Création de la modale
+  // Création de la modale de confirmation
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
@@ -793,13 +793,12 @@ function resetRound() {
   `;
   document.body.appendChild(backdrop);
 
-  // Gestion des boutons
   const cancelBtn = backdrop.querySelector("#cancel-reset");
   const confirmBtn = backdrop.querySelector("#confirm-reset");
 
   cancelBtn.addEventListener("click", () => backdrop.remove());
 
-  confirmBtn.addEventListener("click", () => {
+  confirmBtn.addEventListener("click", async () => {
     backdrop.remove();
 
     // 🔁 Réinitialisation complète
@@ -813,7 +812,27 @@ function resetRound() {
 
     $("hole-card").innerHTML = "";
     $("score-summary").innerHTML = "";
+
+    // ✅ Recharge la liste des golfs
     $("golf-select").style.display = "block";
+
+    try {
+      const golfs = await fetchGolfs();
+      $("golf-select").innerHTML =
+        "<h3>Choisis ton golf :</h3>" +
+        golfs.map(g => `<button class='btn golf-btn' data-id='${g.id}'>⛳ ${g.name}</button>`).join("");
+
+      $("golf-select").querySelectorAll(".golf-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const g = golfs.find(x => String(x.id) === btn.dataset.id);
+          startRound(g);
+          showScorecardIntro(); // 🧭 onboarding affiché à chaque nouvelle partie
+        });
+      });
+    } catch (err) {
+      console.error("Erreur lors du rechargement des golfs :", err);
+      showCoachToast("Erreur de chargement du golf 😅", "#ff6666");
+    }
 
     showCoachToast("Nouvelle partie prête à démarrer 💚", "#00ff99");
   });
@@ -830,7 +849,10 @@ function showScorecardIntro() {
     <div class="modal-card" style="max-width:420px;text-align:left;">
       <h2 style="margin-bottom:6px;">📋 Carte de Score</h2>
       <p>
-        Bienvenue sur ta carte de score interactive !  
+        Bienvenue sur ta carte Parfect Golfr !  
+        Ici on enregistre des Parfects et des Bogey'fects. 
+        Chaque coût à un objectif simple, un coup après l'autre.
+        Et rappelle toi que tu peux rater un shot, mais tu ne peux pas rater ta routine.
         Voici comment l’utiliser :
       </p>
       <ul style="margin-left:18px;line-height:1.4;">
