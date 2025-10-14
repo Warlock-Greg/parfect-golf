@@ -858,3 +858,7 @@ function showScorecardIntro() {
   });
 }
 
+// Rendre certaines fonctions accessibles globalement
+window.showResumeOrNewModal = showResumeOrNewModal;
+
+
