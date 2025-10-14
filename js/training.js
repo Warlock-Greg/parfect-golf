@@ -1,6 +1,8 @@
 // js/training.js
 import { fetchExercises } from "./data.js";
 import { tipAfterPractice } from "./coach.js";
+import { showTrainingCoachFeedback } from "./coachTraining.js";
+
 
 const $ = (id) => document.getElementById(id);
 const TRAINING_KEY = "trainingHistory";
