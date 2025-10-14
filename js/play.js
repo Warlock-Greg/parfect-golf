@@ -45,12 +45,12 @@ function showCoachToast(message, color) {
   // Supprime tout toast existant avant d’en créer un nouveau
   document.querySelectorAll(".coach-panel").forEach(p => p.remove());
 
-  // --- Création du toast ---<strong style="font-size:1.1rem;">Coach ${coach.name}</strong> dit :
+  // --- Création du toast ---
   const panel = document.createElement("div");
   panel.className = "coach-panel";
   panel.innerHTML = `
     <div class="coach-avatar">${coach.avatar}</div>
-    
+    <strong style="font-size:1.1rem;">Coach ${coach.name}</strong> dit :<br>
     <div class="coach-text" style="color:${finalColor};">${message}</div>
     <button id="stop-voice-btn" style="
       margin-left:auto;
