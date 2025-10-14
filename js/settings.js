@@ -7,14 +7,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentKey = document.getElementById("current-key");
 
   // 🔒 PIN de sécurité à l’ouverture
-  if (section) {
+  /*if (section) {
     const entered = prompt("🔐 Entre ton code PIN pour accéder aux paramètres :");
     if (parseInt(entered, 10) !== pinCode) {
       alert("❌ Code incorrect. Accès refusé.");
       section.innerHTML = "<h3>🔒 Accès refusé</h3>";
       return;
     }
-  }
+  }*/
 
   // 🧠 Vérifie si une clé est déjà enregistrée
   const savedKey = localStorage.getItem("openai_key");
