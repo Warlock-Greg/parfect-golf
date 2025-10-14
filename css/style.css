@@ -1279,29 +1279,78 @@ hr {
   /* === COACH TOAST PARFECT STYLE === */
 .coach-toast {
   position: fixed;
-  bottom: 30px;
+  bottom: 16px;
   left: 50%;
-  transform: translateX(-50%) scale(0.9);
-  background: rgba(0, 255, 153, 0.08);
-  border: 1px solid rgba(0, 255, 153, 0.3);
-  backdrop-filter: blur(6px);
-  border-radius: 16px;
-  padding: 14px 18px;
-  color: #00ff99;
-  font-weight: 600;
-  text-align: center;
-  font-size: 1rem;
-  box-shadow: 0 0 25px rgba(0, 255, 153, 0.2);
+  transform: translateX(-50%) translateY(40px);
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 14px;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 10px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
   opacity: 0;
+  transition: all 0.4s ease;
   z-index: 9999;
-  animation: coachFade 2.2s ease forwards;
 }
-@keyframes coachFade {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.95); }
-  15%  { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-  85%  { opacity: 1; }
-  100% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.9); }
+
+.coach-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
+
+.coach-avatar-bubble {
+  font-size: 1.8rem;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: bounceIn 0.5s ease;
+}
+
+.coach-text-zone {
+  flex: 1;
+}
+
+.coach-name {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
+.coach-message {
+  font-size: 1.15rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.stop-voice-btn {
+  background: none;
+  border: none;
+  color: #ff6666;
+  font-size: 1.3rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.stop-voice-btn:hover {
+  opacity: 1;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
 
 /* Variante pour ton fun/zen/tough si tu veux plus tard */
 .coach-toast.zen { color: #44ffaa; border-color: #44ffaa; box-shadow: 0 0 25px rgba(68, 255, 170, 0.3); }
