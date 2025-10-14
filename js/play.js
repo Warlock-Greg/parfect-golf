@@ -29,142 +29,104 @@ function sumVsPar(arr) {
 }
 
 // === Coach Toast + motivation automatique ===
-// === Coach Toast + audio + vibration + voix personnalisée ===
 function showCoachToast(message, color) {
   const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
-
   const coaches = {
     greg: { name: "Greg", avatar: "😎", color: "#00ff99" },
     goathier: { name: "Goathier", avatar: "🧠", color: "#4db8ff" },
     dorothee: { name: "Dorothée", avatar: "💫", color: "#ff99cc" },
   };
-
   const coach = coaches[coachKey] || coaches.greg;
   const finalColor = color || coach.color;
 
-  // Supprime tout toast existant avant d’en créer un nouveau
-  document.querySelectorAll(".coach-panel").forEach(p => p.remove());
+  // Supprime les anciens toasts
+  document.querySelectorAll(".coach-toast").forEach(t => t.remove());
 
   // --- Création du toast ---
-  const panel = document.createElement("div");
-  panel.className = "coach-panel";
-  panel.innerHTML = `
-    <div class="coach-avatar">${coach.avatar}</div>
-    <strong style="font-size:1.1rem;">Coach ${coach.name}</strong> dit :<br>
-    <div class="coach-text" style="color:${finalColor};">${message}</div>
-    <button id="stop-voice-btn" style="
-      margin-left:auto;
-      background:none;
-      border:none;
-      color:${finalColor};
-      font-weight:bold;
-      cursor:pointer;
-    ">🛑 Stop</button>
+  const toast = document.createElement("div");
+  toast.className = "coach-toast";
+  toast.innerHTML = `
+    <div class="coach-avatar-bubble" style="background:${finalColor}33;">${coach.avatar}</div>
+    <div class="coach-text-zone">
+      <div class="coach-name">${coach.name} dit :</div>
+      <div class="coach-message">${message}</div>
+    </div>
+    <button id="stop-voice-btn" class="stop-voice-btn">🛑</button>
   `;
-  document.body.appendChild(panel);
+  document.body.appendChild(toast);
 
   // --- Animation d’apparition ---
-  panel.style.opacity = "0";
-  panel.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-  panel.style.transform = "translateY(10px)";
-  requestAnimationFrame(() => {
-    panel.style.opacity = "1";
-    panel.style.transform = "translateY(0)";
-  });
+  requestAnimationFrame(() => toast.classList.add("visible"));
 
-  // --- Petit son "ping" ---
+  // --- Effet sonore + vibration ---
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = 880;
+    osc.type = "triangle";
+    osc.frequency.value = 660;
     gain.gain.value = 0.05;
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.12);
+    osc.stop(ctx.currentTime + 0.1);
   } catch (err) {
     console.warn("Audio non supporté :", err);
   }
 
-  // --- Vibration courte ---
-  if ("vibrate" in navigator) {
-    navigator.vibrate(80);
-  }
+  if ("vibrate" in navigator) navigator.vibrate(80);
 
   // --- Synthèse vocale personnalisée ---
   if ("speechSynthesis" in window) {
-    // Stoppe toute voix en cours
     window.speechSynthesis.cancel();
-
     const utterance = new SpeechSynthesisUtterance(message);
     utterance.lang = "fr-FR";
     utterance.pitch = 1;
     utterance.rate = 1.0;
     utterance.volume = 1;
 
-    // Fonction pour choisir une voix spécifique selon le coach
     const setVoiceForCoach = (voices) => {
-      // On essaye de trouver une voix FR spécifique
       const frVoices = voices.filter(v => v.lang.startsWith("fr"));
       let chosenVoice = null;
 
       if (coachKey === "dorothee") {
-        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("female"))
-          || frVoices.find(v => v.name.toLowerCase().includes("femme"))
-          || frVoices.find(v => v.name.toLowerCase().includes("google français"))
-          || frVoices[0];
+        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("female")) || frVoices[0];
         utterance.pitch = 1.2;
-        utterance.rate = 1.0;
       } else if (coachKey === "goathier") {
-        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("google français"))
-          || frVoices.find(v => v.name.toLowerCase().includes("male"))
-          || frVoices[0];
+        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("male")) || frVoices[0];
         utterance.pitch = 0.9;
-        utterance.rate = 0.9;
-      } else if (coachKey === "greg") {
-        chosenVoice = frVoices.find(v => v.name.toLowerCase().includes("google français"))
-          || frVoices.find(v => v.name.toLowerCase().includes("male"))
-          || frVoices[0];
-        utterance.pitch = 1.0;
-        utterance.rate = 1.05;
+      } else {
+        chosenVoice = frVoices[0];
       }
-
-      if (chosenVoice) utterance.voice = chosenVoice;
+      utterance.voice = chosenVoice;
       window.speechSynthesis.speak(utterance);
     };
 
-    // Certains navigateurs chargent les voix de façon asynchrone
     const voices = window.speechSynthesis.getVoices();
-    if (voices.length) {
-      setVoiceForCoach(voices);
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        setVoiceForCoach(window.speechSynthesis.getVoices());
-      };
-    }
-
-    // --- Bouton "Stop" ---
-    document.getElementById("stop-voice-btn")?.addEventListener("click", () => {
-      window.speechSynthesis.cancel();
-      panel.remove();
-    });
+    if (voices.length) setVoiceForCoach(voices);
+    else window.speechSynthesis.onvoiceschanged = () => setVoiceForCoach(window.speechSynthesis.getVoices());
   }
 
-  // --- Disparition automatique du toast (sauf si on stoppe) ---
+  // --- Bouton stop ---
+  toast.querySelector("#stop-voice-btn").addEventListener("click", () => {
+    window.speechSynthesis.cancel();
+    toast.classList.remove("visible");
+    setTimeout(() => toast.remove(), 300);
+  });
+
+  // --- Disparition automatique ---
   setTimeout(() => {
-    if (document.body.contains(panel)) {
-      panel.style.opacity = "0";
-      panel.style.transform = "translateY(-10px)";
-      setTimeout(() => panel.remove(), 300);
+    if (document.body.contains(toast)) {
+      toast.classList.remove("visible");
+      setTimeout(() => toast.remove(), 400);
     }
-  }, 15000);
+  }, 8000);
 }
 
 
+
 // === Messages motivationnels aléatoires ===
-function coachMotivationAuto() {
+/*function coachMotivationAuto() {
   const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
 
   const messages = {
@@ -195,7 +157,7 @@ function coachMotivationAuto() {
   const randomMsg = coachMsgs[Math.floor(Math.random() * coachMsgs.length)];
   showCoachToast(randomMsg);
 }
-
+*/
 
 
 
