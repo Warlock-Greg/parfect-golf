@@ -126,7 +126,7 @@ function showCoachToast(message, color) {
 
 
 // === Messages motivationnels aléatoires ===
-function coachMotivationAuto() {
+/*function coachMotivationAuto() {
   const coachKey = window.currentCoach || localStorage.getItem("coach") || "greg";
 
   const messages = {
@@ -156,7 +156,7 @@ function coachMotivationAuto() {
   const coachMsgs = messages[coachKey] || messages.greg;
   const randomMsg = coachMsgs[Math.floor(Math.random() * coachMsgs.length)];
   showCoachToast(randomMsg);
-}
+}*/
 
 
 
