@@ -40,7 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // === Boutons d’accueil ===
-  $("new-round-btn")?.addEventListener("click", () => showPage("play"));
+  $("new-round-btn")?.addEventListener("click", () => {
+  showPage("play");
+  showResumeOrNewModal();
+});
+
   $("training-btn")?.addEventListener("click", () => showPage("training"));
   $("view-history")?.addEventListener("click", () => showPage("history"));
 
