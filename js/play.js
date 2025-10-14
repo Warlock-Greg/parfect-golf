@@ -733,11 +733,11 @@ function showResumeOrNewModal() {
 
 
 // === 🔄 RESET COMPLET D'UNE PARTIE AVEC CONFIRMATION ===
-function resetRound() {
-  // Empêche les doublons
+async function resetRound() {
+  // ⚠️ Évite d’avoir plusieurs modales empilées
   if (document.querySelector(".modal-backdrop")) return;
 
-  // Création de la modale de confirmation
+  // === Création de la modale de confirmation ===
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
   backdrop.innerHTML = `
@@ -780,6 +780,10 @@ function resetRound() {
 
     try {
       const golfs = await fetchGolfs();
+
+      // 🔒 Stocker la liste globale pour d’autres appels (utile dans main.js)
+      window.availableGolfs = golfs;
+
       $("golf-select").innerHTML =
         "<h3>Choisis ton golf :</h3>" +
         golfs.map(g => `<button class='btn golf-btn' data-id='${g.id}'>⛳ ${g.name}</button>`).join("");
@@ -788,17 +792,23 @@ function resetRound() {
         btn.addEventListener("click", () => {
           const g = golfs.find(x => String(x.id) === btn.dataset.id);
           startRound(g);
-          showScorecardIntro(); // 🧭 onboarding affiché à chaque nouvelle partie
+
+          // 🕒 petit délai pour laisser la carte se dessiner
+          setTimeout(() => {
+            showScorecardIntro(); // 👈 onboarding propre et visible
+          }, 500);
         });
       });
+
+      showCoachToast("Nouvelle partie prête à démarrer 💚", "#00ff99");
+
     } catch (err) {
       console.error("Erreur lors du rechargement des golfs :", err);
       showCoachToast("Erreur de chargement du golf 😅", "#ff6666");
     }
-
-    showCoachToast("Nouvelle partie prête à démarrer 💚", "#00ff99");
   });
 }
+
 
 // === MODALE D’EXPLICATION CARTE DE SCORE ===
 function showScorecardIntro() {
