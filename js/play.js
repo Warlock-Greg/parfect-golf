@@ -216,6 +216,8 @@ function coachMotivationAuto() {
 
 // ---- Start / Render Round ----
 function startRound(golf) {
+  showScorecardIntro();
+
   currentGolf = golf;
   totalHoles = Array.isArray(currentGolf?.pars) ? currentGolf.pars.length : 18;
   currentHole = 1;
@@ -727,6 +729,47 @@ function saveRound(round) {
 // === EXPORT GLOBAL pour coachMotivationAuto ===
 window.coachMotivationAuto = coachMotivationAuto;
 
+
+// === MODALE NOUVELLE PARTIE / REPRENDRE ===
+function showResumeOrNewModal() {
+  const lastRound = localStorage.getItem("roundInProgress");
+  const hasActiveRound = lastRound === "true" && holes.some(h => h);
+
+  // Création modale
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal-card" style="max-width:380px;text-align:center;">
+      <h3>🎯 Que veux-tu faire ?</h3>
+      <p style="font-size:0.95rem;line-height:1.5;margin-top:6px;">
+        Tu as une partie précédente${hasActiveRound ? " en cours" : ""}.<br>
+        Souhaites-tu la reprendre ou en démarrer une nouvelle ?
+      </p>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
+        <button id="resume-round" class="btn" style="background:#44ffaa;">Reprendre</button>
+        <button id="new-round-start" class="btn" style="background:#00c676;color:white;">Nouvelle partie</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  // Gestion des clics
+  backdrop.querySelector("#resume-round").addEventListener("click", () => {
+    backdrop.remove();
+    // Recharge l’état précédent (si tu veux plus tard le restaurer)
+    showCoachToast("Partie précédente chargée 💚", "#00ff99");
+    renderHole();
+  });
+
+  backdrop.querySelector("#new-round-start").addEventListener("click", () => {
+    backdrop.remove();
+    resetRound();
+  });
+}
+
+
+
+
 // === 🔄 RESET COMPLET D'UNE PARTIE AVEC CONFIRMATION ===
 function resetRound() {
   // Empêche les doublons
@@ -775,3 +818,43 @@ function resetRound() {
     showCoachToast("Nouvelle partie prête à démarrer 💚", "#00ff99");
   });
 }
+
+// === MODALE D’EXPLICATION CARTE DE SCORE ===
+function showScorecardIntro() {
+  const skip = localStorage.getItem("skipScoreIntro");
+  if (skip === "true") return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:left;">
+      <h2 style="margin-bottom:6px;">📋 Carte de Score</h2>
+      <p>
+        Bienvenue sur ta carte de score interactive !  
+        Voici comment l’utiliser :
+      </p>
+      <ul style="margin-left:18px;line-height:1.4;">
+        <li>💚 <strong>Parfect</strong> : Par + Fairway + GIR + ≤ 2 putts</li>
+        <li>💙 <strong>Bogey’fect</strong> : Bogey + Fairway + ≤ 2 putts</li>
+        <li>✍️ Indique ton score, tes putts, fairway et GIR</li>
+        <li>🎯 Coach Greg t’encourage après chaque trou</li>
+      </ul>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
+      </label>
+
+      <div style="text-align:right;margin-top:16px;">
+        <button id="close-intro" class="btn" style="background:#00c676;color:#fff;">OK, compris 💪</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("close-intro").addEventListener("click", () => {
+    const dontShow = document.getElementById("hide-intro").checked;
+    if (dontShow) localStorage.setItem("skipScoreIntro", "true");
+    modal.remove();
+  });
+}
+
