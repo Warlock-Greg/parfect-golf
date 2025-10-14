@@ -816,6 +816,48 @@ hr {
   margin: 16px 0;
 }
 
+  /* === Coach Training Toast === */
+.coach-training-toast {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 16px;
+  padding: 12px 18px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: all 0.4s ease;
+  z-index: 2000;
+}
+
+.coach-training-toast.visible {
+  bottom: 30px;
+  opacity: 1;
+}
+
+.coach-training-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: #00ff9933;
+}
+
+.coach-training-text strong {
+  color: #00ff99;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
   
 /* === MINI RECAP === */
 .mini-recap {
