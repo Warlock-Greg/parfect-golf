@@ -6,63 +6,6 @@ window.$ = (id) => document.getElementById(id);
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ main.js chargé avec succès");
 
-  document.addEventListener("DOMContentLoaded", async () => {
-  // === Gestion du sélecteur Play V1/V2 ===
-  if (document.getElementById("play-version-choice")) {
-    const playChoice = document.getElementById("play-version-choice");
-    const savedPlayVersion = localStorage.getItem("playVersion") || "v1";
-    playChoice.value = savedPlayVersion;
-
-    await loadPlayVersion(savedPlayVersion);
-
-    playChoice.addEventListener("change", async () => {
-      const version = playChoice.value;
-      localStorage.setItem("playVersion", version);
-      await loadPlayVersion(version);
-      if (window.showCoachToast)
-        showCoachToast(`Mode ${version.toUpperCase()} activé 💚`, "#00ff99");
-    });
-  }
-});
-
-async function loadPlayVersion(version) {
-  const existingScript = document.getElementById("dynamic-play-script");
-  if (existingScript) existingScript.remove();
-
-  const script = document.createElement("script");
-  script.id = "dynamic-play-script";
-  script.type = "module";
-  script.src = version === "v2" ? "./js/play_v2.js" : "./js/play.js";
-  document.body.appendChild(script);
-    
-    
-    
-    // ... autres init ...
-
-  const trainingChoice = document.getElementById("training-version-choice");
-  const savedTrainingVersion = localStorage.getItem("trainingVersion") || "v1";
-  trainingChoice.value = savedTrainingVersion;
-
-  await loadTrainingVersion(savedTrainingVersion);
-
-  trainingChoice.addEventListener("change", async () => {
-    const version = trainingChoice.value;
-    localStorage.setItem("trainingVersion", version);
-    await loadTrainingVersion(version);
-    showCoachToast(`Mode ${version.toUpperCase()} activé 💚`, "#00ff99");
-  });
-});
-
-async function loadTrainingVersion(version) {
-  const existingScript = document.getElementById("dynamic-training-script");
-  if (existingScript) existingScript.remove();
-
-  const script = document.createElement("script");
-  script.id = "dynamic-training-script";
-  script.type = "module";
-  script.src = version === "v2" ? "./js/training_v2.js" : "./js/training.js";
-  document.body.appendChild(script);
-}
 
 
   // Sélecteurs principaux
