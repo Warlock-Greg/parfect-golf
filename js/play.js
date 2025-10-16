@@ -263,6 +263,23 @@ function showPremiumCoachFeedback(allHoles, context = "midround") {
   showCoachToast(msg);
 }
 
+
+<div id="play-version-switch" style="text-align:center;margin:12px 0;">
+  <label for="play-version-choice">🧪 Mode de carte :</label>
+  <select id="play-version-choice" style="margin-left:6px;padding:4px 8px;border-radius:6px;">
+    <option value="v1">Play V1 (classique)</option>
+    <option value="v2">Play V2 (coach-caddie)</option>
+  </select>
+</div>
+
+<!-- Zone dynamique de la carte -->
+<section id="play-zone">
+  <div id="golf-select"></div>
+  <div id="hole-card"></div>
+  <div id="score-summary"></div>
+</section>
+
+  
 /* =========================
    INIT: liste de golfs
    ========================= */
