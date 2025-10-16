@@ -225,6 +225,47 @@ function saveCurrentHole() {
   holes[currentHole - 1] = { hole: currentHole, par, score, fairway, gir, putt2, routine };
   console.log("✅ Hole saved", holes[currentHole - 1]);
 }
+// === Analyse du trou + message coach ===
+function coachFeedbackForHole(entry) {
+  const diff = entry.score - entry.par;
+  const mood = localStorage.getItem("dailyMood") || "calme";
+  const strategy = localStorage.getItem("dailyStrategy") || "safe";
+
+  let msg = "";
+  let color = "#00ff99";
+
+  // 1️⃣ Feedback direct selon le score
+  if (diff <= -1) {
+    msg = "🔥 Birdie ! Momentum on fire, garde ton rythme.";
+  } else if (diff === 0 && entry.fairway && entry.gir && entry.putt2 <= 2) {
+    msg = "💚 Parfect ! Tout est fluide, routine et tempo au top.";
+  } else if (diff === 1 && entry.fairway && entry.putt2 <= 2) {
+    msg = "💙 Bogey’fect ! Smart golf, continue comme ça.";
+  } else if (diff >= 2) {
+    msg = "💪 Double ou plus, c’est pas grave. Respire et recentre-toi.";
+    color = "#ffaa44";
+  } else {
+    msg = "🎯 Trou solide, tu avances bien.";
+  }
+
+  // 2️⃣ Ajustement selon la stratégie
+  if (strategy === "safe" && diff <= 0) msg += " Stratégie safe payante 👌";
+  if (strategy === "aggressive" && diff >= 2) msg += " Trop agressif ? Calme le jeu.";
+  if (strategy === "parfect" && diff === 0) msg += " C’est du pur Parfect 💚";
+  if (strategy === "playfree") msg += " Continue à jouer libre 🌈";
+
+  // 3️⃣ Ajustement selon le mood
+  if (mood === "calme") msg += " Keep zen 🧘";
+  if (mood === "focus") msg += " Mental laser, focus 💥";
+  if (mood === "detente") msg += " Smooth swing only 😎";
+  if (mood === "compet") msg += " Hunger mode 🔥";
+
+  // 4️⃣ Routine et putts
+  if (!entry.routine) msg += " ⚠️ N’oublie pas ta routine au prochain trou.";
+  if (entry.putt2 >= 6) msg += " Travaille ton dosage sur les longs putts 👀";
+
+  showCoachToast(msg, color);
+}
 
 // === Fin de partie ===
 function endRound() {
