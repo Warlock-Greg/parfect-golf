@@ -1,174 +1,95 @@
 // js/training_v2.js
 import { fetchExercises } from "./data.js";
-import { tipAfterPractice } from "./coach.js";
+import { showCoachToast } from "./coach.js";
 
+// === STATE GLOBAL ===
 const $ = (id) => document.getElementById(id);
 const TRAINING_KEY = "trainingHistoryV2";
 
 let exercises = [];
 let selectedType = null;
 let currentExercise = null;
-let playerMood = null;
-let trainingGoal = null;
+let currentCount = 0;
 
-// === INIT ===
-document.addEventListener("DOMContentLoaded", () => initTrainingV2());
+// === INITIALISATION ===
+document.addEventListener("DOMContentLoaded", initTrainingV2);
 
 async function initTrainingV2() {
-  console.log("🚀 Training V2 lancé");
+  console.log("🏋️ Training V2 loaded");
 
-  // Étape 1 : mood & objectif du jour
-  await showTrainingIntroModal();
-
-  // Étape 2 : liste des types d'exercices
-  const types = ["putting", "chipping", "driving", "irons", "mental"];
-  const typeZone = $("training-type");
-  typeZone.innerHTML = types
-    .map(
-      (t) => `<button class="btn training-type" data-type="${t}">${t.toUpperCase()}</button>`
-    )
-    .join("");
-
-  document.querySelectorAll(".training-type").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      selectedType = btn.dataset.type;
-      setActiveTypeButton(selectedType);
-      loadExercises(selectedType);
-    })
-  );
+  const zone = $("training-select");
+  zone.innerHTML = `
+    <h3>Choisis ton thème d'entraînement</h3>
+    <div class="training-types">
+      <button class="btn training-type" data-type="putting">⛳ Putting</button>
+      <button class="btn training-type" data-type="chipping">🎯 Chipping</button>
+      <button class="btn training-type" data-type="driving">💥 Driving</button>
+      <button class="btn training-type" data-type="irons">🪄 Fers</button>
+      <button class="btn training-type" data-type="mental">🧠 Mental</button>
+    </div>
+    <div id="training-exercises"></div>
+  `;
 
   exercises = await fetchExercises();
-  renderHistory();
-}
 
-// === Modale d’intro (mood + objectif) ===
-function showTrainingIntroModal() {
-  return new Promise((resolve) => {
-    const backdrop = document.createElement("div");
-    backdrop.className = "modal-backdrop";
-    backdrop.innerHTML = `
-      <div class="modal-card" style="max-width:420px;text-align:center;">
-        <h2>👋 Salut !</h2>
-        <p>Avant de commencer ta session, dis-moi :</p>
-
-        <h4>Ton mood du jour ?</h4>
-        <div id="mood-buttons" style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
-          <button class="btn mood" data-mood="focus">🎯 Focus</button>
-          <button class="btn mood" data-mood="chill">😌 Chill</button>
-          <button class="btn mood" data-mood="determined">🔥 Déterminé</button>
-          <button class="btn mood" data-mood="fatigue">💤 Fatigué</button>
-        </div>
-
-        <h4 style="margin-top:12px;">Objectif de la session :</h4>
-        <div id="goal-buttons" style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;">
-          <button class="btn goal" data-goal="routine">Routine</button>
-          <button class="btn goal" data-goal="précision">Précision</button>
-          <button class="btn goal" data-goal="distance">Distance</button>
-          <button class="btn goal" data-goal="mental">Mental</button>
-        </div>
-
-        <div style="margin-top:16px;">
-          <button id="start-training" class="btn" disabled>Démarrer 💪</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(backdrop);
-
-    let moodSelected = false;
-    let goalSelected = false;
-
-    backdrop.querySelectorAll(".mood").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        playerMood = btn.dataset.mood;
-        backdrop.querySelectorAll(".mood").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        moodSelected = true;
-        enableStart();
-      })
-    );
-
-    backdrop.querySelectorAll(".goal").forEach((btn) =>
-      btn.addEventListener("click", () => {
-        trainingGoal = btn.dataset.goal;
-        backdrop.querySelectorAll(".goal").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        goalSelected = true;
-        enableStart();
-      })
-    );
-
-    function enableStart() {
-      if (moodSelected && goalSelected) $("start-training").disabled = false;
-    }
-
-    $("start-training").addEventListener("click", () => {
-      backdrop.remove();
-      showCoachToast(`Let's go ! ${playerMood} mood et objectif ${trainingGoal} 💚`, "#00ff99");
-      resolve();
+  document.querySelectorAll(".training-type").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectedType = btn.dataset.type;
+      loadExercisesV2(selectedType);
     });
   });
 }
 
-// === AFFICHAGE EXERCICES ===
-function setActiveTypeButton(type) {
-  document.querySelectorAll(".training-type").forEach((b) =>
-    b.classList.remove("active-type")
-  );
-  const active = document.querySelector(`.training-type[data-type="${type}"]`);
-  if (active) active.classList.add("active-type");
-}
-
-function loadExercises(type) {
+// === CHARGEMENT DES EXERCICES ===
+function loadExercisesV2(type) {
   const exZone = $("training-exercises");
   const exos = exercises.filter((e) => e.type?.toLowerCase().includes(type));
+
   if (!exos.length) {
-    exZone.innerHTML = `<p style="opacity:.7">Aucun exercice pour ${type}.</p>`;
+    exZone.innerHTML = `<p style="opacity:.7;">Aucun exercice pour ${type}</p>`;
     return;
   }
 
   exZone.innerHTML = `
-    <h3>${type.toUpperCase()}</h3>
-    <ul class="exo-list">
-      ${exos
-        .map(
-          (ex) => `
-        <li>
-          <button class="btn exo-btn" data-id="${ex.id}">
-            ${ex.name} — <small>${ex.goal}</small>
-          </button>
-        </li>`
-        )
-        .join("")}
-    </ul>
+    <h3>🧩 Exercices ${type.toUpperCase()}</h3>
+    <div class="exo-list">
+      ${exos.map((ex) => `
+        <button class="btn exo-btn" data-id="${ex.id}">
+          ${ex.name} — <small>${ex.goal}</small>
+        </button>
+      `).join("")}
+    </div>
   `;
 
   exZone.querySelectorAll(".exo-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       const exo = exos.find((e) => e.id === btn.dataset.id);
-      startExercise(exo);
+      startExerciseV2(exo);
     })
   );
 }
 
-// === LANCEMENT EXERCICE ===
-function startExercise(exo) {
+// === DÉMARRAGE DE L’EXERCICE ===
+function startExerciseV2(exo) {
   currentExercise = exo;
+  currentCount = 0;
+
+  showCoachToast(`Let's go pour un ${exo.type} ! ${exo.goal}`, "#00ff99");
+
   const zone = $("training-session");
   $("training-exercises").style.display = "none";
+  zone.style.display = "block";
 
   const objectif = exo.objectif || 10;
-  let currentCount = 0;
-
-  const coach = tipAfterPractice(exo.type, "fun");
 
   zone.innerHTML = `
     <div class="training-session-card">
-      <h4>${exo.name}</h4>
-      <p class="goal">${exo.goal}</p>
-
-      <div class="coach-panel">
+      <h3>${exo.name}</h3>
+      <p>${exo.goal}</p>
+      
+      <div id="coach-training" class="coach-block">
         <div class="coach-avatar">😎</div>
-        <div class="coach-text">${coach}</div>
+        <div class="coach-text">Fais chauffer le swing !</div>
       </div>
 
       <div class="progress-block">
@@ -187,98 +108,102 @@ function startExercise(exo) {
 
       <div class="actions">
         <button class="btn" id="save-perf">Sauvegarder</button>
-        <button class="btn secondary" id="change-exo">🔁 Changer</button>
+        <button class="btn secondary" id="change-exo">Changer d'exercice</button>
       </div>
     </div>
   `;
 
-  $("change-exo").addEventListener("click", () => {
-    $("training-exercises").style.display = "block";
-    zone.innerHTML = "";
-  });
-
+  // === ACTIONS ===
   $("btn-add-success").addEventListener("click", () => {
     if (currentCount < objectif) {
       currentCount++;
       const percent = (currentCount / objectif) * 100;
       $("progress-fill").style.width = percent + "%";
       $("progress-label").textContent = `Progression : ${currentCount} / ${objectif}`;
+      showDynamicFeedback(currentCount, objectif);
     }
   });
 
-  $("save-perf").addEventListener("click", () => {
-    const perf =
-      $("perf-input").value.trim() ||
-      `${currentCount}/${objectif} réussis (${Math.round((currentCount / objectif) * 100)}%)`;
-    const note = $("note-input").value.trim();
+  $("save-perf").addEventListener("click", () => savePerformanceV2(exo, objectif));
+  $("change-exo").addEventListener("click", resetTrainingView);
+}
 
-    const entry = {
-      ...exo,
-      date: new Date().toISOString(),
-      perf,
-      note,
-      mood: playerMood,
-      goal: trainingGoal,
-    };
+// === FEEDBACK DYNAMIQUE DU COACH ===
+function showDynamicFeedback(count, objectif) {
+  const ratio = (count / objectif) * 100;
 
-    savePerformance(entry);
-    showCoachFeedback(entry);
-    renderHistory();
-  });
+  if (ratio === 100) {
+    showCoachToast("💚 Parfect ! Objectif atteint avec style !");
+  } else if (ratio >= 80) {
+    showCoachToast("💪 Presque Parfect ! Un peu plus de focus !");
+  } else if (ratio >= 50) {
+    showCoachToast("🧠 Reste patient, la régularité arrive.");
+  } else {
+    showCoachToast("🚀 Continue, chaque coup te rapproche du flow !");
+  }
 }
 
 // === SAUVEGARDE ===
-function savePerformance(entry) {
+function savePerformanceV2(exo, objectif) {
+  const perfInput = $("perf-input").value.trim();
+  const note = $("note-input").value.trim();
+
+  const perfText =
+    perfInput ||
+    `${currentCount}/${objectif} réussis (${Math.round(
+      (currentCount / objectif) * 100
+    )}%)`;
+
   const data = JSON.parse(localStorage.getItem(TRAINING_KEY) || "[]");
+  const entry = {
+    date: new Date().toISOString(),
+    type: exo.type,
+    name: exo.name,
+    goal: exo.goal,
+    perf: perfText,
+    note,
+  };
   data.push(entry);
   localStorage.setItem(TRAINING_KEY, JSON.stringify(data));
+
+  showCoachToast("📊 Entraînement enregistré !", "#44ffaa");
+  showEndModalV2(exo);
 }
 
-// === FEEDBACK COACH APRÈS ENTRAINEMENT ===
-function showCoachFeedback(entry) {
-  const perfScore = parseInt(entry.perf) || 0;
-  let msg = "";
-
-  if (perfScore >= 80) msg = "💚 Super session ! Ta régularité est en hausse.";
-  else if (perfScore >= 50) msg = "👍 Bon travail, reste dans ta routine.";
-  else msg = "😅 Pas grave, chaque session te rapproche du flow.";
-
-  showCoachToast(`${msg} (${entry.mood} mood / objectif ${entry.goal})`, "#00ff99");
-}
-
-// === HISTORIQUE ===
-function renderHistory() {
-  const histZone = $("training-history");
-  if (!histZone) return;
-
-  const data = JSON.parse(localStorage.getItem(TRAINING_KEY) || "[]");
-  if (!data.length) {
-    histZone.innerHTML = "<p style='opacity:.6'>Aucun entraînement enregistré (V2).</p>";
-    return;
-  }
-
-  data.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  histZone.innerHTML = `
-    <h3>📜 Historique V2</h3>
-    <div class="history-list">
-      ${data
-        .map((h) => {
-          const d = new Date(h.date).toLocaleDateString("fr-FR", {
-            day: "2-digit",
-            month: "short",
-            year: "2-digit",
-          });
-          return `
-            <div class="history-item">
-              <div><strong>${h.name}</strong> (${h.type})</div>
-              <div style="font-size:.85rem;opacity:.8">${d} · Mood: ${h.mood} · Obj: ${h.goal}</div>
-              <div>Perf : ${h.perf}</div>
-              ${h.note ? `<div style="opacity:.8;">${h.note}</div>` : ""}
-            </div>`;
-        })
-        .join("")}
+// === MODALE DE FIN ===
+function showEndModalV2(exo) {
+  const modal = document.createElement("div");
+  modal.className = "end-modal";
+  modal.innerHTML = `
+    <div class="end-content">
+      <h3>✅ Bien joué !</h3>
+      <p>Tu veux recommencer cet exo ou en changer ?</p>
+      <div class="end-actions">
+        <button class="btn" id="restart-exo">🔁 Refaire</button>
+        <button class="btn" id="new-exo">↩️ Nouveau</button>
+      </div>
     </div>
   `;
+  document.body.appendChild(modal);
+
+  $("restart-exo").addEventListener("click", () => {
+    modal.remove();
+    startExerciseV2(exo);
+  });
+
+  $("new-exo").addEventListener("click", () => {
+    modal.remove();
+    resetTrainingView();
+  });
 }
 
+// === REINITIALISATION ===
+function resetTrainingView() {
+  $("training-session").innerHTML = "";
+  $("training-session").style.display = "none";
+  $("training-exercises").style.display = "block";
+}
+
+// === EXPORT GLOBAL ===
+window.trainingV2Loaded = true;
+console.log("✅ Training V2 ready!");
