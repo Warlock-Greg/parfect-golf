@@ -16,18 +16,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Fonction d’affichage d’une section ===
   function showPage(pageId) {
-    sections.forEach((s) => (s.style.display = "none"));
-    const target = $(pageId);
-    if (target) {
-      target.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      console.log(`📄 Page affichée : ${pageId}`);
-    } else {
-      console.warn("⚠️ Section introuvable :", pageId);
-    }
-    if (pageId === "play") coachMotivationAuto();
+  console.log("📄 Page affichée :", pageId);
 
+  // Masquer toutes les sections
+  document.querySelectorAll("section").forEach((sec) => (sec.style.display = "none"));
+
+  // Afficher la page demandée
+  const targetPage = document.getElementById(pageId);
+  if (targetPage) targetPage.style.display = "block";
+  else console.warn("⚠️ Page non trouvée :", pageId);
+
+  // === Gestion spéciale de la page "play_v2"
+  if (pageId === "play_v2") {
+    console.log("🟢 Chargement de play_v2.js");
+
+    // Vérifie si déjà chargé
+    if (!window.playV2Loaded) {
+      const script = document.createElement("script");
+      script.src = "js/play_v2.js";
+      script.type = "module";
+      script.onload = () => {
+        console.log("✅ play_v2.js chargé avec succès");
+        window.playV2Loaded = true;
+      };
+      script.onerror = () => {
+        console.error("❌ Erreur de chargement de play_v2.js");
+      };
+      document.body.appendChild(script);
+    }
   }
+
+  // === Et pour la page "play" classique ===
+  if (pageId === "play") {
+    if (typeof coachMotivationAuto === "function") {
+      coachMotivationAuto();
+    } else {
+      console.warn("⚠️ coachMotivationAuto non défini pour la V1");
+    }
+  }
+}
+
 
   // === Navigation via le menu principal ===
   menuButtons.forEach((btn) => {
