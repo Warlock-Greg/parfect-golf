@@ -13,49 +13,89 @@ let holes = [];
 let currentDiff = null;
 
 // === COACH TOAST ===
+// === COACH TOAST FIXE SOUS LE MENU ===
 function showCoachToast(message, color = "#00ff99") {
-  document.querySelectorAll(".coach-toast").forEach((el) => el.remove());
-  const toast = document.createElement("div");
-  toast.className = "coach-toast";
-  toast.innerHTML = `
-    <div class="coach-avatar">😎</div>
-    <div class="coach-message" style="color:${color}">${message}</div>
+  // Supprimer l’ancien container s’il existe
+  let coachZone = document.getElementById("coach-zone");
+  if (!coachZone) {
+    coachZone = document.createElement("div");
+    coachZone.id = "coach-zone";
+    coachZone.style.cssText = `
+      background: #111;
+      color: white;
+      padding: 10px 14px;
+      border-top: 2px solid ${color};
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(-10px);
+    `;
+    // insérer juste sous le menu
+    const menu = document.getElementById("menu");
+    menu.insertAdjacentElement("afterend", coachZone);
+  }
+
+  // 🧠 Contenu
+  coachZone.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:1.3rem;">😎</div>
+      <div>${message}</div>
+    </div>
+    <button id="stop-voice-btn" style="
+      background:none;
+      border:none;
+      color:${color};
+      font-weight:bold;
+      cursor:pointer;
+      font-size:1rem;
+    ">🛑 Stop</button>
   `;
-  document.body.appendChild(toast);
 
-  toast.style.opacity = "0";
+  // Animation douce
   requestAnimationFrame(() => {
-    toast.style.transition = "opacity 0.3s ease";
-    toast.style.opacity = "1";
+    coachZone.style.opacity = "1";
+    coachZone.style.transform = "translateY(0)";
   });
 
-  setTimeout(() => {
-    toast.style.opacity = "0";
-    setTimeout(() => toast.remove(), 400);
-  }, 5000);
+  // === Son court (ping) ===
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = 660;
+    gain.gain.value = 0.05;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.1);
+  } catch (err) {
+    console.warn("Audio non supporté :", err);
+  }
+
+  // === Synthèse vocale ===
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(message);
+    utter.lang = "fr-FR";
+    utter.pitch = 1;
+    utter.rate = 1.0;
+    utter.volume = 1;
+    window.speechSynthesis.speak(utter);
+  }
+
+  // === Bouton Stop ===
+  document.getElementById("stop-voice-btn").addEventListener("click", () => {
+    window.speechSynthesis.cancel();
+    coachZone.style.opacity = "0";
+    coachZone.style.transform = "translateY(-10px)";
+    setTimeout(() => coachZone.remove(), 300);
+  });
 }
-
-// === Initialisation du golf ===
-(async function initGolfSelect() {
-  const zone = $("golf-select");
-  const golfs = await fetchGolfs();
-
-  zone.innerHTML =
-    "<h3>Choisis ton golf :</h3>" +
-    golfs
-      .map(
-        (g) =>
-          `<button class="btn golf-btn" data-id="${g.id}">⛳ ${g.name}</button>`
-      )
-      .join("");
-
-  zone.querySelectorAll(".golf-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const g = golfs.find((x) => String(x.id) === btn.dataset.id);
-      startRound(g);
-    });
-  });
-})();
 
 // === Lancement de la partie ===
 function startRound(golf) {
