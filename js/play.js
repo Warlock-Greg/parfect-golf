@@ -264,21 +264,66 @@ function showPremiumCoachFeedback(allHoles, context = "midround") {
 }
 
 
-<div id="play-version-switch" style="text-align:center;margin:12px 0;">
-  <label for="play-version-choice">🧪 Mode de carte :</label>
-  <select id="play-version-choice" style="margin-left:6px;padding:4px 8px;border-radius:6px;">
-    <option value="v1">Play V1 (classique)</option>
-    <option value="v2">Play V2 (coach-caddie)</option>
-  </select>
-</div>
+// ======== Gestion des versions de la carte (V1 / V2) ========
+(async function handlePlayVersionSwitch() {
+  // Création du petit sélecteur visuel
+  const switcher = document.createElement("div");
+  switcher.id = "play-version-switch";
+  switcher.style.cssText = `
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    z-index: 9999;
+    font-size: 0.9rem;
+    backdrop-filter: blur(6px);
+  `;
+  switcher.innerHTML = `
+    <label for="play-version-choice">🧪 Mode :</label>
+    <select id="play-version-choice" style="margin-left:6px;padding:3px;border-radius:4px;">
+      <option value="v1">V1 (classique)</option>
+      <option value="v2">V2 (coach-caddie)</option>
+    </select>
+  `;
+  document.body.appendChild(switcher);
 
-<!-- Zone dynamique de la carte -->
-<section id="play-zone">
-  <div id="golf-select"></div>
-  <div id="hole-card"></div>
-  <div id="score-summary"></div>
-</section>
+  // === Gestion du choix sauvegardé
+  const select = switcher.querySelector("#play-version-choice");
+  const savedVersion = localStorage.getItem("playVersion") || "v1";
+  select.value = savedVersion;
 
+  // Charge la bonne version
+  await loadPlayVersion(savedVersion);
+
+  // Changement de version à la volée
+  select.addEventListener("change", async () => {
+    const version = select.value;
+    localStorage.setItem("playVersion", version);
+    await loadPlayVersion(version);
+    if (window.showCoachToast)
+      showCoachToast(`Mode ${version.toUpperCase()} activé 💚`, "#00ff99");
+  });
+
+  // === Fonction pour charger dynamiquement le bon JS
+  async function loadPlayVersion(version) {
+    // Supprimer un ancien script si déjà chargé
+    const existing = document.getElementById("dynamic-play-script");
+    if (existing) existing.remove();
+
+    // Ajouter le nouveau
+    const script = document.createElement("script");
+    script.id = "dynamic-play-script";
+    script.type = "module";
+    script.src = version === "v2" ? "./js/play_v2.js" : "./js/play_v1.js";
+
+    // Vérifie que le fichier existe avant d’ajouter
+    try {
+      const res = await fetch(script.src);
+      if (!res.ok) throw new Error(`Fichier introuvable : ${script.src}`);
+      document.body.appendChild(script);
   
 /* =========================
    INIT: liste de golfs
