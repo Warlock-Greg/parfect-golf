@@ -1,6 +1,7 @@
 // js/training.js
 import { fetchExercises } from "./data.js";
 import { tipAfterPractice } from "./coach.js";
+import { showCoachIA, hideCoachIA, initCoachIA } from "./coachIA.js";
 import { showTrainingCoachFeedback } from "./coachTraining.js";
 
 const $ = (id) => document.getElementById(id);
@@ -18,6 +19,11 @@ async function initTraining() {
   typeZone.innerHTML = types
     .map((t) => `<button class="btn training-type" data-type="${t}">${t.toUpperCase()}</button>`)
     .join("");
+
+
+  initCoachIA(); // ✅ Coach prêt aussi sur la page entraînement
+  initTraining();
+
 
   document.querySelectorAll(".training-type").forEach((btn) =>
     btn.addEventListener("click", () => {
@@ -71,7 +77,8 @@ function startExercise(exo) {
   currentExercise = exo;
   const zone = $("training-session");
   const coach = tipAfterPractice(exo.type, "fun");
-
+  showCoachIA(); // 💬 Le coach s’affiche quand un exercice commence
+  
   $("training-exercises").style.display = "none";
 
   const objectif = exo.objectif || 10;
