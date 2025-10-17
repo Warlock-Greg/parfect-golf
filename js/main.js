@@ -46,12 +46,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // === Et pour la page "play" classique ===
+  // === Hooks spécifiques par page ===
   if (pageId === "play") {
-    if (typeof coachMotivationAuto === "function") {
-      coachMotivationAuto();
+    if (typeof showResumeOrNewModal === "function") {
+      showResumeOrNewModal(); // ✅ ouvre le choix Reprendre / Nouvelle partie
     } else {
-      console.warn("⚠️ coachMotivationAuto non défini pour la V1");
+      console.warn("⚠️ showResumeOrNewModal non défini");
     }
   }
 }
@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
   menuButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.target;
-      showPage(target);
+      (target);
 
       // Fermer le menu mobile si ouvert
       burger?.classList.remove("open");
@@ -71,12 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === Boutons d’accueil ===
   $("new-round-btn")?.addEventListener("click", () => {
-  showPage("play");
+  ("play");
   showResumeOrNewModal();
 });
 
-  $("training-btn")?.addEventListener("click", () => showPage("training"));
-  $("view-history")?.addEventListener("click", () => showPage("history"));
+  $("training-btn")?.addEventListener("click", () => ("training"));
+  $("view-history")?.addEventListener("click", () => ("history"));
 
   // === Menu burger mobile ===
   burger?.addEventListener("click", () => {
@@ -107,13 +107,13 @@ if (playBtn) {
     script.type = "module";
     script.src = version === "v2" ? "./js/play_v2.js" : "./js/play.js";
     document.body.appendChild(script);
-    showPage("play");
+    ("play");
   });
 }
 
 
   
   // === Affiche la page d’accueil par défaut ===
-  showPage("home");
+  ("home");
 });
 
