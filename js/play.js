@@ -253,3 +253,7 @@ function endRound() {
     </div>
   `;
 }
+
+// ✅ Rendez la fonction accessible globalement
+window.showResumeOrNewModal = showResumeOrNewModal;
+
