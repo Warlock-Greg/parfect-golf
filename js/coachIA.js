@@ -7,12 +7,13 @@ export function initCoachIA() {
   const sendBtn = document.getElementById("coach-send");
   const historyDiv = document.getElementById("coach-chat-history");
 
-  // Charger historique
-  const history = JSON.parse(localStorage.getItem(COACH_HISTORY_KEY) || "[]");
+  if (!coachSection) return;
+
+  let history = JSON.parse(localStorage.getItem(COACH_HISTORY_KEY) || "[]");
   renderHistory();
 
-  // Envoi d’un message
-  sendBtn.addEventListener("click", () => sendMessage());
+  // === Gestion des envois manuels ===
+  sendBtn.addEventListener("click", sendMessage);
   input.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
   });
@@ -22,9 +23,7 @@ export function initCoachIA() {
     if (!text) return;
     addMessage("user", text);
     input.value = "";
-    setTimeout(() => {
-      simulateCoachReply(text);
-    }, 600);
+    setTimeout(() => simulateCoachReply(text), 600);
   }
 
   function addMessage(from, text) {
@@ -40,22 +39,37 @@ export function initCoachIA() {
     historyDiv.scrollTop = historyDiv.scrollHeight;
   }
 
+  // === Simulation de réponse du coach ===
   function simulateCoachReply(userText) {
-    // Simule une IA
     const lower = userText.toLowerCase();
-    let reply = "Parle-moi de ton dernier coup 👀";
-    if (lower.includes("par")) reply = "💚 Parfect ! Continue dans ce flow !";
-    else if (lower.includes("bogey")) reply = "💙 Bogey’fect ? Focus sur ta routine !";
-    else if (lower.includes("stress")) reply = "Respire. Tu peux rater le shot, pas ta routine 🧘‍♂️";
-    else if (lower.includes("mental")) reply = "Le mental, c’est ton 15e club. Utilise-le.";
+    let reply = "Raconte-moi ce coup 👀";
+
+    if (lower.includes("parfect")) reply = "💚 Parfect ! Tu joues avec le bon mindset !";
+    else if (lower.includes("bogey")) reply = "💙 Bogey’fect ! Tu restes dans le plan, continue ton rythme.";
+    else if (lower.includes("double")) reply = "Pas grave ! Respire, recentre-toi, la routine avant tout 💭";
+    else if (lower.includes("birdie")) reply = "🔥 Birdie baby ! Focus sur le prochain trou.";
+    else if (lower.includes("mental")) reply = "Le mental, c’est ton 15e club. Utilise-le bien 🧘‍♂️";
+    else if (lower.includes("routine")) reply = "Tu peux rater le shot, pas ta routine 😉";
+
     addMessage("coach", reply);
   }
+
+  // === Écoute automatique des messages de la partie ===
+  document.addEventListener("coach-message", (e) => {
+    const msg = e.detail;
+    if (!msg) return;
+    addMessage("coach", msg);
+    showCoachIA();
+  });
 }
 
+// === Contrôles d’affichage ===
 export function showCoachIA() {
-  document.getElementById("coach-ia").classList.add("visible");
+  const section = document.getElementById("coach-ia");
+  if (section) section.classList.add("visible");
 }
 
 export function hideCoachIA() {
-  document.getElementById("coach-ia").classList.remove("visible");
+  const section = document.getElementById("coach-ia");
+  if (section) section.classList.remove("visible");
 }
