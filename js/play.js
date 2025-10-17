@@ -60,6 +60,49 @@ function startRound(golf) {
   showMoodAndStrategyModal();
 }
 
+// --- Onboarding carte de score (hoistée) ---
+function showScorecardIntro() {
+  // Si tu veux l’afficher à chaque nouvelle partie, commente la ligne suivante
+  // if (localStorage.getItem("skipScoreIntro") === "true") return;
+
+  // Empêche les doublons
+  if (document.querySelector(".modal-backdrop")) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:left;">
+      <h2 style="margin-bottom:6px;">📋 Carte de Score</h2>
+      <p>
+        Bienvenue sur ta carte Parfect Golfr !<br />
+        <strong>Parfect</strong> = Par + Fairway + GIR + ≤ 2 putts<br />
+        <strong>Bogey’fect</strong> = Bogey + Fairway + ≤ 2 putts
+      </p>
+      <ul style="margin-left:18px;line-height:1.4;">
+        <li>Choisis ton score (Par, Bogey, Birdie…)</li>
+        <li>Coche Fairway / GIR / Routine</li>
+        <li>Renseigne la distance du 2ᵉ putt (Donné, One putt, &lt;2m, &lt;4m…)</li>
+      </ul>
+
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
+      </label>
+
+      <div style="text-align:right;margin-top:16px;">
+        <button id="close-intro" class="btn" style="background:#00c676;color:#000;">OK, compris 💪</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("close-intro").addEventListener("click", () => {
+    const dontShow = document.getElementById("hide-intro").checked;
+    if (dontShow) localStorage.setItem("skipScoreIntro", "true");
+    modal.remove();
+  });
+}
+
+
 // === Mood du jour & stratégie ===
 function showMoodAndStrategyModal() {
   const modal = document.createElement("div");
