@@ -254,6 +254,8 @@ function endRound() {
   `;
 }
 
-// ✅ Rendez la fonction accessible globalement
+// Exporte les fonctions globalement
 window.showResumeOrNewModal = showResumeOrNewModal;
+window.showScorecardIntro = showScorecardIntro;
+
 
