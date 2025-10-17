@@ -22,7 +22,7 @@ async function initTraining() {
 
 
   initCoachIA(); // ✅ Coach prêt aussi sur la page entraînement
-  initTraining();
+  
 
 
   document.querySelectorAll(".training-type").forEach((btn) =>
