@@ -285,19 +285,213 @@ function analyzeHole(entry) {
   document.dispatchEvent(new CustomEvent("coach-message", { detail: message }));
 }
 
-// === Fin de partie ===
-function endRound() {
-  const total = holes.filter(Boolean).reduce((a, h) => a + (h.score - h.par), 0);
-  $("hole-card").innerHTML = `
+// === FIN DE PARTIE ===
+function endRound(showBadge = false) {
+  console.log("🏁 Fin de partie déclenchée");
+
+  const validHoles = holes.filter(h => h && typeof h.score === "number");
+  const totalVsPar = validHoles.reduce((acc, h) => acc + (h.score - h.par), 0);
+  const parfects = validHoles.filter(
+    h => h.fairway && h.gir && h.putts <= 2 && (h.score - h.par) === 0
+  ).length;
+  const bogeyfects = validHoles.filter(
+    h => h.fairway && !h.gir && h.putts <= 2 && (h.score - h.par) === 1
+  ).length;
+
+  const roundData = {
+    date: new Date().toISOString(),
+    golf: currentGolf?.name ?? "Parcours inconnu",
+    totalVsPar,
+    parfects,
+    bogeyfects,
+    holes,
+  };
+
+  try {
+    const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    history.push(roundData);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+  } catch (err) {
+    console.error("❌ Erreur lors de la sauvegarde du round :", err);
+  }
+
+  if (showBadge) {
+    showFinalBadge(roundData);
+    return;
+  }
+
+  const summary = `
     <div class="score-summary-card">
       <h3>Carte terminée 💚</h3>
-      <p>Total : ${total > 0 ? "+" + total : total}</p>
-      <button class="btn" onclick="location.reload()">🔁 Nouvelle partie</button>
+      <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+      <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
+
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>Trou</th><th>Par</th><th>Score</th><th>Vs Par</th><th>FW</th><th>GIR</th><th>Putts</th><th>Dist1 (m)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${holes.map(h => `
+            <tr>
+              <td>${h.hole}</td>
+              <td>${h.par}</td>
+              <td>${h.score}</td>
+              <td>${h.score - h.par > 0 ? "+" + (h.score - h.par) : h.score - h.par}</td>
+              <td>${h.fairway ? "✔" : "—"}</td>
+              <td>${h.gir ? "✔" : "—"}</td>
+              <td>${h.putts}</td>
+              <td>${h.dist1}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+
+      <div class="end-actions">
+        <button class="btn" id="new-round">🔁 Nouvelle partie</button>
+        <button class="btn secondary" id="share-badge">🎖️ Voir le badge</button>
+      </div>
     </div>
   `;
+
+  $("hole-card").innerHTML = summary;
+
+  $("new-round").addEventListener("click", resetRound);
+  $("share-badge").addEventListener("click", () => showFinalBadge(roundData));
 }
 
-// Exporte les fonctions globalement
+
+// === BADGE FINAL ===
+function showFinalBadge(roundData) {
+  const { golf, totalVsPar, parfects, bogeyfects } = roundData;
+
+  const modal = document.createElement("div");
+  modal.className = "badge-modal";
+  modal.innerHTML = `
+    <div class="badge-content" id="badge-to-share">
+      <h2>🎖️ Parfect Badge</h2>
+      <p>${golf}</p>
+      <div class="badge-stats">
+        <p>Score total : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+        <p>💚 Parfects : ${parfects}</p>
+        <p>💙 Bogey’fects : ${bogeyfects}</p>
+      </div>
+      <p class="badge-quote">"Smart Golf. Cool Mindset."</p>
+      <div class="badge-actions">
+        <button id="share-instagram" class="btn">📸 Partager sur Instagram</button>
+        <button id="close-badge" class="btn secondary">Fermer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("share-instagram").addEventListener("click", captureBadgeAsImage);
+  document.getElementById("close-badge").addEventListener("click", () => {
+    modal.remove();
+    $("golf-select").style.display = "block";
+    $("hole-card").innerHTML = "";
+    localStorage.setItem("roundInProgress", "false");
+  });
+}
+
+
+// === CAPTURE BADGE ===
+async function captureBadgeAsImage() {
+  const badge = document.querySelector(".badge-content");
+  if (!badge) return;
+
+  try {
+    const canvas = await html2canvas(badge, { backgroundColor: "#111", scale: 2, useCORS: true });
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = "parfect-badge.png";
+    link.click();
+    showCoachToast("📸 Badge sauvegardé ! Partage-le sur Instagram 💚", "#00ff99");
+  } catch (e) {
+    console.error("Erreur capture badge :", e);
+    showCoachToast("😅 Erreur lors de la capture du badge", "#ff6666");
+  }
+}
+
+
+// === ONBOARDING CARTE DE SCORE ===
+function showScorecardIntro() {
+  if (document.querySelector(".modal-backdrop")) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:left;">
+      <h2>📋 Carte de Score</h2>
+      <p>
+        Bienvenue sur ta carte Parfect Golfr !<br />
+        <strong>💚 Parfect</strong> : Par + Fairway + GIR + ≤ 2 putts<br />
+        <strong>💙 Bogey’fect</strong> : Bogey + Fairway + ≤ 2 putts
+      </p>
+      <ul style="margin-left:18px;line-height:1.4;">
+        <li>✍️ Indique ton score, putts, fairway et GIR</li>
+        <li>🎯 Coach Greg t’encourage après chaque trou</li>
+      </ul>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
+      </label>
+      <div style="text-align:right;margin-top:16px;">
+        <button id="close-intro" class="btn" style="background:#00c676;color:#fff;">OK, compris 💪</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById("close-intro").addEventListener("click", () => {
+    const dontShow = document.getElementById("hide-intro").checked;
+    if (dontShow) localStorage.setItem("skipScoreIntro", "true");
+    modal.remove();
+  });
+}
+
+
+// === MODALE REPRENDRE / NOUVELLE PARTIE ===
+function showResumeOrNewModal() {
+  const lastRound = localStorage.getItem("roundInProgress");
+  const hasActiveRound = lastRound === "true";
+
+  if (document.querySelector(".modal-backdrop")) return;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal-card" style="max-width:380px;text-align:center;">
+      <h3>🎯 Que veux-tu faire ?</h3>
+      <p style="font-size:0.95rem;line-height:1.5;margin-top:6px;">
+        ${hasActiveRound
+          ? "Tu as une partie en cours. Souhaites-tu la reprendre ou recommencer ?"
+          : "Prêt à démarrer une nouvelle partie ?"}
+      </p>
+      <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
+        ${hasActiveRound ? `<button id="resume-round" class="btn" style="background:#44ffaa;">Reprendre</button>` : ""}
+        <button id="new-round-start" class="btn" style="background:#00c676;color:white;">Nouvelle partie</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  if (hasActiveRound) {
+    backdrop.querySelector("#resume-round").addEventListener("click", () => {
+      backdrop.remove();
+      showCoachToast("⛳ Reprise de ta dernière partie", "#00ff99");
+      renderHole();
+    });
+  }
+
+  backdrop.querySelector("#new-round-start").addEventListener("click", () => {
+    backdrop.remove();
+    resetRound();
+  });
+}
+
+
+// ✅ Export global
 window.showResumeOrNewModal = showResumeOrNewModal;
 window.showScorecardIntro = showScorecardIntro;
 
