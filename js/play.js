@@ -415,40 +415,6 @@ async function captureBadgeAsImage() {
 }
 
 
-// === ONBOARDING CARTE DE SCORE ===
-function showScorecardIntro() {
-  if (document.querySelector(".modal-backdrop")) return;
-
-  const modal = document.createElement("div");
-  modal.className = "modal-backdrop";
-  modal.innerHTML = `
-    <div class="modal-card" style="max-width:420px;text-align:left;">
-      <h2>📋 Carte de Score</h2>
-      <p>
-        Bienvenue sur ta carte Parfect Golfr !<br />
-        <strong>💚 Parfect</strong> : Par + Fairway + GIR + ≤ 2 putts<br />
-        <strong>💙 Bogey’fect</strong> : Bogey + Fairway + ≤ 2 putts
-      </p>
-      <ul style="margin-left:18px;line-height:1.4;">
-        <li>✍️ Indique ton score, putts, fairway et GIR</li>
-        <li>🎯 Coach Greg t’encourage après chaque trou</li>
-      </ul>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-        <input type="checkbox" id="hide-intro"> Ne plus me la montrer
-      </label>
-      <div style="text-align:right;margin-top:16px;">
-        <button id="close-intro" class="btn" style="background:#00c676;color:#fff;">OK, compris 💪</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
-
-  document.getElementById("close-intro").addEventListener("click", () => {
-    const dontShow = document.getElementById("hide-intro").checked;
-    if (dontShow) localStorage.setItem("skipScoreIntro", "true");
-    modal.remove();
-  });
-}
 
 
 // === MODALE REPRENDRE / NOUVELLE PARTIE ===
