@@ -414,6 +414,33 @@ async function captureBadgeAsImage() {
   }
 }
 
+function resetRound() {
+  if (document.querySelector(".modal-backdrop")) return;
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal-card">
+      <h3>♻️ Recommencer une partie ?</h3>
+      <p>Toutes les données non sauvegardées seront perdues.</p>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button id="cancel-reset" class="btn">Annuler</button>
+        <button id="confirm-reset" class="btn">Oui, recommencer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  document.getElementById("cancel-reset").addEventListener("click", () => backdrop.remove());
+  document.getElementById("confirm-reset").addEventListener("click", () => {
+    backdrop.remove();
+    localStorage.setItem("roundInProgress", "false");
+    $("hole-card").innerHTML = "";
+    $("score-summary").innerHTML = "";
+    $("golf-select").style.display = "block";
+    console.log("♻️ Partie réinitialisée");
+  });
+}
 
 
 
@@ -460,5 +487,6 @@ function showResumeOrNewModal() {
 // ✅ Export global
 window.showResumeOrNewModal = showResumeOrNewModal;
 window.showScorecardIntro = showScorecardIntro;
+window.resetRound = resetRound;
 
 
