@@ -6,62 +6,66 @@ window.$ = (id) => document.getElementById(id);
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ main.js chargé avec succès");
 
-
-
-  // Sélecteurs principaux
-  const sections = document.querySelectorAll("main section");
-  const menuButtons = document.querySelectorAll("nav [data-target]");
   const burger = $("menu-toggle");
   const menu = $("menu");
+  const menuButtons = document.querySelectorAll("nav [data-target]");
+  const allSections = document.querySelectorAll("main section");
 
-  // === Fonction d’affichage d’une section ===
+  // === Fonction d’affichage d’une page ===
   function showPage(pageId) {
-  console.log("📄 Page affichée :", pageId);
+    console.log("📄 Page affichée :", pageId);
 
-  // Masquer toutes les sections
-  document.querySelectorAll("section").forEach((sec) => (sec.style.display = "none"));
+    // Masquer toutes les sections
+    allSections.forEach((sec) => (sec.style.display = "none"));
 
-  // Afficher la page demandée
-  const targetPage = document.getElementById(pageId);
-  if (targetPage) targetPage.style.display = "block";
-  else console.warn("⚠️ Page non trouvée :", pageId);
-
-  // === Gestion spéciale de la page "play_v2"
-  if (pageId === "play_v2") {
-    console.log("🟢 Chargement de play_v2.js");
-
-    // Vérifie si déjà chargé
-    if (!window.playV2Loaded) {
-      const script = document.createElement("script");
-      script.src = "js/play_v2.js";
-      script.type = "module";
-      script.onload = () => {
-        console.log("✅ play_v2.js chargé avec succès");
-        window.playV2Loaded = true;
-      };
-      script.onerror = () => {
-        console.error("❌ Erreur de chargement de play_v2.js");
-      };
-      document.body.appendChild(script);
-    }
-  }
-
-  // === Hooks spécifiques par page ===
-  if (pageId === "play") {
-    if (typeof showResumeOrNewModal === "function") {
-      showResumeOrNewModal(); // ✅ ouvre le choix Reprendre / Nouvelle partie
+    // Afficher la bonne page
+    const page = document.getElementById(pageId);
+    if (page) {
+      page.style.display = "block";
     } else {
-      console.warn("⚠️ showResumeOrNewModal non défini");
+      console.warn("⚠️ Page non trouvée :", pageId);
+      return;
+    }
+
+    // === Actions spécifiques selon la page ===
+    switch (pageId) {
+      case "play": {
+        const version = localStorage.getItem("playVersion") || "v1";
+        console.log(`🎯 Lancement du mode PLAY ${version}`);
+
+        // Charger le bon script (v1 ou v2)
+        const script = document.createElement("script");
+        script.src = version === "v2" ? "js/play_v2.js" : "js/play.js";
+        script.onload = () => {
+          console.log(`✅ ${script.src} chargé avec succès`);
+          if (version === "v1" && typeof showResumeOrNewModal === "function") {
+            showResumeOrNewModal();
+          }
+        };
+        script.onerror = () =>
+          console.error("❌ Erreur de chargement :", script.src);
+        document.body.appendChild(script);
+        break;
+      }
+
+      case "training":
+        if (typeof initTraining === "function") {
+          initTraining();
+        } else {
+          console.warn("⚠️ initTraining non défini");
+        }
+        break;
+
+      default:
+        break;
     }
   }
-}
-
 
   // === Navigation via le menu principal ===
   menuButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = btn.dataset.target;
-      (target);
+      showPage(target);
 
       // Fermer le menu mobile si ouvert
       burger?.classList.remove("open");
@@ -69,51 +73,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // === Boutons d’accueil ===
-  $("new-round-btn")?.addEventListener("click", () => {
-  ("play");
-  showResumeOrNewModal();
-});
-
-  $("training-btn")?.addEventListener("click", () => ("training"));
-  $("view-history")?.addEventListener("click", () => ("history"));
-
   // === Menu burger mobile ===
   burger?.addEventListener("click", () => {
     burger.classList.toggle("open");
     menu.classList.toggle("visible");
   });
 
-// === Gestion du mode de carte (V1 / V2) ===
-const modeSelect = document.getElementById("play-mode-select");
-if (modeSelect) {
-  const saved = localStorage.getItem("playVersion") || "v1";
-  modeSelect.value = saved;
+  // === Sélecteur de version (play V1 / V2) ===
+  const modeSelect = document.getElementById("play-mode-select");
+  if (modeSelect) {
+    const saved = localStorage.getItem("playVersion") || "v1";
+    modeSelect.value = saved;
 
-  modeSelect.addEventListener("change", () => {
-    const version = modeSelect.value;
-    localStorage.setItem("playVersion", version);
-    if (window.showCoachToast)
-      showCoachToast(`Mode ${version.toUpperCase()} sélectionné 💚`, "#00ff99");
-  });
-}
+    modeSelect.addEventListener("change", () => {
+      const version = modeSelect.value;
+      localStorage.setItem("playVersion", version);
+      if (window.showCoachToast)
+        showCoachToast(`Mode ${version.toUpperCase()} sélectionné 💚`, "#00ff99");
+    });
+  }
 
-// === Lancement de la bonne version au clic sur "Partie" ===
-const playBtn = document.querySelector('[data-target="play"]');
-if (playBtn) {
-  playBtn.addEventListener("click", () => {
-    const version = localStorage.getItem("playVersion") || "v1";
-    const script = document.createElement("script");
-    script.type = "module";
-    script.src = version === "v2" ? "./js/play_v2.js" : "./js/play.js";
-    document.body.appendChild(script);
-    ("play");
-  });
-}
-
-
-  
-  // === Affiche la page d’accueil par défaut ===
-  ("home");
+  // === Page d’accueil par défaut ===
+  showPage("home");
 });
-
