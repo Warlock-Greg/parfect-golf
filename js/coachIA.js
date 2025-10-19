@@ -1,75 +1,90 @@
-// js/coachIA.js
-const COACH_HISTORY_KEY = "coachIAHistory";
+// === Parfect.golfr - coachIA.js (MVP global) ===
+window.$ = window.$ || ((id) => document.getElementById(id));
 
-export function initCoachIA() {
-  const coachSection = document.getElementById("coach-ia");
-  const input = document.getElementById("coach-input");
-  const sendBtn = document.getElementById("coach-send");
-  const historyDiv = document.getElementById("coach-chat-history");
+(function initCoachIADOM() {
+  if (document.querySelector("#coach-ia-panel")) return;
 
-  if (!coachSection) return;
+  const panel = document.createElement("div");
+  panel.id = "coach-ia-panel";
+  panel.style.cssText = `
+    position: fixed; right: 10px; bottom: 10px; width: 320px; max-width: 92%;
+    background: #111; color:#fff; border:1px solid #00ff99; border-radius:12px;
+    overflow: hidden; z-index: 9998; display:none;
+  `;
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#0a0a0a;">
+      <strong>Coach IA</strong>
+      <div>
+        <button id="coach-ia-hide" style="background:none;border:none;color:#00ff99;cursor:pointer">–</button>
+      </div>
+    </div>
+    <div id="coach-ia-log" style="max-height:220px;overflow:auto;padding:10px 12px;font-size:.95rem;line-height:1.4"></div>
+    <div style="padding:8px;display:flex;gap:6px;border-top:1px solid #00ff99">
+      <input id="coach-ia-input" type="text" placeholder="Pose une question..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#000;color:#fff">
+      <button id="coach-ia-send" class="btn" style="background:#00ff99;color:#111;padding:8px 10px;border-radius:8px;border:0;cursor:pointer">Envoyer</button>
+    </div>
+  `;
+  document.body.appendChild(panel);
 
-  let history = JSON.parse(localStorage.getItem(COACH_HISTORY_KEY) || "[]");
-  renderHistory();
+  $("coach-ia-hide").addEventListener("click", hideCoachIA);
+  $("coach-ia-send").addEventListener("click", sendCoachIA);
+  $("coach-ia-input").addEventListener("keypress", (e)=>{ if(e.key==="Enter") sendCoachIA(); });
+})();
 
-  // === Gestion des envois manuels ===
-  sendBtn.addEventListener("click", sendMessage);
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-  });
+function initCoachIA() { /* réservé si besoin futur */ }
+function showCoachIA() { $("coach-ia-panel").style.display = "block"; }
+function hideCoachIA() { $("coach-ia-panel").style.display = "none"; }
 
-  function sendMessage() {
-    const text = input.value.trim();
-    if (!text) return;
-    addMessage("user", text);
-    input.value = "";
-    setTimeout(() => simulateCoachReply(text), 600);
+async function sendCoachIA() {
+  const input = $("coach-ia-input");
+  const log = $("coach-ia-log");
+  const txt = (input.value||"").trim();
+  if (!txt) return;
+  input.value = "";
+
+  const user = document.createElement("div");
+  user.style.margin = "6px 0";
+  user.innerHTML = `<strong>Toi :</strong> ${txt}`;
+  log.appendChild(user);
+  log.scrollTop = log.scrollHeight;
+
+  // Appel API proxy (Cloudflare) si configuré
+  const apiUrl = localStorage.getItem("coach_api_url") || "";
+  if (!apiUrl) {
+    const coach = document.createElement("div");
+    coach.style.margin = "6px 0";
+    coach.style.opacity = ".9";
+    coach.innerHTML = `<strong>Coach :</strong> (mode local) Respire, reste simple, vise le centre du green.`;
+    log.appendChild(coach);
+    log.scrollTop = log.scrollHeight;
+    return;
   }
 
-  function addMessage(from, text) {
-    history.push({ from, text });
-    localStorage.setItem(COACH_HISTORY_KEY, JSON.stringify(history));
-    renderHistory();
+  try {
+    const res = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ messages: [{role:"user", content: txt}] })
+    });
+    if (!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json();
+
+    const coach = document.createElement("div");
+    coach.style.margin = "6px 0";
+    coach.style.opacity = ".95";
+    coach.innerHTML = `<strong>Coach :</strong> ${ (data.reply||"") }`;
+    log.appendChild(coach);
+    log.scrollTop = log.scrollHeight;
+  } catch (err) {
+    const coach = document.createElement("div");
+    coach.style.margin = "6px 0";
+    coach.style.color = "#ff6666";
+    coach.innerHTML = `<strong>Coach :</strong> Erreur de connexion à l’API 😅`;
+    log.appendChild(coach);
+    log.scrollTop = log.scrollHeight;
   }
-
-  function renderHistory() {
-    historyDiv.innerHTML = history
-      .map((m) => `<div class="msg ${m.from}">${m.text}</div>`)
-      .join("");
-    historyDiv.scrollTop = historyDiv.scrollHeight;
-  }
-
-  // === Simulation de réponse du coach ===
-  function simulateCoachReply(userText) {
-    const lower = userText.toLowerCase();
-    let reply = "Raconte-moi ce coup 👀";
-
-    if (lower.includes("parfect")) reply = "💚 Parfect ! Tu joues avec le bon mindset !";
-    else if (lower.includes("bogey")) reply = "💙 Bogey’fect ! Tu restes dans le plan, continue ton rythme.";
-    else if (lower.includes("double")) reply = "Pas grave ! Respire, recentre-toi, la routine avant tout 💭";
-    else if (lower.includes("birdie")) reply = "🔥 Birdie baby ! Focus sur le prochain trou.";
-    else if (lower.includes("mental")) reply = "Le mental, c’est ton 15e club. Utilise-le bien 🧘‍♂️";
-    else if (lower.includes("routine")) reply = "Tu peux rater le shot, pas ta routine 😉";
-
-    addMessage("coach", reply);
-  }
-
-  // === Écoute automatique des messages de la partie ===
-  document.addEventListener("coach-message", (e) => {
-    const msg = e.detail;
-    if (!msg) return;
-    addMessage("coach", msg);
-    showCoachIA();
-  });
 }
 
-// === Contrôles d’affichage ===
-export function showCoachIA() {
-  const section = document.getElementById("coach-ia");
-  if (section) section.classList.add("visible");
-}
-
-export function hideCoachIA() {
-  const section = document.getElementById("coach-ia");
-  if (section) section.classList.remove("visible");
-}
+window.initCoachIA = initCoachIA;
+window.showCoachIA = showCoachIA;
+window.hideCoachIA = hideCoachIA;
