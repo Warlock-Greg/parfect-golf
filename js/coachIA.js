@@ -190,23 +190,7 @@ window.showCoachIA = (msg) => {
     showCoachIA();
   });
 
-  // --- Contrôle global visible depuis play/training ---
-window.showCoachIA = (msg) => {
-  const dock = document.querySelector(".coach-dock");
-  if (!dock) return;
-
-  dock.style.display = "block";
-  if (msg) push("coach", msg);
-
-  // ✅ Focus automatique sur l’input quand on ouvre le coach
-  const input = document.getElementById("coach-input");
-  if (input) {
-    setTimeout(() => input.focus(), 300);
-  }
-
-  clearTimeout(coachTimer);
-  coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
-};
+ 
 
 // --- Initialisation automatique du coach ---
 document.addEventListener("DOMContentLoaded", () => {
