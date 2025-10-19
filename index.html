@@ -5,6 +5,65 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Parfect.golfr</title>
   <link rel="stylesheet" href="css/style.css" />
+<style>
+/* === Animations MVP === */
+.fade-out { opacity: 0; transition: opacity 0.4s ease-out; }
+.fade-in { opacity: 1; transition: opacity 0.4s ease-in; }
+.flash-green { animation: flashGreen 1.5s ease-in-out; }
+.flash-blue { animation: flashBlue 1.5s ease-in-out; }
+
+@keyframes flashGreen {
+  0% { box-shadow: 0 0 0px #00ff99; }
+  50% { box-shadow: 0 0 20px #00ff99; }
+  100% { box-shadow: 0 0 0px #00ff99; }
+}
+@keyframes flashBlue {
+  0% { box-shadow: 0 0 0px #33ccff; }
+  50% { box-shadow: 0 0 20px #33ccff; }
+  100% { box-shadow: 0 0 0px #33ccff; }
+}
+
+/* Coach IA container (dockable) */
+#coach-ia {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 320px;
+  max-height: 400px;
+  background: #111;
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 12px #00ff9970;
+  overflow: hidden;
+  z-index: 9999;
+  display: none;
+}
+#coach-ia.open { display: block; animation: fadeIn 0.5s; }
+#coach-ia-header {
+  background: #00ff99;
+  color: #000;
+  padding: 6px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#coach-ia-content {
+  padding: 10px;
+  font-size: 0.9rem;
+  overflow-y: auto;
+  max-height: 330px;
+}
+#coach-ia button.minimize {
+  background: none;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  font-weight: bold;
+}
+</style>
+
+
 </head>
 
 <body>
