@@ -105,8 +105,25 @@ window.initCoachIA = function initCoachIA() {
 
   let coachTimer = null;
 
-  // --- Fonction message utilisateur ---
-  function sendMsg() {
+  // === Appel à ton backend Cloudflare ===
+async function askCoachAPI(message) {
+  try {
+    const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+
+    const data = await res.json();
+    return data.reply || "Smart golf. Easy mindset 💚";
+  } catch (err) {
+    console.error("Erreur API Coach:", err);
+    return "😅 Le coach n’a pas répondu, reste focus 💚";
+  }
+}
+
+// === Envoi du message depuis la zone de chat ===
+function sendMsg() {
   const input = $("coach-input");
   const msg = (input.value || "").trim();
   if (!msg) return;
@@ -114,26 +131,13 @@ window.initCoachIA = function initCoachIA() {
   push("user", msg);
   input.value = "";
 
-  // 🔥 Envoi du message à ton backend Cloudflare
+  // 🔥 Appel Cloudflare (avec fallback local si besoin)
   setTimeout(async () => {
-    try {
-      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
-
-      if (!res.ok) throw new Error("Erreur API " + res.status);
-
-      const data = await res.json();
-      const reply = data.reply || "Smart golf. Easy mindset 💚";
-      push("coach", reply);
-    } catch (err) {
-      console.error("Erreur Coach IA :", err);
-      push("coach", "😅 Pas de réponse du coach. Reste focus et respire 💚");
-    }
+    const reply = await askCoachAPI(msg);
+    push("coach", reply);
   }, 300);
 }
+
 
 
   // --- Affiche un message dans le log ---
