@@ -1,58 +1,29 @@
-const objectives = {
-  0:{fairways:79,gir:67,putts:29,pars:15,fw:11,gr:12},
-  5:{fairways:71,gir:56,putts:30,pars:12,fw:10,gr:10},
-  7:{fairways:64,gir:50,putts:31,pars:11,fw:9,gr:9},
-  9:{fairways:57,gir:44,putts:32,pars:10,fw:8,gr:8},
-  12:{fairways:50,gir:33,putts:33,pars:8,fw:7,gr:6},
-  15:{fairways:43,gir:22,putts:34,pars:6,fw:6,gr:4},
-  18:{fairways:36,gir:17,putts:35,pars:5,fw:5,gr:3},
-  21:{fairways:29,gir:11,putts:36,pars:4,fw:4,gr:2}
-};
+// === Parfect.golfr - objectives.js (MVP) ===
 
-const coachBios = {
-  greg: {
-    avatar: "😎",
-    name: "Greg",
-    role: "Mindset & Stratégie",
-    quote: "Smart golf, easy mindset. Reste cool, reste malin."
-  },
-  goathier: {
-    avatar: "🧠",
-    name: "Goathier",
-    role: "Technique & Données",
-    quote: "Le golf, c’est de la physique appliquée à ton swing."
-  },
-  dorothee: {
-    avatar: "💫",
-    name: "Dorothée",
-    role: "Mental & Respiration",
-    quote: "Respire, aligne-toi, laisse le mouvement venir à toi."
-  }
-};
+(function(){
+  const $ = window.$ || (id => document.getElementById(id));
 
-let currentCoach = localStorage.getItem("coach") || "greg";
+  const objectives = {
+    0:{fairways:79,gir:67,putts:29,pars:15,fw:11,gr:12},
+    5:{fairways:71,gir:56,putts:30,pars:12,fw:10,gr:10},
+    7:{fairways:64,gir:50,putts:31,pars:11,fw:9,gr:9},
+    9:{fairways:57,gir:44,putts:32,pars:10,fw:8,gr:8},
+    12:{fairways:50,gir:33,putts:33,pars:8,fw:7,gr:6},
+    15:{fairways:43,gir:22,putts:34,pars:6,fw:6,gr:4},
+    18:{fairways:36,gir:17,putts:35,pars:5,fw:5,gr:3},
+    21:{fairways:29,gir:11,putts:36,pars:4,fw:4,gr:2}
+  };
 
-function initObjectives() {
-  const select = document.getElementById("level-select");
-  const statsZone = document.getElementById("objective-stats");
-  const footerIndex = document.getElementById("footer-index");
-  const coachSelect = document.getElementById("coach-select-objectives");
-  const bioZone = document.getElementById("coach-bio");
-  const chatBox = document.getElementById("coach-chat");
-  const openChat = document.getElementById("open-coach-chat-objectives");
+  const coachBios = {
+    greg: { avatar:"😎", name:"Greg", role:"Mindset & Stratégie", quote:"Smart golf, easy mindset." },
+    goathier: { avatar:"🧠", name:"Goathier", role:"Technique & Données", quote:"Le golf, c’est de la physique appliquée." },
+    dorothee: { avatar:"💫", name:"Dorothée", role:"Mental & Respiration", quote:"Respire, aligne-toi, laisse venir le mouvement." }
+  };
 
-  // Si l’un de ces éléments est absent, on attend et on réessaie
-  if (!coachSelect || !select || !statsZone || !footerIndex) {
-    console.log("⏳ Attente chargement DOM pour objectives.js...");
-    setTimeout(initObjectives, 300); // réessaye dans 300ms
-    return;
-  }
+  let currentCoach = localStorage.getItem("coach") || "greg";
 
-  console.log("✅ objectives.js initialisé");
-
-  function renderStats(level) {
-    const o = objectives[level];
-    if (!o) return;
+  function renderStats(level, statsZone, footerIndex){
+    const o = objectives[level]; if (!o) return;
     statsZone.innerHTML = `
       <div class="objective-card">
         <p><strong>Fairways :</strong> ${o.fairways}% (${o.fw})</p>
@@ -64,120 +35,77 @@ function initObjectives() {
     localStorage.setItem("parfect_objective", level);
   }
 
-  const saved = localStorage.getItem("parfect_objective") || "9";
-  select.value = saved;
-  renderStats(saved);
-  select.addEventListener("change", () => renderStats(select.value));
-
-  // === Coach ===
-  coachSelect.value = currentCoach;
-  renderCoachBio(currentCoach);
-  coachSelect.addEventListener("change", () => {
-    currentCoach = coachSelect.value;
-    localStorage.setItem("coach", currentCoach);
-    renderCoachBio(currentCoach);
-  });
-
-  // === Chat ===
-  openChat?.addEventListener("click", () => {
-    chatBox.style.display = "block";
-    openChat.style.display = "none";
-  });
-
-  document.getElementById("send-chat")?.addEventListener("click", sendMessage);
-  document.getElementById("chat-text")?.addEventListener("keypress", e => {
-    if (e.key === "Enter") sendMessage();
-  });
-}
-
-// Lance l'initialisation après le chargement du DOM
-document.addEventListener("DOMContentLoaded", initObjectives);
-
-
-
-function renderCoachBio(coachKey) {
-  const c = coachBios[coachKey];
-  $("coach-bio").innerHTML = `
-    <div class="coach-bio-card">
-      <div class="coach-avatar">${c.avatar}</div>
-      <div>
-        <p><strong>${c.name}</strong> — ${c.role}</p>
-        <p class="coach-quote">"${c.quote}"</p>
-      </div>
-    </div>
-  `;
-}
-
-// === Envoi message ===
-async function sendMessage() {
-  const input = $("chat-text");
-  const msg = input.value.trim();
-  if (!msg) return;
-  addMessage("user", msg);
-  input.value = "";
-
-  // Essai d'appel API OpenAI
-  const apiResponse = await askCoachAPI(msg, currentCoach);
-  if (apiResponse) {
-    addMessage("coach", apiResponse);
-    return;
+  function renderCoachBio(key){
+    const c = coachBios[key]; if (!c) return;
+    const zone = $("coach-bio"); if (!zone) return;
+    zone.innerHTML = `
+      <div class="coach-bio-card">
+        <div class="coach-avatar">${c.avatar}</div>
+        <div>
+          <p><strong>${c.name}</strong> — ${c.role}</p>
+          <p class="coach-quote">"${c.quote}"</p>
+        </div>
+      </div>`;
   }
 
-  // Sinon fallback local
-  const reply = coachResponse(msg);
-  addMessage("coach", reply);
-}
+  async function sendMessage(){
+    const input = $("chat-text"); const chat = $("chat-messages");
+    if (!input || !chat) return;
+    const msg = (input.value||"").trim(); if (!msg) return;
+    appendMsg("user", msg); input.value="";
 
-function addMessage(role, text) {
-  const chat = $("chat-messages");
-  const div = document.createElement("div");
-  div.className = `msg ${role}`;
-  div.textContent = text;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-// === Fallback local simple ===
-function coachResponse(msg) {
-  if (currentCoach === "goathier") {
-    return "🧠 Goathier : vérifie ton alignement et ta vitesse de club.";
+    // Fallback local
+    let reply = "😎 Greg : Smart golf. Reste cool.";
+    if (currentCoach==="goathier") reply = "🧠 Goathier : tempo + alignement = précision.";
+    if (currentCoach==="dorothee") reply = "💫 Dorothée : respire, un coup à la fois.";
+    appendMsg("coach", reply);
   }
-  if (currentCoach === "dorothee") {
-    return "💫 Dorothée : calme ton souffle, un coup à la fois.";
+
+  function appendMsg(role, text){
+    const chat = $("chat-messages"); if (!chat) return;
+    const div = document.createElement("div");
+    div.className = `msg ${role}`; div.textContent = text;
+    chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
   }
-  return "😎 Greg : smart golf bro, reste fluide et cool.";
-}
 
-// === Appel OpenAI API (si clé définie) ===
-async function askCoachAPI(message, coach) {
-  const apiKey = localStorage.getItem("openai_key"); // ou ta clé backend
-  if (!apiKey) return null; // pas de clé → pas d'appel
+  // Public
+  window.initObjectives = function initObjectives(){
+    const select = $("level-select");
+    const statsZone = $("objective-stats");
+    const footerIndex = $("footer-index");
+    // NOTE : id réalistes trouvés dans ta page : "coach-select" et "open-coach-chat"
+    // si tu as d’autres ids, adapte ici :
+    const coachSelect = document.getElementById("coach-select") || document.getElementById("coach-select-objectives");
+    const bioZone = $("coach-bio");
+    const chatBox = $("coach-chat");
+    const openChat = document.getElementById("open-coach-chat") || document.getElementById("open-coach-chat-objectives");
 
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `Tu es ${coachBios[coach].name}, coach de golf spécialisé en ${coachBios[coach].role}. Sois concis, bienveillant, et motivant.`
-          },
-          { role: "user", content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 100
-      })
+    if (!select || !statsZone || !footerIndex) {
+      // la page n'est pas visible, on ignore
+      return;
+    }
+
+    const saved = localStorage.getItem("parfect_objective") || "9";
+    select.value = saved;
+    renderStats(saved, statsZone, footerIndex);
+    select.addEventListener("change", ()=> renderStats(select.value, statsZone, footerIndex));
+
+    if (coachSelect) {
+      coachSelect.value = currentCoach;
+      renderCoachBio(currentCoach);
+      coachSelect.addEventListener("change",()=>{
+        currentCoach = coachSelect.value;
+        localStorage.setItem("coach", currentCoach);
+        renderCoachBio(currentCoach);
+      });
+    }
+
+    openChat?.addEventListener("click", ()=>{
+      if (chatBox) chatBox.style.display = "block";
+      openChat.style.display = "none";
     });
 
-    const data = await res.json();
-    return data.choices?.[0]?.message?.content?.trim() || null;
-  } catch (err) {
-    console.error("Erreur API coach:", err);
-    return null;
-  }
-}
+    $("send-chat")?.addEventListener("click", sendMessage);
+    $("chat-text")?.addEventListener("keypress", e => { if (e.key==="Enter") sendMessage(); });
+  };
+})();
