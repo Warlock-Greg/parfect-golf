@@ -1,4 +1,4 @@
-// === Parfect.golfr - coachIA.js (MVP propre et corrigé) ===
+// === Parfect.golfr - coachIA.js (MVP final et corrigé) ===
 
 // --- Toast plein format (sous le header, feedback rapide) ---
 window.showCoachToast = function showCoachToast(message, accent) {
@@ -49,6 +49,7 @@ window.showCoachToast = function showCoachToast(message, accent) {
 window.initCoachIA = function initCoachIA() {
   if (document.querySelector(".coach-dock")) return;
 
+  // Création du dock
   const dock = document.createElement("div");
   dock.className = "coach-dock";
   dock.style.cssText = `
@@ -95,15 +96,14 @@ window.initCoachIA = function initCoachIA() {
   `;
   document.body.appendChild(fab);
 
-  // === Événements ===
-  fab.addEventListener("click", () => showCoachIA("💚 Ton coach est prêt à t’aider !"));
-  document.getElementById("coach-dock-close").addEventListener("click", hideCoachIA);
-  document.getElementById("coach-send").addEventListener("click", sendMsg);
-  document.getElementById("coach-input").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMsg();
-  });
-
+  // --- Variables internes ---
   let coachTimer = null;
+
+  // === Définition AVANT usage ===
+  function hideCoachIA() {
+    const dock = document.querySelector(".coach-dock");
+    if (dock) dock.style.display = "none";
+  }
 
   // === Appel à ton backend Cloudflare ===
   async function askCoachAPI(message) {
@@ -172,20 +172,23 @@ window.initCoachIA = function initCoachIA() {
 
     // ✅ Focus automatique sur l’input quand on ouvre le coach
     const input = document.getElementById("coach-input");
-    if (input) {
-      setTimeout(() => input.focus(), 300);
-    }
+    if (input) setTimeout(() => input.focus(), 300);
 
     clearTimeout(coachTimer);
     coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
   };
 
-  window.hideCoachIA = () => {
-    const dock = document.querySelector(".coach-dock");
-    if (dock) dock.style.display = "none";
-  };
+  window.hideCoachIA = hideCoachIA; // expose globalement
 
-  // --- Événements globaux : réaction aux messages rapides ---
+  // --- Événements globaux ---
+  fab.addEventListener("click", () => showCoachIA("💚 Ton coach est prêt à t’aider !"));
+  document.getElementById("coach-dock-close").addEventListener("click", hideCoachIA);
+  document.getElementById("coach-send").addEventListener("click", sendMsg);
+  document.getElementById("coach-input").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMsg();
+  });
+
+  // --- Messages rapides depuis le jeu (play/training) ---
   document.addEventListener("coach-message", (e) => {
     const txt = e?.detail || "";
     if (txt) push("coach", txt);
@@ -193,7 +196,7 @@ window.initCoachIA = function initCoachIA() {
   });
 };
 
-// --- Initialisation automatique du coach ---
+// --- Initialisation automatique ---
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
   showCoachToast("💚 Ton coach est prêt !", "#00ff99");
