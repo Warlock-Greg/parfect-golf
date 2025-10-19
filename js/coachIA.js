@@ -1,4 +1,4 @@
-// === Parfect.golfr - coachIA.js (MVP complet) ===
+// === Parfect.golfr - coachIA.js (MVP propre et corrigé) ===
 
 // --- Toast plein format (sous le header, feedback rapide) ---
 window.showCoachToast = function showCoachToast(message, accent) {
@@ -97,7 +97,7 @@ window.initCoachIA = function initCoachIA() {
 
   // === Événements ===
   fab.addEventListener("click", () => showCoachIA("💚 Ton coach est prêt à t’aider !"));
-  document.getElementById("coach-dock-close").addEventListener("click", () => hideCoachIA());
+  document.getElementById("coach-dock-close").addEventListener("click", hideCoachIA);
   document.getElementById("coach-send").addEventListener("click", sendMsg);
   document.getElementById("coach-input").addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMsg();
@@ -106,91 +106,92 @@ window.initCoachIA = function initCoachIA() {
   let coachTimer = null;
 
   // === Appel à ton backend Cloudflare ===
-async function askCoachAPI(message) {
-  try {
-    const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
-    });
+  async function askCoachAPI(message) {
+    try {
+      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
 
-    const data = await res.json();
-    return data.reply || "Smart golf. Easy mindset 💚";
-  } catch (err) {
-    console.error("Erreur API Coach:", err);
-    return "😅 Le coach n’a pas répondu, reste focus 💚";
+      const data = await res.json();
+      return data.reply || "Smart golf. Easy mindset 💚";
+    } catch (err) {
+      console.error("Erreur API Coach:", err);
+      return "😅 Le coach n’a pas répondu, reste focus 💚";
+    }
   }
-}
 
-// === Envoi du message depuis la zone de chat ===
-function sendMsg() {
-  const input = $("coach-input");
-  const msg = (input.value || "").trim();
-  if (!msg) return;
+  // === Envoi du message depuis la zone de chat ===
+  function sendMsg() {
+    const input = document.getElementById("coach-input");
+    const msg = (input.value || "").trim();
+    if (!msg) return;
 
-  push("user", msg);
-  input.value = "";
+    push("user", msg);
+    input.value = "";
 
-  // 🔥 Appel Cloudflare (avec fallback local si besoin)
-  setTimeout(async () => {
-    const reply = await askCoachAPI(msg);
-    push("coach", reply);
-  }, 300);
-}
-
-
+    // 🔥 Appel Cloudflare (avec fallback local si besoin)
+    setTimeout(async () => {
+      const reply = await askCoachAPI(msg);
+      push("coach", reply);
+    }, 300);
+  }
 
   // --- Affiche un message dans le log ---
-function push(role, text) {
-  const log = document.getElementById("coach-log");
-  if (!log) return;
+  function push(role, text) {
+    const log = document.getElementById("coach-log");
+    if (!log) return;
 
-  const row = document.createElement("div");
-  row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
-  row.innerHTML = `
-    <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
-    <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
-      ${text}
-    </div>
-  `;
-  log.appendChild(row);
+    const row = document.createElement("div");
+    row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
+    row.innerHTML = `
+      <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
+      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
+        ${text}
+      </div>
+    `;
+    log.appendChild(row);
 
-  // ✅ Ajout du padding en bas (30px)
-  log.style.paddingBottom = "30px";
+    // ✅ Ajout du padding en bas (30px)
+    log.style.paddingBottom = "30px";
 
-  // ✅ Scroll automatique vers le bas après chaque ajout
-  requestAnimationFrame(() => {
-    log.scrollTop = log.scrollHeight + 30;
-  });
-}
-
-// --- Contrôle global visible depuis play/training ---
-window.showCoachIA = (msg) => {
-  const dock = document.querySelector(".coach-dock");
-  if (!dock) return;
-
-  dock.style.display = "block";
-  if (msg) push("coach", msg);
-
-  // ✅ Focus automatique sur l’input quand on ouvre le coach
-  const input = document.getElementById("coach-input");
-  if (input) {
-    setTimeout(() => input.focus(), 300);
+    // ✅ Scroll automatique vers le bas après chaque ajout
+    requestAnimationFrame(() => {
+      log.scrollTop = log.scrollHeight + 30;
+    });
   }
 
-  clearTimeout(coachTimer);
-  coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
-};
+  // --- Contrôle global visible depuis play/training ---
+  window.showCoachIA = (msg) => {
+    const dock = document.querySelector(".coach-dock");
+    if (!dock) return;
+
+    dock.style.display = "block";
+    if (msg) push("coach", msg);
+
+    // ✅ Focus automatique sur l’input quand on ouvre le coach
+    const input = document.getElementById("coach-input");
+    if (input) {
+      setTimeout(() => input.focus(), 300);
+    }
+
+    clearTimeout(coachTimer);
+    coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
+  };
+
+  window.hideCoachIA = () => {
+    const dock = document.querySelector(".coach-dock");
+    if (dock) dock.style.display = "none";
+  };
 
   // --- Événements globaux : réaction aux messages rapides ---
   document.addEventListener("coach-message", (e) => {
     const txt = e?.detail || "";
     if (txt) push("coach", txt);
-    // réactive l’affichage si caché
     showCoachIA();
   });
-
- 
+};
 
 // --- Initialisation automatique du coach ---
 document.addEventListener("DOMContentLoaded", () => {
