@@ -1,72 +1,68 @@
-// === Parfect.golfr - play.js (MVP) ===
-
+// === Parfect.golfr - play.js (MVP complet avec Coach IA, animation, sauvegarde mi-parcours) ===
 (function () {
   const STORAGE_KEY = "golfHistory";
+  const $ = window.$ || ((id) => document.getElementById(id));
 
-  // Fallback helper
-  const $ = window.$ || (id => document.getElementById(id));
-
-  // State
+  // --- État global ---
   let currentGolf = null;
   let currentHole = 1;
   let totalHoles = 18;
-  let holes = [];          // [{hole,par,score,fairway,gir,routine,dist2,trouble}]
+  let holes = [];
   let currentDiff = 0;
 
-  // Choix de score (inclut Parfect/Bogey’fect en tête)
+  // --- Choix de score ---
   const SCORE_CHOICES = [
-    { key: "parfect",  label: "💚 Parfect",     diff: 0, special: true },
-    { key: "bogeyfect",label: "💙 Bogey’fect",  diff: 1, special: true },
-    { key: "birdie",   label: "Birdie",         diff: -1 },
-    { key: "par",      label: "Par",            diff:  0 },
-    { key: "bogey",    label: "Bogey",          diff:  1 },
-    { key: "double",   label: "Double",         diff:  2 },
-    { key: "triple",   label: "Triple",         diff:  3 },
-    { key: "eagle",    label: "Eagle",          diff: -2 },
+    { key: "birdie", label: "Birdie", diff: -1 },
+    { key: "par", label: "Par", diff: 0 },
+    { key: "bogey", label: "Bogey", diff: 1 },
+    { key: "double", label: "Double", diff: 2 },
+    { key: "triple", label: "Triple", diff: 3 },
+    { key: "eagle", label: "Eagle", diff: -2 },
   ];
 
-  // --- Data fetchers (MVP, pas d'import) ---
+  // --- Chargement des golfs ---
   function fetchGolfs() {
     const url = "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/data/golfs.json";
-    return fetch(url, { cache: "no-store" }).then(r => r.json()).catch(() => ([]));
+    return fetch(url, { cache: "no-store" })
+      .then((r) => r.json())
+      .catch(() => []);
   }
 
-  // === Public : init de la sélection de golf
+  // === Initialisation de la sélection de golf ===
   window.initGolfSelect = async function initGolfSelect() {
     const zone = $("golf-select");
     if (!zone) return;
-
     const golfs = await fetchGolfs();
+
     zone.innerHTML =
       "<h3>Choisis ton golf :</h3>" +
-      golfs.map(g => `<button class="btn golf-btn" data-id="${g.id}">⛳ ${g.name}</button>`).join("");
+      golfs
+        .map((g) => `<button class="btn golf-btn" data-id="${g.id}">⛳ ${g.name}</button>`)
+        .join("");
 
-    zone.querySelectorAll(".golf-btn").forEach(btn => {
+    zone.querySelectorAll(".golf-btn").forEach((btn) =>
       btn.addEventListener("click", () => {
-        const g = golfs.find(x => String(x.id) === btn.dataset.id);
+        const g = golfs.find((x) => String(x.id) === btn.dataset.id);
         startRound(g);
-      });
-    });
+      })
+    );
   };
 
-  // === Démarrer une partie
+  // === Démarrage d'une partie ===
   function startRound(golf) {
     if (!golf) return;
     currentGolf = golf;
     totalHoles = Array.isArray(golf.pars) ? golf.pars.length : 18;
     currentHole = 1;
     holes = new Array(totalHoles).fill(null);
-    currentDiff = 0;
-
     $("golf-select").style.display = "none";
     $("hole-card").innerHTML = "";
     showScorecardIntro();
     showMoodAndStrategyModal();
   }
 
-  // --- Onboarding carte de score
+  // === Onboarding carte de score ===
   function showScorecardIntro() {
-    // if (localStorage.getItem("skipScoreIntro")==="true") return;
     if (document.querySelector(".modal-backdrop")) return;
 
     const modal = document.createElement("div");
@@ -75,27 +71,21 @@
       <div class="modal-card" style="max-width:420px;text-align:left;">
         <h2>📋 Carte de Score</h2>
         <p><strong>Parfect</strong> = Par + Fairway + GIR + ≤ 2 putts<br>
-           <strong>Bogey’fect</strong> = Bogey + Fairway + ≤ 2 putts</p>
+        <strong>Bogey’fect</strong> = Bogey + Fairway + ≤ 2 putts</p>
         <ul style="margin-left:18px;line-height:1.4;">
           <li>Choisis ton score</li>
           <li>Coche Fairway / GIR / Routine</li>
-          <li>Indique la distance du 2ᵉ putt (donné, &lt;2m, etc.)</li>
+          <li>Indique la distance du 2ᵉ putt</li>
         </ul>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
-          <input type="checkbox" id="hide-intro"> Ne plus me la montrer
-        </label>
         <div style="text-align:right;margin-top:12px;">
-          <button id="close-intro" class="btn" style="background:#00ff99;color:#111">OK</button>
+          <button id="close-intro" class="btn" style="background:#00ff99;color:#111;">OK</button>
         </div>
       </div>`;
     document.body.appendChild(modal);
-    $("close-intro").addEventListener("click", () => {
-      if ($("hide-intro").checked) localStorage.setItem("skipScoreIntro","true");
-      modal.remove();
-    });
+    $("close-intro").addEventListener("click", () => modal.remove());
   }
 
-  // --- Mood & stratégie (début de partie)
+  // === Mood & stratégie ===
   function showMoodAndStrategyModal() {
     const modal = document.createElement("div");
     modal.className = "modal-backdrop";
@@ -122,14 +112,22 @@
 
     let mood = "focus";
     let strat = "mindset";
-    modal.querySelectorAll(".mood").forEach(b => b.addEventListener("click", () => {
-      modal.querySelectorAll(".mood").forEach(x => x.classList.remove("active"));
-      b.classList.add("active"); mood = b.dataset.mood;
-    }));
-    modal.querySelectorAll(".strategy").forEach(b => b.addEventListener("click", () => {
-      modal.querySelectorAll(".strategy").forEach(x => x.classList.remove("active"));
-      b.classList.add("active"); strat = b.dataset.strat;
-    }));
+
+    modal.querySelectorAll(".mood").forEach((b) =>
+      b.addEventListener("click", () => {
+        modal.querySelectorAll(".mood").forEach((x) => x.classList.remove("active"));
+        b.classList.add("active");
+        mood = b.dataset.mood;
+      })
+    );
+
+    modal.querySelectorAll(".strategy").forEach((b) =>
+      b.addEventListener("click", () => {
+        modal.querySelectorAll(".strategy").forEach((x) => x.classList.remove("active"));
+        b.classList.add("active");
+        strat = b.dataset.strat;
+      })
+    );
 
     $("start-round").addEventListener("click", () => {
       localStorage.setItem("mood", mood);
@@ -140,92 +138,89 @@
     });
   }
 
-  // --- Rendu du trou
+  // === Rendu du trou ===
   function renderHole() {
-    if (!currentGolf) return;
     const zone = $("hole-card");
-    if (!zone) return;
+    if (!zone || !currentGolf) return;
 
     const par = currentGolf.pars[currentHole - 1];
     const saved = holes[currentHole - 1] || {};
-    const total = holes.filter(Boolean).reduce((a,h)=>a+(h.score-h.par),0);
+    const total = holes.filter(Boolean).reduce((a, h) => a + (h.score - h.par), 0);
 
-    zone.innerHTML = `
-      <div class="mini-recap" style="background:#111;padding:8px 12px;border-radius:12px;margin-bottom:10px;text-align:center;">
-        <strong>Trou ${currentHole}/${totalHoles}</strong> — Par ${par} · Total :
-        <span style="color:${total>0 ? '#ff6666' : total<0 ? '#00ff99' : '#fff'}">${total>0? "+"+total : total}</span>
-      </div>
-
-      <div class="hole-inputs" style="display:flex;flex-direction:column;gap:10px;align-items:center;">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-          ${SCORE_CHOICES.map(sc=>`
-            <button class="btn score-btn" data-diff="${sc.diff}">${sc.label}</button>
-          `).join("")}
+    zone.classList.add("fade-out");
+    setTimeout(() => {
+      zone.classList.remove("fade-out");
+      zone.classList.add("fade-in");
+      zone.innerHTML = `
+        <div class="mini-recap" style="background:#111;padding:8px;border-radius:12px;text-align:center;">
+          <strong>Trou ${currentHole}/${totalHoles}</strong> — Par ${par} · Total :
+          <span style="color:${total>0?'#ff6666':total<0?'#00ff99':'#fff'}">${total>0? "+"+total : total}</span>
         </div>
-
-        <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px;">
+        <div style="text-align:center;margin-top:10px;">
+          ${SCORE_CHOICES.map(
+            (sc) => `<button class="btn score-btn" data-diff="${sc.diff}">${sc.label}</button>`
+          ).join("")}
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;">
           <label><input type="checkbox" id="fairway" ${saved.fairway?'checked':''}> Fairway</label>
           <label><input type="checkbox" id="gir" ${saved.gir?'checked':''}> GIR</label>
           <label><input type="checkbox" id="routine" ${saved.routine?'checked':''}> Routine</label>
         </div>
-
         <div style="margin-top:8px;">
           <label>Distance 2e putt :</label>
           <select id="dist2" style="margin-left:6px;padding:4px 6px;border-radius:6px;">
             <option value="">Choisir</option>
-            <option value="1">Donné</option>
-            <option value="2">One putt baby</option>
-            <option value="3">Moins de 2 m</option>
-            <option value="4">Moins de 4 m</option>
-            <option value="5">Moins de 6 m</option>
-            <option value="6">Au-delà</option>
+            <option>Donné</option>
+            <option>One putt baby</option>
+            <option>&lt; 2m</option>
+            <option>&lt; 4m</option>
+            <option>&lt; 6m</option>
+            <option>Au-delà</option>
           </select>
         </div>
-
         <div id="trouble-zone" style="display:none;margin-top:8px;">
           <label>Pourquoi double ou plus ?</label><br>
-          <select id="trouble" style="margin-top:4px;padding:4px 6px;border-radius:6px;">
+          <select id="trouble" style="padding:4px 6px;border-radius:6px;">
             <option value="none">R.A.S.</option>
             <option value="drive">Drive égaré</option>
             <option value="penalite">Pénalité</option>
             <option value="approche">Approche manquée</option>
           </select>
         </div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;">
+          <button id="prev-hole" class="btn" ${currentHole===1?'disabled':''}>⬅️ Trou ${currentHole-1}</button>
+          <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Trou ${currentHole+1} ➡️</button>
+        </div>`;
+      zone.classList.remove("fade-in");
+      bindHoleEvents();
+    }, 250);
+  }
 
-        <div style="margin-top:14px;display:flex;justify-content:space-between;width:100%;max-width:360px;">
-          <button id="prev-hole" class="btn" ${currentHole===1?'disabled':''}>⬅️ Précédent</button>
-          <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Suivant ➡️</button>
-        </div>
-      </div>`;
+  // === Liens et actions ===
+  function bindHoleEvents() {
+    document.querySelectorAll(".score-btn").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        currentDiff = parseInt(btn.dataset.diff);
+        $("trouble-zone").style.display = currentDiff >= 2 ? "block" : "none";
+      })
+    );
 
-    // Sélection score
-    document.querySelectorAll(".score-btn").forEach(btn=>{
-      btn.addEventListener("click",()=>{
-        currentDiff=parseInt(btn.dataset.diff);
-        // effets Parfect/Bogey’fect
-        if (currentDiff===0 && btn.textContent.includes("Parfect")) {
-          $("fairway").checked = true; $("gir").checked = true;
-        }
-        if (currentDiff===1 && btn.textContent.includes("Bogey")) {
-          $("fairway").checked = true; $("gir").checked = false;
-        }
-        // Double ou + ⇒ raison
-        const showTrouble = currentDiff>=2;
-        $("trouble-zone").style.display = showTrouble ? "block" : "none";
-      });
-    });
-
-    $("prev-hole").addEventListener("click",()=>{
+    $("prev-hole").addEventListener("click", () => {
       saveCurrentHole();
-      if (currentHole>1) currentHole--;
+      if (currentHole > 1) currentHole--;
       renderHole();
     });
 
-    $("next-hole").addEventListener("click",()=>{
+    $("next-hole").addEventListener("click", () => {
       saveCurrentHole();
-      if ([9,12,18].includes(currentHole)) saveMidRound();
-      if (currentHole<totalHoles) {
-        currentHole++; renderHole();
+      if ([9, 12].includes(currentHole)) saveMidRound();
+      if (currentHole < totalHoles) {
+        currentHole++;
+        renderHole();
+        if (typeof window.showCoachIA === "function") {
+          window.showCoachIA();
+          setTimeout(() => window.hideCoachIA?.(), 180000);
+        }
       } else {
         endRound();
       }
@@ -233,7 +228,7 @@
   }
 
   function saveCurrentHole() {
-    const par = currentGolf.pars[currentHole-1];
+    const par = currentGolf.pars[currentHole - 1];
     const entry = {
       hole: currentHole,
       par,
@@ -242,83 +237,86 @@
       gir: $("gir")?.checked || false,
       routine: $("routine")?.checked || false,
       dist2: $("dist2")?.value || "",
-      trouble: $("trouble")?.value || ""
+      trouble: $("trouble")?.value || "",
     };
-    holes[currentHole-1] = entry;
+    holes[currentHole - 1] = entry;
     analyzeHole(entry);
   }
 
+  // === Sauvegarde intermédiaire ===
   function saveMidRound() {
-    try {
-      localStorage.setItem("roundInProgress","true");
-      localStorage.setItem("currentGolf", JSON.stringify(currentGolf));
-      localStorage.setItem("holes", JSON.stringify(holes));
-      console.log("💾 Sauvegarde mid-round OK");
-    } catch(e){ console.error(e); }
+    localStorage.setItem("roundInProgress", "true");
+    localStorage.setItem("currentGolf", JSON.stringify(currentGolf));
+    localStorage.setItem("holes", JSON.stringify(holes));
+    console.log("💾 Sauvegarde mi-parcours");
   }
 
+  // === Analyse du coach IA ===
   function analyzeHole(entry) {
     let msg = "";
     const d = entry.score - entry.par;
-    if (d<=-1) msg = "💚 Birdie ou mieux ! Continue !";
-    else if (d===0 && entry.gir) msg = "💪 Par solide (GIR).";
-    else if (d===1 && entry.fairway) msg = "💙 Bogey’fect : fairway + ≤2 putts, smart.";
-    else if (d>=2) msg = "😅 Double ou + ? Reste calme, routine, stratégie simple.";
+    if (d <= -1) msg = "💚 Birdie ou mieux ! Continue !";
+    else if (d === 0 && entry.gir) msg = "💪 Par solide (GIR).";
+    else if (d === 1 && entry.fairway) msg = "💙 Bogey’fect : fairway + ≤2 putts.";
+    else if (d >= 2) msg = "😅 Double ou plus ? Routine, respire et reste patient.";
     else msg = "Un coup après l’autre, flow > force.";
     if (typeof window.showCoachToast === "function") window.showCoachToast(msg, "#00ff99");
     document.dispatchEvent(new CustomEvent("coach-message", { detail: msg }));
   }
 
+  // === Fin de partie ===
   function endRound() {
     const valid = holes.filter(Boolean);
-    const totalVsPar = valid.reduce((a,h)=>a+(h.score-h.par),0);
-    const parfects  = valid.filter(h=>h.fairway&&h.gir&&(h.score-h.par)===0).length;
-    const bogeyfects= valid.filter(h=>h.fairway&&!h.gir&&(h.score-h.par)===1).length;
+    const totalVsPar = valid.reduce((a, h) => a + (h.score - h.par), 0);
+    const parfects = valid.filter((h) => h.fairway && h.gir && (h.score - h.par) === 0).length;
+    const bogeyfects = valid.filter((h) => h.fairway && !h.gir && (h.score - h.par) === 1).length;
 
-    // Sauvegarde historique
-    try {
-      const hist = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      hist.push({
-        date: new Date().toISOString(),
-        golf: currentGolf?.name || "Parcours inconnu",
-        totalVsPar, parfects, bogeyfects, holes
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
-    } catch(e){ console.error(e); }
+    const hist = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    hist.push({
+      date: new Date().toISOString(),
+      golf: currentGolf?.name || "Parcours inconnu",
+      totalVsPar,
+      parfects,
+      bogeyfects,
+      holes,
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
 
-    const summary = `
+    $("hole-card").innerHTML = `
       <div class="score-summary-card">
         <h3>Partie terminée 💚</h3>
-        <p>Total vs Par : <strong>${totalVsPar>0? "+"+totalVsPar : totalVsPar}</strong></p>
+        <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
         <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
         <button id="new-round" class="btn" style="margin-top:10px;">🔁 Nouvelle partie</button>
       </div>`;
-    $("hole-card").innerHTML = summary;
     $("new-round").addEventListener("click", resetRound);
-    localStorage.setItem("roundInProgress","false");
+    localStorage.setItem("roundInProgress", "false");
   }
 
   function resetRound() {
     $("hole-card").innerHTML = "";
     $("golf-select").style.display = "block";
-    currentGolf=null; currentHole=1; holes=[]; currentDiff=0;
-    localStorage.setItem("roundInProgress","false");
+    currentGolf = null;
+    currentHole = 1;
+    holes = [];
+    currentDiff = 0;
+    localStorage.setItem("roundInProgress", "false");
     console.log("♻️ Partie réinitialisée");
     window.initGolfSelect?.();
   }
 
   // === Modale Reprendre / Nouvelle partie ===
-  window.showResumeOrNewModal = function showResumeOrNewModal() {
-    const hasRound = localStorage.getItem("roundInProgress")==="true";
+  window.showResumeOrNewModal = function () {
+    const hasRound = localStorage.getItem("roundInProgress") === "true";
     if (document.querySelector(".modal-backdrop")) return;
     const modal = document.createElement("div");
     modal.className = "modal-backdrop";
     modal.innerHTML = `
       <div class="modal-card" style="max-width:380px;text-align:center;">
         <h3>🎯 Que veux-tu faire ?</h3>
-        <p>${hasRound? "Reprendre la partie ou recommencer ?" : "Prêt pour une nouvelle partie ?"}</p>
+        <p>${hasRound ? "Reprendre la partie en cours ou recommencer ?" : "Prêt à démarrer une nouvelle partie ?"}</p>
         <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
-          ${hasRound? `<button id="resume-round" class="btn">Reprendre</button>` : ""}
+          ${hasRound ? `<button id="resume-round" class="btn">Reprendre</button>` : ""}
           <button id="new-round-start" class="btn" style="background:#00ff99;color:#111;">Nouvelle partie</button>
         </div>
       </div>`;
@@ -328,17 +326,20 @@
       $("resume-round").addEventListener("click", () => {
         modal.remove();
         try {
-          const g = JSON.parse(localStorage.getItem("currentGolf")||"null");
-          const h = JSON.parse(localStorage.getItem("holes")||"[]");
+          const g = JSON.parse(localStorage.getItem("currentGolf") || "null");
+          const h = JSON.parse(localStorage.getItem("holes") || "[]");
           if (g && h.length) {
-            currentGolf=g; holes=h; totalHoles=g.pars.length;
-            currentHole = h.findIndex(x=>!x)+1; if (currentHole<=0) currentHole=1;
+            currentGolf = g;
+            holes = h;
+            totalHoles = g.pars.length;
+            currentHole = h.findIndex((x) => !x) + 1 || 1;
             $("golf-select").style.display = "none";
             renderHole();
             return;
           }
-        } catch(e){ console.error(e); }
-        // fallback
+        } catch (e) {
+          console.error(e);
+        }
         $("golf-select").style.display = "block";
       });
     }
@@ -350,7 +351,7 @@
     });
   };
 
-  // Expose quelques fonctions utiles (optionnel)
+  // Expose globalement
   window.startRound = startRound;
-  window.renderHole  = renderHole;
+  window.renderHole = renderHole;
 })();
