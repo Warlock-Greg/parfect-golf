@@ -1,90 +1,106 @@
-// === Parfect.golfr - coachIA.js (MVP global) ===
-window.$ = window.$ || ((id) => document.getElementById(id));
+// === Parfect.golfr - coachIA.js (MVP) ===
 
-(function initCoachIADOM() {
-  if (document.querySelector("#coach-ia-panel")) return;
+// Toast plein format (moitié écran sur mobile) sous le header
+window.showCoachToast = function showCoachToast(message, accent) {
+  // supprime l'ancien
+  document.querySelectorAll(".coach-toast").forEach(n => n.remove());
 
-  const panel = document.createElement("div");
-  panel.id = "coach-ia-panel";
-  panel.style.cssText = `
-    position: fixed; right: 10px; bottom: 10px; width: 320px; max-width: 92%;
-    background: #111; color:#fff; border:1px solid #00ff99; border-radius:12px;
-    overflow: hidden; z-index: 9998; display:none;
+  const color = accent || "#00ff99";
+  const wrap = document.createElement("div");
+  wrap.className = "coach-toast";
+  wrap.style.cssText = `
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: 72px; z-index: 9999; width: min(680px, 92vw);
+    background: #0d0f10; border: 2px solid ${color};
+    border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 30px rgba(0,0,0,.45);
+    display:flex; gap:12px; align-items:flex-start;
+    font-size: 1rem; line-height: 1.35;
   `;
-  panel.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#0a0a0a;">
-      <strong>Coach IA</strong>
-      <div>
-        <button id="coach-ia-hide" style="background:none;border:none;color:#00ff99;cursor:pointer">–</button>
-      </div>
+  wrap.innerHTML = `
+    <div style="font-size:1.6rem">😎</div>
+    <div style="flex:1">
+      <div style="font-weight:700;color:${color};margin-bottom:4px">Coach</div>
+      <div>${message}</div>
     </div>
-    <div id="coach-ia-log" style="max-height:220px;overflow:auto;padding:10px 12px;font-size:.95rem;line-height:1.4"></div>
-    <div style="padding:8px;display:flex;gap:6px;border-top:1px solid #00ff99">
-      <input id="coach-ia-input" type="text" placeholder="Pose une question..." style="flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#000;color:#fff">
-      <button id="coach-ia-send" class="btn" style="background:#00ff99;color:#111;padding:8px 10px;border-radius:8px;border:0;cursor:pointer">Envoyer</button>
+    <button id="coach-toast-close" class="btn" style="background:${color};color:#0d0f10">OK</button>
+  `;
+  document.body.appendChild(wrap);
+
+  $("coach-toast-close").addEventListener("click", () => wrap.remove());
+  setTimeout(() => { if (document.body.contains(wrap)) wrap.remove(); }, 8000);
+};
+
+// Petit dock coach (ouverture/fermeture)
+window.initCoachIA = function initCoachIA() {
+  if (document.querySelector(".coach-dock")) return;
+
+  const dock = document.createElement("div");
+  dock.className = "coach-dock";
+  dock.style.cssText = `
+    position: fixed; right: 12px; bottom: 12px; z-index: 9998;
+    width: 320px; max-width: calc(100vw - 24px);
+    background: #0d0f10; border:1px solid #222; border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,.4); display:none;
+  `;
+  dock.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid #222">
+      <div style="font-size:1.2rem">💬</div>
+      <div style="font-weight:700">Coach IA</div>
+      <button id="coach-dock-close" class="btn" style="margin-left:auto;background:#00ff99;color:#111">Fermer</button>
+    </div>
+    <div id="coach-log" style="max-height:280px;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="display:flex;gap:8px;padding:10px;border-top:1px solid #222">
+      <input id="coach-input" type="text" placeholder="Pose ta question…" style="flex:1;padding:8px;border-radius:8px;border:1px solid #333;background:#111;color:#fff">
+      <button id="coach-send" class="btn">Envoyer</button>
     </div>
   `;
-  document.body.appendChild(panel);
+  document.body.appendChild(dock);
 
-  $("coach-ia-hide").addEventListener("click", hideCoachIA);
-  $("coach-ia-send").addEventListener("click", sendCoachIA);
-  $("coach-ia-input").addEventListener("keypress", (e)=>{ if(e.key==="Enter") sendCoachIA(); });
-})();
+  // Toggle button (flottant)
+  const fab = document.createElement("button");
+  fab.id = "coach-fab";
+  fab.className = "btn";
+  fab.textContent = "😎 Coach";
+  fab.style.cssText = `
+    position: fixed; right: 12px; bottom: 12px; z-index: 9997;
+    background:#00ff99; color:#111; border-radius:30px; padding:.6rem .9rem;
+  `;
+  document.body.appendChild(fab);
 
-function initCoachIA() { /* réservé si besoin futur */ }
-function showCoachIA() { $("coach-ia-panel").style.display = "block"; }
-function hideCoachIA() { $("coach-ia-panel").style.display = "none"; }
+  fab.addEventListener("click", () => dock.style.display = "block");
+  $("coach-dock-close").addEventListener("click", () => dock.style.display = "none");
+  $("coach-send").addEventListener("click", sendMsg);
+  $("coach-input").addEventListener("keypress", (e) => { if (e.key === "Enter") sendMsg(); });
 
-async function sendCoachIA() {
-  const input = $("coach-ia-input");
-  const log = $("coach-ia-log");
-  const txt = (input.value||"").trim();
-  if (!txt) return;
-  input.value = "";
-
-  const user = document.createElement("div");
-  user.style.margin = "6px 0";
-  user.innerHTML = `<strong>Toi :</strong> ${txt}`;
-  log.appendChild(user);
-  log.scrollTop = log.scrollHeight;
-
-  // Appel API proxy (Cloudflare) si configuré
-  const apiUrl = localStorage.getItem("coach_api_url") || "";
-  if (!apiUrl) {
-    const coach = document.createElement("div");
-    coach.style.margin = "6px 0";
-    coach.style.opacity = ".9";
-    coach.innerHTML = `<strong>Coach :</strong> (mode local) Respire, reste simple, vise le centre du green.`;
-    log.appendChild(coach);
-    log.scrollTop = log.scrollHeight;
-    return;
+  function sendMsg() {
+    const input = $("coach-input");
+    const msg = (input.value || "").trim();
+    if (!msg) return;
+    push("user", msg);
+    input.value = "";
+    // MVP: réponse locale (tu brancheras le proxy API plus tard)
+    setTimeout(() => push("coach", "OK, on garde le flow. Smart golf!"), 400);
   }
 
-  try {
-    const res = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({ messages: [{role:"user", content: txt}] })
-    });
-    if (!res.ok) throw new Error("HTTP "+res.status);
-    const data = await res.json();
-
-    const coach = document.createElement("div");
-    coach.style.margin = "6px 0";
-    coach.style.opacity = ".95";
-    coach.innerHTML = `<strong>Coach :</strong> ${ (data.reply||"") }`;
-    log.appendChild(coach);
-    log.scrollTop = log.scrollHeight;
-  } catch (err) {
-    const coach = document.createElement("div");
-    coach.style.margin = "6px 0";
-    coach.style.color = "#ff6666";
-    coach.innerHTML = `<strong>Coach :</strong> Erreur de connexion à l’API 😅`;
-    log.appendChild(coach);
+  function push(role, text) {
+    const log = $("coach-log");
+    const row = document.createElement("div");
+    row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
+    row.innerHTML = `
+      <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
+      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">${text}</div>
+    `;
+    log.appendChild(row);
     log.scrollTop = log.scrollHeight;
   }
-}
 
-window.initCoachIA = initCoachIA;
-window.showCoachIA = showCoachIA;
-window.hideCoachIA = hideCoachIA;
+  // Écoute des messages rapides
+  document.addEventListener("coach-message", (e) => {
+    const txt = e?.detail || "";
+    if (txt) push("coach", txt);
+  });
+
+  // Expose
+  window.showCoachIA = () => { dock.style.display = "block"; };
+  window.hideCoachIA = () => { dock.style.display = "none"; };
+};
