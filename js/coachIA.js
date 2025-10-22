@@ -151,17 +151,62 @@ window.initCoachIA = function () {
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
 
-  // Vérifie si on est sur la page d’accueil
   const isHome =
     location.pathname.endsWith("index.html") ||
     location.pathname === "/" ||
     document.getElementById("home");
 
+  const savedCoach = localStorage.getItem("coach");
+  const coachBios = {
+    greg: { emoji: "😎", name: "Greg", quote: "Smart golf, easy mindset 💚" },
+    goathier: { emoji: "🧠", name: "Goathier", quote: "Analyse, précision, performance." },
+    dorothee: { emoji: "💫", name: "Dorothée", quote: "Respire, aligne-toi, et swing librement." },
+  };
+
   if (isHome) {
-    // 💚 Message d’accueil simple
-    showCoachToast("👋 Bienvenue sur Parfect.golfr ! Prêt à jouer ou t’entraîner aujourd’hui ? 💚", "#00ff99");
+    showCoachToast("👋 Bienvenue sur Parfect.golfr ! Choisis ton coach avant de commencer 💚", "#00ff99");
+
+    // Ouvre automatiquement le dock
+    showCoachIA();
+
+    const log = document.getElementById("coach-log");
+    log.innerHTML = `
+      <div style="font-size:1.1rem;opacity:.8;margin-bottom:6px;">💬 Choisis ton coach :</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${Object.entries(coachBios)
+          .map(
+            ([key, c]) => `
+              <button class="btn" data-coach="${key}" style="flex:1;min-width:90px;">
+                ${c.emoji} ${c.name}
+              </button>
+            `
+          )
+          .join("")}
+      </div>
+    `;
+
+    // Ajout des événements sur chaque bouton coach
+    log.querySelectorAll("button[data-coach]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const selected = btn.dataset.coach;
+        localStorage.setItem("coach", selected);
+        const c = coachBios[selected];
+        log.innerHTML = `
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="font-size:1.2rem">${c.emoji}</div>
+            <div>
+              <strong>${c.name}</strong> sera ton coach aujourd’hui.<br>
+              <em style="opacity:.8">${c.quote}</em>
+            </div>
+          </div>
+        `;
+        showCoachToast(`${c.emoji} ${c.name} est prêt ! ${c.quote}`, "#00ff99");
+        setTimeout(() => hideCoachIA(), 4000);
+      });
+    });
   } else {
-    // 💚 Message normal du coach IA actif
+    // Pour les autres pages → comportement normal
     showCoachToast("💚 Ton coach est prêt !", "#00ff99");
   }
 });
+
