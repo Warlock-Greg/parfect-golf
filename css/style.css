@@ -1458,6 +1458,69 @@ hr {
   transition: opacity 0.2s;
 }
 
+
+  /* === Parfect.golfr – COACH IA (MVP) === */
+
+/* --- Toast de feedback rapide --- */
+.coach-toast {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.coach-toast button {
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+/* --- Dock principal (chat) --- */
+.coach-dock {
+  backdrop-filter: blur(6px);
+  animation: coachDockFade 0.4s ease;
+}
+@keyframes coachDockFade {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Log de discussion --- */
+#coach-log {
+  scroll-behavior: smooth;
+  padding-bottom: 30px; /* marge visuelle pour le dernier message */
+}
+
+/* --- Messages du coach / joueur --- */
+#coach-log div {
+  word-wrap: break-word;
+}
+#coach-log div > div {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* --- Bouton flottant (FAB) --- */
+#coach-fab {
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 255, 153, 0.35);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+#coach-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(0, 255, 153, 0.45);
+}
+
+/* --- Input de chat --- */
+#coach-input {
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+#coach-input:focus {
+  border-color: #00ff99;
+  box-shadow: 0 0 6px #00ff9955;
+}
+
+
 .stop-voice-btn:hover {
   opacity: 1;
 }
