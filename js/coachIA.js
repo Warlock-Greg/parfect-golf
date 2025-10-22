@@ -1,4 +1,4 @@
-// === Parfect.golfr - coachIA.js (MVP final et corrigé) ===
+// === Parfect.golfr - coachIA.js (MVP propre et corrigé) ===
 
 // --- Toast plein format (sous le header, feedback rapide) ---
 window.showCoachToast = function showCoachToast(message, accent) {
@@ -49,7 +49,6 @@ window.showCoachToast = function showCoachToast(message, accent) {
 window.initCoachIA = function initCoachIA() {
   if (document.querySelector(".coach-dock")) return;
 
-  // Création du dock
   const dock = document.createElement("div");
   dock.className = "coach-dock";
   dock.style.cssText = `
@@ -96,14 +95,15 @@ window.initCoachIA = function initCoachIA() {
   `;
   document.body.appendChild(fab);
 
-  // --- Variables internes ---
-  let coachTimer = null;
+  // === Événements ===
+  fab.addEventListener("click", () => showCoachIA("💚 Ton coach est prêt à t’aider !"));
+  document.getElementById("coach-dock-close").addEventListener("click", hideCoachIA);
+  document.getElementById("coach-send").addEventListener("click", sendMsg);
+  document.getElementById("coach-input").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMsg();
+  });
 
-  // === Définition AVANT usage ===
-  function hideCoachIA() {
-    const dock = document.querySelector(".coach-dock");
-    if (dock) dock.style.display = "none";
-  }
+  let coachTimer = null;
 
   // === Appel à ton backend Cloudflare ===
   async function askCoachAPI(message) {
@@ -123,88 +123,69 @@ window.initCoachIA = function initCoachIA() {
   }
 
   // === Envoi du message depuis la zone de chat ===
-  const input = $("coach-input");
-  const msg = (input.value || "").trim();
-  if (!msg) return;
+  function sendMsg() {
+    const input = document.getElementById("coach-input");
+    const msg = (input.value || "").trim();
+    if (!msg) return;
 
-  push("user", msg);
-  input.value = "";
+    push("user", msg);
+    input.value = "";
 
-  // 🔥 Envoi du message à ton backend Cloudflare
-  setTimeout(async () => {
-    try {
-      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
-
-      if (!res.ok) throw new Error("Erreur API " + res.status);
-
-      const data = await res.json();
-      const reply = data.reply || "Smart golf. Easy mindset 💚";
+    // 🔥 Appel Cloudflare (avec fallback local si besoin)
+    setTimeout(async () => {
+      const reply = await askCoachAPI(msg);
       push("coach", reply);
-    } catch (err) {
-      console.error("Erreur Coach IA :", err);
-      push("coach", "😅 Pas de réponse du coach. Reste focus et respire 💚");
-    }
-  }, 300);
-}
-
-  // --- Affiche un message dans le log ---
- function push(role, text) {
-  const log = document.getElementById("coach-log");
-  if (!log) return;
-
-  const row = document.createElement("div");
-  row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
-  row.innerHTML = `
-    <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
-    <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
-      ${text}
-    </div>
-  `;
-  log.appendChild(row);
-
-  // ✅ Ajout du padding en bas (30px)
-  log.style.paddingBottom = "30px";
-
-  // ✅ Scroll automatique vers le bas après chaque ajout
-  requestAnimationFrame(() => {
-    log.scrollTop = log.scrollHeight + 30;
-  });
-}
-
-// --- Contrôle global visible depuis play/training ---
-window.showCoachIA = (msg) => {
-  const dock = document.querySelector(".coach-dock");
-  if (!dock) return;
-
-  dock.style.display = "block";
-  if (msg) push("coach", msg);
-
-  // ✅ Focus automatique sur l’input quand on ouvre le coach
-  const input = document.getElementById("coach-input");
-  if (input) {
-    setTimeout(() => input.focus(), 300);
+    }, 300);
   }
 
-  clearTimeout(coachTimer);
-  coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
-};
+  // --- Affiche un message dans le log ---
+  function push(role, text) {
+    const log = document.getElementById("coach-log");
+    if (!log) return;
 
+    const row = document.createElement("div");
+    row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
+    row.innerHTML = `
+      <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
+      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
+        ${text}
+      </div>
+    `;
+    log.appendChild(row);
 
-  window.hideCoachIA = hideCoachIA; // expose globalement
+    // ✅ Ajout du padding en bas (30px)
+    log.style.paddingBottom = "30px";
 
-  // --- Événements globaux ---
-  fab.addEventListener("click", () => showCoachIA("💚 Ton coach est prêt à t’aider !"));
-  document.getElementById("coach-dock-close").addEventListener("click", hideCoachIA);
-  document.getElementById("coach-send").addEventListener("click", sendMsg);
-  document.getElementById("coach-input").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMsg();
-  });
+    // ✅ Scroll automatique vers le bas après chaque ajout
+    requestAnimationFrame(() => {
+      log.scrollTop = log.scrollHeight + 30;
+    });
+  }
 
-  // --- Messages rapides depuis le jeu (play/training) ---
+  // --- Contrôle global visible depuis play/training ---
+  window.showCoachIA = (msg) => {
+    const dock = document.querySelector(".coach-dock");
+    if (!dock) return;
+
+    dock.style.display = "block";
+    if (msg) push("coach", msg);
+
+    // ✅ Focus automatique sur l’input quand on ouvre le coach
+    const input = document.getElementById("coach-input");
+    if (input) {
+      setTimeout(() => input.focus(), 300);
+    }
+
+    clearTimeout(coachTimer);
+    coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
+  };
+
+  window.hideCoachIA = () => {
+    const dock = document.querySelector(".coach-dock");
+    if (dock) dock.style.display = "none";
+  };
+
+  // --- Événements globaux : réaction aux messages rapides ---
   document.addEventListener("coach-message", (e) => {
     const txt = e?.detail || "";
     if (txt) push("coach", txt);
@@ -212,7 +193,7 @@ window.showCoachIA = (msg) => {
   });
 };
 
-// --- Initialisation automatique ---
+// --- Initialisation automatique du coach ---
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
   showCoachToast("💚 Ton coach est prêt !", "#00ff99");
