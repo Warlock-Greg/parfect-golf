@@ -123,20 +123,33 @@ window.initCoachIA = function initCoachIA() {
   }
 
   // === Envoi du message depuis la zone de chat ===
-  function sendMsg() {
-    const input = document.getElementById("coach-input");
-    const msg = (input.value || "").trim();
-    if (!msg) return;
+  const input = $("coach-input");
+  const msg = (input.value || "").trim();
+  if (!msg) return;
 
-    push("user", msg);
-    input.value = "";
+  push("user", msg);
+  input.value = "";
 
-    // 🔥 Appel Cloudflare (avec fallback local si besoin)
-    setTimeout(async () => {
-      const reply = await askCoachAPI(msg);
+  // 🔥 Envoi du message à ton backend Cloudflare
+  setTimeout(async () => {
+    try {
+      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg }),
+      });
+
+      if (!res.ok) throw new Error("Erreur API " + res.status);
+
+      const data = await res.json();
+      const reply = data.reply || "Smart golf. Easy mindset 💚";
       push("coach", reply);
-    }, 300);
-  }
+    } catch (err) {
+      console.error("Erreur Coach IA :", err);
+      push("coach", "😅 Pas de réponse du coach. Reste focus et respire 💚");
+    }
+  }, 300);
+}
 
   // --- Affiche un message dans le log ---
   function push(role, text) {
