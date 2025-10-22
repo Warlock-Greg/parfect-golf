@@ -150,5 +150,18 @@ window.initCoachIA = function () {
 // === Initialisation auto ===
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
-  showCoachToast("💚 Ton coach est prêt !", "#00ff99");
+
+  // Vérifie si on est sur la page d’accueil
+  const isHome =
+    location.pathname.endsWith("index.html") ||
+    location.pathname === "/" ||
+    document.getElementById("home");
+
+  if (isHome) {
+    // 💚 Message d’accueil simple
+    showCoachToast("👋 Bienvenue sur Parfect.golfr ! Prêt à jouer ou t’entraîner aujourd’hui ? 💚", "#00ff99");
+  } else {
+    // 💚 Message normal du coach IA actif
+    showCoachToast("💚 Ton coach est prêt !", "#00ff99");
+  }
 });
