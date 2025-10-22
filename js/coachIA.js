@@ -152,44 +152,47 @@ window.initCoachIA = function initCoachIA() {
 }
 
   // --- Affiche un message dans le log ---
-  function push(role, text) {
-    const log = document.getElementById("coach-log");
-    if (!log) return;
+ function push(role, text) {
+  const log = document.getElementById("coach-log");
+  if (!log) return;
 
-    const row = document.createElement("div");
-    row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
-    row.innerHTML = `
-      <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
-      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
-        ${text}
-      </div>
-    `;
-    log.appendChild(row);
+  const row = document.createElement("div");
+  row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
+  row.innerHTML = `
+    <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
+    <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
+      ${text}
+    </div>
+  `;
+  log.appendChild(row);
 
-    // ✅ Ajout du padding en bas (30px)
-    log.style.paddingBottom = "30px";
+  // ✅ Ajout du padding en bas (30px)
+  log.style.paddingBottom = "30px";
 
-    // ✅ Scroll automatique vers le bas après chaque ajout
-    requestAnimationFrame(() => {
-      log.scrollTop = log.scrollHeight + 30;
-    });
+  // ✅ Scroll automatique vers le bas après chaque ajout
+  requestAnimationFrame(() => {
+    log.scrollTop = log.scrollHeight + 30;
+  });
+}
+
+// --- Contrôle global visible depuis play/training ---
+window.showCoachIA = (msg) => {
+  const dock = document.querySelector(".coach-dock");
+  if (!dock) return;
+
+  dock.style.display = "block";
+  if (msg) push("coach", msg);
+
+  // ✅ Focus automatique sur l’input quand on ouvre le coach
+  const input = document.getElementById("coach-input");
+  if (input) {
+    setTimeout(() => input.focus(), 300);
   }
 
-  // --- Contrôle global visible depuis play/training ---
-  window.showCoachIA = (msg) => {
-    const dock = document.querySelector(".coach-dock");
-    if (!dock) return;
+  clearTimeout(coachTimer);
+  coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
+};
 
-    dock.style.display = "block";
-    if (msg) push("coach", msg);
-
-    // ✅ Focus automatique sur l’input quand on ouvre le coach
-    const input = document.getElementById("coach-input");
-    if (input) setTimeout(() => input.focus(), 300);
-
-    clearTimeout(coachTimer);
-    coachTimer = setTimeout(() => hideCoachIA(), 180000); // auto-hide après 3 min
-  };
 
   window.hideCoachIA = hideCoachIA; // expose globalement
 
