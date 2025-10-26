@@ -1,39 +1,99 @@
-// === Parfect.golfr - social.js (MVP) ===
-const SOCIAL_REFRESH_MS = 120000;
+// === SOCIAL.JS — version stable et nettoyée ===
+
+// Helper DOM local (ne redéfinit pas $)
 const $$ = (id) => document.getElementById(id);
 
-async function checkSocialUpdates() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  if (!user.email) return;
-  const res = await fetch(GOOGLE_API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "getParfects", data: { to_user: user.email } })
-  }).then(r => r.json()).catch(() => ({ parfects: [] }));
+// --- Conteneur principal ---
+function injectSocialUI() {
+  console.log("👥 Chargement de l'interface sociale...");
 
-  const lastCheck = localStorage.getItem("lastSocialCheck") || "1970-01-01";
-  const newOnes = res.parfects?.filter(p => new Date(p.created_at) > new Date(lastCheck)) || [];
-  if (newOnes.length > 0) {
-    $$("friend-badge").style.display = "inline-block";
-    $$("friend-badge").textContent = newOnes.length;
-    localStorage.setItem("lastSocialCheck", new Date().toISOString());
-    localStorage.setItem("pendingParfects", JSON.stringify(newOnes));
+  // Cherche ou crée un conteneur principal
+  let container = $$("social-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "social-container";
+    container.style.padding = "16px";
+    container.style.textAlign = "center";
+    container.style.background = "#111";
+    container.style.border = "1px solid #222";
+    container.style.borderRadius = "12px";
+    container.style.margin = "16px auto";
+    container.style.maxWidth = "500px";
+    document.body.appendChild(container);
   }
+
+  // Contenu de base du module social
+  container.innerHTML = `
+    <h2 style="color:#00ff99;">👥 Communauté Parfect</h2>
+    <p>Connecte-toi avec d'autres golfeurs, partage tes scores et tes routines.</p>
+    <div style="margin-top:16px;">
+      <button id="invite-friend-btn" class="btn">Inviter un ami</button>
+      <button id="show-leaderboard-btn" class="btn" style="margin-left:8px;">Leaderboard</button>
+    </div>
+    <div id="social-content" style="margin-top:20px;"></div>
+  `;
+
+  // Boutons d'action
+  const inviteBtn = $$("invite-friend-btn");
+  const leaderboardBtn = $$("show-leaderboard-btn");
+
+  inviteBtn?.addEventListener("click", handleInviteFriend);
+  leaderboardBtn?.addEventListener("click", showLeaderboard);
 }
 
-setInterval(checkSocialUpdates, SOCIAL_REFRESH_MS);
+// --- Gestion de l'invitation ---
+function handleInviteFriend() {
+  console.log("📨 Invitation d’un ami...");
 
-$$("friends-btn")?.addEventListener("click", () => {
-  const feed = $$("friends-feed");
-  const newOnes = JSON.parse(localStorage.getItem("pendingParfects") || "[]");
-  feed.innerHTML = newOnes.length
-    ? newOnes.map(p => `
-        <div class="parfect-card" style="margin:8px 0;padding:10px;border:1px solid #222;border-radius:8px;">
-          <strong>$${p.from_user}</strong> t’a envoyé un Parfect 💚<br>
-          <small>$${new Date(p.created_at).toLocaleString()}</small>
-        </div>`).join("")
-    : "<p>Aucune nouveauté 💚</p>";
-  $$("friend-badge").style.display = "none";
-  showPage("friends");
-});
+  const content = $$("social-content");
+  if (!content) return;
 
+  content.innerHTML = `
+    <h3>Invite un ami</h3>
+    <input id="friend-name" type="text" placeholder="Nom de ton ami" style="padding:6px;border-radius:6px;border:1px solid #333;background:#000;color:#fff;">
+    <button id="send-invite-btn" class="btn" style="margin-left:8px;">Envoyer</button>
+  `;
+
+  const sendBtn = $$("send-invite-btn");
+  sendBtn?.addEventListener("click", () => {
+    const friend = $$("friend-name")?.value?.trim();
+    if (friend) {
+      content.innerHTML = `<p>✅ Invitation envoyée à <b>${friend}</b> !</p>`;
+    } else {
+      content.innerHTML += `<p style="color:#f55;">⚠️ Entre un nom avant d’envoyer.</p>`;
+    }
+  });
+}
+
+// --- Affiche le classement ---
+function showLeaderboard() {
+  console.log("🏆 Affichage du leaderboard");
+
+  const content = $$("social-content");
+  if (!content) return;
+
+  const mockLeaderboard = [
+    { name: "Greg", index: 10 },
+    { name: "Camille", index: 12 },
+    { name: "Alex", index: 14 },
+  ];
+
+  const rows = mockLeaderboard
+    .map((p, i) => `<tr><td>${i + 1}</td><td>${p.name}</td><td>${p.index}</td></tr>`)
+    .join("");
+
+  content.innerHTML = `
+    <h3>🏆 Leaderboard</h3>
+    <table style="width:100%;color:#fff;border-collapse:collapse;margin-top:8px;">
+      <thead>
+        <tr style="color:#00ff99;text-align:left;">
+          <th>#</th><th>Nom</th><th>Index</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// --- Expose globalement (pour main.js) ---
+window.injectSocialUI = injectSocialUI;
