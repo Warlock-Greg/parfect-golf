@@ -151,7 +151,10 @@
 <!-- === Shims / Helpers en tout premier === -->
 <script>
   // Helper global
-  window.$ = window.$ || (id => document.getElementById(id));
+ if (!window.$) {
+  window.$ = (id) => document.getElementById(id);
+}
+
 
   // Garde-fous : si certaines fonctions ne sont pas encore définies,
   // on évite le crash en créant des no-ops (fonctions vides).
