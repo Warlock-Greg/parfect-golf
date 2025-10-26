@@ -1,76 +1,80 @@
-// === Parfect.golfr - main.js (MVP) ===
-const $ = (id) => document.getElementById(id);
+// === MAIN.JS — version stable et nettoyée ===
 
+// --- Initialisation globale ---
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 main.js chargé");
+  console.log("✅ Boot Parfect.golfr");
 
-  if (typeof initLicence === "function") initLicence();
-  if (typeof initCoachIA === "function") initCoachIA();
-  initShortcuts();
+  // Initialiser le coach IA si dispo
+  if (typeof window.initCoachIA === "function") {
+    window.initCoachIA();
+  }
+
+  // Raccourcis vers les boutons du footer
+  const playBtn = document.getElementById("play-btn");
+  const trainingBtn = document.getElementById("training-btn");
+  const historyBtn = document.getElementById("history-btn");
+  const friendsBtn = document.getElementById("friends-btn");
+
+  // Helper pour activer le bouton courant
+  function setActiveButton(btn) {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+  }
+
+  // --- 🟢 Bouton "Jouer" ---
+  playBtn?.addEventListener("click", () => {
+    setActiveButton(playBtn);
+
+    console.log("🎮 Menu: Jouer");
+
+    // Afficher modale de reprise / nouvelle partie
+    if (typeof window.showResumeOrNewModal === "function") {
+      window.showResumeOrNewModal();
+    } else if (typeof window.initGolfSelect === "function") {
+      // Fallback : afficher la sélection des golfs
+      window.initGolfSelect();
+    }
+
+    // Notifie le coach IA (facultatif)
+    window.showCoachIA?.("⛳ Mode Jouer activé");
+  });
+
+  // --- 🏋️‍♂️ Bouton "S'entraîner" ---
+  trainingBtn?.addEventListener("click", () => {
+    setActiveButton(trainingBtn);
+
+    console.log("💪 Menu: Entraînement");
+
+    if (typeof window.initTraining === "function") {
+      window.initTraining();
+    }
+
+    window.showCoachIA?.("🏋️ Mode Entraînement activé");
+  });
+
+  // --- 📜 Bouton "Historique" ---
+  historyBtn?.addEventListener("click", () => {
+    setActiveButton(historyBtn);
+
+    console.log("📜 Menu: Historique");
+
+    if (typeof window.renderHistory === "function") {
+      window.renderHistory();
+    }
+
+    window.showCoachIA?.("📖 Historique ouvert");
+  });
+
+  // --- 👥 Bouton "Amis" ---
+  friendsBtn?.addEventListener("click", () => {
+    setActiveButton(friendsBtn);
+
+    console.log("👥 Menu: Amis");
+
+    if (typeof window.injectSocialUI === "function") {
+      window.injectSocialUI();
+    }
+
+    window.showCoachIA?.("👋 Section Amis activée");
+  });
 });
-
-function initShortcuts() {
-  $("play-btn")?.addEventListener("click", () => {
-    showCoachIA("🎯 On part jouer un parcours ?");
-    if (typeof showResumeOrNewModal === "function") setTimeout(showResumeOrNewModal, 400);
-  });
-
-  $("training-btn")?.addEventListener("click", () => {
-    showCoachIA("🏋️‍♂️ On s’entraîne ? Choisis ton challenge !");
-    if (typeof initTraining === "function") setTimeout(initTraining, 400);
-  });
-
-  $("history-btn")?.addEventListener("click", () => {
-    showCoachIA("📜 Voici ton historique 💚");
-    if (typeof renderHistory === "function") {
-      setTimeout(() => {
-        renderHistory();
-        if (typeof injectSocialUI === "function") injectSocialUI();
-      }, 400);
-    }
-  });
-}
-
-// --- Chat du coach IA sur la page d’accueil ---
-(function initCoachCentral() {
-  const input = $("coach-input");
-  const sendBtn = $("coach-send");
-  const log = $("coach-log");
-
-  if (!input || !sendBtn) return;
-
-  sendBtn.addEventListener("click", sendCoachMessage);
-  input.addEventListener("keypress", (e) => e.key === "Enter" && sendCoachMessage());
-
-  async function sendCoachMessage() {
-    const msg = input.value.trim();
-    if (!msg) return;
-    appendMsg("user", msg);
-    input.value = "";
-
-    try {
-      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
-      const data = await res.json();
-      appendMsg("coach", data.reply || "Smart golf. Easy mindset 💚");
-    } catch {
-      appendMsg("coach", "😅 Le coach ne répond pas, reste dans ton flow 💚");
-    }
-  }
-
-  function appendMsg(role, text) {
-    const row = document.createElement("div");
-    row.style.cssText = "display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;";
-    row.innerHTML = `
-      <div style="font-size:1.2rem">${role === "user" ? "👤" : "😎"}</div>
-      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
-        ${text}
-      </div>`;
-    log.appendChild(row);
-    requestAnimationFrame(() => (log.scrollTop = log.scrollHeight + 30));
-  }
-})();
-
