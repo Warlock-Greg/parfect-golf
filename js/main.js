@@ -1,5 +1,5 @@
 // === Parfect.golfr - main.js (MVP) ===
-const $$ = (id) => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 main.js chargé");
@@ -10,17 +10,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initShortcuts() {
-  $$("play-btn")?.addEventListener("click", () => {
+  $("play-btn")?.addEventListener("click", () => {
     showCoachIA("🎯 On part jouer un parcours ?");
     if (typeof showResumeOrNewModal === "function") setTimeout(showResumeOrNewModal, 400);
   });
 
-  $$("training-btn")?.addEventListener("click", () => {
+  $("training-btn")?.addEventListener("click", () => {
     showCoachIA("🏋️‍♂️ On s’entraîne ? Choisis ton challenge !");
     if (typeof initTraining === "function") setTimeout(initTraining, 400);
   });
 
-  $$("history-btn")?.addEventListener("click", () => {
+  $("history-btn")?.addEventListener("click", () => {
     showCoachIA("📜 Voici ton historique 💚");
     if (typeof renderHistory === "function") {
       setTimeout(() => {
@@ -33,9 +33,9 @@ function initShortcuts() {
 
 // --- Chat du coach IA sur la page d’accueil ---
 (function initCoachCentral() {
-  const input = $$("coach-input");
-  const sendBtn = $$("coach-send");
-  const log = $$("coach-log");
+  const input = $("coach-input");
+  const sendBtn = $("coach-send");
+  const log = $("coach-log");
 
   if (!input || !sendBtn) return;
 
