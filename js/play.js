@@ -1,7 +1,7 @@
 // === Parfect.golfr - play.js (MVP amélioré) ===
 (function () {
   const STORAGE_KEY = "golfHistory";
-  const $ = window.$ || ((id) => document.getElementById(id));
+  const $$ = window.$ || ((id) => document.getElementById(id));
 
   let currentGolf = null;
   let currentHole = 1;
@@ -27,7 +27,7 @@
   }
 
   window.initGolfSelect = async function initGolfSelect() {
-    const zone = $("golf-select");
+    const zone = $$("golf-select");
     if (!zone) return;
 
     const golfs = await fetchGolfs();
@@ -35,7 +35,7 @@
       "<h3>Choisis ton golf :</h3>" +
       golfs
         .map(
-          (g) => `<button class="btn golf-btn" data-id="${g.id}">⛳ ${g.name}</button>`
+          (g) => `<button class="btn golf-btn" data-id="$${g.id}">⛳ $${g.name}</button>`
         )
         .join("");
 
@@ -55,8 +55,8 @@
     holes = new Array(totalHoles).fill(null);
     currentDiff = 0;
 
-    $("golf-select").style.display = "none";
-    $("hole-card").innerHTML = "";
+    $$("golf-select").style.display = "none";
+    $$("hole-card").innerHTML = "";
     showMoodAndStrategyModal();
   }
 
@@ -104,7 +104,7 @@
       })
     );
 
-    $("start-round").addEventListener("click", () => {
+    $$("start-round").addEventListener("click", () => {
       localStorage.setItem("mood", mood);
       localStorage.setItem("strategy", strat);
       modal.remove();
@@ -116,7 +116,7 @@
   // === Rendu du trou ===
   function renderHole() {
     if (!currentGolf) return;
-    const zone = $("hole-card");
+    const zone = $$("hole-card");
     if (!zone) return;
 
     const par = currentGolf.pars[currentHole - 1];
@@ -125,27 +125,27 @@
 
     zone.innerHTML = `
       <div class="mini-recap" style="background:#111;padding:8px 12px;border-radius:12px;margin-bottom:10px;text-align:center;">
-        <strong>Trou ${currentHole}/${totalHoles}</strong> — Par ${par} · Total :
-        <span style="color:${total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff"}">
-          ${total > 0 ? "+" + total : total}
+        <strong>Trou $${currentHole}/$${totalHoles}</strong> — Par $${par} · Total :
+        <span style="color:$${total > 0 ? "#ff6666" : total < 0 ? "#00ff99" : "#fff"}">
+          $${total > 0 ? "+" + total : total}
         </span>
       </div>
 
       <div class="hole-inputs" style="display:flex;flex-direction:column;gap:10px;align-items:center;">
         <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
-          ${SCORE_CHOICES.map(
+          $${SCORE_CHOICES.map(
             (sc) => `
-            <button class="btn score-btn" data-diff="${sc.diff}" 
-              ${currentDiff === sc.diff ? 'style="background:#00ff99;color:#111;font-weight:bold;"' : ""}>
-              ${sc.label}
+            <button class="btn score-btn" data-diff="$${sc.diff}" 
+              $${currentDiff === sc.diff ? 'style="background:#00ff99;color:#111;font-weight:bold;"' : ""}>
+              $${sc.label}
             </button>`
           ).join("")}
         </div>
 
         <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px;">
           <label><input type="checkbox" id="fairway" ${saved.fairway ? "checked" : ""}> Fairway</label>
-          <label><input type="checkbox" id="gir" ${saved.gir ? "checked" : ""}> GIR</label>
-          <label><input type="checkbox" id="routine" ${saved.routine ? "checked" : ""}> Routine</label>
+          <label><input type="checkbox" id="gir" $${saved.gir ? "checked" : ""}> GIR</label>
+          <label><input type="checkbox" id="routine" $${saved.routine ? "checked" : ""}> Routine</label>
         </div>
 
         <div style="margin-top:8px;">
@@ -163,12 +163,12 @@
 
         <div style="margin-top:8px;">
           <label>Nombre de putts :</label>
-          <input id="putts" type="number" min="0" max="6" value="${saved.putts || 2}" 
+          <input id="putts" type="number" min="0" max="6" value="$${saved.putts || 2}" 
                  style="width:80px;margin-left:6px;text-align:center;border-radius:6px;padding:4px 6px;">
         </div>
 
         <div style="margin-top:14px;display:flex;justify-content:space-between;width:100%;max-width:360px;">
-          <button id="prev-hole" class="btn" ${currentHole === 1 ? "disabled" : ""}>⬅️ Précédent</button>
+          <button id="prev-hole" class="btn" $${currentHole === 1 ? "disabled" : ""}>⬅️ Précédent</button>
           <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Trou suivant ➡️</button>
         </div>
       </div>
@@ -182,13 +182,13 @@
       });
     });
 
-    $("prev-hole").addEventListener("click", () => {
+    $$("prev-hole").addEventListener("click", () => {
       saveCurrentHole();
       if (currentHole > 1) currentHole--;
       renderHole();
     });
 
-    $("next-hole").addEventListener("click", () => {
+    $$("next-hole").addEventListener("click", () => {
       saveCurrentHole();
       if ([9, 12].includes(currentHole)) saveMidRound();
       if (currentHole < totalHoles) {
@@ -206,11 +206,11 @@
       hole: currentHole,
       par,
       score: par + (currentDiff || 0),
-      fairway: $("fairway")?.checked || false,
-      gir: $("gir")?.checked || false,
-      routine: $("routine")?.checked || false,
-      dist2: $("dist2")?.value || "",
-      putts: parseInt($("putts")?.value || 0),
+      fairway: $$("fairway")?.checked || false,
+      gir: $$("gir")?.checked || false,
+      routine: $$("routine")?.checked || false,
+      dist2: $$("dist2")?.value || "",
+      putts: parseInt($$("putts")?.value || 0),
     };
     holes[currentHole - 1] = entry;
     analyzeHole(entry);
@@ -265,20 +265,20 @@
       console.error(e);
     }
 
-    $("hole-card").innerHTML = `
+    $$("hole-card").innerHTML = `
       <div class="score-summary-card">
         <h3>Partie terminée 💚</h3>
-        <p>Total vs Par : <strong>${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
-        <p>💚 Parfects : ${parfects} · 💙 Bogey’fects : ${bogeyfects}</p>
+        <p>Total vs Par : <strong>$${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}</strong></p>
+        <p>💚 Parfects : $${parfects} · 💙 Bogey’fects : $${bogeyfects}</p>
         <button id="new-round" class="btn" style="margin-top:10px;">🔁 Nouvelle partie</button>
       </div>`;
-    $("new-round").addEventListener("click", resetRound);
+    $$("new-round").addEventListener("click", resetRound);
     localStorage.setItem("roundInProgress", "false");
   }
 
   function resetRound() {
-    $("hole-card").innerHTML = "";
-    $("golf-select").style.display = "block";
+    $$("hole-card").innerHTML = "";
+    $$("golf-select").style.display = "block";
     currentGolf = null;
     currentHole = 1;
     holes = [];
@@ -296,9 +296,9 @@
     modal.innerHTML = `
       <div class="modal-card" style="max-width:380px;text-align:center;">
         <h3>🎯 Que veux-tu faire ?</h3>
-        <p>${hasRound ? "Reprendre ou recommencer ?" : "Nouvelle partie ?"}</p>
+        <p>$${hasRound ? "Reprendre ou recommencer ?" : "Nouvelle partie ?"}</p>
         <div style="display:flex;justify-content:center;gap:10px;margin-top:18px;">
-          ${
+          $${
             hasRound
               ? `<button id="resume-round" class="btn">Reprendre</button>`
               : ""
@@ -309,7 +309,7 @@
     document.body.appendChild(modal);
 
     if (hasRound) {
-      $("resume-round").addEventListener("click", () => {
+      $$("resume-round").addEventListener("click", () => {
         modal.remove();
         const g = JSON.parse(localStorage.getItem("currentGolf") || "null");
         const h = JSON.parse(localStorage.getItem("holes") || "[]");
@@ -318,13 +318,13 @@
           holes = h;
           totalHoles = g.pars.length;
           currentHole = h.findIndex((x) => !x) + 1 || 1;
-          $("golf-select").style.display = "none";
+          $$("golf-select").style.display = "none";
           renderHole();
         }
       });
     }
 
-    $("new-round-start").addEventListener("click", () => {
+    $$("new-round-start").addEventListener("click", () => {
       modal.remove();
       resetRound();
       window.initGolfSelect?.();
