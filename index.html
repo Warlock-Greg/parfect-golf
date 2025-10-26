@@ -10,14 +10,34 @@
       font-family: system-ui, sans-serif;
       background: #0d0f10;
       color: #eee;
-      text-align: center;
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    header img {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+    }
+
     h1 {
-      margin-top: 20px;
+      margin: 0;
+      font-size: 1.4rem;
       color: #00ff99;
     }
+
     .btn {
       background: #00ff99;
       color: #111;
@@ -28,20 +48,9 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     .btn:hover { background: #33ffaa; }
-    main {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-    .shortcut {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 30px;
-    }
+
     #coach-ia {
       margin: 20px auto;
       max-width: 500px;
@@ -50,16 +59,22 @@
       border-radius: 12px;
       padding: 16px;
       box-shadow: 0 0 12px rgba(0,0,0,.3);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
+
     #coach-log {
-      max-height: 260px;
+      flex: 1;
       overflow-y: auto;
-      text-align: left;
       padding: 8px;
       margin-bottom: 10px;
       border-radius: 8px;
       background: #0d0f10;
+      text-align: left;
     }
+
     #coach-input {
       width: 70%;
       padding: 8px;
@@ -68,29 +83,62 @@
       background: #111;
       color: #fff;
     }
+
+    /* --- Barre de menu --- */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111;
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: #00ff99;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    nav button.active {
+      color: #fff;
+      transform: scale(1.2);
+    }
   </style>
 </head>
 
 <body>
-  <h1>🏌️‍♂️ Parfect.golfr</h1>
+  <!-- === En-tête avec logo === -->
+  <header>
+    <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/assets/logo.png" alt="Logo Parfect.golfr" />
+    <h1>Parfect.golfr</h1>
+  </header>
 
-  <!-- Chat central du coach -->
+  <!-- === Chat central du coach === -->
   <div id="coach-ia">
-    <h2 style="color:#00ff99;">Coach IA</h2>
+    <h2 style="color:#00ff99;margin-top:0;">Coach IA</h2>
     <div id="coach-log"></div>
-    <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
-    <button id="coach-send" class="btn">Envoyer</button>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
+      <button id="coach-send" class="btn">Envoyer</button>
+    </div>
   </div>
 
-  <main>
-    <div class="shortcut">
-      <button id="play-btn" class="btn">⛳ Jouer</button>
-      <button id="training-btn" class="btn">🏋️‍♂️ S’entraîner</button>
-      <button id="history-btn" class="btn">📜 Historique</button>
-    </div>
-  </main>
+  <!-- === Barre de navigation === -->
+  <nav>
+    <button id="play-btn" title="Jouer">⛳</button>
+    <button id="training-btn" title="S'entraîner">🏋️‍♂️</button>
+    <button id="history-btn" title="Historique">📜</button>
+    <button id="friends-btn" title="Amis">👥</button>
+  </nav>
 
-  <!-- Scripts MVP -->
+  <!-- === Scripts MVP === -->
   <script src="licence.js"></script>
   <script src="social.js"></script>
   <script src="coachIA.js"></script>
@@ -99,5 +147,35 @@
   <script src="training.js"></script>
   <script src="history.js"></script>
   <script src="objectives.js"></script>
+
+  <script>
+    // === Initialisation globale ===
+    function initShortcuts() {
+      const buttons = {
+        play: document.getElementById("play-btn"),
+        training: document.getElementById("training-btn"),
+        history: document.getElementById("history-btn"),
+        friends: document.getElementById("friends-btn"),
+      };
+
+      Object.entries(buttons).forEach(([name, btn]) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          if (typeof window.showCoachIA === "function") window.showCoachIA(`🟢 Mode ${name} activé`);
+          if (name === "training" && typeof initTraining === "function") initTraining();
+          if (name === "history" && typeof renderHistory === "function") renderHistory();
+          if (name === "friends" && typeof injectSocialUI === "function") injectSocialUI();
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("✅ Parfect.golfr chargé avec logo et menu");
+      if (typeof initCoachIA === "function") initCoachIA();
+      if (typeof injectSocialUI === "function") injectSocialUI();
+      initShortcuts();
+    });
+  </script>
 </body>
 </html>
