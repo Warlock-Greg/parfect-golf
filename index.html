@@ -3,272 +3,101 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parfect.golfr</title>
-  <link rel="stylesheet" href="css/style.css" />
-<style>
-/* === Animations MVP === */
-.fade-out { opacity: 0; transition: opacity 0.4s ease-out; }
-.fade-in { opacity: 1; transition: opacity 0.4s ease-in; }
-.flash-green { animation: flashGreen 1.5s ease-in-out; }
-.flash-blue { animation: flashBlue 1.5s ease-in-out; }
+  <title>Parfect.golfr – MVP</title>
 
-@keyframes flashGreen {
-  0% { box-shadow: 0 0 0px #00ff99; }
-  50% { box-shadow: 0 0 20px #00ff99; }
-  100% { box-shadow: 0 0 0px #00ff99; }
-}
-@keyframes flashBlue {
-  0% { box-shadow: 0 0 0px #33ccff; }
-  50% { box-shadow: 0 0 20px #33ccff; }
-  100% { box-shadow: 0 0 0px #33ccff; }
-}
-
-/* Coach IA container (dockable) */
-#coach-ia {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: 320px;
-  max-height: 400px;
-  background: #111;
-  color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 0 12px #00ff9970;
-  overflow: hidden;
-  z-index: 9999;
-  display: none;
-}
-#coach-ia.open { display: block; animation: fadeIn 0.5s; }
-#coach-ia-header {
-  background: #00ff99;
-  color: #000;
-  padding: 6px;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-#coach-ia-content {
-  padding: 10px;
-  font-size: 0.9rem;
-  overflow-y: auto;
-  max-height: 330px;
-}
-#coach-ia button.minimize {
-  background: none;
-  border: none;
-  color: #000;
-  cursor: pointer;
-  font-weight: bold;
-}
-</style>
-
-
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0d0f10;
+      color: #eee;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #00ff99;
+    }
+    .btn {
+      background: #00ff99;
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn:hover { background: #33ffaa; }
+    main {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .shortcut {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 30px;
+    }
+    #coach-ia {
+      margin: 20px auto;
+      max-width: 500px;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 0 12px rgba(0,0,0,.3);
+    }
+    #coach-log {
+      max-height: 260px;
+      overflow-y: auto;
+      text-align: left;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background: #0d0f10;
+    }
+    #coach-input {
+      width: 70%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #111;
+      color: #fff;
+    }
+  </style>
 </head>
 
 <body>
-  <header>
-    <h1>
-      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
-           alt="Parfect Golfr" class="header-image" style="max-width:100px; margin:0 auto;">
-      Parfect.golfr
-    </h1>
+  <h1>🏌️‍♂️ Parfect.golfr</h1>
 
-    <!-- 💬 Coach IA -->
+  <!-- Chat central du coach -->
   <div id="coach-ia">
-    <div id="coach-ia-header">
-      Coach IA
-      <button class="minimize" onclick="hideCoachIA()">–</button>
-    </div>
-    <div id="coach-ia-content"></div>
+    <h2 style="color:#00ff99;">Coach IA</h2>
+    <div id="coach-log"></div>
+    <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
+    <button id="coach-send" class="btn">Envoyer</button>
   </div>
-    
-    <!-- ✅ ID corrigé pour correspondre à main.js -->
-    <button id="menu-toggle">☰<span></button>
-
-    <nav id="menu">
-      <button data-target="home">🏠 Accueil</button>
-      <button data-target="training">🏌️‍♂️ Entraînement</button>
-      <button data-target="play">⛳ Partie</button>
-      <button data-target="history">📜 Historique</button>
-      <button data-target="objectives">🎯 Objectifs</button>
-      <button data-target="settings">⚙️ Paramètres</button>
-       <!-- 🧪 Sélecteur du mode de carte -->
-  <div style="margin-top:10px; padding:8px; border-top:1px solid #333;">
-    <label for="play-mode-select" style="display:block; font-size:0.9rem; margin-bottom:4px;">
-      🧪 Mode Carte :
-    </label>
-    <select id="play-mode-select" style="
-      width:100%;
-      padding:6px;
-      border-radius:6px;
-      border:none;
-      background:#fff;
-      color:#000;
-      font-size:0.9rem;
-    ">
-      <option value="v1">V1 classique</option>
-      <option value="v2">V2 coach-caddie</option>
-    </select>
-  </div>
-    </nav>
-  </header>
 
   <main>
-    <!-- === ACCUEIL === -->
-    <section id="home" class="active">
-      <h2>Bienvenue</h2>
-      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo%20parfect%20v2.png"
-           alt="Parfect Golfr" class="header-image" style="max-width:200px; margin:0 auto;">
-      <h2>🎯 Baisse ton index,<br>sans changer ton swing ⛳️.</h2>
-
-      <div class="home-buttons">
-        <button class="btn btn-play" id="new-round-btn">💚 Jouer</button>
-        <button class="btn btn-train" id="training-btn">💙 S’entraîner</button>
-      </div>
-
-      <button class="btn" id="view-history" style="margin-top:16px;">📜 Historique</button>
-    </section>
-
-    <!-- === PARTIE (PLAY) === -->
-    <section id="play">
-      <h2>Carte de Score</h2>
-      <div id="golf-select"></div>
-      <div id="hole-card"></div>
-      <div id="score-summary"></div>
-    </section>
-
-    <!-- === ENTRAÎNEMENT (TRAINING) === -->
-    <section id="training">
-      <h2>Training Zone</h2>
-      <div id="training-type" class="training-types"></div>
-      <div id="training-exercises"></div>
-      <div id="training-session"></div>
-
-      <hr style="margin:20px auto;width:90%;border:1px solid #222;" />
-
-      <div id="training-history"></div>
-
-      <button id="reset-history" class="btn" style="background:#ff4d4d;margin-top:12px;">
-        🧹 Réinitialiser l’historique
-      </button>
-    </section>
-
-    <!-- === HISTORIQUE DES PARTIES === -->
-    <section id="history">
-      <h2>📜 Historique des parties</h2>
-      <div id="history-summary"></div>
-      <div id="history-list"></div>
-      <button id="reset-rounds" class="btn" style="background:#ff4d4d;margin-top:12px;">
-        🧹 Réinitialiser l’historique
-      </button>
-    </section>
-
-    <!-- === OBJECTIFS & COACH === -->
-    <section id="objectives">
-      <h2>🎯 Mes Objectifs & Coach</h2>
-
-      <div class="objective-zone">
-        <div class="objective-select">
-          <label for="level-select">Mon objectif (index) :</label>
-          <select id="level-select">
-            <option value="0">Index 0</option>
-            <option value="5">Index 5</option>
-            <option value="7">Index 7</option>
-            <option value="9" selected>Index 9</option>
-            <option value="12">Index 12</option>
-            <option value="15">Index 15</option>
-            <option value="18">Index 18</option>
-            <option value="21">Index 21</option>
-          </select>
-        </div>
-
-        <div id="objective-stats" class="objective-stats"></div>
-
-        <!-- ✅ IDs corrigés pour éviter doublons -->
-        <div class="coach-choose">
-          <label for="coach-select-objectives">Mon coach :</label>
-          <select id="coach-select-objectives">
-            <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
-            <option value="goathier">Goathier 🧠 (Technique & Données)</option>
-            <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
-          </select>
-        </div>
-
-        <div id="coach-bio" class="coach-bio"></div>
-
-        <button id="open-coach-chat-objectives" class="btn">💬 Discuter avec mon coach</button>
-      </div>
-
-      <div id="coach-chat" class="coach-chat" style="display:none;">
-        <div id="chat-messages" class="chat-messages"></div>
-        <div class="chat-input">
-          <input id="chat-text" type="text" placeholder="Pose ta question au coach..." />
-          <button id="send-chat" class="btn">Envoyer</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- === PARAMÈTRES === -->
-    <section id="settings">
-      <h2>⚙️ Paramètres</h2>
-
-      <div class="settings-card">
-        <h3>Mon Coach</h3>
-        <select id="coach-select-settings">
-          <option value="greg">Greg 😎 (Mindset & Stratégie)</option>
-          <option value="goathier">Goathier 🧠 (Technique & Données)</option>
-          <option value="dorothee">Dorothée 💫 (Mental & Respiration)</option>
-        </select>
-
-        <div id="settings-coach-bio" class="coach-bio"></div>
-
-        <hr />
-
-        <h3>API OpenAI</h3>
-        <p style="opacity:0.8;font-size:0.9rem;">(nécessaire pour discuter avec le coach IA)</p>
-        <input type="password" id="openai-key-input" placeholder="Colle ta clé OpenAI ici" />
-        <button class="btn" id="save-openai-key">💾 Enregistrer la clé</button>
-
-        <div id="current-key" class="current-key"></div>
-      </div>
-    </section>
+    <div class="shortcut">
+      <button id="play-btn" class="btn">⛳ Jouer</button>
+      <button id="training-btn" class="btn">🏋️‍♂️ S’entraîner</button>
+      <button id="history-btn" class="btn">📜 Historique</button>
+    </div>
   </main>
 
-<!-- SECTION COACH IA GLOBALE -->
-<section id="coach-ia" class="coach-ia hidden">
-  <div class="coach-ia-header">
-    <div class="coach-avatar">😎</div>
-    <div class="coach-title">Coach Greg</div>
-  </div>
-  <div class="coach-chat-history" id="coach-chat-history"></div>
-  <div class="coach-ia-footer">
-    <input id="coach-input" type="text" placeholder="Parle à ton coach..." />
-    <button id="coach-send" class="btn">💬</button>
-  </div>
-</section>
-
-
-  
-  <footer id="footer-objective">
-    Mon objectif : <strong id="footer-index">index 9</strong>
-  </footer>
-
-<!-- Librairies éventuelles -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
-<!-- Core helpers & coach -->
-<script src="js/coachIA.js"></script>
-<script src="js/coach.js"></script>
-
-<!-- Features -->
-<script src="js/play.js"></script>
-<script src="js/training.js"></script>
-<script src="js/history.js"></script>
-<script src="js/objectives.js"></script>
-
-<!-- App shell -->
-<script src="js/main.js"></script>
-
+  <!-- Scripts MVP -->
+  <script src="licence.js"></script>
+  <script src="social.js"></script>
+  <script src="coachIA.js"></script>
+  <script src="main.js"></script>
+  <script src="play.js"></script>
+  <script src="training.js"></script>
+  <script src="history.js"></script>
+  <script src="objectives.js"></script>
 </body>
 </html>
