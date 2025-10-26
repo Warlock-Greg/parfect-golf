@@ -148,34 +148,74 @@
   <script src="history.js"></script>
   <script src="objectives.js"></script>
 
-  <script>
-    // === Initialisation globale ===
-    function initShortcuts() {
-      const buttons = {
-        play: document.getElementById("play-btn"),
-        training: document.getElementById("training-btn"),
-        history: document.getElementById("history-btn"),
-        friends: document.getElementById("friends-btn"),
-      };
+<!-- === Shims / Helpers en tout premier === -->
+<script>
+  // Helper global
+  window.$ = window.$ || (id => document.getElementById(id));
 
-      Object.entries(buttons).forEach(([name, btn]) => {
-        btn.addEventListener("click", () => {
-          document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          if (typeof window.showCoachIA === "function") window.showCoachIA(`🟢 Mode ${name} activé`);
-          if (name === "training" && typeof initTraining === "function") initTraining();
-          if (name === "history" && typeof renderHistory === "function") renderHistory();
-          if (name === "friends" && typeof injectSocialUI === "function") injectSocialUI();
-        });
+  // Garde-fous : si certaines fonctions ne sont pas encore définies,
+  // on évite le crash en créant des no-ops (fonctions vides).
+  [
+    "initGolfSelect","showResumeOrNewModal","renderHole",
+    "initTraining","renderHistory","injectSocialUI",
+    "showCoachIA","hideCoachIA","showCoachToast"
+  ].forEach(fn => { if (typeof window[fn] !== "function") window[fn] = function(){}; });
+
+  // Log des erreurs JS pour t’aider à diagnostiquer
+  window.addEventListener("error", (e) => {
+    console.error("🔥 JS Error:", e.message, e.filename+":"+e.lineno+":"+e.colno);
+  });
+</script>
+
+<!-- === Ordre: coach d’abord, puis features, puis main (qui fait le wiring) === -->
+<script src="coachIA.js"></script>
+<script src="play.js"></script>
+<script src="training.js"></script>
+<script src="history.js"></script>
+<script src="objectives.js"></script>
+<script src="social.js"></script>
+<script src="licence.js"></script>
+
+<!-- === Main à la fin (attend que tout le reste soit défini) === -->
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("✅ Boot MVP");
+
+    // Initialiser le coach (sans ouvrir automatiquement)
+    if (typeof initCoachIA === "function") initCoachIA();
+
+    // Raccourcis footer (si présents dans ta page)
+    const map = {
+      play: $("play-btn"),
+      training: $("training-btn"),
+      history: $("history-btn"),
+      friends: $("friends-btn")
+    };
+
+    Object.entries(map).forEach(([name, btn]) => {
+      if (!btn) return;
+      btn.addEventListener("click", () => {
+        // Visuel menu actif
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Actions
+        if (name === "play") {
+          // Ouvre la modale Reprendre / Nouvelle partie si dispo
+          if (typeof showResumeOrNewModal === "function") showResumeOrNewModal();
+          // Sinon fallback : afficher la liste des golfs
+          if (typeof initGolfSelect === "function") initGolfSelect();
+        }
+        if (name === "training" && typeof initTraining === "function") initTraining();
+        if (name === "history" && typeof renderHistory === "function") renderHistory();
+        if (name === "friends" && typeof injectSocialUI === "function") injectSocialUI();
+
+        // Ping coach (facultatif)
+        if (typeof showCoachIA === "function") showCoachIA(`🟢 ${name} activé`);
       });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      console.log("✅ Parfect.golfr chargé avec logo et menu");
-      if (typeof initCoachIA === "function") initCoachIA();
-      if (typeof injectSocialUI === "function") injectSocialUI();
-      initShortcuts();
     });
-  </script>
+  });
+</script>
+
 </body>
 </html>
