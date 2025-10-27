@@ -8,26 +8,35 @@ let holes = [];
 let currentDiff = 0;
 
 // --- Initialisation du choix de golf ---
-function initGolfSelect() {
-  const container = $$("golf-select");
+async function initGolfSelect() {
+  const container = document.getElementById("golf-select");
   if (!container) {
     console.warn("⚠️ Élément #golf-select introuvable");
     return;
   }
 
-  container.innerHTML = `
-    <h3>Choisis ton golf</h3>
-    <button class="btn" id="new-round-btn">Nouvelle partie</button>
-  `;
+  try {
+    const res = await fetch("./data/golfs.json");
+    const golfs = await res.json();
 
-  // Bouton "Nouvelle partie"
-  const newRoundBtn = $$("new-round-btn");
-  if (newRoundBtn) {
-    newRoundBtn.addEventListener("click", () => {
-      startNewRound();
-    });
+    container.innerHTML = `
+      <h3 style="color:#00ff99;">Choisis ton golf</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${golfs.map(g => `
+          <button class="btn" onclick="startNewRound('${g.id}')">
+            ${g.name}<br><small style="color:#aaa;">${g.location}</small>
+          </button>
+        `).join("")}
+      </div>
+    `;
+
+    container.style.display = "block";
+  } catch (err) {
+    console.error("❌ Erreur chargement golfs.json :", err);
+    container.innerHTML = `<p style="color:#f55;">Erreur de chargement des golfs</p>`;
   }
 }
+
 
 // --- Démarre une nouvelle partie ---
 function startNewRound() {
