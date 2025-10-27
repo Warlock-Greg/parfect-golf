@@ -39,26 +39,45 @@ async function initGolfSelect() {
 
 
 // --- Démarre une nouvelle partie ---
-function startNewRound() {
-  console.log("🎯 Nouvelle partie démarrée");
+// --- Démarre une nouvelle partie ---
+async function startNewRound(golfId) {
+  console.log("🎯 Nouvelle partie démarrée :", golfId);
 
-  // Nettoie la carte actuelle si elle existe
   const holeCard = $$("hole-card");
   if (holeCard) holeCard.innerHTML = "";
 
-  // Cache le sélecteur de golf si présent
   const golfSelect = $$("golf-select");
   if (golfSelect) golfSelect.style.display = "none";
 
-  // Initialise les variables
-  currentGolf = { name: "Golf Demo" };
-  currentHole = 1;
-  holes = Array.from({ length: 9 }, (_, i) => ({ number: i + 1, par: 4 }));
-  currentDiff = 0;
-  localStorage.setItem("roundInProgress", "true");
+  try {
+    // 🟢 Charge la liste complète des golfs
+    const res = await fetch("./data/golfs.json");
+    const golfs = await res.json();
 
-  renderHole(currentHole);
+    // 🟢 Trouve le golf choisi
+    const golf = golfs.find(g => g.id === golfId);
+    if (!golf) {
+      console.warn("⚠️ Golf introuvable :", golfId);
+      holeCard.innerHTML = `<p style="color:#f55;">Golf introuvable</p>`;
+      return;
+    }
+
+    // Initialise les variables globales
+    currentGolf = golf;
+    currentHole = 1;
+    holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
+    currentDiff = 0;
+    localStorage.setItem("roundInProgress", "true");
+    localStorage.setItem("currentGolf", golfId);
+
+    // Affiche le premier trou
+    renderHole(currentHole);
+  } catch (err) {
+    console.error("❌ Erreur lors du chargement du golf :", err);
+    if (holeCard) holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
+  }
 }
+
 
 // --- Affiche un trou ---
 function renderHole(number) {
