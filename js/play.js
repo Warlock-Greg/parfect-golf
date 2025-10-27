@@ -239,24 +239,33 @@ function renderHole(number) {
   });
 
   // --- Navigation ---
-  $$("prev-hole").addEventListener("click", () => {
-    saveCurrentHole();
-    if (currentHole > 1) {
-      currentHole--;
-      renderHole(currentHole);
-    }
-  });
 
-  $$("next-hole").addEventListener("click", () => {
-    saveCurrentHole();
-    if (currentHole < holes.length) {
-      currentHole++;
-      renderHole(currentHole);
-    } else {
-      endRound();
-    }
-  });
-}
+    // --- Navigation ---
+  const prevBtn = $$("prev-hole");
+  const nextBtn = $$("next-hole");
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      saveCurrentHole();
+      if (currentHole > 1) {
+        currentHole--;
+        renderHole(currentHole);
+      }
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      saveCurrentHole();
+      if (currentHole < holes.length) {
+        currentHole++;
+        renderHole(currentHole);
+      } else {
+        endRound();
+      }
+    });
+  }
+
 
 
 // === Réinitialiser la partie ===
