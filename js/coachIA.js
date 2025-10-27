@@ -1,82 +1,126 @@
-// === Parfect.golfr - coachIA.js (version intégrée dans la page) ===
+// === Parfect.golfr - Coach IA Stable ===
 
-// Petit helper global
-const $ = (id) => document.getElementById(id);
+let coachVisible = true;
 
-// --- 1️⃣ Coach IA intégré (utilise la div du HTML) ---
-window.initCoachIA = function initCoachIA() {
-  const container = $("coach-ia");
-  if (!container) {
-    console.warn("⚠️ Coach IA introuvable dans le DOM");
+// --- Initialisation du coach ---
+function initCoachIA() {
+  const coachLog = document.getElementById("coach-log");
+  const coachInput = document.getElementById("coach-input");
+  const coachSend = document.getElementById("coach-send");
+
+  if (!coachLog || !coachInput || !coachSend) {
+    console.warn("⚠️ Coach IA : éléments manquants dans le DOM");
     return;
   }
 
-  // Récupère les sous-éléments existants
-  const log = $("coach-log");
-  const input = $("coach-input");
-  const sendBtn = $("coach-send");
-
-  // Si un de ces éléments est manquant, on stoppe
-  if (!log || !input || !sendBtn) {
-    console.warn("⚠️ Structure coach IA incomplète (log / input / bouton manquant)");
-    return;
+  // Message d’accueil unique
+  if (!localStorage.getItem("coachIntroDone")) {
+    appendCoachMessage("👋 Salut golfeur ! Je suis ton coach IA Parfect.golfr. Pose-moi une question ou lance ta session !");
+    localStorage.setItem("coachIntroDone", "true");
   }
 
-  // --- Événements ---
-  sendBtn.addEventListener("click", sendMsg);
-  input.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMsg();
-  });
+  // Envoi manuel par clic
+  coachSend.addEventListener("click", () => handleCoachInput(coachInput, coachLog));
 
-  async function askCoachAPI(message) {
-    try {
-      const res = await fetch("https://parfect-coach-api.gregoiremm.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-      const data = await res.json();
-      return data.reply || "Smart golf. Easy mindset 💚";
-    } catch {
-      return "😅 Le coach n’a pas répondu, reste focus 💚";
+  // Envoi par touche Entrée
+  coachInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      handleCoachInput(coachInput, coachLog);
     }
-  }
-
-  async function sendMsg() {
-    const msg = input.value.trim();
-    if (!msg) return;
-    push("user", msg);
-    input.value = "";
-    const reply = await askCoachAPI(msg);
-    push("coach", reply);
-  }
-
-  function push(role, text) {
-    const row = document.createElement("div");
-    row.style.cssText = `display:flex;gap:8px;align-items:flex-start;`;
-    row.innerHTML = `
-      <div style="font-size:1.1rem">${role === "user" ? "👤" : "😎"}</div>
-      <div style="background:#111;border:1px solid #222;padding:8px 10px;border-radius:8px;max-width:85%;">
-        ${text}
-      </div>`;
-    log.appendChild(row);
-    log.style.paddingBottom = "30px";
-    requestAnimationFrame(() => (log.scrollTop = log.scrollHeight + 30));
-  }
-
-  // --- Fonctions globales (compatibles avec main.js) ---
-  window.showCoachIA = (msg) => {
-    if (msg) push("coach", msg);
-    input.focus();
-  };
-
-  window.hideCoachIA = () => {
-    // Pour compatibilité, ne fait rien (le coach reste visible)
-  };
-
-  document.addEventListener("coach-message", (e) => {
-    const txt = e?.detail || "";
-    if (txt) push("coach", txt);
-    showCoachIA();
   });
-};
+}
+
+// --- Traitement de la saisie utilisateur ---
+function handleCoachInput(input, log) {
+  const message = input.value.trim();
+  if (!message) return;
+
+  appendUserMessage(message);
+  input.value = "";
+
+  // Simule une réponse coach
+  setTimeout(() => {
+    respondAsCoach(message);
+  }, 500);
+}
+
+// --- Réponses du coach ---
+function respondAsCoach(message) {
+  let reply = "⛳ Un coup après l’autre ! Reste concentré sur ton flow.";
+
+  if (/routine/i.test(message)) reply = "💆 Respire, visualise et engage ta routine complète avant chaque coup.";
+  if (/putt/i.test(message)) reply = "🎯 Vise un rythme fluide sur tes putts, pas la force.";
+  if (/drive/i.test(message)) reply = "🏌️ Allonge sans forcer : priorité au contrôle du contact.";
+  if (/bogey/i.test(message)) reply = "💙 Un Bogey’fect reste un bon coup. L’important c’est le mental !";
+  if (/par/i.test(message)) reply = "💚 Par solide, ça se construit avec des choix intelligents.";
+  if (/relax/i.test(message)) reply = "😌 Respire entre les coups. Le relâchement crée la performance.";
+
+  appendCoachMessage(reply);
+}
+
+// --- Affichage d’un message du joueur ---
+function appendUserMessage(text) {
+  const log = document.getElementById("coach-log");
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.textContent = text;
+  log.appendChild(div);
+  scrollCoachLog();
+}
+
+// --- Affichage d’un message du coach ---
+function appendCoachMessage(text) {
+  const log = document.getElementById("coach-log");
+  const div = document.createElement("div");
+  div.className = "msg coach";
+  div.textContent = text;
+  log.appendChild(div);
+  scrollCoachLog();
+}
+
+// --- Scroll fluide sans forcer le focus ---
+function scrollCoachLog() {
+  const log = document.getElementById("coach-log");
+  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
+}
+
+// --- Interface pour les autres modules (play.js, training.js...) ---
+function showCoachIA(message = "") {
+  const coachLog = document.getElementById("coach-log");
+  const coach = document.getElementById("coach-ia");
+  if (!coach || !coachLog) return;
+
+  coach.style.display = "flex";
+
+  if (message) appendCoachMessage(message);
+}
+
+function hideCoachIA() {
+  const coach = document.getElementById("coach-ia");
+  if (coach) coach.style.display = "none";
+}
+
+function showCoachToast(msg, color = "#00ff99") {
+  const toast = document.createElement("div");
+  toast.textContent = msg;
+  toast.style.position = "fixed";
+  toast.style.bottom = "80px";
+  toast.style.left = "50%";
+  toast.style.transform = "translateX(-50%)";
+  toast.style.background = color;
+  toast.style.color = "#111";
+  toast.style.padding = "8px 14px";
+  toast.style.borderRadius = "8px";
+  toast.style.fontWeight = "bold";
+  toast.style.zIndex = 9999;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// --- Export global ---
+window.initCoachIA = initCoachIA;
+window.showCoachIA = showCoachIA;
+window.hideCoachIA = hideCoachIA;
+window.showCoachToast = showCoachToast;
+
+console.log("✅ Coach IA chargé sans auto-focus ni redimensionnement");
