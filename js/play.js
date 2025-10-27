@@ -174,11 +174,16 @@ function showMoodAndStrategyModal() {
 }
 
 // === Afficher un trou ===
-// === Afficher un trou (version complète) ===
-function renderHole(number) {
-  const holeCard = $$("hole-card");
+// === Affiche la carte de score pour le trou courant ===
+function renderHole(number = currentHole) {
+  const holeCard = document.getElementById("hole-card");
   if (!holeCard) {
     console.warn("⚠️ Élément #hole-card introuvable");
+    return;
+  }
+
+  if (!currentGolf) {
+    holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucun golf sélectionné.</p>`;
     return;
   }
 
@@ -190,70 +195,68 @@ function renderHole(number) {
 
   const par = hole.par;
   const saved = holes[number - 1] || {};
-  const totalVsPar = holes.filter(Boolean).reduce((a, h) => a + ((h.score ?? h.par) - h.par), 0);
+  const totalVsPar = holes
+    .filter(h => h.score !== undefined)
+    .reduce((acc, h) => acc + (h.score - h.par), 0);
 
-  // --- UI principale ---
+  // --- Interface principale ---
   holeCard.innerHTML = `
-    <div style="background:#111;padding:12px;border-radius:12px;text-align:center;box-shadow:0 0 8px #00ff9980;">
-      <h3>Trou ${hole.number} / ${holes.length}</h3>
-      <p>Par ${par}</p>
-      <p>Score total : <strong style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
-        ${totalVsPar>0?'+':''}${totalVsPar}</strong></p>
+    <div class="scorecard" style="text-align:center;padding:12px;">
+      <h3 style="color:#00ff99;">⛳ Trou ${number}/${holes.length}</h3>
+      <p>Par ${par} — Score total : 
+        <strong style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
+          ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
+        </strong>
+      </p>
 
-      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;">
-        ${[
-          { label: "💚 Parfect", diff: 0 },
-          { label: "💙 Bogey’fect", diff: 1 },
-          { label: "Birdie", diff: -1 },
-          { label: "Par", diff: 0 },
-          { label: "Bogey", diff: 1 },
-          { label: "Double", diff: 2 }
-        ].map(s => `
-          <button class="btn score-btn ${saved.diff===s.diff?'active':''}" data-diff="${s.diff}">
-            ${s.label}
-          </button>`).join("")}
+      <div style="margin-top:12px;">
+        <h4>Choisis ton score :</h4>
+        <div id="score-options" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px;">
+          <button class="btn score-btn" data-diff="-1">Birdie</button>
+          <button class="btn score-btn" data-diff="0">Par</button>
+          <button class="btn score-btn" data-diff="1">Bogey</button>
+          <button class="btn score-btn" data-diff="2">Double</button>
+        </div>
       </div>
 
-      <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
         <label><input type="checkbox" id="fairway" ${saved.fairway?'checked':''}> Fairway</label>
         <label><input type="checkbox" id="gir" ${saved.gir?'checked':''}> GIR</label>
         <label><input type="checkbox" id="routine" ${saved.routine?'checked':''}> Routine</label>
       </div>
 
       <div style="margin-top:10px;">
-        <label>Distance 2ᵉ putt :</label>
+        <label>Distance du 2ᵉ putt :</label>
         <select id="dist2" style="margin-left:6px;padding:4px 6px;border-radius:6px;">
           <option value="">Choisir</option>
-          <option value="1">Donné</option>
-          <option value="2">One putt</option>
-          <option value="3">Moins de 2 m</option>
-          <option value="4">Moins de 4 m</option>
-          <option value="5">Plus de 6 m</option>
+          <option value="1" ${saved.dist2==="1"?"selected":""}>Donné</option>
+          <option value="2" ${saved.dist2==="2"?"selected":""}>One putt</option>
+          <option value="3" ${saved.dist2==="3"?"selected":""}>< 2m</option>
+          <option value="4" ${saved.dist2==="4"?"selected":""}>< 4m</option>
+          <option value="5" ${saved.dist2==="5"?"selected":""}>< 6m</option>
         </select>
       </div>
 
-      <div style="margin-top:14px;display:flex;justify-content:space-between;">
+      <div style="margin-top:20px;display:flex;justify-content:space-between;">
         <button id="prev-hole" class="btn" ${number===1?'disabled':''}>⬅️ Trou précédent</button>
         <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Trou suivant ➡️</button>
       </div>
     </div>
   `;
 
-  // --- Sélection du score ---
+  // --- Gestion des scores ---
   document.querySelectorAll(".score-btn").forEach(btn => {
     btn.addEventListener("click", () => {
+      document.querySelectorAll(".score-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
       currentDiff = parseInt(btn.dataset.diff);
-      holes[number - 1].diff = currentDiff;
-      renderHole(number);
       saveCurrentHole();
     });
   });
 
   // --- Navigation ---
-
-    // --- Navigation ---
-  const prevBtn = $$("prev-hole");
-  const nextBtn = $$("next-hole");
+  const prevBtn = document.getElementById("prev-hole");
+  const nextBtn = document.getElementById("next-hole");
 
   if (prevBtn) {
     prevBtn.addEventListener("click", () => {
@@ -276,25 +279,57 @@ function renderHole(number) {
       }
     });
   }
-
-
-
-// === Réinitialiser la partie ===
-function resetRound() {
-  const holeCard = $$("hole-card");
-  if (holeCard) holeCard.innerHTML = "";
-
-  const golfSelect = $$("golf-select");
-  if (golfSelect) golfSelect.style.display = "block";
-
-  currentGolf = null;
-  currentHole = 1;
-  holes = [];
-  currentDiff = 0;
-  localStorage.setItem("roundInProgress", "false");
-
-  window.initGolfSelect?.();
 }
+
+// === Sauvegarde de la saisie du trou ===
+function saveCurrentHole() {
+  if (!currentGolf) return;
+
+  const par = holes[currentHole - 1]?.par ?? 4;
+  const fairway = document.getElementById("fairway")?.checked || false;
+  const gir = document.getElementById("gir")?.checked || false;
+  const routine = document.getElementById("routine")?.checked || false;
+  const dist2 = document.getElementById("dist2")?.value || "";
+
+  holes[currentHole - 1] = {
+    number: currentHole,
+    par,
+    score: par + currentDiff,
+    fairway,
+    gir,
+    routine,
+    dist2
+  };
+
+  localStorage.setItem("holesData", JSON.stringify(holes));
+}
+
+// === Fin de partie ===
+function endRound() {
+  const valid = holes.filter(h => h && typeof h.score === "number");
+  const totalVsPar = valid.reduce((sum, h) => sum + (h.score - h.par), 0);
+  const parfects = valid.filter(h => h.fairway && h.gir && (h.score - h.par) === 0).length;
+  const bogeyfects = valid.filter(h => h.fairway && !h.gir && (h.score - h.par) === 1).length;
+
+  const holeCard = document.getElementById("hole-card");
+  holeCard.innerHTML = `
+    <div style="text-align:center;padding:20px;">
+      <h2>🏁 Partie terminée</h2>
+      <p>Total vs Par : <strong style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
+        ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}</strong></p>
+      <p>💚 Parfects : ${parfects} — 💙 Bogey’fects : ${bogeyfects}</p>
+      <button id="new-round" class="btn" style="margin-top:14px;">🔁 Nouvelle partie</button>
+    </div>
+  `;
+
+  document.getElementById("new-round").addEventListener("click", () => {
+    resetRound();
+  });
+
+  localStorage.setItem("roundInProgress", "false");
+}
+
+
 
 // === Export global ===
 window.initGolfSelect = initGolfSelect;
