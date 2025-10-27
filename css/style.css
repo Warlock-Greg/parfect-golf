@@ -368,6 +368,21 @@ td {
   top: 0;
 }
 
+#coach-ia {
+  min-height: 400px;   /* Empêche de se réduire à chaque message */
+  max-height: 70vh;    /* Empêche de prendre tout l’écran */
+  overflow: hidden;    /* Cache les débordements */
+  transition: none;    /* Stoppe les reflows visuels */
+}
+
+#coach-log {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;    /* Hauteur stable du log */
+  scroll-behavior: smooth;
+}
+
+
 /* Barre du bas */
 #menu-toggle::after {
   bottom: 0;
