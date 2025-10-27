@@ -73,6 +73,14 @@ body {
   overflow-y: auto;
   z-index: 3000;
 }
+
+.mood.active, .strategy.active {
+  background: #00ff99 !important;
+  color: #111 !important;
+  font-weight: bold;
+  transform: scale(1.05);
+}
+
 /* === Modal générique === */
 .modal-backdrop {
   position: fixed; inset: 0;
