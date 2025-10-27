@@ -331,11 +331,4 @@ function endRound() {
 
 
 
-// === Export global ===
-window.initGolfSelect = initGolfSelect;
-window.startNewRound = startNewRound;
-window.renderHole = renderHole;
-window.resetRound = resetRound;
-window.showMoodAndStrategyModal = showMoodAndStrategyModal;
-
 console.log("✅ play.js chargé sans erreur");
