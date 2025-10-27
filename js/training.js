@@ -1,5 +1,5 @@
 // === TRAINING.JS ===
-// Chargement de la liste d’exercices depuis exercices.json + filtre par type
+// Chargement de la liste d’exercises depuis exercises.json + filtre par type
 
 let allExercises = [];
 
@@ -11,13 +11,13 @@ async function initTraining() {
   }
 
   try {
-    const res = await fetch("./data/exercices.json");
+    const res = await fetch("./data/exercises.json");
     allExercises = await res.json();
 
     renderExerciseList("all");
   } catch (err) {
-    console.error("❌ Erreur chargement exercices.json :", err);
-    container.innerHTML = `<p style="color:#f55;">Erreur de chargement des exercices</p>`;
+    console.error("❌ Erreur chargement exercises.json :", err);
+    container.innerHTML = `<p style="color:#f55;">Erreur de chargement des exercises</p>`;
   }
 }
 
@@ -43,7 +43,7 @@ function renderExerciseList(filterType) {
     </div>
   `;
 
-  // Rendu des exercices
+  // Rendu des exercises
   const listHTML = filtered.map(ex => `
     <div class="training-card" style="background:#111;border:1px solid #222;border-radius:8px;padding:10px;">
       <h4 style="color:#00ff99;margin-bottom:4px;">${ex.name}</h4>
