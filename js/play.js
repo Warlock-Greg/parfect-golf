@@ -103,27 +103,30 @@ function showScorecardIntro() {
 }
 
 // === Mood & Stratégie ===
+// === Mood du jour & stratégie ===
 function showMoodAndStrategyModal() {
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
   modal.innerHTML = `
-    <div class="modal-card" style="max-width:400px;text-align:center;">
+    <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
       <h3>😎 Ton mood du jour ?</h3>
-      <div class="moods" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
+      <div class="moods" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px;">
         <button class="btn mood" data-mood="focus">Focus</button>
         <button class="btn mood" data-mood="relax">Relax</button>
         <button class="btn mood" data-mood="fun">Fun</button>
         <button class="btn mood" data-mood="grind">Grind</button>
       </div>
-      <h4 style="margin-top:12px;">🎯 Quelle stratégie veux-tu suivre ?</h4>
-      <div class="coach-styles" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+
+      <h4 style="margin-top:18px;">🎯 Quelle stratégie veux-tu suivre ?</h4>
+      <div class="coach-styles" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px;">
         <button class="btn strategy" data-strat="safe">Safe</button>
         <button class="btn strategy" data-strat="aggressive">Aggressive</button>
         <button class="btn strategy" data-strat="5050">50/50</button>
         <button class="btn strategy" data-strat="fairway">Fairway First</button>
         <button class="btn strategy" data-strat="mindset">Parfect Mindset</button>
       </div>
-      <button id="start-round" class="btn" style="margin-top:18px;background:#00c676;color:#000;font-weight:bold;">Démarrer</button>
+
+      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -131,34 +134,42 @@ function showMoodAndStrategyModal() {
   let mood = "focus";
   let strat = "mindset";
 
-  modal.querySelectorAll(".mood").forEach(btn => {
+  // Sélection du mood
+  modal.querySelectorAll(".mood").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".mood").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       mood = btn.dataset.mood;
     });
   });
 
-  modal.querySelectorAll(".strategy").forEach(btn => {
+  // Sélection de la stratégie
+  modal.querySelectorAll(".strategy").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".strategy").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".strategy").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       strat = btn.dataset.strat;
     });
   });
 
-  $$("start-round").addEventListener("click", () => {
+  // 🟢 Validation et lancement du jeu
+  modal.querySelector("#start-round").addEventListener("click", () => {
     localStorage.setItem("mood", mood);
     localStorage.setItem("strategy", strat);
     modal.remove();
-    if (typeof showCoachIA === "function")
-      showCoachIA(`🎯 Let's go — mood: ${mood}, stratégie: ${strat}`);
 
-    setTimeout(() => {
-      const holeCard = $$("hole-card");
-      if (holeCard) holeCard.style.display = "block";
-      if (typeof renderHole === "function") renderHole(1);
-    }, 300);
+    // ✅ Affiche le coach IA avec message d’ouverture
+    if (typeof showCoachIA === "function") {
+      showCoachIA(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat}`);
+    }
+
+    // ✅ Lancer le premier trou
+    if (typeof renderHole === "function") {
+      console.log("📋 Affichage de la carte de score…");
+      renderHole(currentHole);
+    } else {
+      console.warn("⚠️ renderHole non défini au moment du démarrage");
+    }
   });
 }
 
