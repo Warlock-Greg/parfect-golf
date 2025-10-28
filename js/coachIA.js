@@ -123,4 +123,156 @@ window.showCoachIA = showCoachIA;
 window.hideCoachIA = hideCoachIA;
 window.showCoachToast = showCoachToast;
 
+
+// === Flux de jeu intégré au chat IA ===
+console.log("🧠 Mode interactif Coach IA initialisé");
+
+function typeCoachMessage(text, callback) {
+  const log = document.getElementById("coach-log");
+  const div = document.createElement("div");
+  div.className = "msg coach";
+  div.innerHTML = "";
+  log.appendChild(div);
+  let i = 0;
+  const speed = 18;
+  (function type() {
+    if (i < text.length) {
+      div.innerHTML += text.charAt(i);
+      i++;
+      setTimeout(type, speed);
+      log.scrollTop = log.scrollHeight;
+    } else if (callback) {
+      callback();
+    }
+  })();
+}
+
+// Helpers pour boutons de choix
+function addChoiceButtons(choices) {
+  const log = document.getElementById("coach-log");
+  const wrapper = document.createElement("div");
+  wrapper.style.display = "flex";
+  wrapper.style.flexWrap = "wrap";
+  wrapper.style.gap = "8px";
+  wrapper.style.marginTop = "10px";
+  wrapper.style.justifyContent = "center";
+
+  choices.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.textContent = c.label;
+    btn.onclick = () => {
+      wrapper.remove();
+      appendCoachMessage(`👉 ${c.label}`);
+      c.action();
+    };
+    wrapper.appendChild(btn);
+  });
+
+  log.appendChild(wrapper);
+  scrollCoachLog();
+}
+
+// === Étape 1 : Démarrage ===
+window.coachAskNewRound = function() {
+  const log = document.getElementById("coach-log");
+  if (log) log.innerHTML = ""; // reset du chat
+  typeCoachMessage("Salut champion 🏌️‍♂️ Prêt à lancer une nouvelle partie ?", () => {
+    addChoiceButtons([
+      { label: "🎯 Nouvelle partie", action: coachAskGolf },
+      { label: "♻️ Reprendre une partie", action: () => renderHole?.(1) }
+    ]);
+  });
+};
+
+// === Étape 2 : Choix du golf ===
+async function coachAskGolf() {
+  appendCoachMessage("Choisis ton golf préféré ⛳");
+  try {
+    const res = await fetch("./data/golfs.json");
+    const golfs = await res.json();
+    addChoiceButtons(golfs.map(g => ({
+      label: g.name,
+      action: () => {
+        localStorage.setItem("selectedGolf", g.id);
+        appendCoachMessage(`Super choix 💚 ${g.name} !`);
+        setTimeout(coachAskCoach, 600);
+      }
+    })));
+  } catch {
+    appendCoachMessage("❌ Erreur lors du chargement des golfs.");
+  }
+}
+
+// === Étape 3 : Choix du coach ===
+function coachAskCoach() {
+  appendCoachMessage("Maintenant, choisis ton coach 🎓");
+
+  const coachs = [
+    { id: "dorothee", label: "🧘 Dorothée", quote: "Respire. Visualise. Tu as déjà réussi ce coup." },
+    { id: "goathier", label: "🧠 Goathier", quote: "Le fairway, c’est ta zone de confort. Joue smart." },
+    { id: "greg", label: "💪 Greg", quote: "Fonce, vise le drapeau. 1 coup à la fois !" },
+    { id: "chill", label: "😎 Chill", quote: "Relax. C’est juste du golf. Kiffe ton swing." }
+  ];
+
+  addChoiceButtons(coachs.map(c => ({
+    label: c.label,
+    action: () => {
+      localStorage.setItem("selectedCoach", c.id);
+      appendCoachMessage(`Excellent choix 😎 Tu joueras avec <b>${c.label}</b> aujourd’hui !`);
+      appendCoachMessage(`<i>"${c.quote}"</i>`);
+      setTimeout(coachAskMood, 600);
+    }
+  })));
+}
+
+// === Étape 4 : Mood ===
+function coachAskMood() {
+  appendCoachMessage("Quel est ton mood du jour ? 😎");
+  const moods = ["Focus", "Relax", "Fun", "Grind"];
+  addChoiceButtons(moods.map(m => ({
+    label: m,
+    action: () => {
+      localStorage.setItem("mood", m);
+      appendCoachMessage(`Mood sélectionné : <b>${m}</b>`);
+      setTimeout(coachAskStrategy, 500);
+    }
+  })));
+}
+
+// === Étape 5 : Stratégie ===
+function coachAskStrategy() {
+  appendCoachMessage("Et ta stratégie de jeu ? 🎯");
+  const strats = ["Safe", "Aggressive", "50/50", "Mindset", "Fairway First"];
+  addChoiceButtons(strats.map(s => ({
+    label: s,
+    action: () => {
+      localStorage.setItem("strategy", s);
+      appendCoachMessage(`Stratégie : <b>${s}</b>`);
+      setTimeout(coachStartGame, 600);
+    }
+  })));
+}
+
+// === Étape 6 : Démarrage de la partie ===
+function coachStartGame() {
+  const golf = localStorage.getItem("selectedGolf");
+  const coach = localStorage.getItem("selectedCoach");
+  const mood = localStorage.getItem("mood");
+  const strat = localStorage.getItem("strategy");
+
+  appendCoachMessage(`
+    Parfait 💚<br>
+    Golf : <b>${golf}</b><br>
+    Coach : <b>${coach}</b><br>
+    Mood : <b>${mood}</b><br>
+    Stratégie : <b>${strat}</b><br><br>
+    Prêt ? Let's go ⛳
+  `);
+
+  addChoiceButtons([
+    { label: "🚀 Démarrer la partie", action: () => startNewRound?.(golf) }
+  ]);
+}
+
 console.log("✅ Coach IA chargé sans auto-focus ni redimensionnement");
