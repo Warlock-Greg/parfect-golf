@@ -16,7 +16,7 @@ body {
 
 /* === Background global === */
 body {
-  background-image: url('https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=1600&q=80');
+  background-image: url('https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
