@@ -78,3 +78,28 @@ document.addEventListener("DOMContentLoaded", () => {
     window.showCoachIA?.("👋 Section Amis activée");
   });
 });
+
+// === GESTION CENTRALISÉE DES SECTIONS VISIBLES ===
+console.log("🧭 Gestion affichage des sections activée");
+
+// --- Helper global : montre/masque les zones principales ---
+window.showSection = function (mode) {
+  const play = document.getElementById("hole-card");
+  const training = document.getElementById("training-list");
+  const golfSelect = document.getElementById("golf-select");
+  const coach = document.getElementById("coach-ia");
+
+  // Par sécurité : éviter les erreurs si un bloc n’existe pas encore
+  if (play) play.style.display = mode === "play" ? "block" : "none";
+  if (training) training.style.display = mode === "training" ? "block" : "none";
+  if (golfSelect) golfSelect.style.display = mode === "play" ? "block" : "none";
+
+  // Le coach IA reste toujours visible, sauf si tu veux le masquer totalement
+  if (coach) coach.style.display = "flex";
+};
+
+// --- Initialisation par défaut ---
+document.addEventListener("DOMContentLoaded", () => {
+  // On démarre en mode “coach” libre (aucune partie ou training en cours)
+  window.showSection("coach");
+});
