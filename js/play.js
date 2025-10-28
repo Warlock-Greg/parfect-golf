@@ -217,6 +217,11 @@ function renderHole(number = currentHole) {
       btn.classList.add("active");
       currentDiff = parseInt(btn.dataset.diff);
       saveCurrentHole();
+
+      // 🧠 Fait réagir le coach
+    const par = holes[number - 1].par;
+    const diff = currentDiff;
+    triggerCoachFeedback(diff, par);
     });
   });
 
@@ -245,6 +250,47 @@ function renderHole(number = currentHole) {
     });
   }
 }
+
+// --- Fait réagir le coach après chaque trou ---
+async function triggerCoachFeedback(diff, par) {
+  let message = "";
+
+  // 🧠 Mode simplifié local
+  if (!window.OPENAI_KEY) {
+    if (diff <= -1) message = "💚 Magnifique ! Un birdie, c’est du Parfect Golf.";
+    else if (diff === 0) message = "💪 Solide Par ! Continue sur ce rythme.";
+    else if (diff === 1) message = "💙 Bogey propre. Mental stable, routine solide.";
+    else message = "😅 Double ? Respire et recentre-toi sur le prochain coup.";
+    showCoachIA(message);
+    return;
+  }
+
+  // 🤖 Mode OpenAI (licence active)
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${window.OPENAI_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Tu es un coach de golf motivant et bienveillant. Reste bref et concret." },
+          { role: "user", content: `Le joueur vient de faire un ${diff > 0 ? "+" + diff : diff} sur un par ${par}. Donne-lui un conseil.` }
+        ],
+        max_tokens: 40
+      })
+    });
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content || "💬 Continue, un coup après l'autre.";
+    showCoachIA(reply);
+  } catch (err) {
+    console.error("Erreur API OpenAI :", err);
+    showCoachIA("🤖 Coach hors ligne, mais garde la tête haute !");
+  }
+}
+
 
 // === Sauvegarde du trou ===
 function saveCurrentHole() {
