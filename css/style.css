@@ -50,7 +50,7 @@ body {
 
 .objective-select {
   margin: 12px auto;
-  color: #00ff99;
+  color: #94c0d1;
 }
 
 .objective-stats {
@@ -75,7 +75,7 @@ body {
 }
 
 .mood.active, .strategy.active {
-  background: #00ff99 !important;
+  background: #67ab5b !important;
   color: #111 !important;
   font-weight: bold;
   transform: scale(1.05);
@@ -183,7 +183,7 @@ main, .content {
   right: 0;
   text-align: center;
   background: rgba(0,0,0,0.85);
-  color: #00ff99;
+  color: #67ab5b;
   padding: 6px;
   font-weight: 600;
   font-size: 0.9rem;
@@ -195,7 +195,7 @@ main, .content {
 /* Header & menu */
 header {
   background-color: #111;
-  color: #00ff99;
+  color: #67ab5b;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -276,7 +276,7 @@ header h1 {
 }
 
 #coach-log .msg.user {
-  background: #00ff99;
+  background: #67ab5b;
   color: #111;
   align-self: flex-end;
   text-align: right;
@@ -339,7 +339,7 @@ section.active {
 
 /* Boutons */
 .btn {
-  background-color: #00ff99;
+  background-color: #67ab5b;
   color: #000;
   border: none;
   border-radius: 8px;
