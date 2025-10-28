@@ -250,7 +250,7 @@ function renderHole(number = currentHole) {
       currentHole++;
       renderHole(currentHole);
     } else {
-      endRound();
+      summarizeRound();
     }
   });
 }
