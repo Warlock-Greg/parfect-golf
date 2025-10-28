@@ -359,6 +359,39 @@ function analyzeHole(holeData) {
 }
 
 
+// === Synthèse de fin de partie ===
+function summarizeRound() {
+  const validHoles = holes.filter(h => h && typeof h.score === "number");
+
+  if (!validHoles.length) {
+    showCoachIA?.("😅 Aucune donnée enregistrée, recommence une partie !");
+    return;
+  }
+
+  const totalVsPar = validHoles.reduce((sum, h) => sum + (h.score - h.par), 0);
+  const parfects = validHoles.filter(
+    h => h.score - h.par === 0 && h.fairway && h.gir && (h.dist2 === "1" || h.dist2 === "2")
+  ).length;
+  const bogeyfects = validHoles.filter(
+    h => h.score - h.par === 1 && h.fairway && (h.dist2 === "1" || h.dist2 === "2")
+  ).length;
+
+  let message = `🏁 Fin de partie sur ${currentGolf?.name ?? "ton parcours"} !\n`;
+  message += `Score total : ${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}\n`;
+  message += `💚 ${parfects} Parfects · 💙 ${bogeyfects} Bogey’fects`;
+
+  if (totalVsPar < 0) {
+    message += "\n🔥 Excellent niveau ! Tu progresses clairement 💪";
+  } else if (parfects > 0) {
+    message += "\n💚 Les Parfects arrivent, continue cette régularité 👏";
+  } else {
+    message += "\n🧘‍♂️ Chaque partie est une leçon. Routine, calme, et flow.";
+  }
+
+  showCoachIA?.(message);
+}
+
+
 // === Fin de partie ===
 function endRound() {
   const valid = holes.filter(h => h && typeof h.score === "number");
