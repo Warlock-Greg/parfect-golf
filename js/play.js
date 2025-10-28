@@ -150,6 +150,9 @@ function renderHole(number = currentHole) {
   const holeCard = $$("hole-card");
   if (!holeCard) return console.warn("⚠️ #hole-card introuvable");
 
+  // ✅ Rendre visible la carte si elle était masquée
+  holeCard.style.display = "block";
+
   if (!currentGolf) {
     holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucun golf sélectionné.</p>`;
     return;
