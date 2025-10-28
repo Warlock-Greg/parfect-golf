@@ -89,6 +89,7 @@ body {
   display: flex; align-items: center; justify-content: center;
   z-index: 4000;
   animation: fadeIn .18s ease-out;
+  background-color: #12161980!important
 }
 
 .modal-card {
