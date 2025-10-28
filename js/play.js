@@ -69,7 +69,11 @@ async function startNewRound(golfId) {
     localStorage.setItem("currentGolf", golfId);
 
     // Lance la modale mood & stratégie
-    showMoodAndStrategyModal();
+    // ✅ Lance la modale mood & stratégie et démarre la partie à la fin
+showMoodAndStrategyModal(() => {
+  console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+  renderHole(currentHole);
+});
   } catch (err) {
     console.error("❌ Erreur lors du chargement du golf :", err);
     if (holeCard) holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
@@ -77,7 +81,7 @@ async function startNewRound(golfId) {
 }
 
 // === Mood du jour & stratégie ===
-function showMoodAndStrategyModal() {
+function showMoodAndStrategyModal(onConfirm) {
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
   modal.innerHTML = `
@@ -133,14 +137,13 @@ function showMoodAndStrategyModal() {
       showCoachIA(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat}`);
     }
 
-    // Lance la carte de score
-    if (typeof renderHole === "function") {
-      renderHole(currentHole);
-    } else {
-      console.warn("⚠️ renderHole non défini");
+    // ✅ Appelle le callback quand on confirme
+    if (typeof onConfirm === "function") {
+      onConfirm();
     }
   });
 }
+
 
 // === Affiche la carte de score ===
 function renderHole(number = currentHole) {
