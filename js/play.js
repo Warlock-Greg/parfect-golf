@@ -239,16 +239,22 @@ function renderHole(number = currentHole) {
   }
 
   if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-      saveCurrentHole();
-      if (currentHole < holes.length) {
-        currentHole++;
-        renderHole(currentHole);
-      } else {
-        endRound();
-      }
-    });
-  }
+  nextBtn.addEventListener("click", () => {
+    saveCurrentHole();
+
+    // Analyse du trou actuel avant de passer au suivant
+    const lastHoleData = holes[currentHole - 1];
+    analyzeHole(lastHoleData);
+
+    if (currentHole < holes.length) {
+      currentHole++;
+      renderHole(currentHole);
+    } else {
+      endRound();
+    }
+  });
+}
+
 }
 
 // --- Fait réagir le coach après chaque trou ---
@@ -314,6 +320,44 @@ function saveCurrentHole() {
 
   localStorage.setItem("holesData", JSON.stringify(holes));
 }
+
+// === Analyse du trou terminé ===
+function analyzeHole(holeData) {
+  if (!holeData) return;
+
+  const { score, par, fairway, gir, dist2 } = holeData;
+  const diff = score - par;
+  let message = "";
+
+  // 💚 Cas Parfect
+  if (diff === 0 && fairway && gir && (dist2 === "1" || dist2 === "2")) {
+    message = "💚 Parfect ! Par + Fairway + GIR + ≤2 putts. Beau coup de discipline 👏";
+  }
+  // 💙 Cas Bogey’fect
+  else if (diff === 1 && fairway && (dist2 === "1" || dist2 === "2")) {
+    message = "💙 Bogey’fect ! Bogey solide, routine respectée, mental au top 💪";
+  }
+  // 🕊️ Birdie
+  else if (diff < 0) {
+    message = "🕊️ Magnifique Birdie ! Tu surfes sur la vague du Parfect Mindset 🌊";
+  }
+  // 😅 Double ou pire
+  else if (diff >= 2) {
+    message = "😅 Pas grave, respire et reprends ta routine. Un trou ne fait pas le tour ⛳";
+  }
+  // Cas neutre
+  else {
+    message = "👌 Trou solide. Continue avec la même intention et reste dans ton flow.";
+  }
+
+  // Affiche le message dans le coach
+  if (typeof showCoachIA === "function") {
+    showCoachIA(message);
+  } else {
+    console.log("Coach:", message);
+  }
+}
+
 
 // === Fin de partie ===
 function endRound() {
