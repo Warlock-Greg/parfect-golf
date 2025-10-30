@@ -321,34 +321,33 @@ function saveCurrentHole() {
   localStorage.setItem("holesData", JSON.stringify(holes));
 }
 
-// === Analyse du trou terminé ===
+let lastCoachMessage = "";
+
 function analyzeHole(holeData) {
   if (!holeData) return;
-
   const { score, par, fairway, gir, dist2 } = holeData;
   const diff = score - par;
   let message = "";
 
-  // 💚 Cas Parfect
   if (diff === 0 && fairway && gir && (dist2 === "1" || dist2 === "2")) {
-    message = "💚 Parfect ! Par + Fairway + GIR + ≤2 putts. Beau coup de discipline 👏";
+    message = "💚 Parfect ! Par + Fairway + GIR + ≤2 putts. Excellent !";
+  } else if (diff === 1 && fairway && (dist2 === "1" || dist2 === "2")) {
+    message = "💙 Bogey’fect ! Bogey solide, mental propre.";
+  } else if (diff < 0) {
+    message = "🕊️ Birdie ! Fluide et en contrôle, c’est du beau golf.";
+  } else if (diff >= 2) {
+    message = "😅 Pas grave, routine + calme = prochain trou solide.";
+  } else {
+    message = "👌 Trou régulier, continue ton flow.";
   }
-  // 💙 Cas Bogey’fect
-  else if (diff === 1 && fairway && (dist2 === "1" || dist2 === "2")) {
-    message = "💙 Bogey’fect ! Bogey solide, routine respectée, mental au top 💪";
-  }
-  // 🕊️ Birdie
-  else if (diff < 0) {
-    message = "🕊️ Magnifique Birdie ! Tu surfes sur la vague du Parfect Mindset 🌊";
-  }
-  // 😅 Double ou pire
-  else if (diff >= 2) {
-    message = "😅 Pas grave, respire et reprends ta routine. Un trou ne fait pas le tour ⛳";
-  }
-  // Cas neutre
-  else {
-    message = "👌 Trou solide. Continue avec la même intention et reste dans ton flow.";
-  }
+
+  // 🔁 Empêche les doublons
+  if (message === lastCoachMessage) return;
+  lastCoachMessage = message;
+
+  showCoachIA?.(message);
+}
+
 
   // Affiche le message dans le coach
   if (typeof showCoachIA === "function") {
@@ -360,9 +359,9 @@ function analyzeHole(holeData) {
 
 
 // === Synthèse de fin de partie ===
+// === Synthèse de fin de partie (avec récap + variation de ton) ===
 function summarizeRound() {
   const validHoles = holes.filter(h => h && typeof h.score === "number");
-
   if (!validHoles.length) {
     showCoachIA?.("😅 Aucune donnée enregistrée, recommence une partie !");
     return;
@@ -376,17 +375,30 @@ function summarizeRound() {
     h => h.score - h.par === 1 && h.fairway && (h.dist2 === "1" || h.dist2 === "2")
   ).length;
 
+  // 🧩 Mini carte récap
+  const recap = validHoles.map(h => {
+    const diff = h.score - h.par;
+    if (diff < 0) return "🕊️";
+    if (diff === 0 && h.fairway && h.gir) return "💚";
+    if (diff === 1 && h.fairway) return "💙";
+    if (diff >= 2) return "😅";
+    return "⚪";
+  }).join(" ");
+
+  // 💬 Message global variable
+  const encouragements = [
+    "💪 Belle régularité aujourd’hui ! Continue à jouer simple.",
+    "🔥 Ton mental a tenu jusqu’au bout, c’est ça l’esprit Parfect.",
+    "🌿 Sérénité et focus : tu construis un vrai flow de jeu.",
+    "💚 De plus en plus de Parfects, la constance arrive !",
+    "🧘‍♂️ Reste calme entre les coups, le progrès est déjà là."
+  ];
+  const messageVar = encouragements[Math.floor(Math.random() * encouragements.length)];
+
   let message = `🏁 Fin de partie sur ${currentGolf?.name ?? "ton parcours"} !\n`;
   message += `Score total : ${totalVsPar > 0 ? "+" + totalVsPar : totalVsPar}\n`;
-  message += `💚 ${parfects} Parfects · 💙 ${bogeyfects} Bogey’fects`;
-
-  if (totalVsPar < 0) {
-    message += "\n🔥 Excellent niveau ! Tu progresses clairement 💪";
-  } else if (parfects > 0) {
-    message += "\n💚 Les Parfects arrivent, continue cette régularité 👏";
-  } else {
-    message += "\n🧘‍♂️ Chaque partie est une leçon. Routine, calme, et flow.";
-  }
+  message += `💚 ${parfects} Parfects · 💙 ${bogeyfects} Bogey’fects\n`;
+  message += `Carte : ${recap}\n\n${messageVar}`;
 
   showCoachIA?.(message);
 }
