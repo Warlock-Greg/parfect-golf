@@ -53,23 +53,24 @@
     .btn:hover { background: pink; }
 
     /* === Coach IA fixe en bas d’écran === */
+/* === Coach IA : ancré à mi-hauteur sur la page === */
 #coach-ia {
   position: fixed;
-  bottom: 60px; /* au-dessus du menu nav */
-  left: 0;
-  right: 0;
+  bottom: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
   max-width: 500px;
-  margin: 0 auto;
   background: #111;
-  border-top: 1px solid #222;
-  border-radius: 12px 12px 0 0;
+  border: 1px solid #222;
+  border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, .4);
+  box-shadow: 0 0 12px rgba(0,0,0,.4);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  height: 260px; /* hauteur fixe */
-  transition: height .3s ease;
+  justify-content: space-between;
+  height: 260px;
+  z-index: 900;
 }
 
 #coach-log {
@@ -78,7 +79,9 @@
   padding: 6px;
   margin-bottom: 6px;
   font-size: 0.9rem;
+  scroll-behavior: smooth;
 }
+
 
 #coach-input {
   flex: 1;
