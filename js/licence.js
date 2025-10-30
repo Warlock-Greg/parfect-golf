@@ -43,19 +43,23 @@ async function verifyPromo(code) {
   }
 }
 
-// === licence.js — Détection de la clé IA ===
+// === licence.js — Détection automatique du mode IA ===
 
-// 1️⃣ Cherche la clé dans localStorage (ou variable globale)
-window.envOpenAIKey = localStorage.getItem("openai_key") || window.envOpenAIKey || "";
+// 1️⃣ Si ton Worker est configuré, indique son URL ici :
+window.parfectWorkerURL = "https://ton-worker.cloudflareworkers.net/coach"; // ⬅️ adapte ce lien
 
-// 2️⃣ Crée un petit badge d’état
-function showLicenceBadge(active = false) {
+// 2️⃣ Badge visuel
+function showLicenceBadge(active = false, mode = "local") {
   const existing = document.getElementById("ia-badge");
   if (existing) existing.remove();
 
   const badge = document.createElement("div");
   badge.id = "ia-badge";
-  badge.textContent = active ? "💡 IA activée" : "🤖 Mode local";
+  badge.textContent = active
+    ? mode === "worker"
+      ? "💡 IA via Worker"
+      : "💡 IA activée"
+    : "🤖 Mode local";
   badge.style.position = "fixed";
   badge.style.top = "8px";
   badge.style.right = "10px";
@@ -70,14 +74,21 @@ function showLicenceBadge(active = false) {
   document.body.appendChild(badge);
 }
 
-// 3️⃣ Si clé trouvée → badge vert + mode IA
-if (window.envOpenAIKey && window.envOpenAIKey.length > 10) {
-  console.log("🔑 Licence OpenAI détectée.");
-  showLicenceBadge(true);
+// 3️⃣ Détection automatique
+if (window.parfectWorkerURL && window.parfectWorkerURL.startsWith("https")) {
+  console.log("🌐 Mode IA via Worker activé :", window.parfectWorkerURL);
+  showLicenceBadge(true, "worker");
+  window.iaMode = "worker";
+} else if (window.envOpenAIKey && window.envOpenAIKey.length > 10) {
+  console.log("🔑 Licence OpenAI locale détectée.");
+  showLicenceBadge(true, "local");
   window.iaMode = "openai";
 } else {
-  console.log("⚙️ Aucun token OpenAI : coach local activé.");
+  console.log("⚙️ Aucun accès IA : mode local standard.");
   showLicenceBadge(false);
+  window.iaMode = "local";
+}
+
   window.iaMode = "local";
 }
 
