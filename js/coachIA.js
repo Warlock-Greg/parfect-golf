@@ -276,3 +276,49 @@ function coachStartGame() {
 }
 
 console.log("✅ Coach IA chargé sans auto-focus ni redimensionnement");
+
+// === Activation dynamique de l'IA OpenAI (si clé licence dispo) ===
+if (typeof window.envOpenAIKey !== "undefined" && window.envOpenAIKey) {
+  console.log("🔑 Licence OpenAI détectée, mode IA activé");
+
+  // Remplace la fonction showCoachIA par une version IA
+  window.showCoachIA = async function (userMessage) {
+    const coachLog = document.getElementById("coach-log");
+    if (!coachLog) return;
+
+    // Affiche le message du joueur si fourni
+    if (userMessage) appendUserMessage(userMessage);
+
+    // Message d’attente
+    appendCoachMessage("⏳ Réflexion du coach...");
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${window.envOpenAIKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "Tu es le coach Parfect.golfr, expert en mental golf, parle de manière calme, positive et brève." },
+            { role: "user", content: userMessage || "Analyse la situation actuelle de jeu." }
+          ],
+          temperature: 0.7
+        })
+      });
+
+      const data = await response.json();
+      const reply = data?.choices?.[0]?.message?.content?.trim() || "🤔 Je réfléchis encore...";
+      appendCoachMessage(reply);
+
+    } catch (err) {
+      console.error("❌ Erreur OpenAI :", err);
+      appendCoachMessage("⚠️ Le coach IA n’est pas dispo. Je repasse en mode classique !");
+    }
+  };
+} else {
+  console.log("💬 Mode coach local (pas de licence OpenAI)");
+}
+
