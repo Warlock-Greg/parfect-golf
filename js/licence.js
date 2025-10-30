@@ -42,3 +42,42 @@ async function verifyPromo(code) {
     return false;
   }
 }
+
+// === licence.js — Détection de la clé IA ===
+
+// 1️⃣ Cherche la clé dans localStorage (ou variable globale)
+window.envOpenAIKey = localStorage.getItem("openai_key") || window.envOpenAIKey || "";
+
+// 2️⃣ Crée un petit badge d’état
+function showLicenceBadge(active = false) {
+  const existing = document.getElementById("ia-badge");
+  if (existing) existing.remove();
+
+  const badge = document.createElement("div");
+  badge.id = "ia-badge";
+  badge.textContent = active ? "💡 IA activée" : "🤖 Mode local";
+  badge.style.position = "fixed";
+  badge.style.top = "8px";
+  badge.style.right = "10px";
+  badge.style.background = active ? "#00ff99" : "#555";
+  badge.style.color = "#111";
+  badge.style.fontSize = "0.8rem";
+  badge.style.padding = "4px 10px";
+  badge.style.borderRadius = "8px";
+  badge.style.fontWeight = "bold";
+  badge.style.boxShadow = "0 0 8px rgba(0,0,0,.4)";
+  badge.style.zIndex = 9999;
+  document.body.appendChild(badge);
+}
+
+// 3️⃣ Si clé trouvée → badge vert + mode IA
+if (window.envOpenAIKey && window.envOpenAIKey.length > 10) {
+  console.log("🔑 Licence OpenAI détectée.");
+  showLicenceBadge(true);
+  window.iaMode = "openai";
+} else {
+  console.log("⚙️ Aucun token OpenAI : coach local activé.");
+  showLicenceBadge(false);
+  window.iaMode = "local";
+}
+
