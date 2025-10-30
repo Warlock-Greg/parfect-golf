@@ -52,38 +52,46 @@
 
     .btn:hover { background: pink; }
 
-    #coach-ia {
-      margin: 20px auto;
-      max-width: 500px;
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 0 12px rgba(0,0,0,.3);
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+    /* === Coach IA fixe en bas d’écran === */
+#coach-ia {
+  position: fixed;
+  bottom: 60px; /* au-dessus du menu nav */
+  left: 0;
+  right: 0;
+  max-width: 500px;
+  margin: 0 auto;
+  background: #111;
+  border-top: 1px solid #222;
+  border-radius: 12px 12px 0 0;
+  padding: 12px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, .4);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 260px; /* hauteur fixe */
+  transition: height .3s ease;
+}
 
-    #coach-log {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      background: #0d0f10;
-      text-align: left;
-    }
+#coach-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
 
-    #coach-input {
-      width: 70%;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #333;
-      background: #111;
-      color: #fff;
-    }
+#coach-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
+
+#coach-send {
+  padding: 8px 16px;
+}
 
     /* --- Barre de menu --- */
     nav {
