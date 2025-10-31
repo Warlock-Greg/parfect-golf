@@ -349,7 +349,7 @@ function analyzeHole(holeData) {
 }
 
 
-  // Affiche le message dans le coach
+    // Affiche le message dans le coach
   if (typeof showCoachIA === "function") {
     showCoachIA(message);
   } else {
@@ -357,8 +357,6 @@ function analyzeHole(holeData) {
   }
 }
 
-
-// === Synthèse de fin de partie ===
 // === Synthèse de fin de partie (avec récap + variation de ton) ===
 function summarizeRound() {
   const validHoles = holes.filter(h => h && typeof h.score === "number");
@@ -402,7 +400,6 @@ function summarizeRound() {
 
   showCoachIA?.(message);
 }
-
 
 // === Fin de partie ===
 function endRound() {
@@ -449,3 +446,4 @@ window.initGolfSelect = initGolfSelect;
 window.startNewRound = startNewRound;
 window.renderHole = renderHole;
 window.resetRound = resetRound;
+
