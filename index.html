@@ -6,150 +6,189 @@
   <title>Parfect.golfr – MVP SplitScreen</title>
 
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0d0f10 url('https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png') center/cover fixed;
-      color: #eee;
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+   /* === RESET GLOBAL === */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #0d0f10 url('https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/background.png') center/cover fixed;
+  color: #eee;
+  font-family: "Poppins", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,0.6);
-      position: sticky;
-      top: 0;
-      z-index: 9999;
-    }
+/* === HEADER === */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+}
 
-    header img {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
-    }
+header img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+}
 
-    h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      color: #00ff99;
-    }
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #00ff99;
+}
 
-    /* === SPLIT LAYOUT === */
-    main#split-layout {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      height: calc(100vh - 70px);
-    }
+/* === SPLIT LAYOUT === */
+main#split-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px);
+}
 
-    /* 🧠 Coach en haut */
-    #coach-ia {
-      flex: 0 0 45%;
-      background: rgba(0, 0, 0, 0.85);
-      border-bottom: 1px solid #00ff99;
-      border-radius: 12px 12px 0 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 8px;
-      overflow: hidden;
-    }
+/* 🧠 Zone Coach */
+#coach-ia {
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.85);
+  border-bottom: 1px solid #00ff99;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  padding: 8px;
+  z-index: 9000;
+}
 
-    #coach-log {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px;
-      font-size: 0.9rem;
-      scroll-behavior: smooth;
-    }
+#coach-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  font-size: 0.9rem;
+  scroll-behavior: smooth;
+}
 
-    #coach-input-zone {
-      display: flex;
-      gap: 8px;
-      padding: 6px;
-    }
+#coach-input-zone {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+}
 
-    #coach-input {
-      flex: 1;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #000;
-      color: #fff;
-    }
+#coach-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
 
-    #coach-send {
-      background: #00ff99;
-      color: #111;
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+#coach-send {
+  background: #00ff99;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-    /* 🎯 Zone d’interaction (Play / Training / Friends) */
-    #interaction-zone {
-      flex: 1;
-      position: relative;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.7);
-      padding: 8px;
-    }
+/* === ZONE INTERACTIVE (Play / Training / Friends) === */
+#interaction-zone {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 8px;
+}
 
-    .modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 8500;
-    }
+/* === Modales === */
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 8500;
+}
 
-    .modal-card {
-      background-color: #121619;
-      padding: 20px;
-      border-radius: 12px;
-      color: #fff;
-      max-width: 420px;
-      text-align: center;
-    }
+.modal-card {
+  background: #121619;
+  padding: 20px;
+  border-radius: 12px;
+  color: #fff;
+  max-width: 420px;
+  text-align: center;
+}
 
-    /* --- Barre de menu --- */
-    nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #111;
-      border-top: 1px solid #333;
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 0;
-      z-index: 9999;
-    }
+/* === Footer / Navigation === */
+nav, footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111;
+  border-top: 1px solid #333;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  z-index: 9999;
+}
 
-    nav button {
-      background: none;
-      border: none;
-      color: #00ff99;
-      font-size: 1.3rem;
-      cursor: pointer;
-      transition: transform 0.15s;
-    }
+nav button,
+footer button {
+  background: none;
+  border: none;
+  color: #00ff99;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
 
-    nav button.active {
-      color: #fff;
-      transform: scale(1.2);
-    }
+nav button.active,
+footer button.active {
+  color: #fff;
+  transform: scale(1.2);
+}
+
+/* === Boutons généraux === */
+.btn {
+  background: #00ff99;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: #00ffaa;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  #coach-ia {
+    flex: 0 0 50%;
+  }
+
+  #interaction-zone {
+    padding-bottom: 80px; /* Laisse de la place au footer */
+  }
+
+  nav button {
+    font-size: 1.1rem;
+  }
+}
+
+    
   </style>
 </head>
 
