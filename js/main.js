@@ -1,105 +1,68 @@
-// === MAIN.JS — version stable et nettoyée ===
+// === MAIN.JS — Version fusionnée SplitScreen + Gestion sections ===
 
-// --- Initialisation globale ---
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("✅ Boot Parfect.golfr");
+  console.log("✅ Boot Parfect.golfr SplitScreen");
 
-  // Initialiser le coach IA si dispo
+  // --- Initialisation du coach IA ---
   if (typeof window.initCoachIA === "function") {
     window.initCoachIA();
   }
 
-  // Raccourcis vers les boutons du footer
+  // --- Sélecteurs principaux ---
   const playBtn = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
-  const historyBtn = document.getElementById("history-btn");
   const friendsBtn = document.getElementById("friends-btn");
 
-  // Helper pour activer le bouton courant
-  function setActiveButton(btn) {
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-    if (btn) btn.classList.add("active");
-  }
-
-  // --- 🟢 Bouton "Jouer" ---
-  playBtn?.addEventListener("click", () => {
-    setActiveButton(playBtn);
-
-    console.log("🎮 Menu: Jouer");
-
-    // Afficher modale de reprise / nouvelle partie
-    if (typeof window.showResumeOrNewModal === "function") {
-      window.showResumeOrNewModal();
-    } else if (typeof window.initGolfSelect === "function") {
-      // Fallback : afficher la sélection des golfs
-      window.initGolfSelect();
-    }
-
-    // Notifie le coach IA (facultatif)
-    window.showCoachIA?.("⛳ Mode Jouer activé");
-  });
-
-  // --- 🏋️‍♂️ Bouton "S'entraîner" ---
-  trainingBtn?.addEventListener("click", () => {
-    setActiveButton(trainingBtn);
-
-    console.log("💪 Menu: Entraînement");
-
-    if (typeof window.initTraining === "function") {
-      window.initTraining();
-    }
-
-    window.showCoachIA?.("🏋️ Mode Entraînement activé");
-  });
-
-  // --- 📜 Bouton "Historique" ---
-  historyBtn?.addEventListener("click", () => {
-    setActiveButton(historyBtn);
-
-    console.log("📜 Menu: Historique");
-
-    if (typeof window.renderHistory === "function") {
-      window.renderHistory();
-    }
-
-    window.showCoachIA?.("📖 Historique ouvert");
-  });
-
-  // --- 👥 Bouton "Amis" ---
-  friendsBtn?.addEventListener("click", () => {
-    setActiveButton(friendsBtn);
-
-    console.log("👥 Menu: Amis");
-
-    if (typeof window.injectSocialUI === "function") {
-      window.injectSocialUI();
-    }
-
-    window.showCoachIA?.("👋 Section Amis activée");
-  });
-});
-
-// === GESTION CENTRALISÉE DES SECTIONS VISIBLES ===
-console.log("🧭 Gestion affichage des sections activée");
-
-// --- Helper global : montre/masque les zones principales ---
-window.showSection = function (mode) {
-  const play = document.getElementById("hole-card");
-  const training = document.getElementById("training-list");
-  const golfSelect = document.getElementById("golf-select");
+  const gameArea = document.getElementById("game-area");
+  const trainingArea = document.getElementById("training-area");
+  const friendsArea = document.getElementById("friends-area");
   const coach = document.getElementById("coach-ia");
 
-  // Par sécurité : éviter les erreurs si un bloc n’existe pas encore
-  if (play) play.style.display = mode === "play" ? "block" : "none";
-  if (training) training.style.display = mode === "training" ? "block" : "none";
-  if (golfSelect) golfSelect.style.display = mode === "play" ? "block" : "none";
+  // --- Helper : activer un onglet ---
+  function setActive(btn) {
+    document.querySelectorAll("footer button, nav button").forEach(b => b.classList.remove("active"));
+    btn?.classList.add("active");
+  }
 
-  // Le coach IA reste toujours visible, sauf si tu veux le masquer totalement
-  if (coach) coach.style.display = "flex";
-};
+  // --- Coach helper ---
+  window.coachReact = function (message) {
+    if (typeof appendCoachMessage === "function") appendCoachMessage(message);
+  };
 
-// --- Initialisation par défaut ---
-document.addEventListener("DOMContentLoaded", () => {
-  // On démarre en mode “coach” libre (aucune partie ou training en cours)
-  window.showSection("coach");
+  // --- Gestion centralisée des vues ---
+  window.showSection = function (mode) {
+    if (gameArea) gameArea.style.display = mode === "play" ? "block" : "none";
+    if (trainingArea) trainingArea.style.display = mode === "training" ? "block" : "none";
+    if (friendsArea) friendsArea.style.display = mode === "friends" ? "block" : "none";
+
+    // Le coach reste visible dans tous les cas
+    if (coach) coach.style.display = "flex";
+  };
+
+  // --- Bouton : Mode Jouer ---
+  playBtn?.addEventListener("click", () => {
+    setActive(playBtn);
+    showSection("play");
+    window.initGolfSelect?.();
+    coachReact("🎯 Mode Jouer activé — choisis ton golf !");
+  });
+
+  // --- Bouton : Mode Training ---
+  trainingBtn?.addEventListener("click", () => {
+    setActive(trainingBtn);
+    showSection("training");
+    window.initTraining?.();
+    coachReact("💪 Mode Entraînement activé — choisis ton exercice mental !");
+  });
+
+  // --- Bouton : Mode Friends ---
+  friendsBtn?.addEventListener("click", () => {
+    setActive(friendsBtn);
+    showSection("friends");
+    window.injectSocialUI?.();
+    coachReact("👋 Mode Amis activé — partage tes stats !");
+  });
+
+  // --- Démarrage par défaut ---
+  showSection("play");
 });
