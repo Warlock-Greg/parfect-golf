@@ -355,7 +355,7 @@ function analyzeHole(holeData) {
   } else {
     console.log("Coach:", message);
   }
-}
+
 
 // === Synthèse de fin de partie (avec récap + variation de ton) ===
 function summarizeRound() {
