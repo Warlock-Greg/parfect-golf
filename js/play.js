@@ -379,14 +379,6 @@ function analyzeHole(holeData) {
 }
 
 
-    // Affiche le message dans le coach
-  if (typeof showCoachIA === "function") {
-    showCoachIA(message);
-  } else {
-    console.log("Coach:", message);
-  }
-
-
 // === Synthèse de fin de partie (avec récap + variation de ton) ===
 function summarizeRound() {
   const validHoles = holes.filter(h => h && typeof h.score === "number");
