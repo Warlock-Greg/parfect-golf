@@ -93,7 +93,7 @@ main#split-layout {
 
 /* 🧠 Mode compact du coach (play + social) */
 #coach-ia.compact {
-  flex: 0 0 25% !important;       /* hauteur réduite */
+  flex: 0 0 25% !important;
   height: auto;
   transition: all 0.3s ease;
 }
@@ -212,8 +212,6 @@ footer button.active {
     font-size: 1.1rem;
   }
 }
-
-    
   </style>
 </head>
 
@@ -254,6 +252,13 @@ footer button.active {
     <button id="friends-btn" title="Amis">👥</button>
   </nav>
 
+  <!-- === Helper global (corrige l’erreur $ is not defined) === -->
+  <script>
+    if (!window.$) {
+      window.$ = (id) => document.getElementById(id);
+    }
+  </script>
+
   <!-- === Scripts === -->
   <script src="js/coachIA.js"></script>
   <script src="js/play.js"></script>
@@ -261,16 +266,20 @@ footer button.active {
   <script src="js/friends.js"></script>
   <script src="js/main.js"></script>
 
+  <!-- === Boot inline (MVP-safe) === -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       console.log("✅ Boot SplitScreen MVP");
 
-      // Initialisation du coach
       if (typeof initCoachIA === "function") initCoachIA();
 
-      // Zones
-      const playBtn = $("play-btn"), trainingBtn = $("training-btn"), friendsBtn = $("friends-btn");
-      const gameArea = $("game-area"), trainingArea = $("training-area"), friendsArea = $("friends-area");
+      const playBtn = $("play-btn"),
+            trainingBtn = $("training-btn"),
+            friendsBtn = $("friends-btn");
+
+      const gameArea = $("game-area"),
+            trainingArea = $("training-area"),
+            friendsArea = $("friends-area");
 
       const setActive = (btn) => {
         document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
@@ -308,4 +317,5 @@ footer button.active {
     });
   </script>
 </body>
-<
+</html>
+
