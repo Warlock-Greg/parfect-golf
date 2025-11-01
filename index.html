@@ -43,6 +43,24 @@ h1 {
   color: #00ff99;
 }
 
+/* --- Animation changement de trou (verticale) --- */
+@keyframes holeOut {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+@keyframes holeIn {
+  0% { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.hole-animate-out {
+  animation: holeOut 0.35s ease forwards;
+}
+.hole-animate-in {
+  animation: holeIn 0.35s ease forwards;
+}
+
+    
 /* === SPLIT LAYOUT === */
 main#split-layout {
   flex: 1;
