@@ -204,10 +204,27 @@ function renderHole(number = currentHole) {
         </select>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:space-between;">
-        <button id="prev-hole" class="btn" ${number===1?'disabled':''}>⬅️ Trou précédent</button>
-        <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Trou suivant ➡️</button>
-      </div>
+      <div class="hole-nav" style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:6px;">
+  <button id="prev-hole" class="btn" ${number===1?'disabled':''} style="flex:1;">⬅️</button>
+
+  <div class="hole-info" style="
+    flex:2;
+    background:#111;
+    border:1px solid #00ff99;
+    border-radius:8px;
+    padding:6px 8px;
+    text-align:center;
+    font-size:0.9rem;
+    color:#00ff99;">
+    Trou ${number}/${holes.length}<br>
+    <span style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
+      ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
+    </span>
+  </div>
+
+  <button id="next-hole" class="btn" style="flex:1;background:#00ff99;color:#111;">➡️</button>
+</div>
+
     </div>
   `;
 
