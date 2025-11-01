@@ -240,20 +240,33 @@ function renderHole(number = currentHole) {
 
   if (nextBtn) {
   nextBtn.addEventListener("click", () => {
-    saveCurrentHole();
+    const holeCard = $$("hole-card");
+    if (!holeCard) return;
 
-    // Analyse du trou actuel avant de passer au suivant
-    const lastHoleData = holes[currentHole - 1];
-    analyzeHole(lastHoleData);
+    // 🎬 Animation de sortie vers le haut
+    holeCard.classList.add("hole-animate-out");
 
-    if (currentHole < holes.length) {
-      currentHole++;
-      renderHole(currentHole);
-    } else {
-      summarizeRound();
-    }
+    setTimeout(() => {
+      saveCurrentHole();
+
+      if (currentHole < holes.length) {
+        currentHole++;
+        renderHole(currentHole);
+
+        // 🎬 Animation d'entrée depuis le bas
+        holeCard.classList.remove("hole-animate-out");
+        holeCard.classList.add("hole-animate-in");
+
+        setTimeout(() => {
+          holeCard.classList.remove("hole-animate-in");
+        }, 350);
+      } else {
+        summarizeRound();
+      }
+    }, 350);
   });
 }
+
 
 }
 
