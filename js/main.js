@@ -8,6 +8,60 @@ document.addEventListener("DOMContentLoaded", () => {
     window.initCoachIA();
   }
 
+  const playBtn = document.getElementById("play-btn");
+  const trainingBtn = document.getElementById("training-btn");
+  const friendsBtn = document.getElementById("friends-btn");
+
+  const gameArea = document.getElementById("game-area");
+  const trainingArea = document.getElementById("training-area");
+  const friendsArea = document.getElementById("friends-area");
+  const coach = document.getElementById("coach-ia");
+
+  // Helper : active le bon bouton
+  function setActive(btn) {
+    document.querySelectorAll("footer button, nav button").forEach(b => b.classList.remove("active"));
+    btn?.classList.add("active");
+  }
+
+  // Affiche une section + ajuste la taille du coach
+  function showSection(mode) {
+    if (gameArea) gameArea.style.display = mode === "play" ? "block" : "none";
+    if (trainingArea) trainingArea.style.display = mode === "training" ? "block" : "none";
+    if (friendsArea) friendsArea.style.display = mode === "friends" ? "block" : "none";
+
+    // Ajuste la taille du coach
+    if (coach) {
+      if (mode === "training") coach.classList.remove("compact");
+      else coach.classList.add("compact");
+    }
+  }
+
+  // === Boutons ===
+  playBtn?.addEventListener("click", () => {
+    setActive(playBtn);
+    showSection("play");
+    window.initGolfSelect?.();
+    appendCoachMessage?.("🎯 Mode Jouer activé — choisis ton golf !");
+  });
+
+  trainingBtn?.addEventListener("click", () => {
+    setActive(trainingBtn);
+    showSection("training");
+    window.initTraining?.();
+    appendCoachMessage?.("💪 Mode Entraînement — choisis ton exercice mental !");
+  });
+
+  friendsBtn?.addEventListener("click", () => {
+    setActive(friendsBtn);
+    showSection("friends");
+    window.injectSocialUI?.();
+    appendCoachMessage?.("👋 Mode Amis activé — partage tes stats !");
+  });
+
+  // Démarrage : en mode "play" compact
+  showSection("play");
+});
+
   // --- Sélecteurs principaux ---
   const playBtn = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
