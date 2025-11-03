@@ -476,7 +476,9 @@ function resetRound() {
 
 // === Exports globaux ===
 window.initGolfSelect = initGolfSelect;
+
 window.startNewRound = startNewRound;
+window.showResumeOrNewModal = showResumeOrNewModal; // ✅ obligatoire
 window.renderHole = renderHole;
 window.resetRound = resetRound;
 
