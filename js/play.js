@@ -111,7 +111,7 @@ async function startNewRound(golfId) {
   localStorage.setItem("roundInProgress", "true");
   localStorage.setItem("currentGolf", golfId);
 
-  showMoodAndStrategyModal(() => renderHole(currentHole));
+  showCoachSelectModal((); => renderHole(currentHole));
 }
 
 // === Modale de sélection du coach Parfect.golfr ===
