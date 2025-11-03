@@ -48,12 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === 🎮 Mode Jouer ===
+  //playBtn?.addEventListener("click", () => {
+  //  setActive(playBtn);
+  //  showSection("play");
+  //  window.initGolfSelect?.();
+  //  coachReact("🎯 Mode Jouer activé — choisis ton golf !");
+  //});
+
   playBtn?.addEventListener("click", () => {
-    setActive(playBtn);
-    showSection("play");
-    window.initGolfSelect?.();
-    coachReact("🎯 Mode Jouer activé — choisis ton golf !");
-  });
+  setActive(playBtn);
+  showSection("play");
+  // ❌ à remplacer : window.initGolfSelect?.();
+  showResumeOrNewModal(); // ✅ c’est elle qui gère “reprendre” ou “nouvelle partie”
+  coachReact("🎯 Mode Jouer activé — choisis ton golf !");
+});
 
   // === 🏋️ Mode Training ===
   trainingBtn?.addEventListener("click", () => {
