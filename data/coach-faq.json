@@ -1,0 +1,62 @@
+{
+  "routine": {
+    "keywords": ["routine", "préparation", "avant", "focus", "mental"],
+    "responses": [
+      "Ta routine, c’est ton ancrage. Respire, visualise et engage ton corps calmement.",
+      "Pense toujours à répéter le même schéma avant chaque coup : respiration, visualisation, swing.",
+      "Une bonne routine t’enlève le doute. Elle crée la stabilité dans ton jeu.",
+      "La routine, c’est comme une chanson : même rythme, même refrain avant chaque swing.",
+      "Avant de frapper, fixe ton attention sur la cible, pas sur le résultat."
+    ]
+  },
+  "swing": {
+    "keywords": ["swing", "rotation", "plan", "mains", "épaules"],
+    "responses": [
+      "Le swing n’est pas une force, c’est un rythme. Laisse le corps tourner naturellement.",
+      "Ne cherche pas à taper fort : cherche à frapper au bon tempo.",
+      "Si tu pars à droite, c’est souvent une face ouverte ou un corps figé. Respire et relâche.",
+      "Ton corps guide, tes mains accompagnent. Pas l’inverse.",
+      "Pense fluide. Le swing, c’est un mouvement, pas un geste."
+    ]
+  },
+  "direction": {
+    "keywords": ["droite", "gauche", "slice", "hook", "trajectoire"],
+    "responses": [
+      "Une balle qui part à droite, c’est souvent une face ouverte à l’impact.",
+      "Vérifie ton alignement. Parfois, c’est le corps plus que le club.",
+      "Le slice vient d’un swing extérieur-intérieur : relâche et tourne autour de ta colonne.",
+      "Si tu tires à gauche, ton chemin est trop intérieur. Garde le tempo et vise le centre du fairway.",
+      "Concentre-toi sur le point de contact, pas sur le chemin. Le reste suivra."
+    ]
+  },
+  "stratégie": {
+    "keywords": ["stratégie", "plan", "choix", "club", "attaque", "départ"],
+    "responses": [
+      "Ta stratégie, c’est ton GPS. Décide avant de jouer, pas pendant.",
+      "Mieux vaut un petit coup bien placé qu’un grand coup risqué.",
+      "Joue le coup que tu sais faire, pas celui que tu rêves.",
+      "Quand le doute arrive, choisis le club qui t’apporte la paix mentale.",
+      "La stratégie, c’est anticiper le pire sans craindre le résultat."
+    ]
+  },
+  "putting": {
+    "keywords": ["putt", "putting", "green", "lecture", "tempo"],
+    "responses": [
+      "Sur le green, c’est ton regard qui guide. Vois la trajectoire avant d’agir.",
+      "Un bon putting, c’est 80% de tempo, 20% de visée.",
+      "Reste immobile, léger. Laisse les épaules balancer le club.",
+      "Le secret du putting, c’est la confiance, pas la perfection.",
+      "Regarde le trou, pas la balle, avant de démarrer ta routine de putt."
+    ]
+  },
+  "mental": {
+    "keywords": ["mental", "confiance", "stress", "tension", "émotion"],
+    "responses": [
+      "Respire profondément. Le calme crée la performance.",
+      "Tu n’as pas besoin d’être parfait, juste présent à chaque coup.",
+      "Accepte l’erreur comme partie du jeu. Le mental, c’est 80% du golf.",
+      "Moins tu cherches à contrôler, plus tu joues juste.",
+      "Le stress est un signe que tu tiens à bien faire. Transforme-le en énergie calme."
+    ]
+  }
+}
