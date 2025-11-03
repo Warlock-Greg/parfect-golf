@@ -114,65 +114,6 @@ async function startNewRound(golfId) {
   showMoodAndStrategyModal(() => renderHole(currentHole));
 }
 
-function showMoodAndStrategyModal(onConfirm) {
-  const modal = document.createElement("div");
-  modal.className = "modal-backdrop";
-  modal.innerHTML = `
-    <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
-      <h3>😎 Ton mood du jour ?</h3>
-      <div class="moods" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-        <button class="btn mood" data-mood="focus">Focus</button>
-        <button class="btn mood" data-mood="relax">Relax</button>
-        <button class="btn mood" data-mood="fun">Fun</button>
-        <button class="btn mood" data-mood="grind">Grind</button>
-      </div>
-
-      <h4 style="margin-top:18px;">🎯 Stratégie :</h4>
-      <div class="coach-styles" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-        <button class="btn strategy" data-strat="safe">Safe</button>
-        <button class="btn strategy" data-strat="aggressive">Aggressive</button>
-        <button class="btn strategy" data-strat="5050">50/50</button>
-        <button class="btn strategy" data-strat="mindset">Mindset</button>
-      </div>
-
-      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
-    </div>`;
-  document.body.appendChild(modal);
-
-  let selectedMood = null;
-  let selectedStrat = null;
-
-  // Sélection visuelle indépendante (les deux restent “actifs” dans LEUR groupe)
-  modal.querySelectorAll(".mood").forEach(btn => {
-    btn.addEventListener("click", () => {
-      modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedMood = btn.dataset.mood;
-    });
-  });
-
-  modal.querySelectorAll(".strategy").forEach(btn => {
-    btn.addEventListener("click", () => {
-      modal.querySelectorAll(".strategy").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedStrat = btn.dataset.strat;
-    });
-  });
-
-  modal.querySelector("#start-round").addEventListener("click", () => {
-    if (!selectedMood || !selectedStrat) {
-      showCoachIA?.("⚠️ Choisis ton mood ET ta stratégie avant de commencer !");
-      return;
-    }
-    localStorage.setItem("mood", selectedMood);
-    localStorage.setItem("strategy", selectedStrat);
-    modal.remove();
-    showCoachIA?.(`🧠 Mood: ${selectedMood} · 🎯 Stratégie: ${selectedStrat}`);
-    onConfirm?.();
-  });
-}
-
-
 // === Modale de sélection du coach Parfect.golfr ===
 function showCoachSelectModal() {
   const modal = document.createElement("div");
@@ -236,6 +177,67 @@ function showCoachSelectModal() {
     showMoodAndStrategyModal(); // Enchaîne sur la modale suivante
   });
 }
+
+
+function showMoodAndStrategyModal(onConfirm) {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
+      <h3>😎 Ton mood du jour ?</h3>
+      <div class="moods" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn mood" data-mood="focus">Focus</button>
+        <button class="btn mood" data-mood="relax">Relax</button>
+        <button class="btn mood" data-mood="fun">Fun</button>
+        <button class="btn mood" data-mood="grind">Grind</button>
+      </div>
+
+      <h4 style="margin-top:18px;">🎯 Stratégie :</h4>
+      <div class="coach-styles" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn strategy" data-strat="safe">Safe</button>
+        <button class="btn strategy" data-strat="aggressive">Aggressive</button>
+        <button class="btn strategy" data-strat="5050">50/50</button>
+        <button class="btn strategy" data-strat="mindset">Mindset</button>
+      </div>
+
+      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+    </div>`;
+  document.body.appendChild(modal);
+
+  let selectedMood = null;
+  let selectedStrat = null;
+
+  // Sélection visuelle indépendante (les deux restent “actifs” dans LEUR groupe)
+  modal.querySelectorAll(".mood").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedMood = btn.dataset.mood;
+    });
+  });
+
+  modal.querySelectorAll(".strategy").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".strategy").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedStrat = btn.dataset.strat;
+    });
+  });
+
+  modal.querySelector("#start-round").addEventListener("click", () => {
+    if (!selectedMood || !selectedStrat) {
+      showCoachIA?.("⚠️ Choisis ton mood ET ta stratégie avant de commencer !");
+      return;
+    }
+    localStorage.setItem("mood", selectedMood);
+    localStorage.setItem("strategy", selectedStrat);
+    modal.remove();
+    showCoachIA?.(`🧠 Mood: ${selectedMood} · 🎯 Stratégie: ${selectedStrat}`);
+    onConfirm?.();
+  });
+}
+
+
 
 
 function renderHole(number = currentHole) {
