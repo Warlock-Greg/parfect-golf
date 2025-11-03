@@ -45,18 +45,32 @@ function handleCoachInput(input, log) {
 }
 
 // --- Réponses du coach ---
-function respondAsCoach(message) {
-  let reply = "⛳ Un coup après l’autre ! Reste concentré sur ton flow.";
+async function respondAsCoach(message) {
+  // Charger la base FAQ une fois
+  if (!window.faqData) {
+    const res = await fetch("./data/coach-faq.json");
+    window.faqData = await res.json();
+  }
 
-  if (/routine/i.test(message)) reply = "💆 Respire, visualise et engage ta routine complète avant chaque coup.";
-  if (/putt/i.test(message)) reply = "🎯 Vise un rythme fluide sur tes putts, pas la force.";
-  if (/drive/i.test(message)) reply = "🏌️ Allonge sans forcer : priorité au contrôle du contact.";
-  if (/bogey/i.test(message)) reply = "💙 Un Bogey’fect reste un bon coup. L’important c’est le mental !";
-  if (/par/i.test(message)) reply = "💚 Par solide, ça se construit avec des choix intelligents.";
-  if (/relax/i.test(message)) reply = "😌 Respire entre les coups. Le relâchement crée la performance.";
+  // Détection des mots-clés
+  message = message.toLowerCase();
+  let found = null;
+  for (const [category, obj] of Object.entries(window.faqData)) {
+    if (obj.keywords.some(k => message.includes(k))) {
+      found = obj;
+      break;
+    }
+  }
+
+  // Sélection d'une réponse
+  let reply = found
+    ? obj.responses[Math.floor(Math.random() * obj.responses.length)]
+    : "Intéressant ! Peux-tu préciser ta question sur le swing, la routine ou la stratégie ?";
 
   appendCoachMessage(reply);
 }
+
+
 
 // --- Affichage d’un message du joueur ---
 function appendUserMessage(text) {
