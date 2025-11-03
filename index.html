@@ -198,6 +198,29 @@ footer button.active {
   background: white !important;
 }
 
+/* === Parfect Counter === */
+#parfect-counter {
+  position: fixed;
+  top: 68px; /* juste sous le header */
+  right: 12px;
+  background: rgba(0, 255, 153, 0.15);
+  border: 1px solid #00ff99;
+  color: #00ff99;
+  font-weight: bold;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  z-index: 9500;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+#parfect-counter.flash {
+  transform: scale(1.2);
+  background: rgba(0, 255, 153, 0.35);
+}
+
+    
 /* === Responsive === */
 @media (max-width: 768px) {
   #coach-ia {
