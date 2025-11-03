@@ -139,15 +139,11 @@ async function startTrainingSession(exoId) {
   `;
 
   const validateBtn = $$("validate-training");
-  validateBtn.addEventListener("click", async () => {
-    const result = parseInt($$("training-result").value || "0");
-    const coach = localStorage.getItem("coach") || "Greg";
-    const context = result >= exo.objectif ? "training_focus" : "training_relax";
-    const comment = await getCoachComment(coach, context);
+ validateBtn.addEventListener("click", () => {
+  const result = parseInt($$("training-result").value || "0");
+  recordTrainingAndRecap(exo.id, result);
+});
 
-    showCoachIA(`💬 ${comment}`);
-    showCoachToast("💚 Exercice enregistré !");
-  });
 }
 
 // --- Export global ---
