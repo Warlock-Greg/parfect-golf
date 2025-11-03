@@ -63,3 +63,233 @@
     { "context": "end_round", "text": "🌈 Beau parcours. L’énergie était belle, peu importe le score." }
   ]
 }
+  {
+  "Dorothee": {
+    "intro": [
+      "💚 Coucou toi ! Un coup après l’autre, toujours avec douceur et confiance.",
+      "🌸 Respire, souris, ton golf commence avec ton calme.",
+      "☀️ Chaque coup est une opportunité d’apprendre, pas de juger."
+    ],
+    "parfect": [
+      "💚 Voilà le golf que j’aime : fluide, calme, ancré.",
+      "🌿 Ce trou, c’est du Parfect pur : maîtrise et sérénité.",
+      "🌸 Reste dans ce flow, c’est là que ton meilleur swing vit."
+    ],
+    "bogey": [
+      "💙 Un Bogey’fect, c’est un pas vers ton Parfect. Respire, continue.",
+      "🧘 Même les bogeys t’enseignent quelque chose.",
+      "🌤️ Pas grave, tant que tu restes dans ton calme intérieur."
+    ],
+    "double": [
+      "😌 Pas grave. Ce coup ne te définit pas, ta routine oui.",
+      "💆 Reviens à ton souffle, à ton ancrage. Le reste suivra.",
+      "🌸 Laisse ce double s’envoler comme une balle mal tapée. Next."
+    ],
+    "training_focus": [
+      "🌿 Ta régularité m’impressionne. On sent le calme de ton esprit.",
+      "💚 Continue à t’écouter, à respirer, à sentir ton rythme.",
+      "☀️ Tu avances sans forcer, et c’est ça, le vrai Parfect."
+    ],
+    "training_relax": [
+      "😌 Ce n’est pas grave, repose ton mental.",
+      "🌸 Tu ne perds jamais, tu apprends à mieux te connaître.",
+      "💫 Un jour fort, un jour doux. Le golf, c’est comme la vie."
+    ],
+    "motivation": [
+      "💪 Crois en ton flow, il est déjà en toi.",
+      "🌿 L’important, c’est ton intention, pas la perfection.",
+      "☀️ Tu es sur le bon chemin, pas besoin de forcer."
+    ]
+  },
+
+  "Goathier": {
+    "intro": [
+      "🔵 Le mental, c’est ton meilleur club.",
+      "📘 Structure ta routine, ton cerveau adore ça.",
+      "🎯 Clarté. Respiration. Intention. Et tu es prêt."
+    ],
+    "parfect": [
+      "💙 C’est carré, c’est propre. L’intention était juste.",
+      "📏 Le bon tempo, la bonne décision. Parfect mental.",
+      "🎯 Plan de jeu respecté, exécution maîtrisée. Bravo."
+    ],
+    "bogey": [
+      "🧩 Petit ajustement mental. Reviens à ton plan.",
+      "📘 Ce n’est pas l’erreur, c’est la réaction qui compte.",
+      "🔵 La patience, c’est ta meilleure stratégie aujourd’hui."
+    ],
+    "double": [
+      "😐 OK, analyse, respire, continue. Rien de dramatique.",
+      "📊 Mauvais coup ? Oui. Mauvaise attitude ? Non.",
+      "🔵 On apprend plus d’un double que d’un birdie. Observe."
+    ],
+    "training_focus": [
+      "📘 Bon entraînement. Le mental se muscle par la répétition.",
+      "🎯 Continue à structurer. C’est ainsi que tu progresses durablement.",
+      "🔵 Ta constance est ta vraie victoire."
+    ],
+    "training_relax": [
+      "😌 Tu n’as rien perdu, juste besoin de repos mental.",
+      "📏 Note ton ressenti, pas juste la performance.",
+      "🔵 Même les jours mous servent le progrès."
+    ],
+    "motivation": [
+      "📘 L’efficacité vient de la simplicité.",
+      "🎯 La rigueur calme ton esprit, le calme crée la performance.",
+      "🔵 Ce n’est pas magique, c’est méthodique."
+    ]
+  },
+
+  "Greg": {
+    "intro": [
+      "💥 Allez, feu ! On va chercher le Parfect avec du rythme et de la data.",
+      "📊 Chaque coup, une info. Chaque info, une progression.",
+      "🔥 Focus, énergie, mental : on joue intelligent."
+    ],
+    "parfect": [
+      "📈 Parfect ! Tes stats vont aimer ce trou.",
+      "💚 C’est carré, fluide, inspiré. Continue sur cette vibe.",
+      "🔥 Donne-moi encore des chiffres comme ça !"
+    ],
+    "bogey": [
+      "💙 Bogey’fect validé ! Solide mental, bon choix.",
+      "📊 Rien d’alarmant, c’est juste une variable.",
+      "💥 La régularité, c’est la vraie stat du champion."
+    ],
+    "double": [
+      "😅 On garde la tête froide, juste un outlier !",
+      "📉 Pas grave, c’est une data parmi d’autres.",
+      "💥 On apprend, on ajuste, on performe."
+    ],
+    "training_focus": [
+      "📈 Ta constance est un modèle de discipline.",
+      "💡 Ce n’est pas la chance, c’est la répétition qui crée le skill.",
+      "🔥 Bravo, t’es dans la zone."
+    ],
+    "training_relax": [
+      "😌 Ça arrive, c’est juste du bruit dans les données.",
+      "📊 Ton mental reste positif, et c’est ce qui compte.",
+      "💥 Reviens demain, plus calme, plus fort."
+    ],
+    "motivation": [
+      "📈 Ta courbe de progression est belle.",
+      "💚 Continue à t’auto-coacher. T’es ton propre data lab.",
+      "💥 Petit à petit, tu deviens ton modèle."
+    ]
+  },
+
+  "Chill": {
+    "intro": [
+      "🌿 Respire. Le golf, c’est la mer avant la vague.",
+      "🧘 Ferme les yeux, écoute ton swing intérieur.",
+      "😎 Aucun stress. Juste du flow."
+    ],
+    "parfect": [
+      "🌊 Smooth. Aucun effort. C’est ça, le Parfect style.",
+      "😌 Easy birdie, easy life.",
+      "💚 Continue à surfer sur ton calme intérieur."
+    ],
+    "bogey": [
+      "😅 Bogey cool. Tant que t’as kiffé le swing, tout va bien.",
+      "🌿 Rien à corriger, tout à ressentir.",
+      "☀️ T’as encore du soleil dans le mental, c’est l’essentiel."
+    ],
+    "double": [
+      "😌 Mauvais trou, bon sourire. Ça compense.",
+      "🌊 Le mental revient toujours comme la marée.",
+      "💨 Laisse filer ce coup. Ride ton flow."
+    ],
+    "training_focus": [
+      "🌿 Le zen, c’est la régularité tranquille.",
+      "😌 Tu bosses ton calme, c’est du high level.",
+      "💚 Tu progresses sans t’en rendre compte."
+    ],
+    "training_relax": [
+      "🧘 Chill total, t’as le droit de lever le pied.",
+      "🌤️ Laisse-toi respirer aujourd’hui.",
+      "😌 Parfois, ne rien faire, c’est s’entraîner aussi."
+    ],
+    "motivation": [
+      "🌿 Tu es déjà dans le bon film, relax.",
+      "💚 Continue de kiffer, le reste suivra.",
+      "☀️ Laisse le flow te guider."
+    ]
+  },
+
+  "MusicLover": {
+    "intro": [
+      "🎶 Don’t stop believin’, hold on to that feeling.",
+      "🎵 I got a feeling… that this round’s gonna be a good one.",
+      "🎤 It’s a beautiful day, don’t let it get away."
+    ],
+    "parfect": [
+      "🎸 You’re simply the best, better than all the rest!",
+      "🎶 We will, we will Parfect you!",
+      "🎧 You rock this fairway like a Rolling Stone."
+    ],
+    "bogey": [
+      "🎵 Let it be, let it be...",
+      "🎶 Every little thing’s gonna be alright.",
+      "🎤 Don’t worry, be happy."
+    ],
+    "double": [
+      "🎧 Oops!... you did it again 😅",
+      "🎶 It’s a hard day’s night, but you’re still shining.",
+      "🎤 Shake it off, swing it off!"
+    ],
+    "training_focus": [
+      "🎸 Eye of the Tiger mode ON!",
+      "🎶 You got the rhythm, don’t lose the beat.",
+      "🎵 Keep on rockin’ in the free world."
+    ],
+    "training_relax": [
+      "🎧 Slow down, you move too fast.",
+      "🎶 Take it easy, take it slow.",
+      "🎵 Relax, don’t do it (just breathe)."
+    ],
+    "motivation": [
+      "🎤 You can’t always get what you want, but you can try again.",
+      "🎶 Ain’t no mountain high enough.",
+      "🎵 Don’t stop me now, I’m having such a good time."
+    ]
+  },
+
+  "CinemaLover": {
+    "intro": [
+      "🎬 May the force be with your swing.",
+      "🎥 C’est pas l’club qui fait le joueur, c’est la confiance.",
+      "🍿 On est partis pour un beau film de golf."
+    ],
+    "parfect": [
+      "🎬 Here’s looking at you, kid. Parfect.",
+      "💚 You made my day.",
+      "🎥 Nobody puts baby in the rough."
+    ],
+    "bogey": [
+      "🎞️ Houston, we have a bogey.",
+      "🎬 It’s only a flesh wound.",
+      "🍿 Le bogey n’est qu’un figurant. Le héros, c’est toi."
+    ],
+    "double": [
+      "🎥 I’ll be back. Mais sans double.",
+      "🎬 You talking to me ? Alors calme ton swing.",
+      "🍿 Every hero stumbles before he rises again."
+    ],
+    "training_focus": [
+      "🎬 Lights, camera, concentration.",
+      "🎥 Ce plan est parfait. Refais-le au prochain.",
+      "🍿 Silence sur le plateau, action dans ta tête."
+    ],
+    "training_relax": [
+      "🎞️ Cut ! On refait la scène demain.",
+      "🎥 Le mental aussi a besoin de popcorn.",
+      "🎬 Pause, mais pas fin du film."
+    ],
+    "motivation": [
+      "🎬 You can’t handle the truth… mais tu peux gérer ton mental.",
+      "🎥 Show me the Parfect.",
+      "🍿 This is the beginning of a beautiful round."
+    ]
+  }
+}
+
