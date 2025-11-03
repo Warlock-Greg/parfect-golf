@@ -1,138 +1,154 @@
-// === TRAINING.JS — Version interactive avec Coach IA ===
+// === TRAINING.JS – Parfect.golfr MVP+ ===
 
-let allExercises = [];
-let currentExercise = null;
+// Helper
+const $$ = (id) => document.getElementById(id);
 
-// === Initialisation principale ===
+// --- Initialisation du mode Entraînement ---
 async function initTraining() {
-  const container = document.getElementById("coach-log");
+  console.log("🏋️ Mode Training lancé");
+
+  const container = $$("coach-log");
   if (!container) {
-    console.warn("⚠️ Élément #coach-log introuvable");
+    console.warn("⚠️ coach-log introuvable");
     return;
   }
 
+  // Étape 1 : choisir le coach
+  showTrainingCoachSelectModal();
+}
+
+// --- Modale de sélection du coach (version Training) ---
+function showTrainingCoachSelectModal() {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:center;padding:20px;">
+      <h2 style="color:#00ff99;">🎯 Choisis ton coach pour l'entraînement</h2>
+      <p style="color:#ccc;margin-bottom:16px;">Chaque coach a sa méthode pour t’aider à progresser mentalement.</p>
+
+      <div class="coach-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button class="coach-choice btn" data-coach="Dorothee">💚 Dorothée<br><small>Bienveillance & Flow</small></button>
+        <button class="coach-choice btn" data-coach="Goathier">🔵 Goathier<br><small>Technique mentale</small></button>
+        <button class="coach-choice btn" data-coach="Greg">💥 Greg<br><small>Énergie & Data</small></button>
+        <button class="coach-choice btn" data-coach="Chill">🌿 Chill<br><small>Zen & Flow</small></button>
+      </div>
+
+      <p id="coach-desc" style="margin-top:14px;font-style:italic;color:#aaa;">Clique sur un coach pour voir sa vibe.</p>
+      <button id="validate-coach" class="btn" style="margin-top:18px;background:#00ff99;color:#111;">Valider</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  let selectedCoach = null;
+  const desc = modal.querySelector("#coach-desc");
+
+  const coachProfiles = {
+    "Dorothee": "💚 Douce, bienveillante, elle t’accompagne sans pression. Focus sur le calme et la respiration.",
+    "Goathier": "🔵 Posé et précis. Il t’aide à structurer ta pratique et à comprendre ton plan de progression.",
+    "Greg": "💥 Dynamique et méthodique. Il te pousse à performer avec des mini-défis et des données mentales.",
+    "Chill": "🌿 Relax et intuitif. Il t’aide à relâcher la tension pour retrouver ton flow."
+  };
+
+  modal.querySelectorAll(".coach-choice").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".coach-choice").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCoach = btn.dataset.coach;
+      desc.textContent = coachProfiles[selectedCoach];
+    });
+  });
+
+  modal.querySelector("#validate-coach").addEventListener("click", () => {
+    if (!selectedCoach) {
+      desc.textContent = "👉 Choisis ton coach avant de valider.";
+      desc.style.color = "#f66";
+      return;
+    }
+
+    localStorage.setItem("coach", selectedCoach);
+    modal.remove();
+
+    showCoachIA(`🏋️ ${selectedCoach} t’accompagne pour cette session d’entraînement.`);
+    showTrainingExerciseSelect(); // Étape suivante
+  });
+}
+
+// --- Étape 2 : affichage des exercices depuis le JSON ---
+async function showTrainingExerciseSelect() {
+  const log = $$("coach-log");
+  log.innerHTML = `<p style="color:#00ff99;">📂 Chargement des exercices...</p>`;
+
   try {
     const res = await fetch("./data/exercises.json");
-    allExercises = await res.json();
-    renderExerciseList("all");
+    const exercises = await res.json();
+
+    // Regroupement par type
+    const types = [...new Set(exercises.map(e => e.type))];
+
+    log.innerHTML = `
+      <h3 style="color:#00ff99;">Choisis un domaine :</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+        ${types.map(t => `<button class="btn training-type" data-type="${t}">${t}</button>`).join("")}
+      </div>
+      <div id="training-list" style="margin-top:20px;"></div>
+    `;
+
+    log.querySelectorAll(".training-type").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const selectedType = btn.dataset.type;
+        const filtered = exercises.filter(e => e.type === selectedType);
+        const list = log.querySelector("#training-list");
+        list.innerHTML = `
+          <h4 style="color:#00ff99;margin-top:10px;">Exercices ${selectedType} :</h4>
+          ${filtered.map(e => `
+            <div class="exercise-card" style="background:#111;border:1px solid #333;border-radius:8px;padding:8px;margin-top:6px;text-align:left;">
+              <strong>${e.name}</strong><br>
+              <small>${e.goal}</small><br>
+              <button class="btn start-exo" data-id="${e.id}" style="margin-top:6px;">Démarrer</button>
+            </div>
+          `).join("")}
+        `;
+
+        list.querySelectorAll(".start-exo").forEach(b => {
+          b.addEventListener("click", () => startTrainingSession(b.dataset.id));
+        });
+      });
+    });
   } catch (err) {
-    console.error("❌ Erreur chargement exercises.json :", err);
-    container.innerHTML = `<p style="color:#f55;">Erreur de chargement des exercices</p>`;
+    log.innerHTML = `<p style="color:#f55;">Erreur de chargement des exercices.</p>`;
+    console.error(err);
   }
 }
 
-// === Rendu de la liste filtrée ===
-function renderExerciseList(filterType) {
-  const container = document.getElementById("coach-log");
-  if (!container) return;
+// --- Étape 3 : Lancement de la session ---
+async function startTrainingSession(exoId) {
+  const res = await fetch("./data/exercises.json");
+  const exercises = await res.json();
+  const exo = exercises.find(e => e.id === exoId);
+  if (!exo) return;
 
-  const filtered = filterType === "all"
-    ? allExercises
-    : allExercises.filter(ex => ex.type === filterType);
-
-  const filterBar = `
-    <div id="filter-bar" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:12px;">
-      ${["all","putting","chipping","driving","irons","mental"].map(type => `
-        <button class="btn" data-type="${type}"
-          style="background:${filterType===type ? '#fff' : '#00ff99'};color:${filterType===type ? '#111' : '#000'};">
-          ${type === "all" ? "Tous" : type.charAt(0).toUpperCase() + type.slice(1)}
-        </button>
-      `).join("")}
+  const log = $$("coach-log");
+  log.innerHTML = `
+    <h3 style="color:#00ff99;">🏋️ ${exo.name}</h3>
+    <video src="${exo.media}" controls style="width:100%;border-radius:8px;margin-top:8px;"></video>
+    <p style="margin-top:8px;">🎯 Objectif : ${exo.goal}</p>
+    <div style="margin-top:12px;">
+      <input id="training-result" type="number" min="0" placeholder="Résultat..." style="padding:6px;border-radius:6px;width:60px;text-align:center;">
+      <button id="validate-training" class="btn" style="margin-left:8px;">Valider</button>
     </div>
   `;
 
-  const listHTML = filtered.map(ex => `
-    <div class="training-card" data-id="${ex.id}"
-         style="background:#111;border:1px solid #222;border-radius:8px;padding:10px;cursor:pointer;">
-      <h4 style="color:#00ff99;margin-bottom:4px;">${ex.name}</h4>
-      <p style="color:#ccc;margin-top:0;">${ex.goal}</p>
-      <video src="${ex.media}" muted style="width:100%;border-radius:8px;margin-top:8px;"></video>
-    </div>
-  `).join("");
+  const validateBtn = $$("validate-training");
+  validateBtn.addEventListener("click", async () => {
+    const result = parseInt($$("training-result").value || "0");
+    const coach = localStorage.getItem("coach") || "Greg";
+    const context = result >= exo.objectif ? "training_focus" : "training_relax";
+    const comment = await getCoachComment(coach, context);
 
-  container.innerHTML = `
-    <h3 style="color:#00ff99;">🧠 Choisis ton exercice</h3>
-    ${filterBar}
-    <div style="display:flex;flex-direction:column;gap:12px;">${listHTML}</div>
-  `;
-
-  // Filtres
-  document.querySelectorAll("#filter-bar button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const type = btn.getAttribute("data-type");
-      renderExerciseList(type);
-    });
-  });
-
-  // 🔹 Cliquer sur un exo => lancer la session
-  document.querySelectorAll(".training-card").forEach(card => {
-    card.addEventListener("click", () => {
-      const exo = allExercises.find(e => e.id === card.dataset.id);
-      if (exo) startExercise(exo);
-    });
+    showCoachIA(`💬 ${comment}`);
+    showCoachToast("💚 Exercice enregistré !");
   });
 }
 
-// === Lancer un exercice ===
-function startExercise(exo) {
-  currentExercise = exo;
-
-  const container = document.getElementById("coach-log");
-  container.innerHTML = `
-    <h3 style="color:#00ff99;">${exo.name}</h3>
-    <p>${exo.goal}</p>
-    <video src="${exo.media}" controls autoplay style="width:100%;border-radius:8px;margin:8px 0;"></video>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
-      <button id="success-btn" class="btn">✅ Réussi</button>
-      <button id="fail-btn" class="btn">❌ Pas encore</button>
-      <button id="talk-btn" class="btn">💬 Parler au coach</button>
-    </div>
-  `;
-
-  // 🧠 Message du coach
-  if (typeof showCoachIA === "function") {
-    showCoachIA(`🎯 Allez, objectif : ${exo.goal}`);
-  }
-
-  // Gestion des actions
-  document.getElementById("success-btn").addEventListener("click", () => finishExercise(true));
-  document.getElementById("fail-btn").addEventListener("click", () => finishExercise(false));
-  document.getElementById("talk-btn").addEventListener("click", () => {
-    if (typeof showCoachIA === "function") showCoachIA("💬 Raconte-moi ton ressenti sur cet exercice.");
-  });
-}
-
-// === Fin d’un exercice ===
-function finishExercise(success) {
-  const container = document.getElementById("coach-log");
-
-  const msg = success
-    ? `💚 Super travail sur "${currentExercise.name}" ! Routine validée 👏`
-    : `😅 Ce n’est pas encore parfait sur "${currentExercise.name}" — continue à t’entraîner.`;
-
-  // 🧠 Réaction du coach
-  if (typeof showCoachIA === "function") {
-    showCoachIA(msg);
-  }
-
-  // Sauvegarde locale
-  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-  history.push({
-    id: currentExercise.id,
-    name: currentExercise.name,
-    date: new Date().toISOString(),
-    success
-  });
-  localStorage.setItem("trainingHistory", JSON.stringify(history));
-
-  // Interface de fin
-  container.innerHTML = `
-    <h3>${msg}</h3>
-    <button class="btn" id="back-training" style="margin-top:12px;">⬅️ Retour aux exercices</button>
-  `;
-
-  document.getElementById("back-training").addEventListener("click", () => renderExerciseList("all"));
-}
-
-// === Export global ===
+// --- Export global ---
 window.initTraining = initTraining;
