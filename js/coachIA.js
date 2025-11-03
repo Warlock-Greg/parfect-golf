@@ -45,27 +45,42 @@ function handleCoachInput(input, log) {
 }
 
 // --- Réponses du coach ---
+// --- Réponses du coach IA hors ligne (professeur) ---
 async function respondAsCoach(message) {
-  // Charger la base FAQ une fois
+  // Charger la base si besoin
   if (!window.faqData) {
-    const res = await fetch("./data/coach-faq.json");
-    window.faqData = await res.json();
+    try {
+      const res = await fetch("./data/coach-faq.json");
+      window.faqData = await res.json();
+      console.log("📘 Base FAQ coach chargée");
+    } catch (err) {
+      console.error("❌ Impossible de charger coach-faq.json :", err);
+      appendCoachMessage("Désolé, je ne trouve pas mes notes pour le moment 😅");
+      return;
+    }
   }
 
-  // Détection des mots-clés
-  message = message.toLowerCase();
-  let found = null;
-  for (const [category, obj] of Object.entries(window.faqData)) {
-    if (obj.keywords.some(k => message.includes(k))) {
-      found = obj;
+  const lowerMsg = message.toLowerCase();
+  let category = null;
+  let responses = null;
+
+  // 🔍 Détection du thème
+  for (const [cat, obj] of Object.entries(window.faqData)) {
+    if (obj.keywords.some(k => lowerMsg.includes(k))) {
+      category = cat;
+      responses = obj.responses;
       break;
     }
   }
 
-  // Sélection d'une réponse
-  let reply = found
-    ? obj.responses[Math.floor(Math.random() * obj.responses.length)]
-    : "Intéressant ! Peux-tu préciser ta question sur le swing, la routine ou la stratégie ?";
+  // 🎯 Sélection aléatoire d’une réponse
+  let reply;
+  if (responses) {
+    const idx = Math.floor(Math.random() * responses.length);
+    reply = responses[idx];
+  } else {
+    reply = "Bonne question ! Peux-tu préciser si tu parles de ta routine, de ton swing ou de ta stratégie ?";
+  }
 
   appendCoachMessage(reply);
 }
