@@ -267,6 +267,32 @@ footer button.active {
         <div id="hole-card"></div>
       </div>
 
+<!-- === ANALYSE DU SWING (MVP) === -->
+<section id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
+  <h3>🎥 Analyse ton swing</h3>
+
+  <div style="margin-top:10px;">
+    <label for="swing-type">Type de coup :</label><br>
+    <select id="swing-type" style="margin-top:6px;padding:6px;border-radius:6px;">
+      <option value="drive">Drive</option>
+      <option value="iron">Fer</option>
+      <option value="approach">Approche</option>
+      <option value="putting">Putting</option>
+    </select>
+  </div>
+
+  <div style="margin-top:15px;">
+    <input type="file" id="video-upload" accept="video/*" capture="user">
+  </div>
+
+  <video id="video-preview" controls style="max-width:100%;margin-top:10px;border-radius:8px;display:none;"></video>
+
+  <button id="analyze-btn" class="btn" style="margin-top:15px;background:#00ff99;color:#111;">Analyser mon swing</button>
+
+  <div id="analysis-result" style="margin-top:20px;font-size:0.95rem;color:#fff;"></div>
+</section>
+
+      
       <div id="training-area" style="display:none;"></div>
       <div id="friends-area" style="display:none;"></div>
     </section>
