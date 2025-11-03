@@ -1,62 +1,107 @@
 {
   "routine": {
-    "keywords": ["routine", "préparation", "avant", "focus", "mental"],
+    "keywords": ["routine", "préparation", "focus", "avant", "avant de jouer", "rituel"],
     "responses": [
       "Ta routine, c’est ton ancrage. Respire, visualise et engage ton corps calmement.",
-      "Pense toujours à répéter le même schéma avant chaque coup : respiration, visualisation, swing.",
-      "Une bonne routine t’enlève le doute. Elle crée la stabilité dans ton jeu.",
+      "Répète ton rituel avant chaque coup, même les plus simples : c’est ton socle de confiance.",
+      "Une bonne routine t’enlève le doute. Elle te ramène dans ton présent.",
       "La routine, c’est comme une chanson : même rythme, même refrain avant chaque swing.",
-      "Avant de frapper, fixe ton attention sur la cible, pas sur le résultat."
+      "Avant de frapper, fixe ton attention sur la cible, pas sur le résultat.",
+      "Quand tu doutes, reviens à ta respiration. C’est la première étape de ta routine.",
+      "Routine = sécurité. Même gestes, même tempo, même énergie.",
+      "Visualise ton coup avant de t’installer. C’est ton autopilote mental.",
+      "Ta routine, c’est la colle entre ton mental et ton swing.",
+      "Garde toujours le même tempo de routine : calme et intention claire."
     ]
   },
   "swing": {
-    "keywords": ["swing", "rotation", "plan", "mains", "épaules"],
+    "keywords": ["swing", "rotation", "plan", "mains", "bras", "épaules", "corps"],
     "responses": [
-      "Le swing n’est pas une force, c’est un rythme. Laisse le corps tourner naturellement.",
-      "Ne cherche pas à taper fort : cherche à frapper au bon tempo.",
-      "Si tu pars à droite, c’est souvent une face ouverte ou un corps figé. Respire et relâche.",
+      "Le swing, c’est un rythme, pas une force. Laisse ton corps respirer.",
+      "Ne cherche pas à taper fort, cherche à frapper juste.",
+      "Si tu sens que tu forces, c’est que tu veux trop bien faire. Reviens à ton tempo.",
       "Ton corps guide, tes mains accompagnent. Pas l’inverse.",
-      "Pense fluide. Le swing, c’est un mouvement, pas un geste."
+      "Pense fluide. Le swing, c’est un mouvement, pas un geste.",
+      "Un bon swing, c’est une respiration complète : inspire à la montée, expire à la descente.",
+      "Ne bloque pas ton corps. Le relâchement crée la vitesse.",
+      "Ton swing n’a pas besoin d’être parfait. Il doit être régulier.",
+      "Moins tu réfléchis, plus tu ressens ton swing.",
+      "Le bon swing, c’est celui que tu peux répéter sans forcer."
     ]
   },
   "direction": {
-    "keywords": ["droite", "gauche", "slice", "hook", "trajectoire"],
+    "keywords": ["droite", "gauche", "slice", "hook", "trajectoire", "alignement"],
     "responses": [
-      "Une balle qui part à droite, c’est souvent une face ouverte à l’impact.",
-      "Vérifie ton alignement. Parfois, c’est le corps plus que le club.",
-      "Le slice vient d’un swing extérieur-intérieur : relâche et tourne autour de ta colonne.",
-      "Si tu tires à gauche, ton chemin est trop intérieur. Garde le tempo et vise le centre du fairway.",
-      "Concentre-toi sur le point de contact, pas sur le chemin. Le reste suivra."
+      "Une balle à droite, c’est souvent une face ouverte à l’impact. Respire et relâche.",
+      "Vérifie ton alignement. Parfois, ce n’est pas ton swing mais ton regard.",
+      "Si tu tires à gauche, ton chemin est peut-être trop intérieur. Reste centré.",
+      "Le slice vient souvent d’un excès de tension dans les bras. Détends-toi.",
+      "La direction, c’est une question d’intention. Visualise ta cible avant d’agir.",
+      "Cherche la trajectoire, pas le geste. L’œil guide le corps.",
+      "Un bon alignement, c’est déjà un bon coup.",
+      "Ta balle va là où tu regardes : choisis ta cible, pas ton obstacle.",
+      "Laisse ton corps tourner, pas tes bras tirer.",
+      "L’équilibre crée la direction. Reste stable jusqu’à la fin du swing."
     ]
   },
   "stratégie": {
-    "keywords": ["stratégie", "plan", "choix", "club", "attaque", "départ"],
+    "keywords": ["stratégie", "plan", "choix", "club", "attaque", "départ", "gestion"],
     "responses": [
-      "Ta stratégie, c’est ton GPS. Décide avant de jouer, pas pendant.",
-      "Mieux vaut un petit coup bien placé qu’un grand coup risqué.",
+      "Ta stratégie, c’est ton GPS : décide avant, pas pendant.",
+      "Mieux vaut un petit coup sûr qu’un grand coup risqué.",
       "Joue le coup que tu sais faire, pas celui que tu rêves.",
-      "Quand le doute arrive, choisis le club qui t’apporte la paix mentale.",
-      "La stratégie, c’est anticiper le pire sans craindre le résultat."
+      "Quand tu doutes, choisis le club qui t’apporte la paix mentale.",
+      "La stratégie, c’est anticiper sans craindre. Reste dans ton plan.",
+      "Tu gagnes des coups avec ton cerveau, pas avec ta force.",
+      "Un bon joueur, c’est un bon décideur avant tout.",
+      "Ta stratégie doit s’adapter à ton jour, pas ton ego.",
+      "Un bogey réfléchi vaut mieux qu’un par précipité.",
+      "Joue pour le prochain coup, pas pour l’ego du moment."
     ]
   },
   "putting": {
-    "keywords": ["putt", "putting", "green", "lecture", "tempo"],
+    "keywords": ["putt", "putting", "green", "lecture", "tempo", "putter"],
     "responses": [
-      "Sur le green, c’est ton regard qui guide. Vois la trajectoire avant d’agir.",
+      "Sur le green, c’est ton regard qui guide. Visualise le chemin.",
       "Un bon putting, c’est 80% de tempo, 20% de visée.",
-      "Reste immobile, léger. Laisse les épaules balancer le club.",
+      "Reste léger. Laisse les épaules balancer, pas les mains.",
       "Le secret du putting, c’est la confiance, pas la perfection.",
-      "Regarde le trou, pas la balle, avant de démarrer ta routine de putt."
+      "Lis ton putt comme un livre ouvert. Regarde les pentes.",
+      "Ne pense pas résultat, pense mouvement.",
+      "Ton regard et ton souffle font la différence.",
+      "Mieux vaut un putt court bien roulé qu’un long forcé.",
+      "Cherche la douceur, pas la puissance.",
+      "Chaque putt est une danse entre rythme et intention."
     ]
   },
   "mental": {
-    "keywords": ["mental", "confiance", "stress", "tension", "émotion"],
+    "keywords": ["mental", "confiance", "stress", "tension", "émotion", "pression", "calme"],
     "responses": [
       "Respire profondément. Le calme crée la performance.",
       "Tu n’as pas besoin d’être parfait, juste présent à chaque coup.",
-      "Accepte l’erreur comme partie du jeu. Le mental, c’est 80% du golf.",
-      "Moins tu cherches à contrôler, plus tu joues juste.",
-      "Le stress est un signe que tu tiens à bien faire. Transforme-le en énergie calme."
+      "Accepte l’erreur : elle fait partie de ton apprentissage.",
+      "Moins tu veux contrôler, plus tu joues juste.",
+      "Le stress, c’est ton énergie. Apprends à la canaliser.",
+      "Reste dans ton présent, pas dans ton score.",
+      "Le mental, c’est ton club le plus important.",
+      "Souris avant chaque coup. C’est un déclencheur de relâchement.",
+      "Garde ton tempo intérieur, quoi qu’il arrive autour de toi.",
+      "La patience est une arme redoutable au golf."
+    ]
+  },
+  "bunker": {
+    "keywords": ["bunker", "sable", "explosion", "sortie"],
+    "responses": [
+      "Dans le sable, pense rythme, pas force.",
+      "Frappe le sable, pas la balle : c’est lui qui la fait sortir.",
+      "Reste stable et garde ton regard fixe.",
+      "Un bon coup de bunker, c’est un bon contact avec le sable.",
+      "Laisse le club glisser sous la balle, sans tension.",
+      "Ne cherche pas à lever, laisse le bounce travailler.",
+      "Ton finish doit être haut, ton tempo constant.",
+      "Visualise la sortie, pas la peur du sable.",
+      "Garde ton poids à gauche et ton mental tranquille.",
+      "Un bon coup de bunker, c’est du feeling avant tout."
     ]
   }
 }
