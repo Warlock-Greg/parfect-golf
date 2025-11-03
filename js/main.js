@@ -71,6 +71,12 @@ document.addEventListener("DOMContentLoaded", () => {
     coachReact("💪 Mode Entraînement — choisis ton exercice mental !");
   });
 
+  // Ajoute ceci dans le menu Historique :
+if (typeof window.showTrainingRecap === "function") {
+  window.showTrainingRecap();
+}
+
+
   // === 👥 Mode Friends ===
   friendsBtn?.addEventListener("click", () => {
     setActive(friendsBtn);
