@@ -353,29 +353,40 @@ function saveCurrentHole() {
 
 let lastCoachMessage = "";
 
-function analyzeHole(holeData) {
-  if (!holeData) return;
-  const { score, par, fairway, gir, dist2 } = holeData;
-  const diff = score - par;
+function analyzeHole(hole) {
+  if (!hole) return;
+  const diff = hole.score - hole.par;
+  const { fairway, gir, dist2 } = hole;
   let message = "";
+  let parfectCount = parseInt(localStorage.getItem("parfectCount") || "0");
 
-  if (diff === 0 && fairway && gir && (dist2 === "1" || dist2 === "2")) {
-    message = "💚 Parfect ! Par + Fairway + GIR + ≤2 putts. Excellent !";
-  } else if (diff === 1 && fairway && (dist2 === "1" || dist2 === "2")) {
-    message = "💙 Bogey’fect ! Bogey solide, mental propre.";
+  const isParfect =
+    diff === 0 && fairway && gir && ["1", "2", "3", "4", "5"].includes(dist2);
+
+  if (isParfect) {
+    parfectCount++;
+    localStorage.setItem("parfectCount", parfectCount);
+    updateParfectCounter?.();
+    flashParfectCounter?.();
+    message = `💚 Parfect collecté (${parfectCount}) ! Flow en hausse.`;
   } else if (diff < 0) {
-    message = "🕊️ Birdie ! Fluide et en contrôle, c’est du beau golf.";
+    message = "🕊️ Birdie, du grand golf !";
+  } else if (diff === 1) {
+    message = "💙 Bogey’fect, tu restes solide.";
   } else if (diff >= 2) {
-    message = "😅 Pas grave, routine + calme = prochain trou solide.";
+    message = "😅 Pas grave, on rebondit au prochain.";
   } else {
-    message = "👌 Trou régulier, continue ton flow.";
+    message = "👌 Trou régulier, flow maîtrisé.";
   }
 
-  // 🔁 Empêche les doublons
-  if (message === lastCoachMessage) return;
-  lastCoachMessage = message;
+  // ✅ Forcer l’affichage du coach même si message répété
+  if (typeof showCoachIA === "function") {
+    showCoachIA(message);
+  } else {
+    console.log("Coach:", message);
+  }
 
-  showCoachIA?.(message);
+  lastCoachMessage = message;
 }
 
 
