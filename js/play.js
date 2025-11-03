@@ -173,6 +173,71 @@ function showMoodAndStrategyModal(onConfirm) {
 }
 
 
+// === Modale de sélection du coach Parfect.golfr ===
+function showCoachSelectModal() {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:420px;text-align:center;padding:20px;">
+      <h2 style="color:#00ff99;">🎯 Choisis ton coach</h2>
+      <p style="color:#ccc;margin-bottom:16px;">Chaque coach a sa vibe. Choisis celui qui t’inspire aujourd’hui.</p>
+
+      <div class="coach-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <button class="coach-choice btn" data-coach="Dorothee" style="background:#00c676;color:#111;">
+          💚 Dorothée<br><small>Bienveillance & Flow</small>
+        </button>
+        <button class="coach-choice btn" data-coach="Goathier" style="background:#00c676;color:#111;">
+          🔵 Goathier<br><small>Technique mentale</small>
+        </button>
+        <button class="coach-choice btn" data-coach="Greg" style="background:#00c676;color:#111;">
+          💥 Greg<br><small>Énergie & Data</small>
+        </button>
+        <button class="coach-choice btn" data-coach="Chill" style="background:#00c676;color:#111;">
+          🌿 Chill<br><small>Zen & Flow</small>
+        </button>
+      </div>
+
+      <p id="coach-desc" style="margin-top:14px;font-style:italic;color:#aaa;">Clique sur un coach pour voir sa vibe.</p>
+      <button id="validate-coach" class="btn" style="margin-top:18px;background:#00ff99;color:#111;">Valider</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  let selectedCoach = null;
+  const desc = modal.querySelector("#coach-desc");
+
+  const coachProfiles = {
+    "Dorothee": "💚 Ta meilleure amie de parcours. Douce, bienveillante, elle t’aide à respirer entre les coups.",
+    "Goathier": "🔵 Calme et réfléchi. Il t’aide à comprendre ton plan et à garder la structure mentale.",
+    "Greg": "💥 Créatif et analytique. Il parle stats, rythme et mindset intelligent.",
+    "Chill": "🌿 Relax, positif et un peu poète. Il t’aide à surfer sur le flow du jeu."
+  };
+
+  modal.querySelectorAll(".coach-choice").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".coach-choice").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedCoach = btn.dataset.coach;
+      desc.textContent = coachProfiles[selectedCoach];
+    });
+  });
+
+  modal.querySelector("#validate-coach").addEventListener("click", () => {
+    if (!selectedCoach) {
+      desc.textContent = "👉 Choisis ton coach avant de valider.";
+      desc.style.color = "#f66";
+      return;
+    }
+
+    localStorage.setItem("coach", selectedCoach);
+    modal.remove();
+
+    showCoachIA(`🎙️ ${selectedCoach} activé ! Prêt à te guider sur ce parcours.`);
+    showMoodAndStrategyModal(); // Enchaîne sur la modale suivante
+  });
+}
+
+
 function renderHole(number = currentHole) {
   const holeCard = $$("hole-card");
   if (!holeCard) return console.warn("⚠️ #hole-card introuvable");
