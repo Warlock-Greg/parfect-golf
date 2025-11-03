@@ -299,3 +299,19 @@ window.initGolfSelect = initGolfSelect;
 window.startNewRound = startNewRound;
 window.showResumeOrNewModal = showResumeOrNewModal;
 window.renderHole = renderHole;
+
+// === Parfect Counter ===
+function updateParfectCounter() {
+  const counter = document.getElementById("parfect-counter");
+  if (!counter) return;
+  const count = parseInt(localStorage.getItem("parfectCount") || "0");
+  counter.textContent = `💚 ${count} Parfect${count > 1 ? "s" : ""} collecté${count > 1 ? "s" : ""}`;
+}
+
+function flashParfectCounter() {
+  const counter = document.getElementById("parfect-counter");
+  if (!counter) return;
+  counter.classList.add("flash");
+  setTimeout(() => counter.classList.remove("flash"), 400);
+}
+
