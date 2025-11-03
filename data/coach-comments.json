@@ -1,0 +1,65 @@
+{
+  "Dorothee": [
+    { "context": "birdie", "text": "🌸 Magnifique ! Ce birdie c’est ton calme qui a parlé, pas la force." },
+    { "context": "parfect", "text": "💚 Sérénité, focus, respiration — voilà ton trio gagnant aujourd’hui." },
+    { "context": "bogeyfect", "text": "💙 Ce bogey est un beau signe : tu restes fidèle à ta routine, c’est tout ce qui compte." },
+    { "context": "par", "text": "✨ Chaque par construit la confiance. Tu restes dans ton plan, c’est parfait." },
+    { "context": "double_bogey_drive", "text": "Respire. Le drive s’est échappé, mais ton calme t’aidera à revenir sur le fairway mental." },
+    { "context": "double_bogey_penalite", "text": "Une pénalité ne change rien à ton flow. Reprends ton souffle, recommence doucement." },
+    { "context": "double_bogey_mauvais_shot", "text": "Ce n’est rien. Un mauvais coup, un bon mental — et tu avances déjà." },
+    { "context": "double_bogey_strategie", "text": "Tu apprends de chaque choix. Ton intelligence de jeu grandit à chaque trou." },
+    { "context": "routine_ok", "text": "Ta routine est ton ancrage. Reste dedans, quoi qu’il arrive." },
+    { "context": "routine_skip", "text": "Pas grave. Reviens à ta routine au prochain coup, c’est elle ton équilibre." },
+    { "context": "training_focus", "text": "Concentre-toi sur ton souffle. La technique suivra toujours la paix du geste." },
+    { "context": "training_relax", "text": "Plus tu relâches, plus le corps apprend. La détente est une forme d’intelligence." },
+    { "context": "end_round", "text": "🧘 Magnifique parcours. Tu as joué avec intention et respect — ton meilleur golf, c’est celui-là." }
+  ],
+
+  "Goathier": [
+    { "context": "birdie", "text": "Structure claire, exécution fluide. Ton plan s’aligne parfaitement." },
+    { "context": "parfect", "text": "💚 Par + Fairway + GIR, c’est une architecture de sérénité. Continue comme ça." },
+    { "context": "bogeyfect", "text": "💙 Bogey’fect, c’est du contrôle intelligent. Tes décisions sont justes." },
+    { "context": "par", "text": "Chaque par valide ton protocole. Tu es dans la régularité du progrès." },
+    { "context": "double_bogey_drive", "text": "Un drive manqué, mais une analyse à retenir. Ce sont les données du progrès." },
+    { "context": "double_bogey_penalite", "text": "Une pénalité, c’est un point d’ajustement, pas un échec. Le plan reste bon." },
+    { "context": "double_bogey_mauvais_shot", "text": "Ce coup est un indicateur, pas un verdict. Observe et ajuste calmement." },
+    { "context": "double_bogey_strategie", "text": "La stratégie, c’est une boussole, pas une règle. Tu apprends à la recaler, c’est parfait." },
+    { "context": "routine_ok", "text": "Ta routine, c’est ton système nerveux externe. Elle te garde aligné." },
+    { "context": "routine_skip", "text": "Chaque oubli est un repère. Tu sauras corriger naturellement." },
+    { "context": "training_focus", "text": "Focus propre, décisions justes. Le mental est ton meilleur outil de mesure." },
+    { "context": "training_relax", "text": "En relâchant, tu laisses le système s’auto-réguler. C’est très juste." },
+    { "context": "end_round", "text": "📊 Tu construis une belle base de données mentale. Garde ton plan clair, et tout s’optimise." }
+  ],
+
+  "Greg": [
+    { "context": "birdie", "text": "🔥 Momentum enclenché ! Tu valides ton flow et tes chiffres mentaux explosent." },
+    { "context": "parfect", "text": "💚 C’est du golf intelligent : décision juste, exécution simple, résultat solide." },
+    { "context": "bogeyfect", "text": "💙 Même un bogey reste un bon indicateur. T’es stable, et c’est ça le vrai progrès." },
+    { "context": "par", "text": "Ta moyenne mentale reste haute. 4 pars d’affilée, c’est du Parfect Golf." },
+    { "context": "double_bogey_drive", "text": "Stat : drive manqué, mais mindset solide. Tu perds un coup, pas ton plan." },
+    { "context": "double_bogey_penalite", "text": "La data est claire : la pénalité te teste, mais ton attitude reste premium." },
+    { "context": "double_bogey_mauvais_shot", "text": "Pas grave, c’est une anomalie statistique. Le trend global reste positif." },
+    { "context": "double_bogey_strategie", "text": "On ajuste la stratégie, pas le mental. Tu construis ton QI golfique, trou après trou." },
+    { "context": "routine_ok", "text": "Routine validée ✅ Ton taux de cohérence mentale est au top." },
+    { "context": "routine_skip", "text": "Pas grave. Le focus revient vite quand la data t’y ramène." },
+    { "context": "training_focus", "text": "Chaque répétition te fait gagner un point de clarté. Continue ce protocole simple." },
+    { "context": "training_relax", "text": "Tu apprends sans pression. C’est du training intelligent, pas mécanique." },
+    { "context": "end_round", "text": "📈 Tes stats mentales sont belles. Ce parcours est une victoire analytique et humaine." }
+  ],
+
+  "Chill": [
+    { "context": "birdie", "text": "🌿 C’est fluide, naturel, comme une vague qui suit le vent. Continue ce flow." },
+    { "context": "parfect", "text": "💚 L’énergie circule bien, tu ne forces rien. C’est ça le vrai golf." },
+    { "context": "bogeyfect", "text": "💙 Tranquille… un bogey smooth vaut mieux qu’un par stressé." },
+    { "context": "par", "text": "Le par, c’est ton rythme naturel. Tu joues dans la vibe, pas dans la tension." },
+    { "context": "double_bogey_drive", "text": "Pas grave, le vent emporte aussi les drives. L’important, c’est ton énergie qui reste cool." },
+    { "context": "double_bogey_penalite", "text": "La pénalité ? Une vague de plus, et toi tu surfes toujours dessus." },
+    { "context": "double_bogey_mauvais_shot", "text": "Un coup raté, une belle leçon de flow. Rien n’est figé." },
+    { "context": "double_bogey_strategie", "text": "La stratégie, c’est du surf mental. Tu ajustes ta planche et tu continues la glisse." },
+    { "context": "routine_ok", "text": "Ta routine, c’est ton souffle zen. Elle t’ancre, sans te bloquer." },
+    { "context": "routine_skip", "text": "Aucune pression. Le flow reviendra, naturellement." },
+    { "context": "training_focus", "text": "Focus tranquille, esprit libre. Ton corps sait déjà quoi faire." },
+    { "context": "training_relax", "text": "Zéro tension, tout vibration. Le progrès vient quand tu ne le cherches plus." },
+    { "context": "end_round", "text": "🌈 Beau parcours. L’énergie était belle, peu importe le score." }
+  ]
+}
