@@ -9,6 +9,50 @@ let holes = [];
 let currentDiff = 0;
 let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
+// === Modale Reprendre ou Nouvelle Partie ===
+function showResumeOrNewModal() {
+  const roundInProgress = localStorage.getItem("roundInProgress") === "true";
+  const lastGolf = localStorage.getItem("currentGolf");
+
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.innerHTML = `
+    <div class="modal-card" style="text-align:center;padding:20px;">
+      <h3>🎮 Partie en cours ?</h3>
+      ${
+        roundInProgress
+          ? `<p>Souhaites-tu reprendre ta partie en cours ou en démarrer une nouvelle ?</p>
+             <div style="display:flex;gap:10px;justify-content:center;">
+               <button class="btn" id="resume-round">Reprendre</button>
+               <button class="btn" id="new-round">Nouvelle</button>
+             </div>`
+          : `<p>Prêt à démarrer une nouvelle partie ?</p>
+             <button class="btn" id="new-round">🚀 Démarrer</button>`
+      }
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Boutons
+  modal.querySelector("#resume-round")?.addEventListener("click", () => {
+    modal.remove();
+    if (lastGolf) {
+      const resumingGolf = JSON.parse(localStorage.getItem("holesData") || "[]");
+      if (resumingGolf.length > 0) holes = resumingGolf;
+      currentGolf = { id: lastGolf };
+      renderHole(currentHole);
+    }
+  });
+
+  modal.querySelector("#new-round")?.addEventListener("click", () => {
+    modal.remove();
+    initGolfSelect();
+  });
+}
+
+window.showResumeOrNewModal = showResumeOrNewModal;
+
+
 // === Démarre une nouvelle partie ===
 async function startNewRound(golfId) {
   const holeCard = $$("hole-card");
