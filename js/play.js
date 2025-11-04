@@ -212,6 +212,12 @@ function showMoodAndStrategyModal(onConfirm) {
     if (typeof onConfirm === "function") onConfirm();
   });
 }
+// 📋 Accès direct à la carte de score
+  modal.querySelector("#open-score").addEventListener("click", () => {
+    modal.remove();
+    renderHole(currentHole);
+  });
+}
 
 // Rendre accessible globalement
 window.showMoodAndStrategyModal = showMoodAndStrategyModal;
