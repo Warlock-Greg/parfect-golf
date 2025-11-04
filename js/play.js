@@ -411,9 +411,10 @@ function summarizeRound() {
   setTimeout(() => badge.remove(), 3000);
 
   showCoachIA?.(`🏁 Fin de partie ! Score total ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}, ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`);
-}
+
 
 showShareBadge(totalVsPar, parfects);
+  }
 
 
 // === 🏆 BADGE INSTAGRAM DELUXE ===
