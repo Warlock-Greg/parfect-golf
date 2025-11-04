@@ -135,6 +135,90 @@ async function startNewRound(golfId) {
   }
 }
 
+// === Mood & Stratégie avant la partie ===
+function showMoodAndStrategyModal(onConfirm) {
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop";
+  modal.style.zIndex = "12000"; // ✅ au-dessus du coach
+  modal.innerHTML = `
+    <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
+      <h3>😎 Mood du jour</h3>
+      <div id="mood-buttons" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;">
+        <button class="btn mood" data-mood="focus">Focus</button>
+        <button class="btn mood" data-mood="relax">Relax</button>
+        <button class="btn mood" data-mood="fun">Fun</button>
+        <button class="btn mood" data-mood="grind">Grind</button>
+      </div>
+
+      <h4 style="margin-top:18px;">🎯 Stratégie</h4>
+      <div id="strategy-buttons" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;">
+        <button class="btn strat" data-strat="safe">Safe</button>
+        <button class="btn strat" data-strat="aggressive">Aggressive</button>
+        <button class="btn strat" data-strat="5050">50/50</button>
+        <button class="btn strat" data-strat="mindset">Mindset</button>
+      </div>
+
+      <h4 style="margin-top:18px;">🧑‍🏫 Choisis ton coach</h4>
+      <div id="coach-buttons" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;">
+        <button class="btn coach" data-coach="dorothee">Dorothée</button>
+        <button class="btn coach" data-coach="greg">Greg</button>
+        <button class="btn coach" data-coach="gauthier">Gauthier</button>
+      </div>
+
+      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  let mood = "focus";
+  let strat = "mindset";
+  let coach = "dorothee";
+
+  // Sélection Mood
+  modal.querySelectorAll(".mood").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      mood = btn.dataset.mood;
+    });
+  });
+
+  // Sélection Stratégie
+  modal.querySelectorAll(".strat").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".strat").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      strat = btn.dataset.strat;
+    });
+  });
+
+  // Sélection Coach
+  modal.querySelectorAll(".coach").forEach(btn => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".coach").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      coach = btn.dataset.coach;
+    });
+  });
+
+  // Bouton "Démarrer"
+  modal.querySelector("#start-round").addEventListener("click", () => {
+    localStorage.setItem("mood", mood);
+    localStorage.setItem("strategy", strat);
+    localStorage.setItem("coach", coach);
+    modal.remove();
+
+    showCoachIA?.(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat} · 🗣️ Coach: ${coach}`);
+    if (typeof onConfirm === "function") onConfirm();
+  });
+}
+
+// Rendre accessible globalement
+window.showMoodAndStrategyModal = showMoodAndStrategyModal;
+
+
+
+
 // === Affiche un trou ===
 function renderHole(number = currentHole) {
   const holeCard = $$("hole-card");
