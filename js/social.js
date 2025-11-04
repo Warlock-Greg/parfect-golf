@@ -1,4 +1,4 @@
-// === SOCIAL.JS — version stable et nettoyée ===
+// === SOCIAL.JS — version corrigée ===
 
 // Helper DOM local (ne redéfinit pas $)
 const $$ = (id) => document.getElementById(id);
@@ -7,7 +7,14 @@ const $$ = (id) => document.getElementById(id);
 function injectSocialUI() {
   console.log("👥 Chargement de l'interface sociale...");
 
-  // Cherche ou crée un conteneur principal
+  // Cible la vraie zone Social
+  const parent = $$("friends-area");
+  if (!parent) {
+    console.warn("⚠️ Zone friends-area introuvable dans index.html");
+    return;
+  }
+
+  // Cherche ou crée un conteneur interne
   let container = $$("social-container");
   if (!container) {
     container = document.createElement("div");
@@ -19,10 +26,10 @@ function injectSocialUI() {
     container.style.borderRadius = "12px";
     container.style.margin = "16px auto";
     container.style.maxWidth = "500px";
-    document.body.appendChild(container);
+    parent.appendChild(container); // ✅ injecté dans friends-area
   }
 
-  // Contenu de base du module social
+  // Contenu principal
   container.innerHTML = `
     <h2 style="color:#00ff99;">👥 Communauté Parfect</h2>
     <p>Connecte-toi avec d'autres golfeurs, partage tes scores et tes routines.</p>
@@ -33,7 +40,7 @@ function injectSocialUI() {
     <div id="social-content" style="margin-top:20px;"></div>
   `;
 
-  // Boutons d'action
+  // Boutons d’action
   const inviteBtn = $$("invite-friend-btn");
   const leaderboardBtn = $$("show-leaderboard-btn");
 
@@ -65,7 +72,7 @@ function handleInviteFriend() {
   });
 }
 
-// --- Affiche le classement ---
+// --- Affiche le leaderboard ---
 function showLeaderboard() {
   console.log("🏆 Affichage du leaderboard");
 
@@ -95,5 +102,6 @@ function showLeaderboard() {
   `;
 }
 
-// --- Expose globalement (pour main.js) ---
+// --- Expose globalement ---
 window.injectSocialUI = injectSocialUI;
+
