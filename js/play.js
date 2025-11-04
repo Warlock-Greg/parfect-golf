@@ -100,27 +100,35 @@ async function startNewRound(golfId) {
   if (holeCard) holeCard.innerHTML = "";
   if (golfSelect) golfSelect.style.display = "none";
 
-  const res = await fetch("./data/golfs.json");
-  const golfs = await res.json();
-  const golf = golfs.find((g) => g.id === golfId);
-  if (!golf) return (holeCard.innerHTML = `<p>Golf introuvable</p>`);
+  try {
+    const res = await fetch("./data/golfs.json");
+    const golfs = await res.json();
+    const golf = golfs.find((g) => g.id === golfId);
 
-  currentGolf = golf;
-  currentHole = 1;
-  holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
-  localStorage.setItem("roundInProgress", "true");
-  localStorage.setItem("currentGolf", golfId);
+    if (!golf) {
+      holeCard.innerHTML = `<p style="color:#f55;">⚠️ Golf introuvable</p>`;
+      return;
+    }
 
+    // Initialise les variables globales
+    currentGolf = golf;
+    currentHole = 1;
+    holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
 
-// ✅ Lance la modale puis affiche le 1er trou une fois validée
+    localStorage.setItem("roundInProgress", "true");
+    localStorage.setItem("currentGolf", golfId);
+
+    // ✅ Lance la modale puis affiche le 1er trou une fois validée
     showMoodAndStrategyModal(() => {
       console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
       renderHole(currentHole);
     });
+
   } catch (err) {
     console.error("❌ Erreur chargement golfs.json :", err);
     holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
   }
+}
 
 // --- Modale Mood + Stratégie + Coach ---
 function showMoodAndStrategyModal() {
