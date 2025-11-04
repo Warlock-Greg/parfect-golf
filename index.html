@@ -320,6 +320,7 @@ footer button.active {
   <script src="js/play.js"></script>
   <script src="js/training.js"></script>
   <script src="js/social.js"></script>
+  <script src="js/swingAnalyzer.js"></script>
   <script src="js/main.js"></script>
 
   <!-- === Boot inline (MVP-safe) === -->
@@ -374,6 +375,7 @@ footer button.active {
     trainingArea.style.display = "none";
     friendsArea.style.display = "none";
     swingAnalyzer.style.display = "block";
+    window.initSwingAnalyzer?.(); // ✅ ajoute cet appel
     coachReact("🎥 Mode Analyse activé — envoie ta vidéo !");
   });
 
