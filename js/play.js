@@ -111,7 +111,16 @@ async function startNewRound(golfId) {
   localStorage.setItem("roundInProgress", "true");
   localStorage.setItem("currentGolf", golfId);
 
-  showMoodAndStrategyModal((); => renderHole(currentHole));
+
+// ✅ Lance la modale puis affiche le 1er trou une fois validée
+    showMoodAndStrategyModal(() => {
+      console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+      renderHole(currentHole);
+    });
+  } catch (err) {
+    console.error("❌ Erreur chargement golfs.json :", err);
+    holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
+  }
 }
 
 // --- Modale Mood + Stratégie + Coach ---
