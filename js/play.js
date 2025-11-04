@@ -126,14 +126,10 @@ async function startNewRound(golfId) {
     localStorage.setItem("currentGolf", golfId);
 
     showMoodAndStrategyModal(() => {
-      console.log("✅ Mood & stratégie confirmés → affichage du 1er trou");
-      renderHole(currentHole);
-    });
-  } catch (err) {
-    console.error("❌ Erreur chargement golfs.json :", err);
-    holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
-  }
-}
+  console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+  renderHole(currentHole);
+});
+
 
 // === Mood & Stratégie avant la partie ===
 function showMoodAndStrategyModal(onConfirm) {
