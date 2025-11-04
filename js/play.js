@@ -413,6 +413,89 @@ function summarizeRound() {
   showCoachIA?.(`🏁 Fin de partie ! Score total ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}, ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`);
 }
 
+showShareBadge(totalVsPar, parfects);
+
+
+// === 🏆 BADGE INSTAGRAM DELUXE ===
+function showShareBadge(totalVsPar, parfects) {
+  const mood = localStorage.getItem("mood") || "Focus";
+  const strat = localStorage.getItem("strategy") || "Mindset";
+  const coach = localStorage.getItem("coach") || "Parfect";
+
+  const badge = document.createElement("div");
+  badge.id = "share-badge";
+  badge.style = `
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 92%;
+    max-width: 380px;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 0 40px #00ff99aa;
+    z-index: 15000;
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at top, #00ff99 0%, #008f66 100%);
+    color: #111;
+    text-align: center;
+    animation: fadeInBadge 0.6s ease forwards;
+  `;
+
+  badge.innerHTML = `
+    <div style="padding:20px 20px 10px;">
+      <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" 
+           style="width:64px;height:64px;border-radius:12px;margin-bottom:6px;" alt="Parfect.golfr" />
+      <h2 style="margin:0;font-size:1.4rem;">Parfect.golfr</h2>
+      <p style="margin:4px 0 10px;font-size:0.9rem;opacity:0.9;">${new Date().toLocaleDateString()}</p>
+
+      <div style="background:rgba(255,255,255,0.15);padding:10px 14px;border-radius:16px;">
+        <p style="margin:6px 0;font-size:1.3rem;">Score total : 
+          <strong style="color:${totalVsPar>0?'#ff3333':'#111'};">
+            ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
+          </strong>
+        </p>
+        <p style="margin:6px 0;font-size:1.2rem;">💚 ${parfects} Parfect${parfects>1?'s':''} collecté${parfects>1?'s':''}</p>
+      </div>
+
+      <div style="margin-top:10px;font-size:0.95rem;">
+        <p>😎 Mood : <strong>${mood}</strong></p>
+        <p>🎯 Stratégie : <strong>${strat}</strong></p>
+        <p>🧑‍🏫 Coach : <strong>${coach}</strong></p>
+      </div>
+
+      <div style="margin-top:16px;display:flex;justify-content:center;gap:10px;">
+        <button id="download-badge" class="btn" 
+          style="background:#111;color:#00ff99;border-radius:10px;padding:8px 16px;">📸 Télécharger</button>
+        <button id="close-badge" class="btn" 
+          style="background:#ff3366;color:#fff;border-radius:10px;padding:8px 16px;">❌ Fermer</button>
+      </div>
+
+      <p style="font-size:0.85rem;margin-top:10px;opacity:0.8;">#parfectgolfr #mindset #golfjourney</p>
+    </div>
+  `;
+
+  document.body.appendChild(badge);
+
+  // 📸 Télécharger le badge
+  badge.querySelector("#download-badge").addEventListener("click", async () => {
+    try {
+      const canvas = await html2canvas(badge, { backgroundColor: "#00ff99" });
+      const link = document.createElement("a");
+      link.download = `parfect-badge-${new Date().toISOString().split("T")[0]}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (err) {
+      console.error("Erreur génération image :", err);
+      alert("⚠️ Téléchargement non supporté sur ce navigateur.");
+    }
+  });
+
+  // ❌ Fermer
+  badge.querySelector("#close-badge").addEventListener("click", () => badge.remove());
+}
+
+
 // === Sauvegarde trou ===
 function saveCurrentHole() {
   const fairway = $$("fairway")?.checked || false;
