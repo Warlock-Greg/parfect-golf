@@ -123,9 +123,20 @@ async function startNewRound(golfId) {
 
     // ✅ Affiche la modale avant de commencer
     showMoodAndStrategyModal(() => {
-      console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
-      renderHole(1);
-    });
+  console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+
+  // ✅ Force l’affichage avant le rendu
+  const gameArea = $$("game-area");
+  const holeCard = $$("hole-card");
+  if (gameArea) gameArea.style.display = "block";
+  if (holeCard) {
+    holeCard.style.display = "block";
+    holeCard.innerHTML = ""; // Nettoie tout
+  }
+
+  // ✅ Démarre le rendu du premier trou
+  renderHole(1);
+});
   } catch (err) {
     console.error("❌ Erreur chargement golfs.json :", err);
     if (holeCard) holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
