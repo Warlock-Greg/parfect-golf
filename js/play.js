@@ -1,12 +1,14 @@
-// === Parfect.golfr – play.js (MVP 2025) ===
+// === Parfect.golfr – play.js (MVP 2025 corrigé) ===
 console.log("🏌️ Parfect.golfr Play.js chargé");
 
-const $$ = (id) => document.getElementById(id);
+if (typeof window.$$ !== "function") {
+  window.$$ = (id) => document.getElementById(id);
+}
 
 let currentGolf = null;
 let currentHole = 1;
 let holes = [];
-let currentDiff = 0;
+let currentDiff = null;
 let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
 // === Modale Reprendre ou Nouvelle Partie ===
@@ -16,29 +18,28 @@ function showResumeOrNewModal() {
 
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
+  modal.style.zIndex = "12000"; // ✅ au-dessus du coach
   modal.innerHTML = `
     <div class="modal-card" style="text-align:center;padding:20px;">
       <h3>🎮 Partie en cours ?</h3>
       ${
         roundInProgress
-          ? `<p>Souhaites-tu reprendre ta partie en cours ou en démarrer une nouvelle ?</p>
+          ? `<p>Souhaites-tu reprendre ta partie ou recommencer ?</p>
              <div style="display:flex;gap:10px;justify-content:center;">
                <button class="btn" id="resume-round">Reprendre</button>
                <button class="btn" id="new-round">Nouvelle</button>
              </div>`
-          : `<p>Prêt à démarrer une nouvelle partie ?</p>
+          : `<p>Prêt à démarrer ?</p>
              <button class="btn" id="new-round">🚀 Démarrer</button>`
       }
-    </div>
-  `;
+    </div>`;
   document.body.appendChild(modal);
 
-  // Boutons
   modal.querySelector("#resume-round")?.addEventListener("click", () => {
     modal.remove();
     if (lastGolf) {
-      const resumingGolf = JSON.parse(localStorage.getItem("holesData") || "[]");
-      if (resumingGolf.length > 0) holes = resumingGolf;
+      const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
+      if (saved.length) holes = saved;
       currentGolf = { id: lastGolf };
       renderHole(currentHole);
     }
@@ -52,19 +53,17 @@ function showResumeOrNewModal() {
 
 window.showResumeOrNewModal = showResumeOrNewModal;
 
-
 // === Démarre une nouvelle partie ===
 async function startNewRound(golfId) {
   const holeCard = $$("hole-card");
   const golfSelect = $$("golf-select");
-  if (holeCard) holeCard.innerHTML = "";
-  if (golfSelect) golfSelect.style.display = "none";
+  holeCard.innerHTML = "";
+  golfSelect.style.display = "none";
 
   try {
     const res = await fetch("./data/golfs.json");
     const golfs = await res.json();
     const golf = golfs.find((g) => g.id === golfId);
-
     if (!golf) {
       holeCard.innerHTML = `<p style="color:#f55;">⚠️ Golf introuvable</p>`;
       return;
@@ -76,12 +75,10 @@ async function startNewRound(golfId) {
     localStorage.setItem("roundInProgress", "true");
     localStorage.setItem("currentGolf", golfId);
 
-    // ✅ Lance la modale puis affiche le 1er trou
     showMoodAndStrategyModal(() => {
-      console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+      console.log("✅ Mood & stratégie confirmés → affichage du 1er trou");
       renderHole(currentHole);
     });
-
   } catch (err) {
     console.error("❌ Erreur chargement golfs.json :", err);
     holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
@@ -91,8 +88,7 @@ async function startNewRound(golfId) {
 // === Affiche un trou ===
 function renderHole(number = currentHole) {
   const holeCard = $$("hole-card");
-  if (!holeCard) return;
-  if (!currentGolf) return;
+  if (!holeCard || !currentGolf) return;
 
   const hole = holes[number - 1];
   if (!hole) return summarizeRound();
@@ -100,8 +96,8 @@ function renderHole(number = currentHole) {
   const par = hole.par;
   const saved = holes[number - 1] || {};
   const selectedDiff = typeof saved.score === "number" ? saved.score - par : null;
-  const totalVsPar = holes.filter(h => typeof h.score === "number").reduce((acc, h) => acc + (h.score - h.par), 0);
-
+  const totalVsPar = holes.filter(h => typeof h.score === "number")
+    .reduce((a, h) => a + (h.score - h.par), 0);
   currentDiff = selectedDiff;
 
   holeCard.classList.remove("hole-animate-out");
@@ -110,7 +106,7 @@ function renderHole(number = currentHole) {
   holeCard.innerHTML = `
     <div class="scorecard" style="text-align:center;padding:12px;">
       <h3 style="color:#00ff99;">⛳ Trou ${number}/${holes.length}</h3>
-      <p>Par ${par} — Score total :
+      <p>Par ${par} — Score :
         <strong style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
           ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
         </strong>
@@ -118,7 +114,7 @@ function renderHole(number = currentHole) {
 
       <div style="margin-top:12px;">
         <h4>Choisis ton score :</h4>
-        <div id="score-options" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px;">
+        <div id="score-options" style="display:flex;gap:6px;justify-content:center;margin-top:6px;">
           <button class="btn score-btn ${selectedDiff===-1?'active':''}" data-diff="-1">Birdie</button>
           <button class="btn score-btn ${selectedDiff===0?'active':''}" data-diff="0">Par</button>
           <button class="btn score-btn ${selectedDiff===1?'active':''}" data-diff="1">Bogey</button>
@@ -126,7 +122,7 @@ function renderHole(number = currentHole) {
         </div>
       </div>
 
-      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;">
         <label><input type="checkbox" id="fairway" ${saved.fairway?'checked':''}> Fairway</label>
         <label><input type="checkbox" id="gir" ${saved.gir?'checked':''}> GIR</label>
         <label><input type="checkbox" id="routine" ${saved.routine?'checked':''}> Routine</label>
@@ -154,7 +150,7 @@ function renderHole(number = currentHole) {
     </div>
   `;
 
-  // Gestion du choix de score
+  // === Sélection score ===
   document.querySelectorAll(".score-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".score-btn").forEach(b => b.classList.remove("active"));
@@ -164,47 +160,42 @@ function renderHole(number = currentHole) {
     });
   });
 
-  // Boutons navigation
-  const prevBtn = $$("prev-hole");
-  const nextBtn = $$("next-hole");
-
-  if (prevBtn) {
-    prevBtn.addEventListener("click", () => {
+  // === Gestion des checkboxes ===
+  ["fairway", "gir"].forEach(id => {
+    $$(id)?.addEventListener("change", () => {
       saveCurrentHole();
-      if (currentHole > 1) {
-        currentHole--;
-        renderHole(currentHole);
+      const data = holes[currentHole - 1];
+      if (data.fairway && data.gir && data.score - data.par === 0) {
+        analyzeHole(data); // ✅ encouragement Parfect instantané
       }
     });
-  }
+  });
 
-  if (nextBtn) {
-    nextBtn.addEventListener("click", () => {
-      // 🧩 Vérifie qu’un score est choisi
-      if (currentDiff === null || isNaN(currentDiff)) {
-        alert("⚠️ Choisis ton score avant de passer au trou suivant !");
-        return;
-      }
+  // === Boutons navigation ===
+  $$("prev-hole")?.addEventListener("click", () => {
+    saveCurrentHole();
+    if (currentHole > 1) {
+      currentHole--;
+      renderHole(currentHole);
+    }
+  });
 
-      saveCurrentHole();
-      analyzeHole(holes[currentHole - 1]);
-
-      holeCard.classList.remove("hole-animate-in");
-      holeCard.classList.add("hole-animate-out");
-
-      setTimeout(() => {
-        if (currentHole < holes.length) {
-          currentHole++;
-          renderHole(currentHole);
-        } else {
-          summarizeRound();
-        }
-      }, 300);
-    });
-  }
+  $$("next-hole")?.addEventListener("click", () => {
+    if (currentDiff === null || isNaN(currentDiff)) {
+      alert("⚠️ Choisis ton score avant de passer au trou suivant !");
+      return;
+    }
+    saveCurrentHole();
+    analyzeHole(holes[currentHole - 1]);
+    holeCard.classList.remove("hole-animate-in");
+    holeCard.classList.add("hole-animate-out");
+    setTimeout(() => {
+      currentHole < holes.length ? renderHole(++currentHole) : summarizeRound();
+    }, 300);
+  });
 }
 
-// === Analyse du trou ===
+// === Analyse trou ===
 let lastCoachMessage = "";
 function analyzeHole(holeData) {
   if (!holeData) return;
@@ -212,81 +203,82 @@ function analyzeHole(holeData) {
   const diff = score - par;
   let message = "";
 
-  if (diff === 0 && fairway && gir && (["1", "2"].includes(dist2))) {
+  if (diff === 0 && fairway && gir && ["1","2"].includes(dist2)) {
     totalParfects++;
     localStorage.setItem("totalParfects", totalParfects);
     updateParfectCounter();
-    animateParfect();
-    message = "💚 Parfect collecté ! Par + Fairway + GIR + ≤2 putts. Excellent !";
-  } else if (diff === 1 && fairway && (["1", "2"].includes(dist2))) {
+    showConfetti();
+    message = "💚 Parfect collecté ! Par + Fairway + GIR + ≤2 putts !";
+  } else if (diff === 1 && fairway) {
     message = "💙 Bogey’fect ! Bogey solide, mental propre.";
   } else if (diff < 0) {
-    message = "🕊️ Birdie ! Fluide et en contrôle, c’est du beau golf.";
-  } else if (diff >= 2) {
-    message = "😅 Pas grave, routine + calme = prochain trou solide.";
+    message = "🕊️ Birdie ! Fluide et en contrôle.";
   } else {
-    message = "👌 Trou régulier, continue ton flow.";
+    message = "👌 Continue ton flow.";
   }
 
-  if (message === lastCoachMessage) return;
-  lastCoachMessage = message;
-  showCoachIA?.(message);
+  if (message !== lastCoachMessage) {
+    lastCoachMessage = message;
+    showCoachIA?.(message);
+  }
 }
 
-// === Mise à jour compteur ===
+// === Compteur Parfect ===
 function updateParfectCounter() {
   const el = document.getElementById("parfect-counter");
-  if (el) el.textContent = `💚 ${totalParfects} Parfect${totalParfects>1?'s':''} collecté${totalParfects>1?'s':''}`;
+  if (el) {
+    el.textContent = `💚 ${totalParfects} Parfect${totalParfects>1?"s":""} collecté${totalParfects>1?"s":""}`;
+    el.style.transform = "scale(1.3)";
+    setTimeout(() => (el.style.transform = "scale(1)"), 300);
+  }
 }
 
-function animateParfect() {
-  const el = document.getElementById("parfect-counter");
-  if (!el) return;
-  el.style.transform = "scale(1.3)";
-  el.style.transition = "transform 0.3s ease";
-  setTimeout(() => el.style.transform = "scale(1)", 300);
+// === Confetti léger ===
+function showConfetti() {
+  for (let i = 0; i < 12; i++) {
+    const dot = document.createElement("div");
+    dot.style.position = "fixed";
+    dot.style.width = dot.style.height = "6px";
+    dot.style.background = "#00ff99";
+    dot.style.left = Math.random() * 100 + "%";
+    dot.style.top = "50%";
+    dot.style.borderRadius = "50%";
+    dot.style.zIndex = "99999";
+    dot.style.opacity = 1;
+    dot.style.transition = "all 0.8s ease-out";
+    document.body.appendChild(dot);
+    setTimeout(() => {
+      dot.style.top = 100 * Math.random() + "%";
+      dot.style.opacity = 0;
+      dot.style.transform = "translateY(-40px)";
+    }, 20);
+    setTimeout(() => dot.remove(), 900);
+  }
 }
 
 // === Fin de partie ===
 function summarizeRound() {
-  const validHoles = holes.filter(h => h && typeof h.score === "number");
-  const totalVsPar = validHoles.reduce((sum, h) => sum + (h.score - h.par), 0);
-  const parfects = validHoles.filter(h => h.score - h.par === 0 && h.fairway && h.gir && ["1","2"].includes(h.dist2)).length;
+  const valid = holes.filter(h => h && typeof h.score === "number");
+  const totalVsPar = valid.reduce((sum, h) => sum + (h.score - h.par), 0);
+  const parfects = valid.filter(h => h.score - h.par === 0 && h.fairway && h.gir && ["1","2"].includes(h.dist2)).length;
 
-  // Sauvegarde historique
   const history = JSON.parse(localStorage.getItem("history") || "[]");
-  history.push({
-    date: new Date().toLocaleDateString(),
-    golf: currentGolf?.name ?? "Inconnu",
-    totalVsPar,
-    parfects
-  });
+  history.push({ date: new Date().toLocaleDateString(), golf: currentGolf?.name ?? "Inconnu", totalVsPar, parfects });
   localStorage.setItem("history", JSON.stringify(history));
 
-  // Badge
   const badge = document.createElement("div");
-  badge.style.position = "fixed";
-  badge.style.top = "50%";
-  badge.style.left = "50%";
-  badge.style.transform = "translate(-50%, -50%)";
-  badge.style.background = "#00ff99";
-  badge.style.color = "#111";
-  badge.style.padding = "20px 30px";
-  badge.style.borderRadius = "20px";
-  badge.style.fontWeight = "bold";
-  badge.style.fontSize = "1.2rem";
-  badge.style.boxShadow = "0 0 20px #00ff99aa";
-  badge.style.zIndex = "99999";
-  badge.textContent = `🏅 ${parfects} Parfect${parfects>1?'s':''} collecté${parfects>1?'s':''}!`;
+  badge.style = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:#00ff99;color:#111;padding:20px 30px;border-radius:20px;
+    font-weight:bold;font-size:1.2rem;box-shadow:0 0 20px #00ff99aa;z-index:12000;`;
+  badge.textContent = `🏅 ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`;
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 3000);
 
-  showCoachIA?.(`🏁 Fin de partie sur ${currentGolf?.name ?? "ton parcours"} !
-Score total : ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
-💚 ${parfects} Parfect${parfects>1?'s':''} collecté${parfects>1?'s':''}.`);
+  showCoachIA?.(`🏁 Fin de partie ! Score total ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}, ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`);
 }
 
-// === Helpers ===
+// === Sauvegarde trou ===
 function saveCurrentHole() {
   const fairway = $$("fairway")?.checked || false;
   const gir = $$("gir")?.checked || false;
@@ -294,16 +286,7 @@ function saveCurrentHole() {
   const dist2 = $$("dist2")?.value || "";
   const par = holes[currentHole - 1]?.par ?? 4;
 
-  holes[currentHole - 1] = {
-    number: currentHole,
-    par,
-    score: par + currentDiff,
-    fairway,
-    gir,
-    routine,
-    dist2
-  };
-
+  holes[currentHole - 1] = { number: currentHole, par, score: par + (currentDiff ?? 0), fairway, gir, routine, dist2 };
   localStorage.setItem("holesData", JSON.stringify(holes));
   localStorage.setItem("roundInProgress", "true");
 }
@@ -312,3 +295,4 @@ function saveCurrentHole() {
 window.startNewRound = startNewRound;
 window.renderHole = renderHole;
 window.analyzeHole = analyzeHole;
+
