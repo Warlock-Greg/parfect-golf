@@ -1,7 +1,7 @@
 // === SOCIAL.JS — version corrigée ===
 
 // Helper DOM local (ne redéfinit pas $)
-const $$ = (id) => document.getElementById(id);
+//const $$ = (id) => document.getElementById(id);
 
 // --- Conteneur principal ---
 function injectSocialUI() {
