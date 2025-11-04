@@ -121,7 +121,6 @@ async function startNewRound(golfId) {
     console.error("❌ Erreur chargement golfs.json :", err);
     holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
   }
-}
 
 // --- Modale Mood + Stratégie + Coach ---
 function showMoodAndStrategyModal() {
