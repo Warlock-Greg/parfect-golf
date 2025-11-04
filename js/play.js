@@ -115,16 +115,16 @@ async function startNewRound(golfId) {
       return;
     }
 
-    currentGolf = golf;
-    currentHole = 1;
-    holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
+    window.currentGolf = golf;
+    window.currentHole = 1;
+    window.holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
     localStorage.setItem("roundInProgress", "true");
     localStorage.setItem("currentGolf", golfId);
 
     // ✅ Affiche la modale avant de commencer
     showMoodAndStrategyModal(() => {
       console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
-      renderHole(currentHole);
+      renderHole(1);
     });
   } catch (err) {
     console.error("❌ Erreur chargement golfs.json :", err);
