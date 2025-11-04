@@ -330,13 +330,16 @@ footer button.active {
       if (typeof initCoachIA === "function") initCoachIA();
 
       const playBtn = $("play-btn"),
-            trainingBtn = $("training-btn"),
-            friendsBtn = $("friends-btn");
+        trainingBtn = $("training-btn"),
+        swingBtn = $("swing-btn"),
+        historyBtn = $("history-btn"),
+        friendsBtn = $("friends-btn");
 
       const gameArea = $("game-area"),
-            trainingArea = $("training-area"),
-            friendsArea = $("friends-area");
-
+        trainingArea = $("training-area"),
+        friendsArea = $("friends-area"),
+        swingAnalyzer = $("swing-analyzer");
+      
       const setActive = (btn) => {
         document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
@@ -344,6 +347,7 @@ footer button.active {
 
       window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
 
+      // === PLAY ===
       playBtn.addEventListener("click", () => {
         setActive(playBtn);
         gameArea.style.display = "block";
@@ -353,6 +357,7 @@ footer button.active {
         coachReact("🎯 Mode Jouer activé — choisis ton golf !");
       });
 
+      // === TRAINING ===
       trainingBtn.addEventListener("click", () => {
         setActive(trainingBtn);
         gameArea.style.display = "none";
@@ -362,12 +367,46 @@ footer button.active {
         coachReact("💪 Mode Entraînement — choisis ton exercice !");
       });
 
+      / === SWING ===
+  swingBtn.addEventListener("click", () => {
+    setActive(swingBtn);
+    gameArea.style.display = "none";
+    trainingArea.style.display = "none";
+    friendsArea.style.display = "none";
+    swingAnalyzer.style.display = "block";
+    coachReact("🎥 Mode Analyse activé — envoie ta vidéo !");
+  });
+
+      // === HISTORY ===
+  historyBtn.addEventListener("click", () => {
+    setActive(historyBtn);
+    gameArea.style.display = "none";
+    trainingArea.style.display = "none";
+    friendsArea.style.display = "none";
+    swingAnalyzer.style.display = "none";
+
+    // Crée ou appelle ton UI historique
+    if (typeof window.injectHistoryUI === "function") {
+      window.injectHistoryUI();
+    } else {
+      console.warn("⚠️ injectHistoryUI() non trouvée — vérifie ton history.js");
+    }
+
+    coachReact("📜 Historique activé — consulte tes parties passées !");
+  });
+
+    
+ // === FRIENDS ===
       friendsBtn.addEventListener("click", () => {
         setActive(friendsBtn);
         gameArea.style.display = "none";
         trainingArea.style.display = "none";
         friendsArea.style.display = "block";
-        window.injectSocialUI?.();
+        if (typeof window.injectSocialUI === "function") {
+      window.injectSocialUI();
+    } else {
+      console.warn("⚠️ injectSocialUI() non trouvée — vérifie ton social.js");
+    }
         coachReact("👋 Mode Amis activé — partage tes stats !");
       });
     });
