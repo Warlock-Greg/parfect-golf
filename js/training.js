@@ -146,5 +146,37 @@ async function startTrainingSession(exoId) {
 
 }
 
+// --- Étape 4 : Enregistrement + Récapitulatif ---
+function recordTrainingAndRecap(exoId, result) {
+  // Charger les anciens résultats
+  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+  const coach = localStorage.getItem("coach") || "Inconnu";
+
+  // Enregistrer la nouvelle session
+  const newEntry = {
+    id: exoId,
+    result,
+    coach,
+    date: new Date().toISOString()
+  };
+  history.push(newEntry);
+  localStorage.setItem("trainingHistory", JSON.stringify(history));
+
+  // Afficher le récap
+  const log = $$("coach-log");
+  log.innerHTML = `
+    <div style="text-align:center;margin-top:20px;">
+      <h3 style="color:#00ff99;">✅ Entraînement enregistré</h3>
+      <p>Coach : <strong>${coach}</strong></p>
+      <p>Résultat : <strong>${result}</strong></p>
+      <button id="back-training" class="btn" style="margin-top:10px;">↩️ Revenir aux exercices</button>
+    </div>
+  `;
+
+  // Retour à la sélection
+  $$("back-training").addEventListener("click", showTrainingExerciseSelect);
+}
+
+
 // --- Export global ---
 window.initTraining = initTraining;
