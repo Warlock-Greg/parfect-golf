@@ -53,6 +53,56 @@ function showResumeOrNewModal() {
 
 window.showResumeOrNewModal = showResumeOrNewModal;
 
+// === Sélecteur de golf (MVP) ===
+async function initGolfSelect() {
+  const gameArea = document.getElementById("game-area");
+  const golfSelect = document.getElementById("golf-select");
+  const holeCard = document.getElementById("hole-card");
+
+  if (!golfSelect) {
+    console.warn("⚠️ #golf-select introuvable dans le DOM");
+    return;
+  }
+
+  // Affiche la zone de jeu et le sélecteur, masque la carte
+  if (gameArea) gameArea.style.display = "block";
+  if (holeCard) holeCard.style.display = "none";
+  golfSelect.style.display = "block";
+  golfSelect.innerHTML = `<p style="color:#aaa;">Chargement des golfs…</p>`;
+
+  try {
+    const res = await fetch("./data/golfs.json");
+    const golfs = await res.json();
+
+    golfSelect.innerHTML = `
+      <h3 style="color:#00ff99;margin:8px 0;">Choisis ton golf</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${golfs.map(g => `
+          <button class="btn" data-id="${g.id}">
+            ⛳ ${g.name}<br>
+            <small style="color:#aaa;">${g.location}</small>
+          </button>
+        `).join("")}
+      </div>
+    `;
+
+    // Click -> startNewRound(id)
+    golfSelect.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        startNewRound(id);
+      });
+    });
+  } catch (err) {
+    console.error("❌ Erreur chargement golfs.json :", err);
+    golfSelect.innerHTML = `<p style="color:#f55;">Erreur de chargement des golfs</p>`;
+  }
+}
+
+// Exposer globalement
+window.initGolfSelect = initGolfSelect;
+
+
 // === Démarre une nouvelle partie ===
 async function startNewRound(golfId) {
   const holeCard = $$("hole-card");
