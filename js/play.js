@@ -131,24 +131,36 @@ async function startNewRound(golfId) {
 
 
     // ✅ Affiche la modale avant de commencer
-    showMoodAndStrategyModal(() => {
-  console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
+ setTimeout(() => {
+      showMoodAndStrategyModal(() => {
+        console.log("✅ Mood & stratégie confirmés → affichage de la carte de score");
 
-  // ✅ Force l’affichage avant le rendu
-  const gameArea = $$("game-area");
-  const holeCard = $$("hole-card");
-  if (gameArea) gameArea.style.display = "block";
-  if (holeCard) {
-    holeCard.style.display = "block";
-    holeCard.innerHTML = ""; // Nettoie tout
-  }
+        // Force l'affichage du jeu
+        const gameArea = $$("game-area");
+        if (gameArea) {
+          gameArea.style.display = "block";
+          gameArea.style.zIndex = "1";
+        }
+        if (holeCard) {
+          holeCard.style.display = "block";
+          holeCard.innerHTML = "";
+        }
 
-  // ✅ Démarre le rendu du premier trou
-  renderHole(1);
-});
+        // Vérification avant rendu
+        if (!window.holes?.length || !window.currentGolf) {
+          console.warn("⚠️ Données de partie manquantes, rendu annulé");
+          return;
+        }
+
+        // ✅ Rendu du premier trou
+        renderHole(1);
+      });
+    }, 150); // petit délai pour laisser la modale s'initialiser proprement
+
   } catch (err) {
     console.error("❌ Erreur chargement golfs.json :", err);
-    if (holeCard) holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
+    if (holeCard)
+      holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
   }
 }
 
