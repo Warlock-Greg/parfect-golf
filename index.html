@@ -134,13 +134,13 @@ main#split-layout {
 
 /* === Modales === */
 .modal-backdrop {
-  position: absolute;
+  position: fixed; /* ✅ couvre tout l’écran indépendamment du parent */
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 12000;
+  z-index: 15000; /* ✅ passe devant le coach (z-index 9000) et toutes les zones */
 }
 
 .modal-card {
