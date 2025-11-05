@@ -103,10 +103,16 @@ window.initGolfSelect = initGolfSelect;
 async function startNewRound(golfId) {
   const holeCard = $$("hole-card");
   const golfSelect = $$("golf-select");
+  if (!holeCard || !golfSelect) {
+    console.error("❌ Élément manquant (#hole-card ou #golf-select)");
+    return;
+  }
+
   holeCard.innerHTML = "";
   golfSelect.style.display = "none";
 
   try {
+    console.log("⛳ Chargement du golf...");
     const res = await fetch("./data/golfs.json");
     const golfs = await res.json();
     const golf = golfs.find((g) => g.id === golfId);
@@ -120,6 +126,9 @@ async function startNewRound(golfId) {
     window.holes = golf.pars.map((par, i) => ({ number: i + 1, par }));
     localStorage.setItem("roundInProgress", "true");
     localStorage.setItem("currentGolf", golfId);
+
+    console.log("🏌️ Nouvelle partie prête :", golf.name, window.holes.length, "trous");
+
 
     // ✅ Affiche la modale avant de commencer
     showMoodAndStrategyModal(() => {
