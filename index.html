@@ -390,6 +390,16 @@ footer button.active {
         btn.classList.add("active");
       };
 
+      // === Réinitialisation des zones (vider les divs) ===
+function clearInteractionZones() {
+  const ids = ["game-area", "training-area", "friends-area", "interaction-zone"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = ""; // vide le contenu
+  });
+}
+
+
       window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
 
       // === PLAY ===
