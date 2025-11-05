@@ -404,6 +404,7 @@ function clearInteractionZones() {
 
       // === PLAY ===
       playBtn.addEventListener("click", () => {
+        clearInteractionZones(); // ✅ nettoie d'abord
         setActive(playBtn);
         gameArea.style.display = "block";
         trainingArea.style.display = "none";
@@ -414,6 +415,7 @@ function clearInteractionZones() {
 
       // === TRAINING ===
       trainingBtn.addEventListener("click", () => {
+        clearInteractionZones(); // ✅ nettoie d'abord
         setActive(trainingBtn);
         gameArea.style.display = "none";
         trainingArea.style.display = "block";
@@ -424,6 +426,7 @@ function clearInteractionZones() {
 
       // === SWING ===
   swingBtn.addEventListener("click", () => {
+    clearInteractionZones(); // ✅ nettoie d'abord
     setActive(swingBtn);
     gameArea.style.display = "none";
     trainingArea.style.display = "none";
@@ -435,6 +438,7 @@ function clearInteractionZones() {
 
       // === HISTORY ===
   historyBtn.addEventListener("click", () => {
+    clearInteractionZones(); // ✅ nettoie d'abord
     setActive(historyBtn);
     gameArea.style.display = "none";
     trainingArea.style.display = "none";
@@ -454,6 +458,7 @@ function clearInteractionZones() {
     
  // === FRIENDS ===
       friendsBtn.addEventListener("click", () => {
+        clearInteractionZones(); // ✅ nettoie d'abord
         setActive(friendsBtn);
         gameArea.style.display = "none";
         trainingArea.style.display = "none";
