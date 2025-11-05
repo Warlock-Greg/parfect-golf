@@ -392,12 +392,16 @@ footer button.active {
 
       // === Réinitialisation des zones (vider les divs) ===
 function clearInteractionZones() {
-  const ids = ["game-area", "training-area", "friends-area", "interaction-zone"];
+  const ids = ["game-area", "training-area", "friends-area"];
   ids.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = ""; // vide le contenu
+    if (el) {
+      el.style.display = "none";
+      el.innerHTML = "";
+    }
   });
 }
+
 
 
       window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
