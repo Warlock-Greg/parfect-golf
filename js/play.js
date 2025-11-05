@@ -242,6 +242,8 @@ window.showMoodAndStrategyModal = showMoodAndStrategyModal;
 
 // === Affiche un trou ===
 function renderHole(number = currentHole) {
+  console.log("🟢 renderHole lancé avec", { number, currentGolf, holes });
+
   const gameArea  = $$("game-area");
   const holeCard = $$("hole-card");
     if (gameArea)  gameArea.style.display = "block";
