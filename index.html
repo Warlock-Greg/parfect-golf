@@ -298,6 +298,50 @@ footer button.active {
     </section>
   </main>
 
+<!-- === ONBOARDING PARFECT.GOLFR === -->
+<div id="onboarding" style="
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #0d0f10 0%, #000 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 20000;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo%20parfect%20v2.png" 
+       alt="Parfect.golfr" 
+       style="width:80px;height:80px;border-radius:16px;margin-bottom:14px;">
+
+  <h2 style="color:#00ff99;margin:0 0 10px;font-size:1.8rem;">👋 Bienvenue sur <br>Parfect.golfr</h2>
+
+  <p style="max-width:400px;margin:10px 0 16px;opacity:0.9;">
+    🧠 Baisse ton index en forgeant ton mental.  
+    💪 Ton swing suivra.
+  </p>
+
+  <p style="max-width:420px;margin:6px 0 16px;opacity:0.85;">
+    🎯 Ton coach t’aide à garder le flow, trou après trou.  
+    💚 Collecte des <strong>Parfects</strong> à chaque coup solide.
+  </p>
+
+  <button id="start-onboarding" class="btn" style="
+    background:#00ff99;
+    color:#111;
+    border:none;
+    border-radius:10px;
+    padding:10px 24px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:12px;
+  ">🚀 C’est parti</button>
+</div>
+
+  
   <!-- === Barre de navigation principale === -->
 <nav>
   <button id="play-btn" title="Jouer">⛳</button>
@@ -413,6 +457,16 @@ footer button.active {
       });
     });
   </script>
+
+  <script>
+document.getElementById("start-onboarding")?.addEventListener("click", () => {
+  const onboard = document.getElementById("onboarding");
+  onboard.style.opacity = "0";
+  onboard.style.transition = "opacity 0.6s ease";
+  setTimeout(() => onboard.remove(), 600);
+});
+</script>
+
 </body>
 </html>
 
