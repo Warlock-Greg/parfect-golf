@@ -370,6 +370,8 @@ footer button.active {
   <script src="js/swing-analyzer.js"></script>
   <script src="js/main.js"></script>
 
+<script src="js/licence.js"></script>
+  
   <script>
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Boot SplitScreen MVP (router simple)");
@@ -527,12 +529,33 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🚀 Démarrage : uniquement l’onboarding
 [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
 
+
+  
 // Quand l’onboarding se termine
 document.getElementById("start-onboarding")?.addEventListener("click", () => {
   const onboard = document.getElementById("onboarding");
   onboard.style.opacity = "0";
   onboard.style.transition = "opacity 0.6s ease";
-  setTimeout(() => onboard.remove(), 600);
+  setTimeout(() => {
+    onboard.remove();
+
+    // ✅ Une fois l'onboarding fermé, on lance la vérification de la licence
+    if (typeof window.initLicence === "function") {
+      window.initLicence();
+    }
+
+    // ✅ Puis on affiche la home Play par défaut
+    const playBtn = document.getElementById("play-btn");
+    if (playBtn) playBtn.classList.add("active");
+    const gameArea = document.getElementById("game-area");
+    if (gameArea) gameArea.style.display = "none";
+
+    // Message coach d'accueil
+    if (typeof coachReact === "function") {
+      coachReact("👋 Bienvenue sur Parfect.golfr — clique sur Jouer pour commencer !");
+    }
+  }, 600); // attend la fin de l'animation fade-out
+});
 
   // 🟢 Arrivée sur la home
   setActive(playBtn);
@@ -600,6 +623,9 @@ document.getElementById("start-onboarding")?.addEventListener("click", () => {
   setTimeout(() => onboard.remove(), 600);
 });
 </script>
+
+
+
 
 </body>
 </html>
