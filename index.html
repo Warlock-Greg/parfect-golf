@@ -424,25 +424,50 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Petit helper pour ajout d’un bouton Fermer dans une vue
-  function addCloseBar(containerId, closeTo = "play") {
-    const c = $(containerId);
-    if (!c) return;
-    if (c.querySelector(".close-bar")) return; // déjà présent
-    const bar = document.createElement("div");
-    bar.className = "close-bar";
-    bar.style.cssText = "display:flex;justify-content:flex-end;margin-bottom:8px;";
-    bar.innerHTML = `<button class="btn" id="close-${containerId}" style="padding:6px 10px;border-radius:8px;">❌ Fermer</button>`;
-    c.prepend(bar);
-    document.getElementById(`close-${containerId}`).addEventListener("click", () => {
-      setActive(playBtn);
-      showOnly(closeTo);
-      if (closeTo === "play") {
-        ensureGameView();
-        window.initGolfSelect?.();
-      }
-      coachReact("↩️ Retour au mode Jouer.");
-    });
-  }
+ function addCloseBar(containerId, closeTo = "play") {
+  const c = $(containerId);
+  if (!c) return;
+  if (c.querySelector(".close-bar")) return; // déjà présent
+  const bar = document.createElement("div");
+  bar.className = "close-bar";
+  bar.style.cssText = "display:flex;justify-content:flex-end;margin-bottom:8px;";
+  bar.innerHTML = `<button class="btn" id="close-${containerId}" style="padding:6px 10px;border-radius:8px;">❌ Fermer</button>`;
+  c.prepend(bar);
+
+  // === Quand on clique sur Fermer ===
+  document.getElementById(`close-${containerId}`).addEventListener("click", () => {
+    // Réinitialise l'état
+    [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+    document.querySelectorAll(".modal-backdrop").forEach(m => m.remove());
+    document.getElementById("mini-onboarding")?.remove();
+
+    // Crée un mini onboarding neutre
+    const mini = document.createElement("div");
+    mini.id = "mini-onboarding";
+    mini.style.cssText = `
+      text-align:center;
+      padding:40px 20px;
+      color:#00ff99;
+      max-width:420px;
+      margin:40px auto;
+      background:rgba(0,0,0,0.6);
+      border-radius:12px;
+      line-height:1.5;
+      box-shadow:0 0 12px rgba(0,255,153,0.2);
+      animation: fadeIn 0.4s ease;
+    `;
+    mini.innerHTML = `
+      <h2>🧘‍♂️ Prêt pour un nouveau flow ?</h2>
+      <p style="opacity:0.9;">Chaque partie est une opportunité de progresser mentalement.</p>
+      <p style="opacity:0.8;">Clique sur <strong>⛳ Jouer</strong> pour continuer ton chemin Parfect.</p>
+    `;
+    $("interaction-zone").prepend(mini);
+
+    // Message coach
+    coachReact("🧘 Retour à la page d’accueil — choisis ton mode !");
+  });
+}
+
 
   // Coach helper
   window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
