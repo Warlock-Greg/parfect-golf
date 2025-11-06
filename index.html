@@ -369,123 +369,132 @@ footer button.active {
   <script src="js/swing-analyzer.js"></script>
   <script src="js/main.js"></script>
 
-  <!-- === Boot inline (MVP-safe) === -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      console.log("✅ Boot SplitScreen MVP");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("✅ Boot SplitScreen MVP (router simple)");
 
-      if (typeof initCoachIA === "function") initCoachIA();
+  if (typeof initCoachIA === "function") initCoachIA();
 
-      const playBtn = $("play-btn"),
-        trainingBtn = $("training-btn"),
-        swingBtn = $("swing-btn"),
-        historyBtn = $("history-btn"),
-        friendsBtn = $("friends-btn");
+  const $ = (id) => document.getElementById(id);
 
-      const gameArea = $("game-area"),
-        trainingArea = $("training-area"),
-        friendsArea = $("friends-area"),
-        swingAnalyzer = $("swing-analyzer");
-      
-      const setActive = (btn) => {
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-      };
+  // Vues
+  const gameArea      = $("game-area");
+  const trainingArea  = $("training-area");
+  const swingAnalyzer = $("swing-analyzer");
+  const friendsArea   = $("friends-area");
 
-  // === Réinitialisation des zones (vider les divs sauf structure principale) ===
-function clearInteractionZones() {
-  // On garde #game-area et #golf-select, on ne vide que le contenu de #hole-card
-  const holeCard = document.getElementById("hole-card");
-  if (holeCard) holeCard.innerHTML = "";
+  // Boutons
+  const playBtn     = $("play-btn");
+  const trainingBtn = $("training-btn");
+  const swingBtn    = $("swing-btn");
+  const historyBtn  = $("history-btn");
+  const friendsBtn  = $("friends-btn");
 
-  // On cache les autres zones
-  const trainingArea = document.getElementById("training-area");
-  const friendsArea = document.getElementById("friends-area");
-  const swingAnalyzer = document.getElementById("swing-analyzer");
+  // Active visuel
+  const setActive = (btn) => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  };
 
-  [trainingArea, friendsArea].forEach(el => {
-    if (el) {
-      el.style.display = "none";
-      el.innerHTML = ""; // on peut vider ces zones
+  // Montre une seule vue (sans vider)
+  function showOnly(view) {
+    const map = {
+      play:      gameArea,
+      training:  trainingArea,
+      swing:     swingAnalyzer,
+      friends:   friendsArea
+    };
+    [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+    map[view].style.display = "block";
+  }
+
+  // S’assure que la vue Play a ses conteneurs
+  function ensureGameView() {
+    if (!document.getElementById("golf-select")) {
+      const div = document.createElement("div");
+      div.id = "golf-select";
+      gameArea.appendChild(div);
     }
-  });
-}
+    if (!document.getElementById("hole-card")) {
+      const div = document.createElement("div");
+      div.id = "hole-card";
+      gameArea.appendChild(div);
+    }
+  }
 
-
-
-
-      window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
-
-      // === PLAY ===
-      playBtn.addEventListener("click", () => {
-        clearInteractionZones(); // ✅ nettoie d'abord
-        setActive(playBtn);
-        gameArea.style.display = "block";
-        trainingArea.style.display = "none";
-        friendsArea.style.display = "none";
+  // Petit helper pour ajout d’un bouton Fermer dans une vue
+  function addCloseBar(containerId, closeTo = "play") {
+    const c = $(containerId);
+    if (!c) return;
+    if (c.querySelector(".close-bar")) return; // déjà présent
+    const bar = document.createElement("div");
+    bar.className = "close-bar";
+    bar.style.cssText = "display:flex;justify-content:flex-end;margin-bottom:8px;";
+    bar.innerHTML = `<button class="btn" id="close-${containerId}" style="padding:6px 10px;border-radius:8px;">❌ Fermer</button>`;
+    c.prepend(bar);
+    document.getElementById(`close-${containerId}`).addEventListener("click", () => {
+      setActive(playBtn);
+      showOnly(closeTo);
+      if (closeTo === "play") {
+        ensureGameView();
         window.initGolfSelect?.();
-        coachReact("🎯 Mode Jouer activé — choisis ton golf !");
-      });
+      }
+      coachReact("↩️ Retour au mode Jouer.");
+    });
+  }
 
-      // === TRAINING ===
-      trainingBtn.addEventListener("click", () => {
-        clearInteractionZones(); // ✅ nettoie d'abord
-        setActive(trainingBtn);
-        gameArea.style.display = "none";
-        trainingArea.style.display = "block";
-        friendsArea.style.display = "none";
-        window.initTraining?.();
-        coachReact("💪 Mode Entraînement — choisis ton exercice !");
-      });
+  // Coach helper
+  window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
 
-      // === SWING ===
+  // === Listeners ===
+  playBtn.addEventListener("click", () => {
+    setActive(playBtn);
+    ensureGameView();
+    showOnly("play");
+    window.initGolfSelect?.();
+    coachReact("🎯 Mode Jouer activé — choisis ton golf !");
+  });
+
+  trainingBtn.addEventListener("click", () => {
+    setActive(trainingBtn);
+    showOnly("training");
+    window.initTraining?.();
+    addCloseBar("training-area", "play");
+    coachReact("💪 Mode Entraînement — choisis ton exercice !");
+  });
+
   swingBtn.addEventListener("click", () => {
-    clearInteractionZones(); // ✅ nettoie d'abord
     setActive(swingBtn);
-    gameArea.style.display = "none";
-    trainingArea.style.display = "none";
-    friendsArea.style.display = "none";
-    swingAnalyzer.style.display = "block";
-    window.initSwingAnalyzer?.(); // ✅ ajoute cet appel
+    showOnly("swing");
+    window.initSwingAnalyzer?.();
+    addCloseBar("swing-analyzer", "play");
     coachReact("🎥 Mode Analyse activé — envoie ta vidéo !");
   });
 
-      // === HISTORY ===
   historyBtn.addEventListener("click", () => {
-    clearInteractionZones(); // ✅ nettoie d'abord
     setActive(historyBtn);
-    gameArea.style.display = "none";
-    trainingArea.style.display = "none";
-    friendsArea.style.display = "none";
-    swingAnalyzer.style.display = "none";
-
-    // Crée ou appelle ton UI historique
-    if (typeof window.injectHistoryUI === "function") {
-      window.injectHistoryUI();
-    } else {
-      console.warn("⚠️ injectHistoryUI() non trouvée — vérifie ton history.js");
-    }
-
+    // On utilise l’interaction-zone pour l’historique via injectHistoryUI
+    showOnly("play"); // on cache les autres + garde la structure
+    window.injectHistoryUI?.(); // ce module écrit dans #interaction-zone (ok)
     coachReact("📜 Historique activé — consulte tes parties passées !");
   });
 
-    
- // === FRIENDS ===
-      friendsBtn.addEventListener("click", () => {
-        clearInteractionZones(); // ✅ nettoie d'abord
-        setActive(friendsBtn);
-        gameArea.style.display = "none";
-        trainingArea.style.display = "none";
-        friendsArea.style.display = "block";
-        if (typeof window.injectSocialUI === "function") {
-      window.injectSocialUI();
-    } else {
-      console.warn("⚠️ injectSocialUI() non trouvée — vérifie ton social.js");
-    }
-        coachReact("👋 Mode Amis activé — partage tes stats !");
-      });
-    });
-  </script>
+  friendsBtn.addEventListener("click", () => {
+    setActive(friendsBtn);
+    showOnly("friends");
+    window.injectSocialUI?.();
+    addCloseBar("friends-area", "play");
+    coachReact("👥 Mode Social activé — partage tes stats !");
+  });
+
+  // Démarrage par défaut : Play
+  setActive(playBtn);
+  ensureGameView();
+  showOnly("play");
+  window.initGolfSelect?.();
+});
+</script>
+
 
   <script>
 document.getElementById("start-onboarding")?.addEventListener("click", () => {
