@@ -427,6 +427,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+function showHomeScreen() {
+  console.log("🏠 Retour à la home");
+
+  // 1️⃣ Nettoie toutes les zones
+  [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+  document.querySelectorAll(".modal-backdrop").forEach(m => m.remove());
+  document.getElementById("mini-onboarding")?.remove();
+
+  // 2️⃣ Crée un mini écran d’accueil
+  const zone = document.getElementById("interaction-zone");
+  const mini = document.createElement("div");
+  mini.id = "mini-onboarding";
+  mini.style.cssText = `
+    text-align:center;
+    padding:40px 20px;
+    color:#00ff99;
+    max-width:420px;
+    margin:60px auto;
+    background:rgba(0,0,0,0.7);
+    border-radius:12px;
+    line-height:1.6;
+    box-shadow:0 0 12px rgba(0,255,153,0.25);
+    animation: fadeIn 0.4s ease;
+  `;
+  mini.innerHTML = `
+    <h2>👋 Bienvenue sur Parfect.golfr</h2>
+    <p>🧠 Baisse ton index en forgeant ton mental.<br>💚 Clique sur <strong>⛳ Jouer</strong> pour reprendre ton flow.</p>
+  `;
+  zone.prepend(mini);
+
+  // 3️⃣ Message coach
+  coachReact("🏠 Retour à la home — choisis ton mode pour continuer.");
+}
+
+  
   // Petit helper pour ajout d’un bouton Fermer dans une vue
  function addCloseBar(containerId, closeTo = "play") {
   const c = $(containerId);
@@ -610,6 +645,13 @@ document.getElementById("start-onboarding")?.addEventListener("click", () => {
 
     // Réagit côté coach
     coachReact("🏠 Retour à l’accueil — clique sur ⛳ pour jouer !");
+
+    // 4️⃣ Disparition automatique après 5 secondes
+  setTimeout(() => {
+    mini.style.opacity = "0";
+    setTimeout(() => mini.remove(), 600); // petit fade-out
+  }, 5000);
+}
   });
 
 
