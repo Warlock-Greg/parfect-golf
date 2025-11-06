@@ -395,15 +395,15 @@ footer button.active {
   // === Réinitialisation des zones (vider les divs sauf structure principale) ===
 function clearInteractionZones() {
   // On garde #game-area et #golf-select, on ne vide que le contenu de #hole-card
-  const holeCard = document.getElementById("hole-card");
-  if (holeCard) holeCard.innerHTML = "";
+  //const holeCard = document.getElementById("hole-card");
+  //if (holeCard) holeCard.innerHTML = "";
 
   // On cache les autres zones
   const trainingArea = document.getElementById("training-area");
   const friendsArea = document.getElementById("friends-area");
   const swingAnalyzer = document.getElementById("swing-analyzer");
 
-  [trainingArea, friendsArea, swingAnalyzer].forEach(el => {
+  [trainingArea, friendsArea].forEach(el => {
     if (el) {
       el.style.display = "none";
       el.innerHTML = ""; // on peut vider ces zones
