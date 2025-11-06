@@ -447,13 +447,23 @@ document.addEventListener("DOMContentLoaded", () => {
   window.coachReact = (msg) => typeof appendCoachMessage === "function" && appendCoachMessage(msg);
 
   // === Listeners ===
-  playBtn.addEventListener("click", () => {
-    setActive(playBtn);
-    ensureGameView();
-    showOnly("play");
-    window.initGolfSelect?.();
-    coachReact("🎯 Mode Jouer activé — choisis ton golf !");
-  });
+ playBtn.addEventListener("click", () => {
+  setActive(playBtn);
+  showOnly("play");
+
+  // 👇 Reset visuel minimal
+  const gameArea = document.getElementById("game-area");
+  const holeCard = document.getElementById("hole-card");
+  const golfSelect = document.getElementById("golf-select");
+  if (holeCard) holeCard.innerHTML = "";
+  if (golfSelect) golfSelect.innerHTML = "";
+
+  // ✅ Choisir entre Reprendre / Nouvelle partie
+  window.showResumeOrNewModal?.();
+
+  coachReact("🎯 Mode Jouer activé — choisis ton golf ou reprends ta partie !");
+});
+
 
   trainingBtn.addEventListener("click", () => {
     setActive(trainingBtn);
