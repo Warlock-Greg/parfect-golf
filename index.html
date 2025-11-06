@@ -498,11 +498,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Démarrage par défaut : Play
+// 🚀 Démarrage : uniquement l’onboarding
+[gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+
+// Quand l’onboarding se termine
+document.getElementById("start-onboarding")?.addEventListener("click", () => {
+  const onboard = document.getElementById("onboarding");
+  onboard.style.opacity = "0";
+  onboard.style.transition = "opacity 0.6s ease";
+  setTimeout(() => onboard.remove(), 600);
+
+  // 🟢 Arrivée sur la home
   setActive(playBtn);
   ensureGameView();
   showOnly("play");
-  window.initGolfSelect?.();
+
+  // ⚠️ Ne surtout pas lancer initGolfSelect ici
+  // Il ne se lancera qu'après clic sur "Jouer"
+  coachReact("👋 Bienvenue sur Parfect.golfr — clique sur Jouer pour commencer !");
 });
+
 </script>
 
 
