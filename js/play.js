@@ -37,11 +37,17 @@ function showResumeOrNewModal() {
 
   modal.querySelector("#resume-round")?.addEventListener("click", () => {
     modal.remove();
-    if (lastGolf) {
-      const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
-      if (saved.length) holes = saved;
-      currentGolf = { id: lastGolf };
-      renderHole(currentHole);
+  const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
+    const lastGolfId = localStorage.getItem("currentGolf");
+    if (saved.length && lastGolfId) {
+      fetch("./data/golfs.json")
+        .then(res => res.json())
+        .then(golfs => {
+          window.currentGolf = golfs.find(g => g.id === lastGolfId);
+          window.holes = saved;
+          window.currentHole = saved.findIndex(h => !h.score) + 1 || 1;
+          renderHole(currentHole);
+        });
     }
   });
 
