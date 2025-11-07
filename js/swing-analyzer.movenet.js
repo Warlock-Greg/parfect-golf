@@ -230,14 +230,30 @@
     if (zone.dataset.init === "1") return;
     zone.dataset.init = "1";
 
-    const preview = $("video-preview");
-    const recordBtn = $("record-btn");
-    const uploadBtn = $("upload-btn");
-    const uploadInput = $("video-upload");
-    const analyzeBtn = $("analyze-btn");
-    const refSelect = $("ref-swing");
-    const resultBox = $("analysis-result");
-    ensureUploadStatus(); // crée la div si besoin
+   // --- Récupère les éléments
+const preview     = $("video-preview");
+const uploadCam   = $("video-upload-camera");
+const uploadLib   = $("video-upload-library");
+const analyzeBtn  = $("analyze-btn");
+const refSelect   = $("ref-swing");
+const resultBox   = $("analysis-result");
+
+// Handlers de changement (caméra + bibliothèque)
+function handleFileInputChange(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  if (preview) {
+    preview.src = url;
+    preview.style.display = "block";
+    preview.load();
+  }
+  showUploadStatus("✅ Vidéo chargée !");
+  resultBox.innerHTML = ""; // reset d’un ancien résultat
+}
+
+uploadCam?.addEventListener("change", handleFileInputChange);
+uploadLib?.addEventListener("change", handleFileInputChange);
 
     // 🎥 Dual mode : caméra vs album (iPhone OK)
     if (recordBtn && uploadBtn && uploadInput) {
