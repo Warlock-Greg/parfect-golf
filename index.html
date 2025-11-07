@@ -272,8 +272,17 @@ footer button.active {
 <!-- === ANALYSE DU SWING (MVP) === -->
 <div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
   <h3>🎥 Analyse ton swing</h3>
+<div style="margin-top:8px;">
+  <label for="ref-swing">Référence :</label><br>
+  <select id="ref-swing" style="margin-top:6px;padding:6px;border-radius:6px;">
+    <option value="rory_faceon">Rory McIlroy (face-on)</option>
+    <option value="adam_dtl">Adam Scott (down-the-line)</option>
+    <option value="nelly_faceon">Nelly Korda (face-on)</option>
+    <option value="jin_dtl">Jin Young Ko (down-the-line)</option>
+  </select>
+</div>
 
-  <div style="margin-top:10px;">
+  <!--div style="margin-top:10px;">
     <label for="swing-type">Type de coup :</label><br>
     <select id="swing-type" style="margin-top:6px;padding:6px;border-radius:6px;">
       <option value="drive">Drive</option>
@@ -281,7 +290,7 @@ footer button.active {
       <option value="approach">Approche</option>
       <option value="putting">Putting</option>
     </select>
-  </div>
+</div-->
 
   <div style="margin-top:15px;">
     <input type="file" id="video-upload" accept="video/*" capture="user">
@@ -368,6 +377,7 @@ footer button.active {
   <script src="js/training.js"></script>
   <script src="js/social.js"></script>
   <script src="js/swing-analyzer.js"></script>
+  <script src="js/swing-analyzer.movenet.js"></script>
   <script src="js/main.js"></script>
 
 <script src="js/licence.js"></script>
@@ -668,6 +678,14 @@ document.getElementById("start-onboarding")?.addEventListener("click", () => {
 </script>
 
 
+<!-- TFJS + backends -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+
+<!-- Pose Detection (MoveNet via pose-detection) -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
 
 
 </body>
