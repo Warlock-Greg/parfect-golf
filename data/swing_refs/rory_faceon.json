@@ -1,5 +1,5 @@
 {
-  "meta": { "name": "Nelly Korda", "view": "faceon", "fps": 30 },
+  "meta": { "name": "Rory Mc Ilroy", "view": "faceon", "fps": 30 },
   "phases": ["address","top","impact","finish"],
   "angles": {
     "address": { "shoulders": 12, "hips": 9, "left_elbow": 170, "right_elbow": 167, "left_knee": 170, "right_knee": 171, "spine_tilt": 14, "foot_open": 8 },
