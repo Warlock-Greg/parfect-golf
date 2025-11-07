@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "adam", "view": "faceon", "fps": 30 },
+  "phases": ["address","top","impact","finish"],
+  "angles": {
+    "address": { "shoulders": 12, "hips": 9, "left_elbow": 170, "right_elbow": 167, "left_knee": 170, "right_knee": 171, "spine_tilt": 14, "foot_open": 8 },
+    "top":     { "shoulders": 86, "hips": 42, "left_elbow": 165, "right_elbow": 80,  "left_knee": 160, "right_knee": 150, "spine_tilt": 35, "foot_open": 8 },
+    "impact":  { "shoulders": 22, "hips": 46, "left_elbow": 178, "right_elbow": 165, "left_knee": 165, "right_knee": 150, "spine_tilt": 20, "foot_open": 8 },
+    "finish":  { "shoulders": 95, "hips": 90, "left_elbow": 170, "right_elbow": 170, "left_knee": 175, "right_knee": 175, "spine_tilt": 25, "foot_open": 8 }
+  }
+}
