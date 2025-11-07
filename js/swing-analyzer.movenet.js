@@ -27,11 +27,44 @@ let refReady = false;
 
 // --- References (replace URLs as needed)
 const REF_SWINGS = {
-  rory_faceon:  { url: "assets/ref/rory_faceon.mp4", label: "Rory McIlroy" },
-  adam_dtl:     { url: "assets/ref/adam_dtl.mp4", label: "Adam Scott" },
-  nelly_faceon: { url: "assets/ref/nelly_faceon.mp4", label: "Nelly Korda" },
-  jin_dtl:      { url: "assets/ref/jin_dtl.mp4", label: "Jin Young Ko" }
+ // Helper: préfixe pour GitHub Pages
+const REF_BASE = location.hostname.endsWith("github.io") ? "/parfect-golf" : "";
+
+const REF_SWINGS = {
+  rory_faceon:  { url: `${REF_BASE}/assets/ref/rory_faceon.mp4`,  label: "Rory McIlroy" },
+  adam_dtl:     { url: `${REF_BASE}/assets/ref/adam_dtl.mp4`,     label: "Adam Scott"   },
+  nelly_faceon: { url: `${REF_BASE}/assets/ref/nelly_faceon.mp4`, label: "Nelly Korda"  },
+  jin_dtl:      { url: `${REF_BASE}/assets/ref/jin_dtl.mp4`,      label: "Jin Young Ko" }
 };
+
+async function loadReference(selected) {
+  if (!selected || !REF_SWINGS[selected]) return false;
+  const item = REF_SWINGS[selected];
+
+  if (!refVideo) {
+    refVideo = document.createElement("video");
+    refVideo.muted = true;
+    refVideo.playsInline = true;
+    refVideo.crossOrigin = "anonymous"; // ok même en same-origin
+    refVideo.style.display = "none";
+    document.body.appendChild(refVideo);
+  }
+
+  return new Promise((resolve) => {
+    refVideo.onerror = () => {
+      console.error("❌ Référence introuvable :", item.url);
+      coachReact?.("⚠️ Vidéo de référence introuvable. Vérifie le chemin et le nom du fichier.");
+      resolve(false);
+    };
+    refVideo.onloadedmetadata = () => {
+      console.log("🎬 Référence prête :", item.label);
+      resolve(true);
+    };
+    refVideo.src = item.url;
+    refVideo.load();
+  });
+}
+
 
 // === Setup overlay ===
 function ensureOverlay() {
