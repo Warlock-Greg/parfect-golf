@@ -293,8 +293,11 @@ footer button.active {
 </div-->
 
   <div style="margin-top:15px;">
-    <input type="file" id="video-upload" accept="video/*" capture="user">
-  </div>
+  <button id="record-btn" class="btn" style="margin-right:8px;">🎥 Filmer</button>
+  <button id="upload-btn" class="btn">📂 Choisir depuis l’album</button>
+  <input type="file" id="video-upload" accept="video/*" style="display:none;">
+</div>
+
 
   <video id="video-preview" controls style="max-width:100%;margin-top:10px;border-radius:8px;display:none;"></video>
 
