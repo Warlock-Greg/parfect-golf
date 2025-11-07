@@ -17,6 +17,26 @@ const analyzeBtn = $("analyze-btn");
 const refSelect = $("ref-swing");
 const resultBox = $("analysis-result");
 
+// --- 🎥 Dual mode : filmer ou choisir depuis album ---
+const recordBtn = document.getElementById("record-btn");
+const uploadBtn = document.getElementById("upload-btn");
+const uploadInput = document.getElementById("video-upload");
+
+if (recordBtn && uploadBtn && uploadInput) {
+  // Ouvre la caméra
+  recordBtn.addEventListener("click", () => {
+    uploadInput.setAttribute("capture", "environment");
+    uploadInput.click();
+  });
+
+  // Ouvre la pellicule / album
+  uploadBtn.addEventListener("click", () => {
+    uploadInput.removeAttribute("capture");
+    uploadInput.click();
+  });
+}
+
+
 // overlay
 let overlayCanvas = null;
 let overlayCtx = null;
