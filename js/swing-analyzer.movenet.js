@@ -1,5 +1,5 @@
 // === Parfect.golfr - Swing Analyzer (MoveNet + Overlay + Comparaison) ===
-// Version stable 2025-11 — suit le corps, compare à une référence si dispo, donne une note /100.
+// Version stable 2025-11 — overlay squelette, comparaison à une référence, note /100.
 
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -7,13 +7,13 @@
   let detector = null;
   let initialized = false;
 
-  // 🔗 Références vidéo (mets tes fichiers MP4 dans /assets/ref/ et ajuste les noms au besoin)
+  // 🔗 Références vidéo (mets tes fichiers MP4 dans /assets/ref/ et adapte les noms)
   const REF_BASE = "./assets/ref/";
   const REF_MAP = {
-    rory_faceon: REF_BASE + "YTDown.com_Shorts_Rory-McIlroy-Driver-Swing-Slow-Motion-FO_Media_Y32QVpIA4As_001_720p.mp4",
-    adam_dtl:    REF_BASE + "adam_dtl.mp4",
-    nelly_faceon:REF_BASE + "nelly_faceon.mp4",
-    jin_dtl:     REF_BASE + "jin_dtl.mp4",
+    rory_faceon:  REF_BASE + "rory_faceon.mp4",
+    adam_dtl:     REF_BASE + "adam_dtl.mp4",
+    nelly_faceon: REF_BASE + "nelly_faceon.mp4",
+    jin_dtl:      REF_BASE + "jin_dtl.mp4",
   };
 
   // ————— UI helpers —————
@@ -35,7 +35,6 @@
   // ————— Overlay canvas —————
   function ensureOverlayFor(video, idSuffix = "") {
     if (!video) return null;
-    // conteneur parent positionné
     const parent = video.parentElement || video;
     parent.style.position = "relative";
 
@@ -44,35 +43,42 @@
       canvas = document.createElement("canvas");
       canvas.className = `swing-overlay${idSuffix ? "-" + idSuffix : ""}`;
       canvas.style.position = "absolute";
-      canvas.style.left = "50%";
+      canvas.style.left = "0";
       canvas.style.top = "0";
-      canvas.style.transform = "translateX(-50%)";
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
       canvas.style.pointerEvents = "none";
-      canvas.style.opacity = "0.9";
+      canvas.style.opacity = "0.95";
       parent.appendChild(canvas);
     }
+    // taille native du canvas = taille vidéo pour des coordonnées exactes
     const w = video.videoWidth || video.clientWidth || 360;
     const h = video.videoHeight || video.clientHeight || 240;
     canvas.width = w;
     canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    return ctx;
+    return canvas.getContext("2d");
   }
 
-  function drawSkeleton(ctx, keypoints, color = "rgba(0,255,153,0.9)") {
+  function drawSkeleton(ctx, keypoints, color = "rgba(0,255,153,0.95)") {
     if (!ctx || !keypoints) return;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    // Paires MoveNet (indices COCO)
+    // Paires MoveNet/COCO
     const PAIRS = [
-      [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-      [11, 12], [5, 11], [6, 12], [11, 13], [13, 15], [12, 14], [14, 16]
+      [5, 6],  // épaules
+      [5, 7], [7, 9],   // bras gauche
+      [6, 8], [8,10],   // bras droit
+      [11,12],          // hanches
+      [5,11], [6,12],   // tronc
+      [11,13],[13,15],  // jambe gauche
+      [12,14],[14,16]   // jambe droite
     ];
 
     ctx.lineWidth = 3;
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
 
+    // os
     PAIRS.forEach(([a, b]) => {
       const A = keypoints[a], B = keypoints[b];
       if (A && B && A.score > 0.3 && B.score > 0.3) {
@@ -83,6 +89,7 @@
       }
     });
 
+    // articulations
     keypoints.forEach((p) => {
       if (p.score > 0.3) {
         ctx.beginPath();
@@ -99,25 +106,35 @@
     try { await tf.setBackend("webgl"); } catch (_) {}
     detector = await poseDetection.createDetector(
       poseDetection.SupportedModels.MoveNet,
-      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER } // robuste
     );
     return detector;
   }
 
-  // Échantillonne ~N frames sur la durée de la vidéo, dessine le squelette à chaque pas
-  async function samplePosesFromVideo(video, ctx, color = "rgba(0,255,153,0.9)", frames = 40) {
+  // Normalise par largeur d'épaules pour rendre comparables les distances
+  function normalizeKeypoints(kp) {
+    if (!kp) return kp;
+    const L = kp[5], R = kp[6];
+    if (L && R && L.score > 0.2 && R.score > 0.2) {
+      const scale = Math.max(20, Math.hypot(L.x - R.x, L.y - R.y)); // largeur d'épaules
+      return kp.map(p => p ? { ...p, x: p.x / scale, y: p.y / scale } : p);
+    }
+    return kp;
+  }
+
+  // Échantillonne ~N frames sur la vidéo, dessine le squelette à chaque pas (seek)
+  async function samplePosesFromVideo(video, ctx, color = "rgba(0,255,153,0.95)", frames = 40) {
     const det = await ensureDetector();
     const seq = [];
+
+    // s’assurer que la durée est connue
     if (!video.duration || isNaN(video.duration)) {
-      // si la durée n'est pas prête, force un play-pause court pour init les metadata
-      await video.play().catch(()=>{});
-      video.pause();
+      try { await video.play(); video.pause(); } catch (_) {}
     }
 
     const totalFrames = Math.max(8, Math.min(frames, 60));
     for (let i = 0; i < totalFrames; i++) {
       const t = (video.duration || 1) * (i / (totalFrames - 1));
-      // seek
       video.currentTime = t;
       // attendre le seek
       await new Promise((resolve) => {
@@ -130,57 +147,41 @@
         const kp = normalizeKeypoints(est[0].keypoints);
         seq.push(kp);
         if (ctx) drawSkeleton(ctx, kp, color);
-        // petite pause pour laisser peindre le canvas
-        await new Promise(r => setTimeout(r, 0));
+        await new Promise(r => setTimeout(r, 0)); // laisser respirer le thread
       }
     }
     return seq;
   }
 
-  // Normalise par largeur d'épaules pour rendre comparable les distances entre vidéos
-  function normalizeKeypoints(kp) {
-    if (!kp) return kp;
-    const L = kp[5], R = kp[6];
-    if (L && R && L.score > 0.2 && R.score > 0.2) {
-      const scale = Math.max(20, Math.hypot(L.x - R.x, L.y - R.y)); // largeur épaules
-      return kp.map(p => p ? { ...p, x: p.x / scale, y: p.y / scale } : p);
-    }
-    return kp;
-  }
-
   // ————— Scores —————
-  // similarité frame à frame sur points clés (épaules + hanches + coudes + genoux)
+  // similarité frame à frame (épaules, hanches, coudes, genoux)
   function frameSimilarity(a, b) {
     if (!a || !b) return 0;
-    const idx = [5, 6, 11, 12, 7, 8, 13, 14]; // épaules, hanches, coudes, genoux
+    const idx = [5, 6, 11, 12, 7, 8, 13, 14];
     let sum = 0, n = 0;
     for (let i of idx) {
       const A = a[i], B = b[i];
       if (A && B && A.score > 0.2 && B.score > 0.2) {
         const dx = A.x - B.x;
         const dy = A.y - B.y;
-        sum += Math.sqrt(dx * dx + dy * dy);
+        sum += Math.hypot(dx, dy);
         n++;
       }
     }
     if (!n) return 0;
-    // Plus la distance est petite, plus la similarité est grande.
-    // Clamp simple pour obtenir ~[0..1]
-    const avg = sum / n;
-    return Math.max(0, 1 - avg); // avg proche de 0 → 1.0 ; >1 → 0
+    const avg = sum / n;          // distance moyenne normalisée
+    return Math.max(0, 1 - avg);  // 0..1 (plus proche → plus haut)
   }
 
   function sequenceSimilarity(seqA, seqB) {
     if (!seqA.length || !seqB.length) return 0;
     const N = Math.min(seqA.length, seqB.length);
     let s = 0;
-    for (let i = 0; i < N; i++) {
-      s += frameSimilarity(seqA[i], seqB[i]);
-    }
+    for (let i = 0; i < N; i++) s += frameSimilarity(seqA[i], seqB[i]);
     return s / N; // 0..1
   }
 
-  // stabilité interne du swing : variation fluide d'une frame à l'autre
+  // stabilité interne (fluidité d’une frame à l’autre)
   function stability(seq) {
     if (seq.length < 2) return 0.5;
     let s = 0, n = 0;
@@ -192,8 +193,8 @@
   }
 
   // Note finale :
-  // - si ref dispo: 50% similarité à la ref + 50% stabilité
-  // - sinon: 100% stabilité
+  // - avec ref: 50% similarité + 50% stabilité
+  // - sans ref: 100% stabilité
   function finalScore(stab, simOrNull) {
     if (typeof simOrNull === "number") {
       return Math.round((0.5 * stab + 0.5 * simOrNull) * 100);
@@ -201,45 +202,7 @@
     return Math.round(stab * 100);
   }
 
-  // ————— Flux principal —————
-  async function analyze(preview, refKeyOrNull) {
-    const ctxUser = ensureOverlayFor(preview, "user");
-    say("⏳ Analyse en cours…");
-
-    // 1) séquence user
-    const userSeq = await samplePosesFromVideo(preview, ctxUser, "rgba(0,255,153,0.9)", 40);
-    const stab = stability(userSeq); // 0..1
-
-    // 2) tentative ref si demandée
-    let sim = null;
-    if (refKeyOrNull && REF_MAP[refKeyOrNull]) {
-      try {
-        const refVideo = await ensureRefVideo(REF_MAP[refKeyOrNull]); // crée/charge <video id="ref-video">
-        const ctxRef = ensureOverlayFor(refVideo, "ref");
-        const refSeq = await samplePosesFromVideo(refVideo, ctxRef, "rgba(0,180,255,0.85)", 40);
-        sim = sequenceSimilarity(userSeq, refSeq); // 0..1
-      } catch (err) {
-        console.warn("⚠️ Référence indisponible, fallback sans comparaison:", err);
-        sim = null;
-      }
-    }
-
-    // 3) score
-    const score = finalScore(stab, sim);
-    const parts = [
-      `🧮 Note globale : <b>${score}/100</b>`,
-      `🧘 Stabilité : ${(stab * 100).toFixed(0)}/100`
-    ];
-    if (typeof sim === "number") parts.push(`🎯 Similarité à la référence : ${(sim * 100).toFixed(0)}/100`);
-    say(parts.join(" · "));
-
-    // Feed coach si dispo
-    if (typeof window.coachReact === "function") {
-      window.coachReact(`🏌️ Swing analysé → ${score}/100 (${(stab * 100).toFixed(0)} stab${typeof sim === "number" ? `, ${(sim * 100).toFixed(0)} sim` : ""})`);
-    }
-  }
-
-  // ————— Gestion de la vidéo de référence —————
+  // ————— Référence vidéo —————
   function ensureRefVideo(src) {
     return new Promise((resolve, reject) => {
       let v = $("ref-video");
@@ -248,10 +211,10 @@
         v.id = "ref-video";
         v.playsInline = true;
         v.muted = true;
-        v.controls = false;
+        v.controls = true;
         v.style.maxWidth = "100%";
         v.style.marginTop = "8px";
-        // on l’affiche en dessous de la vidéo user si présent
+        // placer sous la vidéo utilisateur si possible
         const preview = $("video-preview");
         if (preview && preview.parentElement) {
           preview.parentElement.appendChild(v);
@@ -267,81 +230,117 @@
     });
   }
 
+  // ————— Pipeline principal —————
+  async function analyze(preview, refKeyOrNull) {
+    const ctxUser = ensureOverlayFor(preview, "user");
+    say("⏳ Analyse en cours…");
+
+    // 1) séquence user
+    const userSeq = await samplePosesFromVideo(preview, ctxUser, "rgba(0,255,153,0.95)", 40);
+    const stab = stability(userSeq); // 0..1
+
+    // 2) tentative ref si demandée
+    let sim = null;
+    if (refKeyOrNull && REF_MAP[refKeyOrNull]) {
+      try {
+        const refVideo = await ensureRefVideo(REF_MAP[refKeyOrNull]);
+        const ctxRef = ensureOverlayFor(refVideo, "ref");
+        const refSeq = await samplePosesFromVideo(refVideo, ctxRef, "rgba(0,180,255,0.9)", 40);
+        sim = sequenceSimilarity(userSeq, refSeq); // 0..1
+      } catch (err) {
+        console.warn("⚠️ Référence indisponible — score basé sur la stabilité seulement:", err);
+        sim = null;
+      }
+    }
+
+    // 3) score
+    const score = finalScore(stab, sim);
+    const parts = [
+      `🧮 Note globale : <b>${score}/100</b>`,
+      `🧘 Stabilité : ${(stab * 100).toFixed(0)}/100`
+    ];
+    if (typeof sim === "number") parts.push(`🎯 Similarité à la référence : ${(sim * 100).toFixed(0)}/100`);
+    say(parts.join(" · "));
+
+    // message coach optionnel
+    if (typeof window.coachReact === "function") {
+      window.coachReact(`🏌️ Swing analysé → ${score}/100 (stab ${(stab*100).toFixed(0)}${typeof sim==="number"?`, sim ${(sim*100).toFixed(0)}`:""})`);
+    }
+  }
+
   // ————— INIT —————
-// ————— INIT —————
-async function initSwingAnalyzer(retry = 0) {
-  if (initialized) return;
-  initialized = true;
+  async function initSwingAnalyzer(retry = 0) {
+    if (initialized) return;
+    initialized = true;
 
-  const preview = $("video-preview");
-  const camInput = $("video-upload-camera");
-  const libInput = $("video-upload-library");
-  const analyzeBtn = $("analyze-btn");
-  const refSelect = $("ref-swing");
-  const uploadStatus = $("upload-status");
+    const preview      = $("video-preview");
+    const camInput     = $("video-upload-camera");   // input file (caméra)
+    const libInput     = $("video-upload-library");  // input file (bibliothèque)
+    const analyzeBtn   = $("analyze-btn");
+    const refSelect    = $("ref-swing");
+    const uploadStatus = $("upload-status");
 
-  // ✅ Tolérance : si pas encore trouvé, retente un peu plus tard
-  if (!preview || !camInput || !libInput || !analyzeBtn || !refSelect || !uploadStatus) {
-    console.warn(`⛔ Élément(s) manquant(s) pour le Swing Analyzer (tentative ${retry})`);
-    initialized = false;
-    if (retry < 10) setTimeout(() => initSwingAnalyzer(retry + 1), 300);
-    return;
-  }
-
-  // Chargement du modèle MoveNet
-  try {
-    await ensureDetector();
-  } catch (e) {
-    console.error("MoveNet load failed:", e);
-    say("❌ Échec chargement IA.", "#f55");
-    initialized = false;
-    return;
-  }
-
-  // 🎥 Fonction de preview commune
-  function handleUpload(file) {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    preview.src = url;
-    preview.style.display = "block";
-    preview.load();
-    uploadStatus.textContent = "✅ Vidéo chargée, prête à être analysée.";
-    uploadStatus.style.opacity = "1";
-    setTimeout(() => (uploadStatus.style.opacity = "0"), 3000);
-  }
-
-  // 📱 Caméra
-  camInput.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    handleUpload(file);
-  });
-
-  // 📂 Bibliothèque
-  libInput.addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    handleUpload(file);
-  });
-
-  // 🚀 Analyse
-  analyzeBtn.addEventListener("click", async () => {
-    if (!preview.src) {
-      say("⚠️ Choisis ou filme une vidéo avant d’analyser.", "#f55");
+    // si le DOM n’est pas prêt (view pas encore montée), on retente gentiment
+    if (!preview || !camInput || !libInput || !analyzeBtn || !refSelect || !uploadStatus) {
+      console.warn(`⛔ Élément(s) manquant(s) pour le Swing Analyzer (tentative ${retry})`);
+      initialized = false;
+      if (retry < 10) setTimeout(() => initSwingAnalyzer(retry + 1), 300);
       return;
     }
 
-    const refKey = refSelect?.value || null;
+    // modèle MoveNet
     try {
-      await analyze(preview, refKey);
-    } catch (err) {
-      console.error(err);
-      say("❌ Erreur pendant l’analyse.", "#f55");
+      await ensureDetector();
+    } catch (e) {
+      console.error("MoveNet load failed:", e);
+      say("❌ Échec de chargement de l’IA.", "#f55");
+      initialized = false;
+      return;
     }
-  });
 
-  console.log("✅ Swing Analyzer initialisé (MoveNet prêt).");
-}
+    // 🎥 Preview commune
+    function handleUpload(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.style.display = "block";
+      preview.load();
+      uploadStatus.textContent = "✅ Vidéo chargée, prête à être analysée.";
+      uploadStatus.style.opacity = "1";
+      setTimeout(() => (uploadStatus.style.opacity = "0"), 2500);
+    }
 
+    // 📱 Caméra (iPhone → ouvre l’appareil photo)
+    camInput.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      handleUpload(file);
+    });
 
-  // Expose global pour ton router
+    // 📂 Bibliothèque (album)
+    libInput.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      handleUpload(file);
+    });
+
+    // 🚀 Analyse
+    analyzeBtn.addEventListener("click", async () => {
+      if (!preview.src) {
+        say("⚠️ Choisis ou filme une vidéo avant d’analyser.", "#f55");
+        return;
+      }
+      const refKey = refSelect?.value || null;
+      try {
+        await analyze(preview, refKey || null);
+      } catch (err) {
+        console.error(err);
+        say("❌ Erreur pendant l’analyse.", "#f55");
+      }
+    });
+
+    console.log("✅ Swing Analyzer initialisé (MoveNet prêt).");
+  }
+
+  // Expose global pour le router
   window.initSwingAnalyzer = initSwingAnalyzer;
 })();
+
