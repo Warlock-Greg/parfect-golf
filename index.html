@@ -292,12 +292,19 @@ footer button.active {
     </select>
 </div-->
 
-  <div style="margin-top:15px;">
-  <button id="record-btn" class="btn" style="margin-right:8px;">🎥 Filmer</button>
-  <button id="upload-btn" class="btn">📂 Choisir depuis l’album</button>
-  <input type="file" id="video-upload" accept="video/*" style="display:none;">
-     <div id="upload-status" style="margin-top:10px;font-size:0.9rem;color:#00ff99;opacity:0;transition:opacity 0.4s ease;"></div>
+  <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+  <!-- Caméra (iPhone ouvre l’appareil photo) -->
+  <input id="video-upload-camera" type="file" accept="video/*" capture="environment" style="display:none;">
+  <label for="video-upload-camera" class="btn" style="cursor:pointer;">🎥 Filmer</label>
+
+  <!-- Bibliothèque (album) -->
+  <input id="video-upload-library" type="file" accept="video/*" style="display:none;">
+  <label for="video-upload-library" class="btn" style="cursor:pointer;">📂 Choisir</label>
 </div>
+
+<!-- Zone de statut (créée ici pour éviter les erreurs) -->
+<div id="upload-status" style="margin-top:10px;font-size:0.9rem;color:#00ff99;opacity:0;transition:opacity .4s ease;"></div>
+
 
 
   <video id="video-preview" controls style="max-width:100%;margin-top:10px;border-radius:8px;display:none;"></video>
