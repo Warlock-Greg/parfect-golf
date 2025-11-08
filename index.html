@@ -275,6 +275,7 @@ footer button.active {
 <div style="margin-top:8px;">
   <label for="ref-swing">Référence :</label><br>
   <select id="ref-swing" style="margin-top:6px;padding:6px;border-radius:6px;">
+    <option value="">(aucune)</option>
     <option value="rory_faceon">Rory McIlroy (face-on)</option>
     <option value="adam_dtl">Adam Scott (down-the-line)</option>
     <option value="nelly_faceon">Nelly Korda (face-on)</option>
@@ -560,12 +561,23 @@ function showHomeScreen() {
   });
 
   swingBtn.addEventListener("click", () => {
-    setActive(swingBtn);
-    showOnly("swing");
-    window.initSwingAnalyzer?.();
-    addCloseBar("swing-analyzer", "play");
-    coachReact("🎥 Mode Analyse activé — envoie ta vidéo !");
-  });
+  setActive(swingBtn);
+  showOnly("swing");
+  
+  // 🕐 Attends un peu que le DOM du swing-analyzer soit prêt
+  setTimeout(() => {
+    if (typeof window.initSwingAnalyzer === "function") {
+      window.initSwingAnalyzer();
+      console.log("✅ Swing Analyzer initialisé après affichage.");
+    } else {
+      console.warn("⚠️ initSwingAnalyzer non trouvé.");
+    }
+  }, 200); // 200ms suffisent
+
+  addCloseBar("swing-analyzer", "play");
+  coachReact("🎥 Mode Analyse activé — envoie ta vidéo !");
+});
+
 
   historyBtn.addEventListener("click", () => {
     setActive(historyBtn);
