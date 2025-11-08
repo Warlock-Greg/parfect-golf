@@ -255,6 +255,22 @@ function handleFileInputChange(e) {
 uploadCam?.addEventListener("change", handleFileInputChange);
 uploadLib?.addEventListener("change", handleFileInputChange);
 
+    // --- Détection de pose (MoveNet) ---
+    const detectorConfig = { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER };
+    detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, detectorConfig);
+
+    // Clique sur "Analyser"
+    analyzeBtn.addEventListener("click", async () => {
+      if (!preview.src) return showUploadStatus("⚠️ Charge d'abord une vidéo !");
+      await analyzeSwing(preview, refSelect.value);
+    });
+
+  } catch (err) {
+    console.error("Swing Analyzer init error:", err);
+    showUploadStatus("❌ Erreur d’initialisation du swing analyzer.");
+  }
+}
+
     // 🎥 Dual mode : caméra vs album (iPhone OK)
     if (recordBtn && uploadBtn && uploadInput) {
       recordBtn.addEventListener("click", () => {
