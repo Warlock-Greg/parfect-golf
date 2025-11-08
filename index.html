@@ -308,7 +308,14 @@ footer button.active {
 
 
 
-  <video id="video-preview" controls style="max-width:100%;margin-top:10px;border-radius:8px;display:none;"></video>
+  <video 
+  id="video-preview" 
+  controls 
+  playsinline 
+  preload="metadata"
+  style="max-width:100%;margin-top:10px;border-radius:8px;display:none;background:#000;"
+></video>
+
 
   <button id="analyze-btn" class="btn" style="margin-top:15px;background:#00ff99;color:#111;">Analyser mon swing</button>
 
