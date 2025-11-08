@@ -1,64 +1,81 @@
-// === swing-analyzer.movenet.js — Parfect.golfr (MVP stable) ===
+// === Parfect.golfr - Swing Analyzer (MoveNet + Overlay + Comparaison) ===
+// Version stable 2025-11 — suit le corps, compare à une référence si dispo, donne une note /100.
+
 (() => {
   const $ = (id) => document.getElementById(id);
 
   let detector = null;
   let initialized = false;
 
-  // --- UI helpers ---
-  function showUploadStatus(msg) {
-    const el = $("upload-status");
+  // 🔗 Références vidéo (mets tes fichiers MP4 dans /assets/ref/ et ajuste les noms au besoin)
+  const REF_BASE = "./assets/ref/";
+  const REF_MAP = {
+    rory_faceon: REF_BASE + "rory_faceon.mp4",
+    adam_dtl:    REF_BASE + "adam_dtl.mp4",
+    nelly_faceon:REF_BASE + "nelly_faceon.mp4",
+    jin_dtl:     REF_BASE + "jin_dtl.mp4",
+  };
+
+  // ————— UI helpers —————
+  function say(msg, color = "#00ff99") {
+    const el = $("analysis-result");
     if (!el) return;
-    el.textContent = msg;
-    el.style.opacity = "1";
-    setTimeout(() => (el.style.opacity = "0"), 2200);
+    el.innerHTML = `<p style="color:${color};margin:6px 0;">${msg}</p>`;
+  }
+  function append(msg, color = "#ddd") {
+    const el = $("analysis-result");
+    if (!el) return;
+    const p = document.createElement("p");
+    p.style.color = color;
+    p.style.margin = "4px 0";
+    p.innerHTML = msg;
+    el.appendChild(p);
   }
 
-  // --- Overlay (squelette) ---
-  function ensureOverlayCanvas(videoEl, id) {
-    let canvas = document.getElementById(id);
+  // ————— Overlay canvas —————
+  function ensureOverlayFor(video, idSuffix = "") {
+    if (!video) return null;
+    // conteneur parent positionné
+    const parent = video.parentElement || video;
+    parent.style.position = "relative";
+
+    let canvas = parent.querySelector(`canvas.swing-overlay${idSuffix ? "-" + idSuffix : ""}`);
     if (!canvas) {
       canvas = document.createElement("canvas");
-      canvas.id = id;
+      canvas.className = `swing-overlay${idSuffix ? "-" + idSuffix : ""}`;
       canvas.style.position = "absolute";
       canvas.style.left = "50%";
+      canvas.style.top = "0";
       canvas.style.transform = "translateX(-50%)";
-      canvas.style.top = videoEl.offsetTop + "px";
       canvas.style.pointerEvents = "none";
       canvas.style.opacity = "0.9";
-      videoEl.parentElement.style.position = "relative";
-      videoEl.parentElement.appendChild(canvas);
+      parent.appendChild(canvas);
     }
-    // adapte la taille au tag <video>
-    canvas.width = videoEl.clientWidth || videoEl.videoWidth || 360;
-    canvas.height = videoEl.clientHeight || videoEl.videoHeight || 240;
-    return canvas.getContext("2d");
+    const w = video.videoWidth || video.clientWidth || 360;
+    const h = video.videoHeight || video.clientHeight || 240;
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    return ctx;
   }
 
-  function drawSkeleton(ctx, keypoints) {
-    if (!keypoints || !keypoints.length) return;
-    const kp = keypoints;
+  function drawSkeleton(ctx, keypoints, color = "rgba(0,255,153,0.9)") {
+    if (!ctx || !keypoints) return;
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    // paires classiques (MediaPipe/MoveNet indices)
+    // Paires MoveNet (indices COCO)
     const PAIRS = [
-      [5, 6],  // épaules
-      [5, 7], [7, 9],   // bras gauche
-      [6, 8], [8, 10],  // bras droit
-      [11, 12],         // hanches
-      [5, 11], [6, 12], // tronc
-      [11, 13], [13, 15], // jambe gauche
-      [12, 14], [14, 16], // jambe droite
+      [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
+      [11, 12], [5, 11], [6, 12], [11, 13], [13, 15], [12, 14], [14, 16]
     ];
 
-    // points
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(0,255,153,0.9)";
-    ctx.fillStyle = "rgba(0,255,153,0.9)";
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
 
-    // segments
     PAIRS.forEach(([a, b]) => {
-      const A = kp[a], B = kp[b];
-      if (A && B && A.x != null && B.x != null) {
+      const A = keypoints[a], B = keypoints[b];
+      if (A && B && A.score > 0.3 && B.score > 0.3) {
         ctx.beginPath();
         ctx.moveTo(A.x, A.y);
         ctx.lineTo(B.x, B.y);
@@ -66,9 +83,8 @@
       }
     });
 
-    // joints
-    kp.forEach((p) => {
-      if (p && p.x != null) {
+    keypoints.forEach((p) => {
+      if (p.score > 0.3) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         ctx.fill();
@@ -76,223 +92,230 @@
     });
   }
 
-  // --- Détection MoveNet ---
-  async function buildDetector() {
+  // ————— MoveNet —————
+  async function ensureDetector() {
+    if (detector) return detector;
     await tf.ready();
-    try {
-      await tf.setBackend("webgl");
-    } catch (_) { /* ignore */ }
-
-    const config = {
-      modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER, // ✅ bon enum
-    };
-    return poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, config);
+    try { await tf.setBackend("webgl"); } catch (_) {}
+    detector = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
+    );
+    return detector;
   }
 
-  async function estimateFromElement(video, frames = 48, overlayCtx = null) {
-    const poses = [];
-    const dur = video.duration || 0;
+  // Échantillonne ~N frames sur la durée de la vidéo, dessine le squelette à chaque pas
+  async function samplePosesFromVideo(video, ctx, color = "rgba(0,255,153,0.9)", frames = 40) {
+    const det = await ensureDetector();
+    const seq = [];
+    if (!video.duration || isNaN(video.duration)) {
+      // si la durée n'est pas prête, force un play-pause court pour init les metadata
+      await video.play().catch(()=>{});
+      video.pause();
+    }
 
-    // if duration unknown, try a tiny delay
-    if (!dur) await new Promise((r) => setTimeout(r, 200));
-    const total = Math.min(frames, Math.max(10, Math.floor((video.duration || 6) * 6)));
-
-    for (let i = 0; i < total; i++) {
-      const t = (video.duration || 1) * (i / (total - 1));
-      try {
-        video.currentTime = t;
-      } catch (_) {}
-      await new Promise((r) => (video.onseeked = () => r()));
-      const est = await detector.estimatePoses(video, { flipHorizontal: false });
-      if (est && est[0]) {
-        const kp = (est[0].keypoints3D || est[0].keypoints || []).map((p) => ({
-          x: p.x,
-          y: p.y,
-        }));
-        poses.push(kp);
-        if (overlayCtx) {
-          overlayCtx.clearRect(0, 0, overlayCtx.canvas.width, overlayCtx.canvas.height);
-          drawSkeleton(overlayCtx, kp);
-        }
+    const totalFrames = Math.max(8, Math.min(frames, 60));
+    for (let i = 0; i < totalFrames; i++) {
+      const t = (video.duration || 1) * (i / (totalFrames - 1));
+      // seek
+      video.currentTime = t;
+      // attendre le seek
+      await new Promise((resolve) => {
+        const onSeek = () => { video.removeEventListener("seeked", onSeek); resolve(); };
+        video.addEventListener("seeked", onSeek, { once: true });
+      });
+      // estimer
+      const est = await det.estimatePoses(video, { flipHorizontal: false });
+      if (est && est[0] && est[0].keypoints) {
+        const kp = normalizeKeypoints(est[0].keypoints);
+        seq.push(kp);
+        if (ctx) drawSkeleton(ctx, kp, color);
+        // petite pause pour laisser peindre le canvas
+        await new Promise(r => setTimeout(r, 0));
       }
     }
-    return poses;
+    return seq;
   }
 
-  async function estimateFromURL(url, overlayTargetId) {
+  // Normalise par largeur d'épaules pour rendre comparable les distances entre vidéos
+  function normalizeKeypoints(kp) {
+    if (!kp) return kp;
+    const L = kp[5], R = kp[6];
+    if (L && R && L.score > 0.2 && R.score > 0.2) {
+      const scale = Math.max(20, Math.hypot(L.x - R.x, L.y - R.y)); // largeur épaules
+      return kp.map(p => p ? { ...p, x: p.x / scale, y: p.y / scale } : p);
+    }
+    return kp;
+  }
+
+  // ————— Scores —————
+  // similarité frame à frame sur points clés (épaules + hanches + coudes + genoux)
+  function frameSimilarity(a, b) {
+    if (!a || !b) return 0;
+    const idx = [5, 6, 11, 12, 7, 8, 13, 14]; // épaules, hanches, coudes, genoux
+    let sum = 0, n = 0;
+    for (let i of idx) {
+      const A = a[i], B = b[i];
+      if (A && B && A.score > 0.2 && B.score > 0.2) {
+        const dx = A.x - B.x;
+        const dy = A.y - B.y;
+        sum += Math.sqrt(dx * dx + dy * dy);
+        n++;
+      }
+    }
+    if (!n) return 0;
+    // Plus la distance est petite, plus la similarité est grande.
+    // Clamp simple pour obtenir ~[0..1]
+    const avg = sum / n;
+    return Math.max(0, 1 - avg); // avg proche de 0 → 1.0 ; >1 → 0
+  }
+
+  function sequenceSimilarity(seqA, seqB) {
+    if (!seqA.length || !seqB.length) return 0;
+    const N = Math.min(seqA.length, seqB.length);
+    let s = 0;
+    for (let i = 0; i < N; i++) {
+      s += frameSimilarity(seqA[i], seqB[i]);
+    }
+    return s / N; // 0..1
+  }
+
+  // stabilité interne du swing : variation fluide d'une frame à l'autre
+  function stability(seq) {
+    if (seq.length < 2) return 0.5;
+    let s = 0, n = 0;
+    for (let i = 1; i < seq.length; i++) {
+      s += frameSimilarity(seq[i], seq[i - 1]);
+      n++;
+    }
+    return n ? (s / n) : 0.5; // 0..1
+  }
+
+  // Note finale :
+  // - si ref dispo: 50% similarité à la ref + 50% stabilité
+  // - sinon: 100% stabilité
+  function finalScore(stab, simOrNull) {
+    if (typeof simOrNull === "number") {
+      return Math.round((0.5 * stab + 0.5 * simOrNull) * 100);
+    }
+    return Math.round(stab * 100);
+  }
+
+  // ————— Flux principal —————
+  async function analyze(preview, refKeyOrNull) {
+    const ctxUser = ensureOverlayFor(preview, "user");
+    say("⏳ Analyse en cours…");
+
+    // 1) séquence user
+    const userSeq = await samplePosesFromVideo(preview, ctxUser, "rgba(0,255,153,0.9)", 40);
+    const stab = stability(userSeq); // 0..1
+
+    // 2) tentative ref si demandée
+    let sim = null;
+    if (refKeyOrNull && REF_MAP[refKeyOrNull]) {
+      try {
+        const refVideo = await ensureRefVideo(REF_MAP[refKeyOrNull]); // crée/charge <video id="ref-video">
+        const ctxRef = ensureOverlayFor(refVideo, "ref");
+        const refSeq = await samplePosesFromVideo(refVideo, ctxRef, "rgba(0,180,255,0.85)", 40);
+        sim = sequenceSimilarity(userSeq, refSeq); // 0..1
+      } catch (err) {
+        console.warn("⚠️ Référence indisponible, fallback sans comparaison:", err);
+        sim = null;
+      }
+    }
+
+    // 3) score
+    const score = finalScore(stab, sim);
+    const parts = [
+      `🧮 Note globale : <b>${score}/100</b>`,
+      `🧘 Stabilité : ${(stab * 100).toFixed(0)}/100`
+    ];
+    if (typeof sim === "number") parts.push(`🎯 Similarité à la référence : ${(sim * 100).toFixed(0)}/100`);
+    say(parts.join(" · "));
+
+    // Feed coach si dispo
+    if (typeof window.coachReact === "function") {
+      window.coachReact(`🏌️ Swing analysé → ${score}/100 (${(stab * 100).toFixed(0)} stab${typeof sim === "number" ? `, ${(sim * 100).toFixed(0)} sim` : ""})`);
+    }
+  }
+
+  // ————— Gestion de la vidéo de référence —————
+  function ensureRefVideo(src) {
     return new Promise((resolve, reject) => {
-      const v = document.createElement("video");
-      v.crossOrigin = "anonymous";
-      v.src = url;
-      v.muted = true;
-      v.playsInline = true;
-      v.onloadeddata = async () => {
-        try {
-          const overlayCtx = ensureOverlayCanvas(v, overlayTargetId);
-          const poses = await estimateFromElement(v, 48, overlayCtx);
-          resolve(poses);
-        } catch (err) {
-          reject(err);
+      let v = $("ref-video");
+      if (!v) {
+        v = document.createElement("video");
+        v.id = "ref-video";
+        v.playsInline = true;
+        v.muted = true;
+        v.controls = false;
+        v.style.maxWidth = "100%";
+        v.style.marginTop = "8px";
+        // on l’affiche en dessous de la vidéo user si présent
+        const preview = $("video-preview");
+        if (preview && preview.parentElement) {
+          preview.parentElement.appendChild(v);
+        } else {
+          document.body.appendChild(v);
         }
-      };
-      v.onerror = () => reject(new Error("Ref video load error"));
-      // on doit l’injecter pour qu’il ait des dimensions correctes
-      document.body.appendChild(v);
-      v.style.position = "absolute";
-      v.style.left = "-9999px";
-      v.style.top = "0";
+      }
+      v.src = src;
+      v.onloadeddata = () => resolve(v);
+      v.onerror = () => reject(new Error("Ref video load error: " + src));
+      // iOS hack: play/pause pour init metadata si besoin
+      v.play().then(()=>v.pause()).catch(()=>{});
     });
   }
 
-  // --- Scoring ---
-  function frameSimilarity(kpA, kpB) {
-    if (!kpA || !kpB) return 0;
-    const idxs = [5, 6, 7, 8, 11, 12, 13, 14]; // épaules, coudes, hanches, genoux
-
-    function norm(kp) {
-      const pts = idxs.map((i) => (kp[i] ? [kp[i].x, kp[i].y] : [0, 0]));
-      // échelle = distance hanches
-      const hL = kp[11], hR = kp[12];
-      const scale = hL && hR ? Math.hypot(hL.x - hR.x, hL.y - hR.y) || 1 : 1;
-      return pts.flat().map((v) => v / scale);
-    }
-
-    const a = norm(kpA), b = norm(kpB);
-    const len = Math.min(a.length, b.length);
-    let dot = 0, na = 0, nb = 0;
-    for (let i = 0; i < len; i++) {
-      dot += a[i] * b[i];
-      na += a[i] * a[i];
-      nb += b[i] * b[i];
-    }
-    if (!na || !nb) return 0;
-    const cos = dot / (Math.sqrt(na) * Math.sqrt(nb));
-    return Math.max(0, Math.min(1, cos));
-  }
-
-  function compareSequences(user, ref) {
-    const n = Math.min(user.length, ref.length);
-    if (!n) return 50;
-    let acc = 0;
-    for (let i = 0; i < n; i++) acc += frameSimilarity(user[i], ref[i]);
-    const sim = acc / n;            // 0..1
-    return 50 + sim * 50;           // 50..100
-  }
-
-  function stabilityScore(seq) {
-    if (!seq.length) return 40;
-    const diffs = [];
-    for (let i = 1; i < seq.length; i++) {
-      const prev = seq[i - 1], cur = seq[i];
-      let s = 0, c = 0;
-      [5, 6, 11, 12].forEach((j) => {
-        if (prev[j] && cur[j]) {
-          s += Math.hypot(cur[j].x - prev[j].x, cur[j].y - prev[j].y);
-          c++;
-        }
-      });
-      if (c) diffs.push(s / c);
-    }
-    const mean = diffs.reduce((a, b) => a + b, 0) / (diffs.length || 1);
-    const normalized = Math.max(0, 1 - Math.min(1, mean * 4)); // heuristique simple
-    return 50 + normalized * 30; // 50..80
-  }
-
-  async function analyzeSwing(userVideoEl, refKey) {
-    const REF_BASE = "https://warlock-greg.github.io/parfect-golf/assets/ref/";
-    const REF_MAP = {
-      rory_faceon: "rory_faceon.mp4",
-      adam_dtl: "adam_dtl.mp4",
-      nelly_faceon: "nelly_faceon.mp4",
-      jin_dtl: "jin_dtl.mp4",
-    };
-
-    const userCtx = ensureOverlayCanvas(userVideoEl, "user-overlay");
-
-    // 1) Poses utilisateur
-    const userSeq = await estimateFromElement(userVideoEl, 48, userCtx);
-
-    // 2) Poses de référence (si dispo)
-    let score = 60;
-    if (REF_MAP[refKey]) {
-      try {
-        const refSeq = await estimateFromURL(REF_BASE + REF_MAP[refKey], "ref-overlay");
-        score = compareSequences(userSeq, refSeq);
-      } catch (e) {
-        console.warn("Référence indisponible → fallback:", e);
-        score = stabilityScore(userSeq);
-      }
-    } else {
-      score = stabilityScore(userSeq);
-    }
-
-    // borne 0..100
-    score = Math.max(0, Math.min(100, Math.round(score)));
-    return score;
-  }
-
-  // --- INIT (appelée par le router quand on ouvre l’onglet Swing) ---
+  // ————— INIT —————
   async function initSwingAnalyzer() {
-    if (initialized) return; // évite les doubles init
+    if (initialized) return;
     initialized = true;
 
-    try {
-      const container = $("swing-analyzer");
-      const preview = $("video-preview");
-      const uploadCam = $("video-upload-camera");
-      const uploadLib = $("video-upload-library");
-      const analyzeBtn = $("analyze-btn");
-      const refSelect = $("ref-swing");
-      const resultBox = $("analysis-result");
+    const preview = $("video-preview");
+    const upload = $("video-upload"); // input file
+    const analyzeBtn = $("analyze-btn");
+    const refSelect = $("ref-swing"); // select optionnel
 
-      if (!container || !preview || !uploadCam || !uploadLib || !analyzeBtn || !refSelect) {
-        console.warn("Swing Analyzer: éléments DOM manquants");
-        initialized = false; // on permettra une réinit plus tard
+    if (!preview || !upload || !analyzeBtn) {
+      console.warn("⛔ Élément(s) manquant(s) pour le Swing Analyzer.");
+      initialized = false;
+      return;
+    }
+
+    // Charger MoveNet au premier usage
+    try { await ensureDetector(); }
+    catch (e) { console.error("MoveNet load failed:", e); say("❌ Échec chargement IA.", "#f55"); initialized = false; return; }
+
+    // Upload local (iPhone: accès Pellicule ok)
+    upload.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      preview.style.display = "block";
+      preview.load();
+      say("✅ Vidéo chargée !");
+    });
+
+    // Lancer l’analyse
+    analyzeBtn.addEventListener("click", async () => {
+      if (!preview.src) {
+        say("⚠️ Choisis une vidéo avant d’analyser.", "#f55");
         return;
       }
-
-      // Fichiers (caméra + bibliothèque)
-      function handleFileInputChange(e) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const url = URL.createObjectURL(file);
-        preview.src = url;
-        preview.style.display = "block";
-        preview.load();
-        showUploadStatus("✅ Vidéo chargée !");
-        resultBox.innerHTML = "";
+      const refKey = refSelect?.value || null;
+      try {
+        await analyze(preview, refKey);
+      } catch (err) {
+        console.error(err);
+        say("❌ Erreur pendant l’analyse.", "#f55");
       }
-      uploadCam.addEventListener("change", handleFileInputChange);
-      uploadLib.addEventListener("change", handleFileInputChange);
+    });
 
-      // MoveNet
-      if (!detector) detector = await buildDetector();
-
-      // Lancer l’analyse
-      analyzeBtn.addEventListener("click", async () => {
-        if (!preview.src) {
-          showUploadStatus("⚠️ Charge d’abord une vidéo !");
-          return;
-        }
-        showUploadStatus("⏳ Analyse en cours...");
-        try {
-          const score = await analyzeSwing(preview, refSelect.value);
-          resultBox.innerHTML = `<div style="margin-top:8px;">🧮 Note : <b>${score}/100</b></div>`;
-          showUploadStatus("✅ Analyse terminée");
-          if (typeof window.coachReact === "function") {
-            coachReact(`🏌️‍♂️ Analyse swing : ${score}/100`);
-          }
-        } catch (err) {
-          console.error("Analyse error:", err);
-          showUploadStatus("❌ Erreur pendant l’analyse.");
-        }
-      });
-    } catch (err) {
-      console.error("Swing Analyzer init error:", err);
-      initialized = false;
-    }
+    console.log("🎥 Swing Analyzer initialisé (MoveNet).");
   }
 
-  // Export global (utilisé par le router)
+  // Expose global pour ton router
   window.initSwingAnalyzer = initSwingAnalyzer;
 })();
