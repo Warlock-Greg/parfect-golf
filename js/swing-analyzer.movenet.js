@@ -10,7 +10,7 @@
   // 🔗 Références vidéo (mets tes fichiers MP4 dans /assets/ref/ et ajuste les noms au besoin)
   const REF_BASE = "./assets/ref/";
   const REF_MAP = {
-    rory_faceon: REF_BASE + "rory_faceon.mp4",
+    rory_faceon: REF_BASE + "YTDown.com_Shorts_Rory-McIlroy-Driver-Swing-Slow-Motion-FO_Media_Y32QVpIA4As_001_720p.mp4",
     adam_dtl:    REF_BASE + "adam_dtl.mp4",
     nelly_faceon:REF_BASE + "nelly_faceon.mp4",
     jin_dtl:     REF_BASE + "jin_dtl.mp4",
