@@ -268,53 +268,79 @@
   }
 
   // ————— INIT —————
-  async function initSwingAnalyzer() {
-    if (initialized) return;
-    initialized = true;
+// ————— INIT —————
+async function initSwingAnalyzer(retry = 0) {
+  if (initialized) return;
+  initialized = true;
 
-    const preview = $("video-preview");
-    const upload = $("video-upload"); // input file
-    const analyzeBtn = $("analyze-btn");
-    const refSelect = $("ref-swing"); // select optionnel
+  const preview = $("video-preview");
+  const camInput = $("video-upload-camera");
+  const libInput = $("video-upload-library");
+  const analyzeBtn = $("analyze-btn");
+  const refSelect = $("ref-swing");
+  const uploadStatus = $("upload-status");
 
-    if (!preview || !upload || !analyzeBtn) {
-      console.warn("⛔ Élément(s) manquant(s) pour le Swing Analyzer.");
-      initialized = false;
+  // ✅ Tolérance : si pas encore trouvé, retente un peu plus tard
+  if (!preview || !camInput || !libInput || !analyzeBtn || !refSelect || !uploadStatus) {
+    console.warn(`⛔ Élément(s) manquant(s) pour le Swing Analyzer (tentative ${retry})`);
+    initialized = false;
+    if (retry < 10) setTimeout(() => initSwingAnalyzer(retry + 1), 300);
+    return;
+  }
+
+  // Chargement du modèle MoveNet
+  try {
+    await ensureDetector();
+  } catch (e) {
+    console.error("MoveNet load failed:", e);
+    say("❌ Échec chargement IA.", "#f55");
+    initialized = false;
+    return;
+  }
+
+  // 🎥 Fonction de preview commune
+  function handleUpload(file) {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    preview.src = url;
+    preview.style.display = "block";
+    preview.load();
+    uploadStatus.textContent = "✅ Vidéo chargée, prête à être analysée.";
+    uploadStatus.style.opacity = "1";
+    setTimeout(() => (uploadStatus.style.opacity = "0"), 3000);
+  }
+
+  // 📱 Caméra
+  camInput.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    handleUpload(file);
+  });
+
+  // 📂 Bibliothèque
+  libInput.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    handleUpload(file);
+  });
+
+  // 🚀 Analyse
+  analyzeBtn.addEventListener("click", async () => {
+    if (!preview.src) {
+      say("⚠️ Choisis ou filme une vidéo avant d’analyser.", "#f55");
       return;
     }
 
-    // Charger MoveNet au premier usage
-    try { await ensureDetector(); }
-    catch (e) { console.error("MoveNet load failed:", e); say("❌ Échec chargement IA.", "#f55"); initialized = false; return; }
+    const refKey = refSelect?.value || null;
+    try {
+      await analyze(preview, refKey);
+    } catch (err) {
+      console.error(err);
+      say("❌ Erreur pendant l’analyse.", "#f55");
+    }
+  });
 
-    // Upload local (iPhone: accès Pellicule ok)
-    upload.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      preview.src = url;
-      preview.style.display = "block";
-      preview.load();
-      say("✅ Vidéo chargée !");
-    });
+  console.log("✅ Swing Analyzer initialisé (MoveNet prêt).");
+}
 
-    // Lancer l’analyse
-    analyzeBtn.addEventListener("click", async () => {
-      if (!preview.src) {
-        say("⚠️ Choisis une vidéo avant d’analyser.", "#f55");
-        return;
-      }
-      const refKey = refSelect?.value || null;
-      try {
-        await analyze(preview, refKey);
-      } catch (err) {
-        console.error(err);
-        say("❌ Erreur pendant l’analyse.", "#f55");
-      }
-    });
-
-    console.log("🎥 Swing Analyzer initialisé (MoveNet).");
-  }
 
   // Expose global pour ton router
   window.initSwingAnalyzer = initSwingAnalyzer;
