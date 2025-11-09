@@ -1,5 +1,4 @@
 // === MAIN.JS — Version fusionnée et corrigée SplitScreen + Gestion sections ===
-
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Boot Parfect.golfr SplitScreen");
 
@@ -12,10 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const playBtn = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
   const friendsBtn = document.getElementById("friends-btn");
+  const swingBtn = document.getElementById("swing-btn"); // 🆕 Bouton Swing ajouté
 
   const gameArea = document.getElementById("game-area");
   const trainingArea = document.getElementById("training-area");
   const friendsArea = document.getElementById("friends-area");
+  const swingArea = document.getElementById("swing-analyzer"); // 🆕 Zone Swing
   const coach = document.getElementById("coach-ia");
 
   // --- Helper : activer un bouton ---
@@ -34,10 +35,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (gameArea) gameArea.style.display = mode === "play" ? "block" : "none";
     if (trainingArea) trainingArea.style.display = mode === "training" ? "block" : "none";
     if (friendsArea) friendsArea.style.display = mode === "friends" ? "block" : "none";
+    if (swingArea) swingArea.style.display = mode === "swing" ? "block" : "none"; // 🆕
 
     // Ajuste la taille du coach selon le mode
     if (coach) {
-      if (mode === "training") {
+      if (mode === "training" || mode === "swing") {
         coach.classList.remove("compact");
         coach.style.flex = "0 0 45%";
       } else {
@@ -48,20 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // === 🎮 Mode Jouer ===
-  //playBtn?.addEventListener("click", () => {
-  //  setActive(playBtn);
-  //  showSection("play");
-  //  window.initGolfSelect?.();
-  //  coachReact("🎯 Mode Jouer activé — choisis ton golf !");
-  //});
-
   playBtn?.addEventListener("click", () => {
-  setActive(playBtn);
-  showSection("play");
-  // ❌ à remplacer : window.initGolfSelect?.();
-  showResumeOrNewModal(); // ✅ c’est elle qui gère “reprendre” ou “nouvelle partie”
-  coachReact("🎯 Mode Jouer activé — choisis ton golf !");
-});
+    setActive(playBtn);
+    showSection("play");
+    showResumeOrNewModal();
+    coachReact("🎯 Mode Jouer activé — choisis ton golf !");
+  });
 
   // === 🏋️ Mode Training ===
   trainingBtn?.addEventListener("click", () => {
@@ -71,18 +65,20 @@ document.addEventListener("DOMContentLoaded", () => {
     coachReact("💪 Mode Entraînement — choisis ton exercice mental !");
   });
 
-  // Ajoute ceci dans le menu Historique :
-if (typeof window.showTrainingRecap === "function") {
-  window.showTrainingRecap();
-}
-
+  // === 🎥 Mode Swing (Analyseur de swing) ===
+  swingBtn?.addEventListener("click", () => {
+    setActive(swingBtn);
+    showSection("swing");
+    window.initSwingAnalyzerV2?.(); // ✅ appelle ton module V2
+    coachReact("🎥 Mode Analyse activé — filme ton swing ou compare à Rory !");
+  });
 
   // === 👥 Mode Friends ===
   friendsBtn?.addEventListener("click", () => {
     setActive(friendsBtn);
     showSection("friends");
     window.injectSocialUI?.();
-    coachReact("👋 Mode Amis activé — partage tes stats !");
+    coachReact("👥 Mode Amis activé — partage tes stats !");
   });
 
   // --- Démarrage par défaut ---
