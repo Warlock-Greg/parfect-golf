@@ -352,7 +352,7 @@
   }
 
   // === Analyse principale ===
-  async function analyze() {
+ async function analyze(relaunch = false) {
     const userVideo = $("user-video");
     const refVideo  = $("ref-video");
     const ou = $("overlay-user");
@@ -362,6 +362,26 @@
 
     if (!userVideo) return;
 
+    clearPanel();
+
+    // 🕒 === DÉCOMPTE 30 SECONDES ===
+    const countdown = $("countdown-overlay");
+    let t = 30;
+    countdown.style.display = "flex";
+    countdown.textContent = t;
+    await new Promise(resolve => {
+      const tick = setInterval(() => {
+        t--;
+        countdown.textContent = t;
+        if (t <= 0) {
+          clearInterval(tick);
+          countdown.style.display = "none";
+          resolve();
+        }
+      }, 1000);
+    });
+
+    // 🟢 === Analyse réelle après le décompte ===
     showOverlays(true);
     clearPanel();
 
@@ -433,6 +453,17 @@
     if (weak.includes("impact")) coachSay("À l’impact, ouvre légèrement le bassin et garde la tête stable.");
     if (weak.length === 0)       coachSay("Swing très propre ! Continue sur cette base et garde ce flow.");
 
+    // 🟢 === Bouton de relance automatique ===
+    const panel = $("score-panel");
+    if (panel) {
+      const relaunchBtn = document.createElement("button");
+      relaunchBtn.textContent = "⟳ Relancer (30s)";
+      relaunchBtn.style.cssText = "margin-top:10px;background:#00ff99;color:#111;padding:6px 10px;border:none;border-radius:6px;cursor:pointer;";
+      relaunchBtn.onclick = () => analyze(true);
+      panel.appendChild(relaunchBtn);
+    }
+
+   
     // 5) Cacher l’overlay après affichage (tu peux laisser 1–2s)
     setTimeout(()=> showOverlays(false), 800);
   }
