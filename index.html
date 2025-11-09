@@ -270,7 +270,8 @@ footer button.active {
       </div>
 
 <!-- === Swing Analyzer V2 UI === -->
-<div style="display:flex;flex-direction:column;gap:10px;">
+<div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
+  <h3>🎥 Analyse ton swing</h3><div style="display:flex;flex-direction:column;gap:10px;">
   <div id="swing-analyzer-view" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;">
     <video id="ref-video" class="main-video" playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
     <canvas id="overlay-ref" style="position:absolute;inset:0;"></canvas>
@@ -313,7 +314,13 @@ footer button.active {
     <button id="save-recording" class="btn" disabled>💾 Sauver la vidéo</button>
     <button id="analyze-btn" class="btn" style="background:#00ff99;color:#111;">⚙️ Analyser</button>
   </div>
+    <div id="countdown-overlay"
+       style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;
+              align-items:center;justify-content:center;
+              font-size:4rem;color:#00ff99;background:rgba(0,0,0,0.6);z-index:20;">
+  </div>
 </div>
+  </div>
 
       
 <!-- === ANALYSE DU SWING (MVP) === -->
@@ -422,6 +429,7 @@ footer button.active {
     margin-top:12px;
   ">🚀 C’est parti</button>
 </div>
+  
 
   
   <!-- === Barre de navigation principale === -->
