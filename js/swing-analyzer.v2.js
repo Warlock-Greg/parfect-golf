@@ -30,7 +30,7 @@
   // === Références vidéo ===
   const REF_BASE = "./assets/ref/";
   const REF_MAP = {
-    rory_faceon: REF_BASE + "rory_faceon.mp4", // 💡 place ce fichier dans /assets/ref/
+    rory_faceon: REF_BASE + "YTDown.com_Shorts_Rory-McIlroy-Driver-Swing-Slow-Motion-FO_Media_Y32QVpIA4As_001_720p.mp4", // 💡 place ce fichier dans /assets/ref/
   };
 
   // === Etat global ===
