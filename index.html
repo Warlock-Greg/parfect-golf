@@ -744,8 +744,10 @@ homeBtn.addEventListener("click", () => {
     mini.style.opacity = "0";
     setTimeout(() => mini.remove(), 600); // petit fade-out
   }, 5000);
-});
 
+}); // ✅ ferme homeBtn.addEventListener
+
+}); // ✅ ferme document.addEventListener("DOMContentLoaded", ...)
 
 
 </script>
