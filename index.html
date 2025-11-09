@@ -269,8 +269,46 @@ footer button.active {
         <div id="hole-card"></div>
       </div>
 
+<!-- === Swing Analyzer V2 UI === -->
+<div style="display:flex;flex-direction:column;gap:10px;">
+  <div id="swing-analyzer-view" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;">
+    <video id="ref-video" class="main-video" playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
+    <canvas id="overlay-ref" style="position:absolute;inset:0;"></canvas>
+
+    <video id="user-video" class="pip-video" playsinline muted style="position:absolute;right:10px;bottom:10px;width:160px;height:120px;border:2px solid #00ff99;border-radius:8px;object-fit:cover;background:#000;"></video>
+    <canvas id="overlay-user" style="position:absolute;right:10px;bottom:10px;width:160px;height:120px;pointer-events:none;"></canvas>
+
+    <div id="score-panel" style="position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.65);color:#00ff99;padding:10px 12px;border-radius:8px;display:none;"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+    <label>Club:
+      <select id="club-type">
+        <option value="driver">Driver</option>
+        <option value="iron">Fer</option>
+        <option value="wedge">Wedge</option>
+        <option value="chip">Chip</option>
+        <option value="putt">Putter</option>
+      </select>
+    </label>
+
+    <label>Référence:
+      <select id="ref-swing">
+        <option value="rory_faceon">Rory McIlroy (face-on)</option>
+      </select>
+    </label>
+
+    <button id="start-cam" class="btn">📷 Démarrer caméra</button>
+    <button id="stop-cam" class="btn">🛑 Arrêter caméra</button>
+    <button id="record" class="btn">⏺️ Enregistrer</button>
+    <button id="save-recording" class="btn" disabled>💾 Sauver la vidéo</button>
+    <button id="analyze-btn" class="btn" style="background:#00ff99;color:#111;">⚙️ Analyser</button>
+  </div>
+</div>
+
+      
 <!-- === ANALYSE DU SWING (MVP) === -->
-<div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
+<!--div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
   <h3>🎥 Analyse ton swing</h3>
 <div style="margin-top:8px;">
   <label for="ref-swing">Référence :</label><br>
@@ -283,7 +321,7 @@ footer button.active {
   </select>
 </div>
 
-  <!--div style="margin-top:10px;">
+  <div style="margin-top:10px;">
     <label for="swing-type">Type de coup :</label><br>
     <select id="swing-type" style="margin-top:6px;padding:6px;border-radius:6px;">
       <option value="drive">Drive</option>
@@ -291,20 +329,20 @@ footer button.active {
       <option value="approach">Approche</option>
       <option value="putting">Putting</option>
     </select>
-</div-->
+</div>
 
   <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
   <!-- Caméra (iPhone ouvre l’appareil photo) -->
-  <input id="video-upload-camera" type="file" accept="video/*" capture="environment" style="display:none;">
+  <!--input id="video-upload-camera" type="file" accept="video/*" capture="environment" style="display:none;">
   <label for="video-upload-camera" class="btn" style="cursor:pointer;">🎥 Filmer</label>
 
   <!-- Bibliothèque (album) -->
-  <input id="video-upload-library" type="file" accept="video/*" style="display:none;">
+  <!--input id="video-upload-library" type="file" accept="video/*" style="display:none;">
   <label for="video-upload-library" class="btn" style="cursor:pointer;">📂 Choisir</label>
-</div>
+    </div-->
 
 <!-- Zone de statut (créée ici pour éviter les erreurs) -->
-<div id="upload-status" style="margin-top:10px;font-size:0.9rem;color:#00ff99;opacity:0;transition:opacity .4s ease;"></div>
+<!--div id="upload-status" style="margin-top:10px;font-size:0.9rem;color:#00ff99;opacity:0;transition:opacity .4s ease;"></div>
 
 
 
@@ -318,14 +356,14 @@ footer button.active {
   ></video>
   <canvas id="pose-overlay" 
     style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
-  </canvas>
+    </canvas>
 </div>
 
 
   <button id="analyze-btn" class="btn" style="margin-top:15px;background:#00ff99;color:#111;">Analyser mon swing</button>
 
   <div id="analysis-result" style="margin-top:20px;font-size:0.95rem;color:#fff;"></div>
-</div>
+    </div-->
 
      <!-- 💪 Entraînement --> 
       <div id="training-area" style="display:none;"></div>
@@ -400,8 +438,9 @@ footer button.active {
   <script src="js/play.js"></script>
   <script src="js/training.js"></script>
   <script src="js/social.js"></script>
-  <script src="js/swing-analyzer.js"></script>
-  <script src="js/swing-analyzer.movenet.js"></script>
+  <script src="js/swing-analyzer.v2.js"></script>
+  <!--script src="js/swing-analyzer.js"></script>
+  <script src="js/swing-analyzer.movenet.js"></script-->
   <script src="js/main.js"></script>
 
 <script src="js/licence.js"></script>
@@ -578,8 +617,8 @@ function showHomeScreen() {
   
   // 🕐 Attends un peu que le DOM du swing-analyzer soit prêt
   setTimeout(() => {
-    if (typeof window.initSwingAnalyzer === "function") {
-      window.initSwingAnalyzer();
+    if (typeof window.initSwingAnalyzerV2 === "function") {
+      window.initSwingAnalyzerv2();
       console.log("✅ Swing Analyzer initialisé après affichage.");
     } else {
       console.warn("⚠️ initSwingAnalyzer non trouvé.");
