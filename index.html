@@ -627,10 +627,10 @@ function showHomeScreen() {
   // 🕐 Attends un peu que le DOM du swing-analyzer soit prêt
   setTimeout(() => {
     if (typeof window.initSwingAnalyzerV2 === "function") {
-      window.initSwingAnalyzerv2();
-      console.log("✅ Swing Analyzer initialisé après affichage.");
+      window.initSwingAnalyzerV2();
+      console.log("✅ Swing Analyzer V2 initialisé après affichage.");
     } else {
-      console.warn("⚠️ initSwingAnalyzer non trouvé.");
+      console.warn("⚠️ initSwingAnalyzerV2 non trouvé.");
     }
   }, 200); // 200ms suffisent
 
