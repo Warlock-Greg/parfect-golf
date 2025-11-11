@@ -474,7 +474,7 @@
     if (!video) return;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } }, // arrière si possible
+        video: { facingMode: { ideal: "user" } }, // arrière si possible
         audio: false
       });
       video.srcObject = stream;
