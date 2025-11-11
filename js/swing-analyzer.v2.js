@@ -382,14 +382,53 @@
     });
 
     // 🟢 === Analyse réelle après le décompte ===
-    showOverlays(true);
-    clearPanel();
+    // 🟢 === Analyse réelle après le décompte ===
+showOverlays(true);
+clearPanel();
 
-    const ctxU = ou?.getContext("2d") || null;
-    const ctxR = or?.getContext("2d") || null;
+const ctxU = ou?.getContext("2d") || null;
+const ctxR = or?.getContext("2d") || null;
 
-    // 1) User seq (3s live)
-    const userSeq = await sampleFromLive(userVideo, ctxU, "rgba(0,255,153,0.95)", 3200, 90);
+// 🎬 Lecture synchronisée de la vidéo de référence Rory
+try {
+  refVideo.src = REF_MAP[refKey];
+  refVideo.playsInline = true;
+  refVideo.muted = true;
+  refVideo.autoplay = false;
+  refVideo.loop = true;
+  refVideo.controls = false;
+
+  await new Promise((resolve, reject) => {
+    refVideo.onloadeddata = resolve;
+    refVideo.onerror = () => reject(new Error("Ref load error"));
+  });
+
+  // 🕐 Top départ : joue Rory + capture simultanée
+  coachSay("⏱️ Top départ ! Swing comme Rory 👇");
+
+  // Lecture Rory + capture simultanée de ta cam
+  await Promise.all([
+    (async () => {
+      await refVideo.play().catch(() => {
+        console.warn("🎬 Autoplay bloqué — clique pour lancer Rory");
+      });
+    })(),
+    (async () => {
+      // capture 3,2 secondes pendant Rory
+      const seq = await sampleFromLive(userVideo, ctxU, "rgba(0,255,153,0.95)", 3200, 90);
+      window._lastUserSeq = seq; // pour debug
+    })()
+  ]);
+
+  refVideo.pause(); // stop Rory à la fin du swing
+
+} catch (e) {
+  console.warn("Référence indisponible → analyse sans comparaison", e);
+}
+
+// récupère les frames capturées
+const userSeq = window._lastUserSeq || [];
+
     const userPhases = detectPhases(userSeq);
     const userStab = stability(userSeq);
 
