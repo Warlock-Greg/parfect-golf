@@ -394,22 +394,37 @@
     const userStab = stability(userSeq);
 
     // 2) Ref seq (si dispo)
-    let refSeq = null, refPhases = null;
-    if (REF_MAP[refKey]) {
-      try {
-        await new Promise((resolve, reject) => {
-          refVideo.src = REF_MAP[refKey];
-          refVideo.onloadeddata = resolve;
-          refVideo.onerror = () => reject(new Error("Ref load error"));
-          refVideo.muted = true;
-          refVideo.play().then(()=>refVideo.pause()).catch(()=>{});
-        });
-        refSeq = await sampleFromVideo(refVideo, ctxR, "rgba(0,180,255,0.9)", 40);
-        refPhases = detectPhases(refSeq);
-      } catch (e) {
-        console.warn("Référence indisponible → analyse sans comparaison", e);
-      }
-    }
+ // 2) Ref seq (si dispo)
+let refSeq = null, refPhases = null;
+if (REF_MAP[refKey]) {
+  try {
+    await new Promise((resolve, reject) => {
+      refVideo.src = REF_MAP[refKey];
+      refVideo.playsInline = true;   // ✅ iPhone autorise la lecture inline
+      refVideo.muted = true;         // ✅ Autoplay sans interaction
+      refVideo.autoplay = true;      // ✅ Démarre automatiquement
+      refVideo.loop = true;          // ✅ Boucle le swing Rory
+      refVideo.controls = false;
+      refVideo.onloadeddata = resolve;
+      refVideo.onerror = () => reject(new Error("Ref load error"));
+
+      // Forcer le chargement (autoplay hack iOS)
+      refVideo.play().then(() => {
+        refVideo.pause();
+        resolve();
+      }).catch(() => {
+        console.warn("🎬 Autoplay bloqué, touche l’écran pour lancer Rory");
+        resolve();
+      });
+    });
+
+    refSeq = await sampleFromVideo(refVideo, ctxR, "rgba(0,180,255,0.9)", 40);
+    refPhases = detectPhases(refSeq);
+  } catch (e) {
+    console.warn("Référence indisponible → analyse sans comparaison", e);
+  }
+}
+
 
     // 3) Scoring 7 phases
     const get = (seq, idx) => (seq && idx != null) ? seq[idx] : null;
