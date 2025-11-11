@@ -623,8 +623,8 @@ if (REF_MAP[refKey]) {
   // Réduit le coach uniquement dans le Swing Analyzer
 const coachDiv = document.getElementById("coach-ia");
 if (coachDiv) {
-  coachDiv.style.flex = "0 0 10%";
-  coachDiv.style.maxWidth = "120px";
+  coachDiv.style.flex = "0 0 10%!important";
+  coachDiv.style.maxWidth = "100%";
   coachDiv.style.minWidth = "80px";
   coachDiv.style.fontSize = "0.75rem";
   coachDiv.style.padding = "6px";
