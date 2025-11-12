@@ -637,6 +637,9 @@ function showHomeScreen() {
     if (typeof window.initSwingAnalyzerV2 === "function") {
       window.initSwingAnalyzerV2();
       console.log("✅ Swing Analyzer V2 initialisé après affichage.");
+  // LANCE DIRECT LA CAMÉRA
+      if (window.startCam) window.startCam();
+      
     } else {
       console.warn("⚠️ initSwingAnalyzerV2 non trouvé.");
     }
