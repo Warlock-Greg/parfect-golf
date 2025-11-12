@@ -7,6 +7,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.initCoachIA();
   }
 
+  // Réduit le coach UNIQUEMENT dans Swing Analyzer
+const coachDiv = document.getElementById("coach-ia");
+if (coachDiv) {
+  coachDiv.classList.add("coach-small");
+}
+
+
   // --- Sélecteurs principaux ---
   const playBtn = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
