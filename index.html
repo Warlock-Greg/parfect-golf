@@ -97,6 +97,16 @@ main#split-layout {
   height: auto;
   transition: all 0.3s ease;
 }
+
+    /* Réduction coach uniquement en mode swing */
+#swing-analyzer.active ~ #coach-ia,
+.coach-small {
+    flex: 0 0 12% !important;
+    max-width: 12% !important;
+    font-size: .75rem !important;
+    padding: 6px !important;
+}
+
     
 #coach-input-zone {
   display: flex;
