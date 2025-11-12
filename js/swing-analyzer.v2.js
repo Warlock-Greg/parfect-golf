@@ -394,9 +394,10 @@ try {
   refVideo.src = REF_MAP[refKey];
   refVideo.playsInline = true;
   refVideo.muted = true;
-  refVideo.autoplay = false;
+  refVideo.autoplay = true;
   refVideo.loop = true;
-  refVideo.controls = false;
+  refVideo.controls = true;
+  refVideo.preload = "auto";
 
   await new Promise((resolve, reject) => {
     refVideo.onloadeddata = resolve;
