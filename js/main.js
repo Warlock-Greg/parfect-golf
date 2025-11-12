@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setActive(swingBtn);
     showSection("swing");
     window.initSwingAnalyzerV2?.(); // ✅ appelle ton module V2
+    window.startCam - startCam;
     coachReact("🎥 Mode Analyse activé — filme ton swing ou compare à Rory !");
   });
 
