@@ -600,8 +600,10 @@ if (REF_MAP[refKey]) {
     catch (e) { console.error("MoveNet init error", e); coachSay("Échec de l’initialisation IA."); initialized = false; return; }
 
     // boutons
-    $("start-cam").onclick = startCam;
-    $("stop-cam").onclick = stopCam;
+    startCam();
+    
+    //$("start-cam").onclick = startCam;
+    //$("stop-cam").onclick = stopCam;
     $("record").onclick = toggleRecord;
     $("save-recording").onclick = saveRecording;
     $("analyze-btn").onclick = analyze;
