@@ -24,6 +24,11 @@ function showResumeOrNewModal() {
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
   modal.style.zIndex = "12000";
+
+  // 🔥 Empêche le clic de traverser la modale
+  modal.addEventListener("click", (e) => e.stopPropagation());
+
+  
   modal.innerHTML = `
     <div class="modal-card" style="text-align:center;padding:20px;">
       <h3>🎮 Partie en cours ?</h3>
