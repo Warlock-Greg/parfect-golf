@@ -1,36 +1,22 @@
-// === Parfect.golfr — Swing Analyzer V2 (MoveNet + Live Cam + 7 scores + Coach) ===
-// Date: 2025-11 — conçu pour iPhone. Overlay affiché uniquement pendant l’analyse.
+// === Parfect.golfr — Swing Analyzer V2.1 (MoveNet + Live Cam + Multi-ref + Multi-club) ===
 //
-// ✅ Ce module attend dans le DOM (dans #swing-analyzer) :
-//   <video id="ref-video" class="main-video" playsinline muted></video>
-//   <canvas id="overlay-ref"></canvas>
-//   <video id="user-video" class="pip-video" playsinline muted></video>
-//   <canvas id="overlay-user"></canvas>
-//   <div id="score-panel"></div>
-//   <select id="club-type">…</select>     (driver/iron/wedge/chip/putt)
-//   <button id="start-cam">Démarrer caméra</button>
-//   <button id="stop-cam">Arrêter caméra</button>
-//   <button id="record">Enregistrer</button>
-//   <button id="save-recording" disabled>Sauver la vidéo</button>
-//   <button id="analyze-btn">Analyser</button>
-//
-//   // Optionnel : choix de référence (pourra rester caché si une seule ref)
-//   <select id="ref-swing"><option value="rory_faceon">Rory McIlroy (face-on)</option></select>
-//
-// ⚠️ Dépendances chargées dans index.html :
-// <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-// <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-// <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
-// <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
-// <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+// - Selfie cam auto-start (face avant)
+// - Vidéo de référence chargée dès le début et quand on change de ref
+// - 30s de décompte avant la capture pour analyse
+// - 7 scores (6h, reprise, retard, 9h, 12h, impact, finish) + global /100
+// - Overlay squelette seulement pendant l’analyse
+// - Coach mini local + message dans coach IA global si dispo
 
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // === Références vidéo ===
+  // === Références vidéo (met les bons fichiers dans /assets/ref/) ===
   const REF_BASE = "./assets/ref/";
   const REF_MAP = {
-    rory_faceon: REF_BASE + "YTDown.com_Shorts_Rory-McIlroy-Driver-Swing-Slow-Motion-FO_Media_Y32QVpIA4As_001_720p.mp4", // 💡 place ce fichier dans /assets/ref/
+    rory_faceon: REF_BASE + "YTDown.com_Shorts_Rory-McIlroy-Driver-Swing-Slow-Motion-FO_Media_Y32QVpIA4As_001_720p.mp4",
+    rory_dtl:    REF_BASE + "rory_dtl.mp4", // à créer si tu veux une 2e réf
+    // nelly_faceon: REF_BASE + "nelly_faceon.mp4",
+    // tiger_faceon: REF_BASE + "tiger_faceon.mp4",
   };
 
   // === Etat global ===
@@ -51,15 +37,19 @@
 
   // === Coach helper ===
   function coachSay(msg) {
-    // Prend en compte le coach choisi et le mode IA/local si tu veux personnaliser le message
-    const coach = localStorage.getItem("coach") || "Parfect";
-    const prefix = `🧑‍🏫 ${coach}: `;
+    const coachName = localStorage.getItem("coach") || "Parfect";
+    const prefix = `🧑‍🏫 ${coachName}: `;
+    const full = prefix + msg;
+
+    const mini = $("coach-ia-mini");
+    if (mini) mini.textContent = full;
+
     if (typeof window.showCoachIA === "function") {
-      window.showCoachIA(prefix + msg);
+      window.showCoachIA(full);
     } else if (typeof window.coachReact === "function") {
-      window.coachReact(prefix + msg);
+      window.coachReact(full);
     } else {
-      console.log(prefix + msg);
+      console.log(full);
     }
   }
 
@@ -99,7 +89,6 @@
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
 
-    // lines
     for (const [a, b] of PAIRS) {
       const A = keypoints[a], B = keypoints[b];
       if (A && B && A.score > 0.3 && B.score > 0.3) {
@@ -109,7 +98,6 @@
         ctx.stroke();
       }
     }
-    // joints
     keypoints.forEach(p => {
       if (p && p.score > 0.3) {
         ctx.beginPath();
@@ -119,7 +107,6 @@
     });
   }
 
-  // Positionne le canvas sur la taille vidéo courante
   function syncCanvasToVideo(canvas, video) {
     if (!canvas || !video) return;
     const w = video.videoWidth || video.clientWidth || 360;
@@ -141,7 +128,6 @@
 
   // === Mesures d’angles / features ===
   function angle(p1, p2) {
-    // angle (en rad) de p1->p2 relatif à l’horizontale
     return Math.atan2(p2.y - p1.y, p2.x - p1.x);
   }
   function dist(a, b) {
@@ -149,86 +135,76 @@
   }
 
   function extractFeatures(kp) {
-    // indices utiles: épaules (5,6), coudes (7,8), poignets (9,10), hanches (11,12), genoux (13,14), chevilles (15,16), nez (0)
     const nose = kp[0], LS = kp[5], RS = kp[6], LE = kp[7], RE = kp[8], LW = kp[9], RW = kp[10], LH = kp[11], RH = kp[12];
-    const valid = (p)=> p && p.score > 0.2;
+    const valid = (p) => p && p.score > 0.2;
 
-    const midShoulder = (valid(LS)&&valid(RS)) ? {x:(LS.x+RS.x)/2, y:(LS.y+RS.y)/2, score:1} : null;
-    const midHip      = (valid(LH)&&valid(RH)) ? {x:(LH.x+RH.x)/2, y:(LH.y+RH.y)/2, score:1} : null;
+    const midShoulder = (valid(LS) && valid(RS)) ? { x: (LS.x + RS.x) / 2, y: (LS.y + RS.y) / 2, score: 1 } : null;
+    const midHip      = (valid(LH) && valid(RH)) ? { x: (LH.x + RH.x) / 2, y: (LH.y + RH.y) / 2, score: 1 } : null;
 
     let shAngle = null, hipAngle = null, headStab = null, lagAngle = null, armHoriz = null;
-    if (valid(LS) && valid(RS)) shAngle = angle(LS, RS);                 // rotation épaules
-    if (valid(LH) && valid(RH)) hipAngle = angle(LH, RH);                 // rotation hanches
-    if (valid(LE) && valid(LW)) armHoriz = Math.abs(angle(LE, LW));       // bras gauche ~ horizontal si proche 0 ou PI
+    if (valid(LS) && valid(RS)) shAngle = angle(LS, RS);
+    if (valid(LH) && valid(RH)) hipAngle = angle(LH, RH);
+    if (valid(LE) && valid(LW)) armHoriz = Math.abs(angle(LE, LW));
     if (valid(LE) && valid(LW) && valid(LH)) {
-      // "retard du club" très simplifié: angle coude->poignet vs hanche gauche (plan)
       const a1 = angle(LE, LW);
       const a2 = angle(LE, LH);
-      lagAngle = Math.abs(a1 - a2); // plus l'angle est grand, plus le retard est présent
+      lagAngle = Math.abs(a1 - a2);
     }
-    if (valid(nose) && midShoulder) headStab = dist(nose, midShoulder);  // déplacement tête relatif
+    if (valid(nose) && midShoulder) headStab = dist(nose, midShoulder);
 
     return { shAngle, hipAngle, headStab, lagAngle, armHoriz, midHip, midShoulder };
   }
 
   // === Phases clés heuristiques ===
   function detectPhases(seq) {
-    // seq: tableau de keypoints normalisés (frame) → on renvoie indices de frames pour 6h, reprise, 9h, top, impact, finish + un estimé retard
     const phases = {
-      setup: 0,          // 6h address (début)
-      weight: null,      // reprise d'appui
-      nine: null,        // 9h (bras // sol)
-      top: null,         // 12h (sommet backswing)
-      impact: null,      // 3h
+      setup: 0,
+      weight: null,
+      nine: null,
+      top: null,
+      impact: null,
       finish: seq.length - 1,
-      lagIdx: null       // frame où le retard du club est max durant le backswing
+      lagIdx: null
     };
 
-    // Parcours des features
     let maxLag = -1, maxLagIdx = null;
     let maxBackswingLift = -1, topIdx = null;
     let bestNineIdx = null, bestNineScore = Infinity;
     let minHeadMove = Infinity, setupIdx = 0;
-    let hipShiftMax = 0, hipShiftIdx = null;
+    let hipShiftIdx = null;
 
-    // point de référence pour poids: position hanche droite/gauche moyen
     const hipsX = [];
     for (let i = 0; i < seq.length; i++) {
       const f = extractFeatures(seq[i]);
-      if (f.midHip) hipsX.push({x: f.midHip.x, i});
-      if (f.headStab != null && f.headStab < minHeadMove) { minHeadMove = f.headStab; setupIdx = i; }
+      if (f.midHip) hipsX.push({ x: f.midHip.x, i });
+      if (f.headStab != null && f.headStab < minHeadMove) {
+        minHeadMove = f.headStab;
+        setupIdx = i;
+      }
 
-      // 9h: bras gauche ~ horizontal (armHoriz proche de 0 ou PI)
       if (f.armHoriz != null) {
         const score = Math.min(Math.abs(f.armHoriz - 0), Math.abs(Math.PI - f.armHoriz));
         if (score < bestNineScore) { bestNineScore = score; bestNineIdx = i; }
       }
 
-      // top backswing: “élévation” approximée par distance poignet-gauche au bassin (ou variation épaule/hanche)
-      // fallback simple: frame avec plus grande distance du poignet gauche à midHip
       const LW = seq[i][9], midHip = f.midHip;
       if (LW && LW.score > 0.2 && midHip) {
         const lift = Math.hypot(LW.x - midHip.x, LW.y - midHip.y);
         if (lift > maxBackswingLift) { maxBackswingLift = lift; topIdx = i; }
       }
 
-      // lag: angle coude->poignet vs hanche gauche
       if (f.lagAngle != null && f.lagAngle > maxLag) { maxLag = f.lagAngle; maxLagIdx = i; }
     }
 
-    // reprise d’appui: premier moment où le centre des hanches repart franchement vers la gauche après le backswing
-    // heuristique: diff sur X sur une fenêtre
     if (hipsX.length > 6) {
       for (let i = 3; i < hipsX.length - 3; i++) {
-        const prev = hipsX[i-3].x;
+        const prev = hipsX[i - 3].x;
         const cur  = hipsX[i].x;
-        const next = hipsX[i+3].x;
-        // déplacement vers la droite (backswing), puis inversion vers la gauche (reprise)
+        const next = hipsX[i + 3].x;
         if ((cur - prev) > 0.02 && (cur - next) > 0.02) { hipShiftIdx = hipsX[i].i; break; }
       }
     }
 
-    // impact approximé: quand les hanches sont le plus “ouvertes” (diff épaules/hanche) + tête la plus stable proche de setup
     let bestImpact = null, bestImpactIdx = null;
     for (let i = 0; i < seq.length; i++) {
       const f = extractFeatures(seq[i]);
@@ -250,10 +226,10 @@
     return phases;
   }
 
-  // === Similarité frame->frame sur points clés (épaules, hanches, coudes, genoux) ===
+  // === Similarité & stabilité ===
   function frameSimilarity(a, b) {
     if (!a || !b) return 0;
-    const idx = [5,6,11,12,7,8,13,14];
+    const idx = [5, 6, 11, 12, 7, 8, 13, 14];
     let sum = 0, n = 0;
     for (const i of idx) {
       const A = a[i], B = b[i];
@@ -263,8 +239,8 @@
       }
     }
     if (!n) return 0;
-    const avg = sum / n;          // petite distance => grande similarité
-    return Math.max(0, 1 - avg);  // ~[0..1]
+    const avg = sum / n;
+    return Math.max(0, 1 - avg);
   }
 
   function stability(seq) {
@@ -277,41 +253,39 @@
     return n ? s / n : 0.5;
   }
 
-  // score 0..100 pour une phase en comparant l’angle/pose user vs ref
   function phaseScore(userFrame, refFrame) {
     if (!userFrame || !refFrame) return 50;
     return Math.round(frameSimilarity(userFrame, refFrame) * 100);
   }
 
   function weightedGlobal(scores, club) {
-    // pondérations par phase (peuvent varier selon le club)
-    const baseW = { setup:10, weight:10, lag:15, nine:15, top:20, impact:20, finish:10 };
+    const baseW = { setup: 10, weight: 10, lag: 15, nine: 15, top: 20, impact: 20, finish: 10 };
     const w = { ...baseW };
 
     if (club === "putt") {
-      w.impact += 10; w.setup += 10; w.top = 0; w.lag = 0; // putting: stabilité & alignement >>> overswing
+      w.impact += 10; w.setup += 10; w.top = 0; w.lag = 0;
     } else if (club === "wedge" || club === "chip") {
       w.setup += 5; w.nine += 5; w.impact += 5; w.top -= 5;
     } else if (club === "driver") {
       w.lag += 5; w.top += 5;
     }
 
-    const totalW = Object.values(w).reduce((a,b)=>a+b,0) || 1;
-    const s = (scores.setup||0)*w.setup
-            + (scores.weight||0)*w.weight
-            + (scores.lag||0)*w.lag
-            + (scores.nine||0)*w.nine
-            + (scores.top||0)*w.top
-            + (scores.impact||0)*w.impact
-            + (scores.finish||0)*w.finish;
+    const totalW = Object.values(w).reduce((a, b) => a + b, 0) || 1;
+    const s = (scores.setup || 0) * w.setup
+            + (scores.weight || 0) * w.weight
+            + (scores.lag || 0) * w.lag
+            + (scores.nine || 0) * w.nine
+            + (scores.top || 0) * w.top
+            + (scores.impact || 0) * w.impact
+            + (scores.finish || 0) * w.finish;
     return Math.round(s / totalW);
   }
 
-  // === Sampling — vidéo avec duration (référence) ===
+  // === Sampling vidéo ref ===
   async function sampleFromVideo(video, ctx, color, frames = 40) {
     const det = await ensureDetector();
     if (!video.duration || isNaN(video.duration)) {
-      await video.play().catch(()=>{});
+      await video.play().catch(() => {});
       video.pause();
     }
     const seq = [];
@@ -319,7 +293,7 @@
     for (let i = 0; i < N; i++) {
       video.currentTime = (video.duration || 1) * (i / (N - 1));
       await new Promise(r => video.addEventListener("seeked", r, { once: true }));
-      syncCanvasToVideo(ctx?.canvas, video);
+      if (ctx && ctx.canvas) syncCanvasToVideo(ctx.canvas, video);
       const res = await det.estimatePoses(video, { flipHorizontal: false });
       if (res && res[0] && res[0].keypoints) {
         const kp = normalizeKeypoints(res[0].keypoints);
@@ -331,15 +305,15 @@
     return seq;
   }
 
-  // === Sampling — live cam (sans duration), on capture N frames temps réel ===
+  // === Sampling live cam ===
   async function sampleFromLive(video, ctx, color, ms = 3000, step = 80) {
     const det = await ensureDetector();
     const seq = [];
     const start = performance.now();
     while (performance.now() - start < ms) {
       if (video.readyState >= 2) {
-        syncCanvasToVideo(ctx?.canvas, video);
-        const res = await det.estimatePoses(video, { flipHorizontal: true }); // miroir pour selfie
+        if (ctx && ctx.canvas) syncCanvasToVideo(ctx.canvas, video);
+        const res = await det.estimatePoses(video, { flipHorizontal: true });
         if (res && res[0] && res[0].keypoints) {
           const kp = normalizeKeypoints(res[0].keypoints);
           seq.push(kp);
@@ -351,8 +325,37 @@
     return seq;
   }
 
+  // === Chargement de la vidéo de référence ===
+  async function loadRefVideo(refKey) {
+    const refVideo = $("ref-video");
+    if (!refVideo) return;
+    const src = REF_MAP[refKey];
+    if (!src) return;
+
+    return new Promise((resolve, reject) => {
+      refVideo.src = src;
+      refVideo.muted = true;
+      refVideo.playsInline = true;
+      refVideo.autoplay = false;
+      refVideo.onloadeddata = () => {
+        // Essaye une petite lecture pour iOS (puis pause)
+        refVideo.play().then(() => {
+          refVideo.pause();
+          resolve();
+        }).catch(() => {
+          // Autoplay bloqué -> on considère quand même chargé, l’utilisateur pourra tap
+          resolve();
+        });
+      };
+      refVideo.onerror = () => {
+        console.warn("Référence indisponible:", src);
+        reject(new Error("Ref load error"));
+      };
+    });
+  }
+
   // === Analyse principale ===
- async function analyze(relaunch = false) {
+  async function analyze(relaunch = false) {
     const userVideo = $("user-video");
     const refVideo  = $("ref-video");
     const ou = $("overlay-user");
@@ -361,132 +364,82 @@
     const refKey = ($("ref-swing")?.value) || "rory_faceon";
 
     if (!userVideo) return;
-
     clearPanel();
 
-    // 🕒 === DÉCOMPTE 30 SECONDES ===
+    // Décompte 30s
     const countdown = $("countdown-overlay");
     let t = 30;
-    countdown.style.display = "flex";
-    countdown.textContent = t;
-    await new Promise(resolve => {
-      const tick = setInterval(() => {
-        t--;
-        countdown.textContent = t;
-        if (t <= 0) {
-          clearInterval(tick);
-          countdown.style.display = "none";
-          resolve();
-        }
-      }, 1000);
-    });
-
-    // 🟢 === Analyse réelle après le décompte ===
-    // 🟢 === Analyse réelle après le décompte ===
-showOverlays(true);
-clearPanel();
-
-const ctxU = ou?.getContext("2d") || null;
-const ctxR = or?.getContext("2d") || null;
-
-// 🎬 Lecture synchronisée de la vidéo de référence Rory
-try {
-  refVideo.src = REF_MAP[refKey];
-  refVideo.playsInline = true;
-  refVideo.muted = true;
-  refVideo.autoplay = true;
-  refVideo.loop = true;
-  refVideo.controls = true;
-  refVideo.preload = "auto";
-
-  await new Promise((resolve, reject) => {
-    refVideo.onloadeddata = resolve;
-    refVideo.onerror = () => reject(new Error("Ref load error"));
-  });
-
-  // 🕐 Top départ : joue Rory + capture simultanée
-  coachSay("⏱️ Top départ ! Swing comme Rory 👇");
-
-  // Lecture Rory + capture simultanée de ta cam
-  await Promise.all([
-    (async () => {
-      await refVideo.play().catch(() => {
-        console.warn("🎬 Autoplay bloqué — clique pour lancer Rory");
+    if (countdown) {
+      countdown.style.display = "flex";
+      countdown.textContent = t;
+      await new Promise(resolve => {
+        const tick = setInterval(() => {
+          t--;
+          countdown.textContent = t;
+          if (t <= 0) {
+            clearInterval(tick);
+            countdown.style.display = "none";
+            resolve();
+          }
+        }, 1000);
       });
-    })(),
-    (async () => {
-      // capture 3,2 secondes pendant Rory
-      const seq = await sampleFromLive(userVideo, ctxU, "rgba(0,255,153,0.95)", 3200, 90);
-      window._lastUserSeq = seq; // pour debug
-    })()
-  ]);
+    }
 
-  refVideo.pause(); // stop Rory à la fin du swing
+    // Au moment où le décompte finit, on lance Rory (ref) si possible
+    if (REF_MAP[refKey]) {
+      try {
+        await loadRefVideo(refKey);
+        // Lecture ref pendant que tu swings
+        refVideo.play().catch(() => {});
+      } catch (e) {
+        console.warn("Référence indisponible pour lecture en parallèle", e);
+      }
+    }
 
-} catch (e) {
-  console.warn("Référence indisponible → analyse sans comparaison", e);
-}
+    // Analyse
+    showOverlays(true);
+    clearPanel();
 
-// récupère les frames capturées
-const userSeq = window._lastUserSeq || [];
+    const ctxU = ou?.getContext("2d") || null;
+    const ctxR = or?.getContext("2d") || null;
 
+    // 1) User (3.2s live)
+    const userSeq = await sampleFromLive(userVideo, ctxU, "rgba(0,255,153,0.95)", 3200, 90);
     const userPhases = detectPhases(userSeq);
     const userStab = stability(userSeq);
 
-    // 2) Ref seq (si dispo)
- // 2) Ref seq (si dispo)
-let refSeq = null, refPhases = null;
-if (REF_MAP[refKey]) {
-  try {
-    await new Promise((resolve, reject) => {
-      refVideo.src = REF_MAP[refKey];
-      refVideo.playsInline = true;   // ✅ iPhone autorise la lecture inline
-      refVideo.muted = true;         // ✅ Autoplay sans interaction
-      refVideo.autoplay = true;      // ✅ Démarre automatiquement
-      refVideo.loop = true;          // ✅ Boucle le swing Rory
-      refVideo.controls = false;
-      refVideo.onloadeddata = resolve;
-      refVideo.onerror = () => reject(new Error("Ref load error"));
+    // 2) Ref
+    let refSeq = null, refPhases = null;
+    if (REF_MAP[refKey]) {
+      try {
+        // on (re)charge pour garantir metadata + duration
+        await loadRefVideo(refKey);
+        refSeq = await sampleFromVideo(refVideo, ctxR, "rgba(0,180,255,0.9)", 40);
+        refPhases = detectPhases(refSeq);
+      } catch (e) {
+        console.warn("Référence indisponible → analyse sans comparaison", e);
+      }
+    }
 
-      // Forcer le chargement (autoplay hack iOS)
-      refVideo.play().then(() => {
-        refVideo.pause();
-        resolve();
-      }).catch(() => {
-        console.warn("🎬 Autoplay bloqué, touche l’écran pour lancer Rory");
-        resolve();
-      });
-    });
-
-    refSeq = await sampleFromVideo(refVideo, ctxR, "rgba(0,180,255,0.9)", 40);
-    refPhases = detectPhases(refSeq);
-  } catch (e) {
-    console.warn("Référence indisponible → analyse sans comparaison", e);
-  }
-}
-
-
-    // 3) Scoring 7 phases
     const get = (seq, idx) => (seq && idx != null) ? seq[idx] : null;
 
     const scores = {
-      setup:   refSeq ? phaseScore(get(userSeq, userPhases.setup),  get(refSeq, refPhases.setup))   : Math.round(userStab*100),
-      weight:  refSeq ? phaseScore(get(userSeq, userPhases.weight), get(refSeq, refPhases.weight))  : Math.round(userStab*100),
-      lag:     refSeq ? phaseScore(get(userSeq, userPhases.lagIdx), get(refSeq, refPhases.lagIdx))  : Math.round(userStab*100),
-      nine:    refSeq ? phaseScore(get(userSeq, userPhases.nine),   get(refSeq, refPhases.nine))    : Math.round(userStab*100),
-      top:     refSeq ? phaseScore(get(userSeq, userPhases.top),    get(refSeq, refPhases.top))     : Math.round(userStab*100),
-      impact:  refSeq ? phaseScore(get(userSeq, userPhases.impact), get(refSeq, refPhases.impact))  : Math.round(userStab*100),
-      finish:  refSeq ? phaseScore(get(userSeq, userPhases.finish), get(refSeq, refPhases.finish))  : Math.round(userStab*100),
+      setup:   refSeq ? phaseScore(get(userSeq, userPhases.setup),  get(refSeq, refPhases.setup))   : Math.round(userStab * 100),
+      weight:  refSeq ? phaseScore(get(userSeq, userPhases.weight), get(refSeq, refPhases.weight))  : Math.round(userStab * 100),
+      lag:     refSeq ? phaseScore(get(userSeq, userPhases.lagIdx), get(refSeq, refPhases.lagIdx))  : Math.round(userStab * 100),
+      nine:    refSeq ? phaseScore(get(userSeq, userPhases.nine),   get(refSeq, refPhases.nine))    : Math.round(userStab * 100),
+      top:     refSeq ? phaseScore(get(userSeq, userPhases.top),    get(refSeq, refPhases.top))     : Math.round(userStab * 100),
+      impact:  refSeq ? phaseScore(get(userSeq, userPhases.impact), get(refSeq, refPhases.impact))  : Math.round(userStab * 100),
+      finish:  refSeq ? phaseScore(get(userSeq, userPhases.finish), get(refSeq, refPhases.finish))  : Math.round(userStab * 100),
     };
     const global = weightedGlobal(scores, club);
 
-    // 4) Affichage + Coach
     say(`
       <div>
         <div style="font-weight:700;font-size:1.1rem;color:#00ff99;margin-bottom:6px;">
           🧮 Score global : ${global}/100
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
           <div>6h: <b>${scores.setup}</b></div>
           <div>Reprise: <b>${scores.weight}</b></div>
           <div>Retard: <b>${scores.lag}</b></div>
@@ -499,8 +452,7 @@ if (REF_MAP[refKey]) {
       </div>
     `);
 
-    // Feedback coach ciblé (exemples simples)
-    const weak = Object.entries(scores).filter(([k,v]) => v < 70).map(([k])=>k);
+    const weak = Object.entries(scores).filter(([k, v]) => v < 70).map(([k]) => k);
     if (weak.includes("weight")) coachSay("Travaille la reprise d’appui : sens le passage de la hanche droite vers la gauche au downswing.");
     if (weak.includes("lag"))    coachSay("Garde le retard du club plus longtemps au backswing pour un relâché plus puissant.");
     if (weak.includes("nine"))   coachSay("À 9h, bras gauche parallèle au sol, stabilise la tête et tourne les épaules.");
@@ -508,7 +460,6 @@ if (REF_MAP[refKey]) {
     if (weak.includes("impact")) coachSay("À l’impact, ouvre légèrement le bassin et garde la tête stable.");
     if (weak.length === 0)       coachSay("Swing très propre ! Continue sur cette base et garde ce flow.");
 
-    // 🟢 === Bouton de relance automatique ===
     const panel = $("score-panel");
     if (panel) {
       const relaunchBtn = document.createElement("button");
@@ -518,9 +469,7 @@ if (REF_MAP[refKey]) {
       panel.appendChild(relaunchBtn);
     }
 
-   
-    // 5) Cacher l’overlay après affichage (tu peux laisser 1–2s)
-    setTimeout(()=> showOverlays(false), 800);
+    setTimeout(() => showOverlays(false), 800);
   }
 
   // === Caméra live + record/save ===
@@ -529,16 +478,17 @@ if (REF_MAP[refKey]) {
     if (!video) return;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "user" } }, // arrière si possible
+        video: { facingMode: { ideal: "user" } }, // selfie cam
         audio: false
       });
       video.srcObject = stream;
       await video.play();
     } catch (e) {
       console.error("getUserMedia error", e);
-      coachSay("Impossible d’accéder à la caméra. Vérifie les permissions.");
+      coachSay("Impossible d’accéder à la caméra. Vérifie les permissions dans Safari.");
     }
   }
+
   function stopCam() {
     const video = $("user-video");
     if (video) video.pause();
@@ -547,6 +497,7 @@ if (REF_MAP[refKey]) {
       stream = null;
     }
   }
+
   function toggleRecord() {
     const recBtn = $("record");
     const saveBtn = $("save-recording");
@@ -569,6 +520,7 @@ if (REF_MAP[refKey]) {
       coachSay("Vidéo enregistrée — tu peux sauvegarder.");
     }
   }
+
   function saveRecording() {
     if (!recordedChunks.length) { coachSay("Aucune vidéo enregistrée à sauvegarder."); return; }
     const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || "video/webm" });
@@ -578,7 +530,7 @@ if (REF_MAP[refKey]) {
     const d = new Date();
     a.download = `parfect-swing-${d.toISOString().slice(0,19).replace(/[:T]/g,'-')}.webm`;
     a.click();
-    setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   // === INIT PUBLIC ===
@@ -586,8 +538,7 @@ if (REF_MAP[refKey]) {
     if (initialized) return;
     initialized = true;
 
-    // éléments requis
-    const need = ["ref-video","overlay-ref","user-video","overlay-user","score-panel","analyze-btn","start-cam","stop-cam","record","save-recording","club-type"];
+    const need = ["ref-video", "overlay-ref", "user-video", "overlay-user", "score-panel", "analyze-btn", "record", "save-recording", "club-type", "ref-swing"];
     const missing = need.filter(id => !$(id));
     if (missing.length) {
       console.warn("Swing Analyzer V2 – éléments manquants:", missing);
@@ -595,20 +546,13 @@ if (REF_MAP[refKey]) {
       return;
     }
 
-    // prêt MoveNet
     try { await ensureDetector(); }
     catch (e) { console.error("MoveNet init error", e); coachSay("Échec de l’initialisation IA."); initialized = false; return; }
 
-    // boutons
-    startCam();
-    
-    //$("start-cam").onclick = startCam;
-    //$("stop-cam").onclick = stopCam;
     $("record").onclick = toggleRecord;
     $("save-recording").onclick = saveRecording;
     $("analyze-btn").onclick = analyze;
 
-    // sync canvas sizes à la volée
     const uv = $("user-video"), rv = $("ref-video");
     const ou = $("overlay-user"), or = $("overlay-ref");
     const syncAll = () => {
@@ -619,22 +563,34 @@ if (REF_MAP[refKey]) {
     rv?.addEventListener("loadedmetadata", syncAll);
     window.addEventListener("resize", syncAll);
 
-    showOverlays(false); // caché au repos
+    // ⚙️ Changement de ref => charge la vidéo
+    const refSelect = $("ref-swing");
+    if (refSelect) {
+      refSelect.addEventListener("change", async () => {
+        const key = refSelect.value;
+        if (REF_MAP[key]) {
+          try {
+            await loadRefVideo(key);
+          } catch (e) {
+            console.warn("Impossible de charger la ref:", e);
+          }
+        }
+      });
+    }
+
+    // 📹 Démarrer la caméra automatiquement
+    startCam();
+
+    // Charger Rory par défaut
+    const defaultRef = (refSelect && refSelect.value) || "rory_faceon";
+    if (REF_MAP[defaultRef]) {
+      try { await loadRefVideo(defaultRef); } catch (e) { console.warn("Ref défaut non chargée", e); }
+    }
+
+    showOverlays(false);
     clearPanel();
-    coachSay("🎥 Analyse prête : démarre la caméra, filme puis clique Analyser.");
+    coachSay("🎥 Analyse prête : regarde Rory, swing en miroir, puis clique Analyser.");
   }
-  // Réduit le coach uniquement dans le Swing Analyzer
-//const coachDiv = document.getElementById("coach-ia");
-//if (coachDiv) {
-  //coachDiv.style.flex = "0 0 10%!important";
-  //coachDiv.style.maxWidth = "100%";
-  //coachDiv.style.minWidth = "80px";
-  //coachDiv.style.fontSize = "0.75rem";
-  //coachDiv.style.padding = "6px";
-  //coachDiv.style.transition = "all 0.3s ease";
- //}
 
-
-  // export
   window.initSwingAnalyzerV2 = initSwingAnalyzerV2;
 })();
