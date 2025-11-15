@@ -1,4 +1,5 @@
-// === MAIN.JS — Version fusionnée et corrigée SplitScreen + Gestion sections ===
+// === MAIN.JS — Router SplitScreen officiel (Play / Training / Swing / Friends) ===
+
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Boot Parfect.golfr SplitScreen");
 
@@ -7,60 +8,79 @@ document.addEventListener("DOMContentLoaded", () => {
     window.initCoachIA();
   }
 
-  // Réduit le coach UNIQUEMENT dans Swing Analyzer
-const coachDiv = document.getElementById("coach-ia");
-if (coachDiv) {
-  coachDiv.classList.add("coach-small");
-}
-
-
   // --- Sélecteurs principaux ---
-  const playBtn = document.getElementById("play-btn");
+  const playBtn     = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
-  const friendsBtn = document.getElementById("friends-btn");
-  const swingBtn = document.getElementById("swing-btn"); // 🆕 Bouton Swing ajouté
+  const swingBtn    = document.getElementById("swing-btn");
+  const friendsBtn  = document.getElementById("friends-btn");
 
-  const gameArea = document.getElementById("game-area");
+  const gameArea     = document.getElementById("game-area");
   const trainingArea = document.getElementById("training-area");
-  const friendsArea = document.getElementById("friends-area");
-  const swingArea = document.getElementById("swing-analyzer"); // 🆕 Zone Swing
-  const coach = document.getElementById("coach-ia");
+  const swingArea    = document.getElementById("swing-analyzer");
+  const friendsArea  = document.getElementById("friends-area");
+  const coach        = document.getElementById("coach-ia");
 
-  // --- Helper : activer un bouton ---
+  // --- Helper : activer un bouton de nav ---
   function setActive(btn) {
-    document.querySelectorAll("footer button, nav button").forEach(b => b.classList.remove("active"));
-    btn?.classList.add("active");
+    document
+      .querySelectorAll("nav button, footer button")
+      .forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
   }
 
-  // --- Coach helper ---
+  // --- Helper global pour parler via le coach ---
   window.coachReact = function (message) {
-    if (typeof appendCoachMessage === "function") appendCoachMessage(message);
+    if (typeof window.appendCoachMessage === "function") {
+      window.appendCoachMessage(message);
+    } else {
+      console.log("Coach:", message);
+    }
   };
 
-  // --- Gestion centralisée des vues ---
+  // --- Affiche une section et ajuste la taille du coach ---
   function showSection(mode) {
-    if (gameArea) gameArea.style.display = mode === "play" ? "block" : "none";
-    if (trainingArea) trainingArea.style.display = mode === "training" ? "block" : "none";
-    if (friendsArea) friendsArea.style.display = mode === "friends" ? "block" : "none";
-    if (swingArea) swingArea.style.display = mode === "swing" ? "block" : "none"; // 🆕
+    if (gameArea)     gameArea.style.display     = mode === "play"    ? "block" : "none";
+    if (trainingArea) trainingArea.style.display = mode === "training"? "block" : "none";
+    if (swingArea)    swingArea.style.display    = mode === "swing"   ? "block" : "none";
+    if (friendsArea)  friendsArea.style.display  = mode === "friends"? "block" : "none";
 
-    // Ajuste la taille du coach selon le mode
-    if (coach) {
-      if (mode === "training" || mode === "swing") {
-        coach.classList.remove("compact");
-        coach.style.flex = "0 0 45%";
-      } else {
-        coach.classList.add("compact");
-        coach.style.flex = "0 0 30%";
-      }
+    if (!coach) return;
+
+    // Layout du coach selon le mode
+    if (mode === "training") {
+      coach.classList.remove("compact");
+      coach.classList.remove("coach-mini");
+      coach.style.flex = "0 0 45%";
+    } else if (mode === "swing") {
+      // Mini coach pour laisser un max de place à la vidéo
+      coach.classList.remove("compact");
+      coach.classList.add("coach-mini");
+      coach.style.flex = "0 0 18%";
+    } else {
+      // Vue "standard" (Play / Friends / autres)
+      coach.classList.remove("coach-mini");
+      coach.classList.add("compact");
+      coach.style.flex = "0 0 30%";
     }
   }
+
+  // --- Flags pour éviter les doubles initialisations ---
+  let trainingInitDone  = false;
+  let swingInitDone     = false;
 
   // === 🎮 Mode Jouer ===
   playBtn?.addEventListener("click", () => {
     setActive(playBtn);
     showSection("play");
-    showResumeOrNewModal();
+
+    // Modale Reprendre / Nouvelle partie (sécurisée)
+    if (typeof window.showResumeOrNewModal === "function") {
+      // évite d'empiler plusieurs modales si on clique plusieurs fois
+      if (!document.querySelector(".modal-backdrop")) {
+        window.showResumeOrNewModal();
+      }
+    }
+
     coachReact("🎯 Mode Jouer activé — choisis ton golf !");
   });
 
@@ -68,26 +88,42 @@ if (coachDiv) {
   trainingBtn?.addEventListener("click", () => {
     setActive(trainingBtn);
     showSection("training");
-    window.initTraining?.();
+
+    if (!trainingInitDone && typeof window.initTraining === "function") {
+      window.initTraining();
+      trainingInitDone = true;
+    }
+
     coachReact("💪 Mode Entraînement — choisis ton exercice mental !");
   });
 
-  // === 🎥 Mode Swing (Analyseur de swing) ===
+  // === 🎥 Mode Swing Analyzer ===
   swingBtn?.addEventListener("click", () => {
     setActive(swingBtn);
     showSection("swing");
-    window.initSwingAnalyzerV2?.(); // ✅ appelle ton module V2
-    coachReact("🎥 Mode Analyse activé — filme ton swing ou compare à Rory !");
+
+    if (!swingInitDone && typeof window.initSwingAnalyzerV2 === "function") {
+      window.initSwingAnalyzerV2();
+      swingInitDone = true;
+      console.log("✅ Swing Analyzer V2 initialisé.");
+    }
+
+    coachReact("🎥 Mode Analyse activé — filme ton swing ou cale-toi sur Rory !");
   });
 
   // === 👥 Mode Friends ===
   friendsBtn?.addEventListener("click", () => {
     setActive(friendsBtn);
     showSection("friends");
-    window.injectSocialUI?.();
+
+    if (typeof window.injectSocialUI === "function") {
+      window.injectSocialUI();
+    }
+
     coachReact("👥 Mode Amis activé — partage tes stats !");
   });
 
-  // --- Démarrage par défaut ---
+  // --- Vue par défaut au chargement ---
+  setActive(playBtn);
   showSection("play");
 });
