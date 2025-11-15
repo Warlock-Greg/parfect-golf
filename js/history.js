@@ -1,234 +1,243 @@
-// === Parfect.golfr - HISTORY PRO (Charts + Filters + Timeline) ===
+// === Parfect.golfr - history.js (V3 CHARTS + FILTER + COACH SUMMARY) ===
 
 (function () {
-  const HISTORY_KEY = "golfHistory";
-  const $ = (id) => document.getElementById(id);
+  const HISTORY_KEY = "golfHistory"; // clé stockage round
+  const $ = window.$ || ((id) => document.getElementById(id));
 
-  // --- Public API ---
-  window.injectHistoryUI = injectHistoryUI;
-  window.renderHistory = renderHistory;
+  let scoreChart = null;
+  let parfectChart = null;
 
-  // ============================================================
-  //  🚀 1) Injecte l’interface
-  // ============================================================
-  function injectHistoryUI() {
-    console.log("📜 Chargement de l’historique...");
-
-    const parent = $("history-area");
-    if (!parent) return console.warn("⚠️ history-area introuvable");
-
+  // === Injection interface Historique ===
+  window.injectHistoryUI = function () {
+    const parent = $("interaction-zone");
+    if (!parent) {
+      console.warn("⚠️ interaction-zone manquant");
+      return;
+    }
     parent.innerHTML = `
-      <div id="history-container" style="padding:16px;text-align:center;max-width:680px;margin:auto;">
-        
+      <div id="history-container" style="padding:16px;text-align:center;">
         <h2 style="color:#00ff99;">📜 Historique des parties</h2>
 
-        <!-- === Filtre par golf === -->
-        <div style="margin-top:16px;">
-          <label style="margin-right:8px;">Filtrer par golf :</label>
-          <select id="filter-golf" style="padding:6px;border-radius:6px;background:#111;color:#fff;border:1px solid #333;">
+        <!-- FILTRES -->
+        <div style="margin:16px 0;">
+          <label style="margin-right:6px;">⛳ Golf :</label>
+          <select id="filter-golf" style="padding:6px;border-radius:8px;background:#000;color:#fff;border:1px solid #333;">
             <option value="all">Tous</option>
           </select>
         </div>
 
-        <!-- === Résumés globaux === -->
-        <div id="history-summary" style="margin-top:20px;"></div>
+        <!-- RÉSUMÉ GLOBAL -->
+        <div id="history-summary"></div>
 
-        <!-- === Graphiques === -->
-        <div style="margin-top:30px;">
-          <h3 style="color:#00ff99;">📈 Progression Score vs Par</h3>
-          <canvas id="chart-score" height="120"></canvas>
-        </div>
+        <!-- GRAPH 1 : score progression -->
+        <h3 style="margin-top:20px;color:#00ff99;">📈 Progression Score vs Par</h3>
+        <canvas id="score-chart" style="max-width:500px;margin:auto;"></canvas>
 
-        <div style="margin-top:30px;">
-          <h3 style="color:#00ff99;">💚 Parfects / Partie</h3>
-          <canvas id="chart-parfects" height="120"></canvas>
-        </div>
+        <!-- GRAPH 2 : Parfects progression -->
+        <h3 style="margin-top:30px;color:#00ff99;">💚 Parfects par partie</h3>
+        <canvas id="parfect-chart" style="max-width:500px;margin:auto;"></canvas>
 
-        <!-- === Timeline === -->
-        <div style="margin-top:40px;">
-          <h3 style="color:#00ff99;">⏱️ Timeline des parties</h3>
-          <div id="history-timeline" style="margin-top:20px;"></div>
-        </div>
+        <!-- TIMELINE -->
+        <h3 style="margin-top:30px;color:#00ff99;">🕓 Timeline des parties</h3>
+        <div id="history-list"></div>
 
-        <button id="reset-history" class="btn" style="margin-top:30px;background:#ff4444;color:#fff;">
-          🧹 Réinitialiser l’historique
+        <button id="reset-rounds" class="btn" style="margin-top:20px;background:#ff4444;color:#fff;">
+          🧹 Tout réinitialiser
         </button>
-
       </div>
     `;
 
-    loadGolfFilter();
+    populateGolfFilter();
     renderHistory();
-  }
+  };
 
-  // ============================================================
-  //  🚀 2) Charge les golfs dans le filtre
-  // ============================================================
-  function loadGolfFilter() {
+  // === Remplir le filtre des golfs joués ===
+  function populateGolfFilter() {
     const rounds = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    const select = $("filter-golf");
-
-    const uniqueGolfs = [...new Set(rounds.map((r) => r.golf))];
-
-    uniqueGolfs.forEach((g) => {
+    const filter = $("filter-golf");
+    if (!filter) return;
+    const golfs = [...new Set(rounds.map((r) => r.golf))];
+    golfs.forEach((g) => {
       const opt = document.createElement("option");
       opt.value = g;
       opt.textContent = g;
-      select.appendChild(opt);
+      filter.appendChild(opt);
     });
-
-    select.addEventListener("change", renderHistory);
+    filter.addEventListener("change", renderHistory);
   }
 
-  // ============================================================
-  //  🚀 3) Rendu complet
-  // ============================================================
-  function renderHistory() {
-    const filter = $("filter-golf")?.value || "all";
-    const allRounds = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  // === Rendu Complet Historique + Graphiques ===
+  window.renderHistory = function () {
+    const rounds = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    const filterValue = $("filter-golf")?.value ?? "all";
+    const filtered = filterValue === "all" ? rounds : rounds.filter((r) => r.golf === filterValue);
 
-    const rounds =
-      filter === "all" ? allRounds : allRounds.filter((r) => r.golf === filter);
+    renderSummary(filtered);
+    renderTimeline(filtered);
+    renderCharts(filtered);
 
-    renderSummary(rounds);
-    renderCharts(rounds);
-    renderTimeline(rounds);
-
-    // Reset btn
-    $("reset-history")?.addEventListener("click", () => {
-      if (!confirm("Supprimer tout l’historique ?")) return;
-      localStorage.removeItem(HISTORY_KEY);
-      renderHistory();
-      loadGolfFilter();
+    $("reset-rounds")?.addEventListener("click", () => {
+      if (confirm("🧹 Supprimer tout l’historique ?")) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistory();
+      }
     });
-  }
+  };
 
-  // ============================================================
-  //  🚀 4) Résumés globaux
-  // ============================================================
+  // === Résumé haut de page ===
   function renderSummary(rounds) {
-    const div = $("history-summary");
+    const zone = $("history-summary");
+    if (!zone) return;
     if (!rounds.length) {
-      div.innerHTML = "<p style='opacity:0.6'>Aucune partie enregistrée.</p>";
+      zone.innerHTML = "<p style='opacity:.5;'>Aucune partie enregistrée.</p>";
       return;
     }
 
     const totalRounds = rounds.length;
     const totalParfects = rounds.reduce((a, r) => a + (r.parfects || 0), 0);
-    const totalBogeyfects = rounds.reduce((a, r) => a + (r.bogeyfects || 0), 0);
     const avgScore =
       Math.round(
         (rounds.reduce((a, r) => a + (r.totalVsPar || 0), 0) / totalRounds) * 10
       ) / 10;
 
-    div.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;margin-top:10px;">
+    zone.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
         <div>📊 <strong>${totalRounds}</strong> parties</div>
-        <div>Moyenne : 
-          <strong style="color:${avgScore < 0 ? "#44ffaa" : avgScore > 0 ? "#ff5555" : "#fff"}">
-            ${avgScore > 0 ? "+" + avgScore : avgScore}
-          </strong>
-        </div>
+        <div>Moyenne score : <strong style="color:${avgScore < 0 ? "#44ffaa" : avgScore > 0 ? "#ff5555" : "#fff"
+      }">${avgScore > 0 ? "+" + avgScore : avgScore}</strong></div>
         <div>💚 <strong>${totalParfects}</strong> Parfects</div>
-        <div>💙 <strong>${totalBogeyfects}</strong> Bogey’fects</div>
       </div>
     `;
   }
 
-  // ============================================================
-  //  🚀 5) Graphiques Chart.js
-  // ============================================================
-  let chartScore = null;
-  let chartParfects = null;
-
-  function renderCharts(rounds) {
-    // SCORE vs PAR
-    if (chartScore) chartScore.destroy();
-
-    chartScore = new Chart($("chart-score"), {
-      type: "line",
-      data: {
-        labels: rounds.map((r) => r.date),
-        datasets: [
-          {
-            label: "Score vs Par",
-            data: rounds.map((r) => r.totalVsPar),
-            borderColor: "#00ff99",
-            backgroundColor: "rgba(0,255,153,0.2)",
-            borderWidth: 2,
-            tension: 0.3,
-          },
-        ],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: "#ccc" } },
-          y: { ticks: { color: "#ccc" } },
-        },
-      },
-    });
-
-    // PARFECTS
-    if (chartParfects) chartParfects.destroy();
-
-    chartParfects = new Chart($("chart-parfects"), {
-      type: "bar",
-      data: {
-        labels: rounds.map((r) => r.date),
-        datasets: [
-          {
-            label: "Parfects",
-            data: rounds.map((r) => r.parfects),
-            backgroundColor: "#00ff99",
-          },
-        ],
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: "#ccc" } },
-          y: { ticks: { color: "#ccc" } },
-        },
-      },
-    });
-  }
-
-  // ============================================================
-  //  🚀 6) Timeline stylée
-  // ============================================================
+  // === TIMELINE - Liste des parties ===
   function renderTimeline(rounds) {
-    const div = $("history-timeline");
+    const zone = $("history-list");
+    if (!zone) return;
 
     if (!rounds.length) {
-      div.innerHTML = "<p style='opacity:0.6'>Aucune partie encore.</p>";
+      zone.innerHTML = "";
       return;
     }
 
     rounds.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    div.innerHTML = rounds
+    zone.innerHTML = rounds
       .map((r) => {
-        const color =
-          r.totalVsPar < 0 ? "#44ffaa" : r.totalVsPar > 0 ? "#ff5555" : "#fff";
+        const d = new Date(r.date).toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "short",
+        });
+        const color = r.totalVsPar < 0 ? "#44ffaa" : r.totalVsPar > 0 ? "#ff5555" : "#fff";
+
+        // Résumé coach basé sur mood + stratégie (si présents)
+        const coachSummary = buildCoachHistorySummary(r);
 
         return `
-        <div style="
-          border-left:3px solid #00ff99;
-          padding-left:12px;
-          margin-bottom:18px;
-        ">
-          <div style="color:#00ff99;font-size:0.9rem;">${r.date}</div>
-          <div style="margin-top:4px;">⛳ <b>${r.golf}</b></div>
-          <div style="margin-top:4px;">
-            Score : <span style="color:${color}">${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar}</span>
+          <div style="background:#111;border:1px solid #333;border-radius:10px;padding:10px;margin-top:10px;text-align:left;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:#00ff99;">${d}</span>
+              <span>⛳ ${r.golf}</span>
+            </div>
+            <div style="margin-top:4px;">
+              Total : <strong style="color:${color}">${r.totalVsPar > 0 ? "+" + r.totalVsPar : r.totalVsPar}</strong>
+            </div>
+            <div>💚 Parfects : ${r.parfects}</div>
+            <div style="margin-top:6px;font-style:italic;opacity:.8;">
+              ${coachSummary}
+            </div>
           </div>
-          <div style="margin-top:4px;">
-            💚 ${r.parfects} · 💙 ${r.bogeyfects || 0}
-          </div>
-        </div>
-      `;
+        `;
       })
       .join("");
+  }
+
+  // === Résumé coach basé sur mood + stratégie ===
+  function buildCoachHistorySummary(round) {
+    const mood = round.mood || "focus";
+    const strat = round.strategy || "mindset";
+
+    const moodMsgs = {
+      focus: "Calme, aligné et concentré.",
+      relax: "Une partie jouée dans la fluidité.",
+      fun: "Tu t’es amusé, et ça se voit.",
+      grind: "Solide mental, combatif jusqu'au bout.",
+    };
+
+    const stratMsgs = {
+      safe: "Stratégie prudente, gestion propre.",
+      aggressive: "Plan agressif avec des prises de risques.",
+      "5050": "Stratégie équilibrée.",
+      mindset: "Tu as joué avec intention et respiration.",
+    };
+
+    return `🎤 ${moodMsgs[mood] || ""} ${stratMsgs[strat] || ""}`;
+  }
+
+  // === Graphiques ===
+  function renderCharts(rounds) {
+    const ctxScore = $("score-chart");
+    const ctxParfect = $("parfect-chart");
+    if (!ctxScore || !ctxParfect) return;
+
+    // Reset anciens charts
+    if (scoreChart) scoreChart.destroy();
+    if (parfectChart) parfectChart.destroy();
+
+    const labels = rounds.map((r, i) => `P${i + 1}`);
+    const scores = rounds.map((r) => r.totalVsPar);
+    const parfects = rounds.map((r) => r.parfects);
+
+    // === Graph 1 : Score progression ===
+    scoreChart = new Chart(ctxScore, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Score vs Par",
+            data: scores,
+            borderColor: "#00ff99",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.2,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            grid: { color: "#333" },
+            ticks: { color: "#fff" },
+          },
+          x: {
+            ticks: { color: "#fff" },
+          },
+        },
+        plugins: { legend: { labels: { color: "#fff" } } },
+      },
+    });
+
+    // === Graph 2 : Parfect progression ===
+    parfectChart = new Chart(ctxParfect, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Parfects",
+            data: parfects,
+            backgroundColor: "#00ff99",
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: { ticks: { color: "#fff" }, grid: { color: "#333" } },
+          x: { ticks: { color: "#fff" } },
+        },
+        plugins: { legend: { labels: { color: "#fff" } } },
+      },
+    });
   }
 })();
