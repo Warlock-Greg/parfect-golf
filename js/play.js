@@ -189,6 +189,7 @@ function showMoodAndStrategyModal(onConfirm) {
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
   modal.style.zIndex = "12000";
+
   modal.innerHTML = `
     <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
       <h3>😎 Mood du jour</h3>
@@ -214,26 +215,48 @@ function showMoodAndStrategyModal(onConfirm) {
         <button class="btn coach" data-coach="gauthier">Gauthier</button>
       </div>
 
-      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+      <!-- 🆕 Résumé dynamique -->
+      <div id="choice-summary"
+           style="margin-top:18px;font-size:0.95rem;opacity:0.85;color:#00ff99;">
+        Mood : Focus · Stratégie : Mindset · Coach : Dorothée
+      </div>
+
+      <button id="start-round" class="btn" 
+        style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
     </div>
   `;
+
   document.body.appendChild(modal);
 
-  // ✅ Marquer visuellement les valeurs par défaut
-  modal.querySelector('.mood[data-mood="focus"]')?.classList.add('active');
-  modal.querySelector('.strat[data-strat="mindset"]')?.classList.add('active');
-  modal.querySelector('.coach[data-coach="dorothee"]')?.classList.add('active');
-
-  
+  // === VAL. PAR DÉFAUT ===
   let mood = "focus";
   let strat = "mindset";
   let coach = "dorothee";
 
+  modal.querySelector('.mood[data-mood="focus"]')?.classList.add('active');
+  modal.querySelector('.strat[data-strat="mindset"]')?.classList.add('active');
+  modal.querySelector('.coach[data-coach="dorothee"]')?.classList.add('active');
+
+  const summary = modal.querySelector("#choice-summary");
+
+  function updateSummary() {
+    summary.textContent =
+      `Mood : ${capitalize(mood)} · ` +
+      `Stratégie : ${capitalize(strat)} · ` +
+      `Coach : ${capitalize(coach)}`;
+  }
+
+  function capitalize(txt) {
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+
+  // === LISTENERS ===
   modal.querySelectorAll(".mood").forEach(btn => {
     btn.addEventListener("click", () => {
       modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       mood = btn.dataset.mood;
+      updateSummary();
     });
   });
 
@@ -242,6 +265,7 @@ function showMoodAndStrategyModal(onConfirm) {
       modal.querySelectorAll(".strat").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       strat = btn.dataset.strat;
+      updateSummary();
     });
   });
 
@@ -250,6 +274,7 @@ function showMoodAndStrategyModal(onConfirm) {
       modal.querySelectorAll(".coach").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       coach = btn.dataset.coach;
+      updateSummary();
     });
   });
 
@@ -262,6 +287,8 @@ function showMoodAndStrategyModal(onConfirm) {
     showCoachIA?.(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat} · 🗣️ Coach: ${coach}`);
     if (typeof onConfirm === "function") onConfirm();
   });
+
+  updateSummary();
 }
 
 window.showMoodAndStrategyModal = showMoodAndStrategyModal;
