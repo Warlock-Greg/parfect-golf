@@ -442,7 +442,7 @@ function renderHole(number = currentHole) {
   if (!holeCard) return;
 
   if (!currentGolf) {
-    holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucune partie active (golf manquante).</p>`;
+    holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucune partie active (golf manquant).</p>`;
     return;
   }
   if (!Array.isArray(holes) || holes.length === 0) {
@@ -469,34 +469,75 @@ function renderHole(number = currentHole) {
 
   const fairwayCheckbox =
     par === 3
-      ? "" // pas de fairway sur par 3
-      : `<label><input type="checkbox" id="fairway" ${saved.fairway ? "checked" : ""}> Fairway</label>`;
+      ? ""
+      : `<label class="tag-toggle">
+          <input type="checkbox" id="fairway" ${saved.fairway ? "checked" : ""}>
+          <span>Fairway</span>
+         </label>`;
 
   holeCard.innerHTML = `
-    <div class="scorecard" style="text-align:center;padding:12px;">
-      <h3 style="color:#00ff99;">⛳ Trou ${number}/${holes.length}</h3>
-      <p>Par ${par} — Total :
-        <strong style="color:${totalVsPar > 0 ? "#ff6666" : totalVsPar < 0 ? "#00ff99" : "#fff"}">
-          ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}
-        </strong>
-      </p>
-
-      <h4>Score :</h4>
-      <div id="score-options" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn score-btn" data-diff="-2">Eagle</button>
-        <button class="btn score-btn" data-diff="-1">Birdie</button>
-        <button class="btn score-btn" data-diff="0">Par</button>
-        <button class="btn score-btn" data-diff="1">Bogey</button>
-        <button class="btn score-btn" data-diff="2">Double</button>
-        <button class="btn score-btn" data-diff="3">Triple</button>
+    <div class="scorecard" style="
+      text-align:center;
+      padding:14px 12px;
+      border-radius:18px;
+      background:linear-gradient(145deg,#101820,#05080c);
+      box-shadow:0 0 18px rgba(0,0,0,0.65);
+      border:1px solid rgba(0,255,153,0.15);
+    ">
+      <!-- Header trou + total -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="text-align:left;">
+          <div style="font-size:0.8rem;opacity:.75;">Trou</div>
+          <div style="font-size:1.1rem;color:#00ff99;font-weight:600;">${number}/${holes.length}</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:0.8rem;opacity:.75;">Par</div>
+          <div style="font-size:1.1rem;font-weight:600;">${par}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.8rem;opacity:.75;">Total</div>
+          <div style="
+            font-size:1.1rem;
+            font-weight:600;
+            color:${totalVsPar > 0 ? "#ff6666" : totalVsPar < 0 ? "#00ff99" : "#fff"};
+          ">
+            ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}
+          </div>
+        </div>
       </div>
 
-      <div style="margin-top:10px;">
-        <label>Distance du 2ᵉ putt :</label>
-        <select id="dist2" style="margin-left:6px;padding:4px 6px;border-radius:6px;">
+      <!-- Boutons score -->
+      <h4 style="margin:6px 0 4px;font-size:0.9rem;opacity:.85;">Score du trou</h4>
+      <div id="score-options" style="
+        display:flex;
+        gap:6px;
+        justify-content:center;
+        flex-wrap:wrap;
+        margin-bottom:6px;
+      ">
+        <button class="btn score-btn" data-diff="-2">🦅 Eagle</button>
+        <button class="btn score-btn" data-diff="-1">🕊️ Birdie</button>
+        <button class="btn score-btn" data-diff="0">🟢 Par</button>
+        <button class="btn score-btn" data-diff="1">⚪ Bogey</button>
+        <button class="btn score-btn" data-diff="2">🟠 Double</button>
+        <button class="btn score-btn" data-diff="3">🔴 Triple</button>
+      </div>
+
+      <!-- Putting -->
+      <div style="margin-top:8px;">
+        <label style="font-size:0.85rem;opacity:.85;">Putting :</label>
+        <select id="dist2" style="
+          margin-left:6px;
+          padding:4px 8px;
+          border-radius:999px;
+          background:#05080c;
+          color:#fff;
+          border:1px solid rgba(255,255,255,0.15);
+          font-size:0.8rem;
+        ">
           <option value="">Choisir</option>
           <option value="1">1 putt</option>
-          <option value="2">2 putts Donné</option>
+          <option value="2">2 putts donné</option>
           <option value="3">2 putts 2m</option>
           <option value="4">2 putts 4m</option>
           <option value="5">2 putts 6m</option>
@@ -505,19 +546,48 @@ function renderHole(number = currentHole) {
         </select>
       </div>
 
-      <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <!-- Tags Fairway / GIR / Routine -->
+      <div style="
+        margin-top:10px;
+        display:flex;
+        gap:8px;
+        justify-content:center;
+        flex-wrap:wrap;
+        font-size:0.8rem;
+      ">
         ${fairwayCheckbox}
-        <label><input type="checkbox" id="gir" ${saved.gir ? "checked" : ""}> GIR</label>
-        <label><input type="checkbox" id="routine" ${saved.routine ? "checked" : ""}> Routine</label>
+        <label class="tag-toggle">
+          <input type="checkbox" id="gir" ${saved.gir ? "checked" : ""}>
+          <span>GIR</span>
+        </label>
+        <label class="tag-toggle">
+          <input type="checkbox" id="routine" ${saved.routine ? "checked" : ""}>
+          <span>Routine</span>
+        </label>
       </div>
 
-      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
+      <!-- Navigation + fin de partie -->
+      <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;">
         <button id="prev-hole" class="btn" ${number === 1 ? "disabled" : ""}>⬅️ Préc.</button>
-        <div id="hole-info" style="font-size:0.9rem;color:#aaa;">Trou ${number}/${holes.length}</div>
+        <div id="hole-info" style="font-size:0.8rem;color:#aaa;">Trou ${number}/${holes.length}</div>
         <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Suivant ➡️</button>
+      </div>
+
+      <div style="margin-top:6px;">
+        <button id="end-round" class="btn" style="
+          font-size:0.8rem;
+          background:transparent;
+          border:1px solid rgba(255,255,255,0.25);
+          color:#fff;
+          padding:4px 10px;
+          border-radius:999px;
+        ">
+          🏁 Terminer la partie
+        </button>
       </div>
     </div>`;
 
+  // Score selection
   document.querySelectorAll(".score-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.querySelectorAll(".score-btn").forEach((b) => b.classList.remove("active"));
@@ -526,6 +596,7 @@ function renderHole(number = currentHole) {
     })
   );
 
+  // Next / Prev
   document.getElementById("next-hole").addEventListener("click", () => {
     if (currentDiff === null || isNaN(currentDiff)) {
       showCoachIA?.("⚠️ Choisis ton score avant de passer au trou suivant !");
@@ -547,7 +618,16 @@ function renderHole(number = currentHole) {
       renderHole(currentHole);
     }
   });
+
+  // 🏁 Bouton Terminer la partie
+  document.getElementById("end-round")?.addEventListener("click", () => {
+    if (confirm("Terminer la partie maintenant et enregistrer les scores joués ?")) {
+      saveCurrentHole(); // on enregistre le trou actuel avant de finir
+      summarizeRound();
+    }
+  });
 }
+
 
 // === Analyse trou ===
 let lastCoachMessage = "";
@@ -573,7 +653,7 @@ function analyzeHole(holeData) {
     showConfetti();
     message = "💚 Parfect collecté ! Par/Birdie/Eagle + GIR + putting 1 à 5 (et fairway sauf Par 3).";
   } else if (diff === 1 && hasFairway) {
-    message = "💙 Bogey’fect ! Bogey solide, mental propre.";
+    message = "💙 Bogey’fect ! Bogey solide, garde ton mental propre.";
   } else if (diff < 0) {
     message = "🕊️ Birdie ! Fluide et en contrôle.";
   } else if (diff >= 2) {
@@ -586,7 +666,7 @@ function analyzeHole(holeData) {
       }
     });
   } else {
-    message = "👌 Continue ton flow.";
+    message = "👌 respecte la règle du n'importe ou : sur le farway, sur le green proche du trou. Pense à ta routein et à ton geste.";
   }
 
   if (message && diff < 2) {
