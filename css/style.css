@@ -27,6 +27,12 @@ body {
 }
 
 
+.btn.active {
+  background:#00ff99 !important;
+  color:#111 !important;
+  box-shadow:0 0 10px #00ff99aa;
+  font-weight:bold;
+}
 
 .exo-media {
   width: 100%;
