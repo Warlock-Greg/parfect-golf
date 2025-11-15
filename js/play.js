@@ -13,6 +13,11 @@ let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
 // === Modale Reprendre ou Nouvelle Partie ===
 function showResumeOrNewModal() {
+// 🔒 Empêche d’ouvrir la même modale plusieurs fois
+  if (document.querySelector(".modal-backdrop.resume-modal")) {
+    return; // ← Stop si elle existe déjà
+  }
+  
   const roundInProgress = localStorage.getItem("roundInProgress") === "true";
   const lastGolf = localStorage.getItem("currentGolf");
 
