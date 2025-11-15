@@ -13,24 +13,19 @@ let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
 // === Modale Reprendre ou Nouvelle Partie ===
 function showResumeOrNewModal() {
-// 🔒 Empêche d’ouvrir la même modale plusieurs fois
+  // 🔒 Empêche d’ouvrir plusieurs fois la même modale
   if (document.querySelector(".modal-backdrop.resume-modal")) {
-    return; // ← Stop si elle existe déjà
+    return;
   }
-  
+
   const roundInProgress = localStorage.getItem("roundInProgress") === "true";
-  const lastGolf = localStorage.getItem("currentGolf");
 
   const modal = document.createElement("div");
-  modal.className = "modal-backdrop";
+  modal.className = "modal-backdrop resume-modal";
   modal.style.zIndex = "12000";
 
-  // 🔥 Empêche le clic de traverser la modale
-  modal.addEventListener("click", (e) => e.stopPropagation());
-
-  
   modal.innerHTML = `
-    <div class="modal-card" style="text-align:center;padding:20px;">
+    <div class="modal-card" id="resume-modal-card" style="text-align:center;padding:20px;">
       <h3>🎮 Partie en cours ?</h3>
       ${
         roundInProgress
@@ -42,12 +37,20 @@ function showResumeOrNewModal() {
           : `<p>Prêt à démarrer ?</p>
              <button class="btn" id="new-round">🚀 Démarrer</button>`
       }
-    </div>`;
+    </div>
+  `;
+
   document.body.appendChild(modal);
 
+  // 🛑 STOP propagation UNIQUEMENT sur la carte (fix essentiel)
+  modal.querySelector("#resume-modal-card")
+    .addEventListener("click", (e) => e.stopPropagation());
+
+  // === REPRENDRE ===
   modal.querySelector("#resume-round")?.addEventListener("click", () => {
     modal.remove();
-  const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
+    
+    const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
     const lastGolfId = localStorage.getItem("currentGolf");
     if (saved.length && lastGolfId) {
       fetch("./data/golfs.json")
@@ -61,6 +64,7 @@ function showResumeOrNewModal() {
     }
   });
 
+  // === NOUVELLE ===
   modal.querySelector("#new-round")?.addEventListener("click", () => {
     modal.remove();
     initGolfSelect();
@@ -68,6 +72,7 @@ function showResumeOrNewModal() {
 }
 
 window.showResumeOrNewModal = showResumeOrNewModal;
+
 
 // === Sélecteur de golf (MVP) ===
 async function initGolfSelect() {
