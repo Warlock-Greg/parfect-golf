@@ -219,6 +219,12 @@ function showMoodAndStrategyModal(onConfirm) {
   `;
   document.body.appendChild(modal);
 
+  // ✅ Marquer visuellement les valeurs par défaut
+  modal.querySelector('.mood[data-mood="focus"]')?.classList.add('active');
+  modal.querySelector('.strat[data-strat="mindset"]')?.classList.add('active');
+  modal.querySelector('.coach[data-coach="dorothee"]')?.classList.add('active');
+
+  
   let mood = "focus";
   let strat = "mindset";
   let coach = "dorothee";
