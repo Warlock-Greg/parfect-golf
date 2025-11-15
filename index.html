@@ -138,6 +138,151 @@ body.mode-swing #coach-ia {
   padding: 8px;
 }
 
+
+    /* === SWING ANALYZER V2.1 (vue mobile) === */
+
+#swing-analyzer {
+  padding: 0;
+  margin: 0;
+}
+
+/* Conteneur vidéo ref (grand) */
+#ref-container {
+  position: relative;
+  width: 100%;
+  height: 45vh;
+  background: #000;
+}
+
+#ref-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+#overlay-ref {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Cam selfie en bas à droite */
+#user-container {
+  position: relative;
+  width: 100%;
+  height: 25vh;
+  margin-top: 6px;
+}
+
+#user-video {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #000;
+  border: 2px solid #00ff99;
+}
+
+#overlay-user {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 160px;
+  height: 160px;
+  pointer-events: none;
+}
+
+/* Panel de score */
+#score-panel {
+  margin: 12px auto 6px;
+  width: 92%;
+  color: #fff;
+  text-align: center;
+  min-height: 50px;
+}
+
+/* Mini coach local */
+#coach-ia-mini {
+  width: 100%;
+  background: rgba(0,0,0,0.45);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  color: #00ff99;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* Options (club + ref) */
+#swing-options {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  width: 94%;
+  margin: 10px auto;
+}
+
+#swing-options select {
+  flex: 1;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #000;
+  color: #fff;
+}
+
+/* Boutons sur une ligne */
+#controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 94%;
+  margin: 10px auto;
+}
+
+#controls button {
+  flex: 1;
+  padding: 8px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: none;
+  background: #00ff99;
+  color: #111;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#controls button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Overlay décompte */
+#countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.75);
+  color: #00ff99;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 6rem;
+  z-index: 9999;
+}
+
+/* Optionnel : rendre le coach global plus petit UNIQUEMENT en mode swing */
+body.mode-swing #coach-ia {
+  flex: 0 0 18% !important;
+}
 /* === Modales === */
 .modal-backdrop {
   position: fixed; /* ✅ couvre tout l’écran indépendamment du parent */
