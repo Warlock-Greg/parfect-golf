@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // === 🎮 Mode Jouer ===
   playBtn?.addEventListener("click", () => {
     setActive(playBtn);
-    showSection("play");
+    //showSection("play");
 
     // Modale Reprendre / Nouvelle partie (sécurisée)
     if (typeof window.showResumeOrNewModal === "function") {
