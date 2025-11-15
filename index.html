@@ -272,58 +272,54 @@ footer button.active {
         <div id="hole-card"></div>
       </div>
 
-<!-- === Swing Analyzer V2 UI === -->
-<div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
-  <h3>🎥 Analyse ton swing</h3><div style="display:flex;flex-direction:column;gap:10px;">
-  <div id="swing-analyzer-view" style="position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden;">
-    <video id="ref-video" class="main-video" playsinline muted style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></video>
-    <canvas id="overlay-ref" style="position:absolute;inset:0;"></canvas>
+<div id="swing-analyzer" style="display:none;">
 
-    <video id="user-video" class="pip-video" playsinline muted style="position:absolute;right:10px;bottom:10px;width:160px;height:120px;border:2px solid #00ff99;border-radius:8px;object-fit:cover;background:#000;"></video>
-    <canvas id="overlay-user" style="position:absolute;right:10px;bottom:10px;width:160px;height:120px;pointer-events:none;"></canvas>
-
-    <div id="score-panel" style="position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.65);color:#00ff99;padding:10px 12px;border-radius:8px;display:none;"></div>
- <div id="countdown-overlay"
-     style="position:absolute;inset:0;
-            display:none;
-            align-items:center;justify-content:center;
-            background:rgba(0,0,0,0.75);
-            color:#00ff99;font-size:4rem;font-weight:700;
-            z-index:10;letter-spacing:2px;">
-</div>
-
+  <!-- 📹 Vidéo de référence (grande) -->
+  <div id="ref-container">
+      <video id="ref-video" class="main-video" playsinline muted preload="auto"></video>
+      <canvas id="overlay-ref"></canvas>
   </div>
 
-  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-    <label>Club:
+  <!-- 🤳 Selfie cam (pip) -->
+  <div id="user-container">
+      <video id="user-video" class="pip-video" playsinline muted></video>
+      <canvas id="overlay-user"></canvas>
+  </div>
+
+  <!-- 🧮 Scores -->
+  <div id="score-panel"></div>
+
+  <!-- 🧠 Mini coach local -->
+  <div id="coach-ia-mini">🧠 Coach prêt pour l'analyse</div>
+
+  <!-- 📋 Sélection club + référence -->
+  <div id="swing-options">
       <select id="club-type">
-        <option value="driver">Driver</option>
-        <option value="iron">Fer</option>
-        <option value="wedge">Wedge</option>
-        <option value="chip">Chip</option>
-        <option value="putt">Putter</option>
+          <option value="driver">Driver</option>
+          <option value="iron">Fer</option>
+          <option value="wedge">Wedge</option>
+          <option value="chip">Chip</option>
+          <option value="putt">Putt</option>
       </select>
-    </label>
 
-    <label>Référence:
       <select id="ref-swing">
-        <option value="rory_faceon">Rory McIlroy (face-on)</option>
+          <option value="rory_faceon">Rory — Face On</option>
+          <option value="rory_dtl">Rory — Down The Line</option>
+          <!-- Tu pourras en rajouter -->
       </select>
-    </label>
+  </div>
 
-    <button id="start-cam" class="btn">📷 Démarrer caméra</button>
-    <button id="stop-cam" class="btn">🛑 Arrêter caméra</button>
-    <button id="record" class="btn">⏺️ Enregistrer</button>
-    <button id="save-recording" class="btn" disabled>💾 Sauver la vidéo</button>
-    <button id="analyze-btn" class="btn" style="background:#00ff99;color:#111;">⚙️ Analyser</button>
+  <!-- 🎛️ Boutons -->
+  <div id="controls">
+      <button id="analyze-btn">Analyser</button>
+      <button id="record">Enregistrer</button>
+      <button id="save-recording" disabled>Sauver</button>
   </div>
-    <div id="countdown-overlay"
-       style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;
-              align-items:center;justify-content:center;
-              font-size:4rem;color:#00ff99;background:rgba(0,0,0,0.6);z-index:20;">
-  </div>
+
+  <!-- ⏱️ Overlay 30s -->
+  <div id="countdown-overlay">30</div>
 </div>
-  </div>
+
 
       
 <!-- === ANALYSE DU SWING (MVP) === -->
