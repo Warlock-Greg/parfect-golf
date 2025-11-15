@@ -71,7 +71,7 @@ main#split-layout {
 
 /* 🧠 Zone Coach */
 #coach-ia {
-  flex: 0 0 89%!important;
+  flex: 0 0 89%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -82,6 +82,33 @@ main#split-layout {
   padding: 8px;
   z-index: 9000;
 }
+
+    /* === Coach IA Modes === */
+
+#coach-ia {
+  transition: all 0.35s ease;
+}
+
+/* Mode PLAY — coach medium */
+.coach-medium {
+  flex: 0 0 40%;
+}
+
+/* Mode TRAINING — coach full height */
+.coach-full {
+  flex: 0 0 50%;
+}
+
+/* Mode SWING — mini coach */
+.coach-mini {
+  flex: 0 0 30%;
+}
+
+/* Mode FRIENDS — invisible */
+.coach-hidden {
+  display: none !important;
+}
+
 
 #coach-log {
   flex: 1;
