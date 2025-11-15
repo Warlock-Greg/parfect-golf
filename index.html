@@ -835,13 +835,36 @@ leaveSwingMode();     // <<< AJOUT
 
 
   historyBtn.addEventListener("click", () => {
-    leaveSwingMode();     // <<< AJOUT
-    setActive(historyBtn);
-    // On utilise l’interaction-zone pour l’historique via injectHistoryUI
-    showOnly("play"); // on cache les autres + garde la structure
-    window.injectHistoryUI?.(); // ce module écrit dans #interaction-zone (ok)
-    coachReact("📜 Historique activé — consulte tes parties passées !");
-  });
+  leaveSwingMode();                  // Sort du mode swing si actif
+  setActive(historyBtn);             // Active le bouton dans la nav
+
+  // On affiche la zone PLAY car elle contient #interaction-zone
+  // mais on cache la carte de jeu pour afficher l’historique proprement
+  showOnly("play");
+
+  // Cache les éventuels contenus de jeu
+  const holeCard = document.getElementById("hole-card");
+  const golfSelect = document.getElementById("golf-select");
+  const gameArea  = document.getElementById("game-area");
+
+  if (holeCard) holeCard.style.display = "none";
+  if (golfSelect) golfSelect.style.display = "none";
+
+  // On garde gameArea mais vide pour ne pas perturber le layout
+  if (gameArea) gameArea.style.display = "block";
+
+  // Maintenant, on charge l’historique dans interaction-zone
+  const interaction = document.getElementById("interaction-zone");
+  if (interaction) {
+    interaction.innerHTML = ""; // nettoie l’ancien contenu
+  }
+
+  // Injecte l'historique dans #interaction-zone
+  window.injectHistoryUI?.();
+
+  coachReact("📜 Historique activé — consulte tes parties passées !");
+});
+
 
   friendsBtn.addEventListener("click", () => {
     leaveSwingMode();     // <<< AJOUT
