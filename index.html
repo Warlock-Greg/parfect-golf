@@ -98,6 +98,9 @@ main#split-layout {
   transition: all 0.3s ease;
 }
 
+body.mode-swing #coach-ia {
+  flex: 0 0 18% !important;
+}
 
 
     
@@ -272,6 +275,9 @@ footer button.active {
         <div id="hole-card"></div>
       </div>
 
+
+            
+<!-- === ANALYSE DU SWING (MVP) === -->
 <div id="swing-analyzer" style="display:none;">
 
   <!-- 📹 Vidéo de référence (grande) -->
@@ -488,7 +494,10 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.classList.add("active");
   };
 
-
+ // réduit la vue coach dans swing
+function leaveSwingMode() {
+  document.body.classList.remove("mode-swing");
+}
 
   // Montre une seule vue (sans vider)
   function showOnly(view) {
@@ -602,6 +611,8 @@ function showHomeScreen() {
 
   // === Listeners ===
  playBtn.addEventListener("click", () => {
+leaveSwingMode();     // <<< AJOUT
+   
   setActive(playBtn);
   showOnly("play");
 
@@ -618,8 +629,10 @@ function showHomeScreen() {
   coachReact("🎯 Mode Jouer activé — choisis ton golf ou reprends ta partie !");
 });
 
-
+// ✅ training 
   trainingBtn.addEventListener("click", () => {
+    leaveSwingMode();     // <<< AJOUT
+    
     setActive(trainingBtn);
     showOnly("training");
     window.initTraining?.();
@@ -627,7 +640,11 @@ function showHomeScreen() {
     coachReact("💪 Mode Entraînement — choisis ton exercice !");
   });
 
+  // ✅ swing
   swingBtn.addEventListener("click", () => {
+   leaveSwingMode(); // pour éviter un double mode
+  document.body.classList.add("mode-swing");   // <<< AJOUT
+    
   setActive(swingBtn);
   showOnly("swing");
   
@@ -650,6 +667,7 @@ function showHomeScreen() {
 
 
   historyBtn.addEventListener("click", () => {
+    leaveSwingMode();     // <<< AJOUT
     setActive(historyBtn);
     // On utilise l’interaction-zone pour l’historique via injectHistoryUI
     showOnly("play"); // on cache les autres + garde la structure
@@ -658,6 +676,7 @@ function showHomeScreen() {
   });
 
   friendsBtn.addEventListener("click", () => {
+    leaveSwingMode();     // <<< AJOUT
     setActive(friendsBtn);
     showOnly("friends");
     window.injectSocialUI?.();
@@ -713,6 +732,7 @@ document.getElementById("start-onboarding")?.addEventListener("click", () => {
 const homeBtn = $("home-btn");
 
 homeBtn.addEventListener("click", () => {
+  leaveSwingMode();     // <<< AJOUT
   setActive(homeBtn);
   
   // Cache toutes les zones
