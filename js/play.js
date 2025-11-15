@@ -1,4 +1,4 @@
-// === Parfect.golfr – play.js (MVP 2025 corrigé propre) ===
+// === Parfect.golfr – play.js (MVP 2025 avec Parfect + Double popup + Putting v2) ===
 console.log("🏌️ Parfect.golfr Play.js chargé");
 
 if (typeof window.$$ !== "function") {
@@ -11,9 +11,183 @@ let holes = [];
 let currentDiff = null;
 let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
+// === Helpers génériques ===
+function pickRandom(arr) {
+  if (!arr || !arr.length) return "";
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getCoachContext() {
+  const coachKey = (localStorage.getItem("coach") || "dorothee").toLowerCase();
+  const mood = (localStorage.getItem("mood") || "focus").toLowerCase();
+  const strategy = (localStorage.getItem("strategy") || "mindset").toLowerCase();
+  return { coachKey, mood, strategy };
+}
+
+// Fallback si le JSON global COACH_COMMENTS n’est pas dispo
+const FALLBACK_DOUBLE_MESSAGES = {
+  dorothee: [
+    "🤗 C’est pas grave, souffle et repars. Ton attitude compte plus que le score.",
+    "🌈 Mauvais coup ? Oui, mais bon mental. L’important, c’est la réaction.",
+    "💭 Même les pros en font. Tu restes dans ton jeu.",
+  ],
+  gauthier: [
+    "🧱 Mauvais coup, certes, mais ton mental reste intact.",
+    "🧘 Reviens à la base : respiration, ancrage, tempo.",
+    "⚖️ Observe sans juger, analyse sans tension.",
+  ],
+  greg: [
+    "📉 Ok, petit coup dur. 1 trou, pas une tendance.",
+    "🧠 Mauvaise stratégie ? Note-le, ajuste et avance.",
+    "📈 Ce double, c’est une info, pas une sanction.",
+  ],
+};
+
+// Hints par RAISON + MOOD
+const DOUBLE_REASON_HINTS = {
+  drive_egare: {
+    focus: "🎯 Drive égaré : choisis une cible claire et un point d’alignement précis au prochain départ.",
+    relax: "🌿 Drive lâché, rien de grave : respire et simplifie ta cible au prochain coup.",
+    fun: "😄 Drive dans les choux, mais l’histoire est bonne. Prochaine fois, vise plus petit.",
+    grind: "🧱 Drive égaré : prends l’info, ajuste ton alignement et valide ta routine au départ.",
+  },
+  hors_limites: {
+    focus: "🚧 Hors limites : note la zone à éviter et reste engagé sur ta cible la prochaine fois.",
+    relax: "🌬️ Balle dehors, mais toi tu restes dedans. Laisse passer la frustration.",
+    fun: "🤷‍♂️ HL, ça arrive. Raconte la blague qui va avec et avance.",
+    grind: "📓 HL = info. Enregistre le pattern et corrige sur le prochain départ.",
+  },
+  penalite: {
+    focus: "💧 Zone à pénalité : visualise mieux la zone safe, pas la zone rouge.",
+    relax: "🌊 Petite baignade de balle : garde ton sourire, le jeu continue.",
+    fun: "🏊 Ta balle a pris son ticket piscine. Prochaine fois, vise un peu plus large.",
+    grind: "🧠 Pénalité notée. Ajuste ta cible pour garder ta stratégie sous contrôle.",
+  },
+  strategie: {
+    focus: "🧭 Mauvaise stratégie : redéfinis ton plan avant d’attaquer le trou suivant.",
+    relax: "🌀 Le choix était ambitieux. Prochaine fois, choisis la version simple.",
+    fun: "🎲 T’as tenté, ça n’est pas passé. C’est le jeu, garde le fun mais ajuste un cran.",
+    grind: "📊 Stratégie à optimiser : recadre ton plan sur tes zones fortes.",
+  },
+  miss_technique: {
+    focus: "🎯 Gros miss technique : reviens à un seul point clé simple au prochain coup.",
+    relax: "😌 Mauvais contact, mais pas grave. Lâche la technique, retrouve le feeling.",
+    fun: "🪓 Gros miss, mais t’es toujours là. On en rit et on tourne la page.",
+    grind: "🔧 Note ce miss, corrige-le au practice, mais pas dans ta tête sur le parcours.",
+  },
+  negociation: {
+    focus: "🤝 Coup mal négocié : clarifie ton choix AVANT de t’installer sur la balle.",
+    relax: "🍃 Ne reste pas bloqué dessus. La prochaine décision sera plus simple.",
+    fun: "🃏 Mauvais deal sur ce coup, mais la partie est longue.",
+    grind: "📌 Ce coup t’apprend où être plus clair dans ton plan.",
+  },
+  autre: {
+    focus: "🧠 Ce trou t’apprend quelque chose sur toi. Garde-le comme info, pas comme jugement.",
+    relax: "🌈 Ok, trou bizarre. Laisse-le derrière toi.",
+    fun: "🎭 Trou chelou, histoire marrante. On passe au suivant.",
+    grind: "📚 Note ce trou comme une expérience, pas comme une sanction.",
+  },
+};
+
+// Hints par STRATÉGIE
+const STRATEGY_HINTS = {
+  safe: "🎯 En mode Safe, autorise-toi des choix très simples sur les prochains départs.",
+  aggressive: "🔥 En mode Aggressive, garde l’audace mais choisis soigneusement quand prendre le risque.",
+  "5050": "⚖️ En mode 50/50, accepte que parfois ça tombe du mauvais côté sans remettre tout en cause.",
+  mindset: "🧘 En mode Mindset, recentre-toi sur respiration, routine et intention, pas sur le score.",
+};
+
+// Récupère un message base double depuis le JSON global ou fallback
+function getBaseDoubleMessages(coachKey) {
+  const global = window.COACH_COMMENTS;
+  const mapKey =
+    coachKey === "dorothee"
+      ? "Dorothee"
+      : coachKey === "gauthier"
+      ? "Gauthier"
+      : coachKey === "greg"
+      ? "Greg"
+      : null;
+
+  if (global && mapKey && global[mapKey] && Array.isArray(global[mapKey].double)) {
+    return global[mapKey].double;
+  }
+  return FALLBACK_DOUBLE_MESSAGES[coachKey] || ["Double bogey, on analyse et on repart."];
+}
+
+// Construit le message coach pour un double / triple
+function buildDoubleCoachMessage(holeData, reasonKey) {
+  const { coachKey, mood, strategy } = getCoachContext();
+
+  const baseList = getBaseDoubleMessages(coachKey);
+  const baseMsg = pickRandom(baseList);
+
+  const moodHintsForReason = DOUBLE_REASON_HINTS[reasonKey] || {};
+  const moodHint =
+    moodHintsForReason[mood] ||
+    moodHintsForReason.focus ||
+    "";
+
+  const stratHint = STRATEGY_HINTS[strategy] || "";
+
+  const parts = [baseMsg, moodHint, stratHint].filter(Boolean);
+  return parts.join(" ");
+}
+
+// Modale pour demander la raison du double/triple
+function showDoubleReasonModal(onReasonChosen) {
+  const existing = document.querySelector(".modal-backdrop.double-reason-modal");
+  if (existing) existing.remove();
+
+  const modal = document.createElement("div");
+  modal.className = "modal-backdrop double-reason-modal";
+  modal.style.zIndex = "12000";
+
+  modal.innerHTML = `
+    <div class="modal-card" id="double-reason-card" style="max-width:420px;text-align:center;padding:20px;">
+      <h3>🤔 Que s’est-il passé sur ce trou ?</h3>
+      <p style="font-size:0.9rem;opacity:0.85;">Choisis ce qui décrit le mieux ton double/triple.</p>
+      <div id="double-reason-buttons" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px;">
+        <button class="btn reason-btn" data-reason="drive_egare">Drive égaré</button>
+        <button class="btn reason-btn" data-reason="hors_limites">Hors limites</button>
+        <button class="btn reason-btn" data-reason="penalite">Zone à pénalité</button>
+        <button class="btn reason-btn" data-reason="strategie">Mauvaise stratégie</button>
+        <button class="btn reason-btn" data-reason="miss_technique">Gros miss technique</button>
+        <button class="btn reason-btn" data-reason="negociation">Coup mal négocié</button>
+        <button class="btn reason-btn" data-reason="autre">Autre</button>
+      </div>
+      <button id="confirm-double-reason" class="btn" style="margin-top:16px;background:#00ff99;color:#111;">Valider</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  let selectedReason = null;
+
+  modal.querySelector("#double-reason-card").addEventListener("click", (e) => e.stopPropagation());
+
+  modal.querySelectorAll(".reason-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      modal.querySelectorAll(".reason-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedReason = btn.dataset.reason;
+    });
+  });
+
+  modal.querySelector("#confirm-double-reason").addEventListener("click", () => {
+    if (!selectedReason) {
+      const card = modal.querySelector("#double-reason-card");
+      card.style.animation = "shake 0.2s";
+      setTimeout(() => (card.style.animation = ""), 200);
+      return;
+    }
+    modal.remove();
+    if (typeof onReasonChosen === "function") onReasonChosen(selectedReason);
+  });
+}
+
 // === Modale Reprendre ou Nouvelle Partie ===
 function showResumeOrNewModal() {
-  // 🔒 Empêche d’ouvrir plusieurs fois la même modale
   if (document.querySelector(".modal-backdrop.resume-modal")) {
     return;
   }
@@ -42,29 +216,25 @@ function showResumeOrNewModal() {
 
   document.body.appendChild(modal);
 
-  // 🛑 STOP propagation UNIQUEMENT sur la carte (fix essentiel)
-  modal.querySelector("#resume-modal-card")
-    .addEventListener("click", (e) => e.stopPropagation());
+  modal.querySelector("#resume-modal-card").addEventListener("click", (e) => e.stopPropagation());
 
-  // === REPRENDRE ===
   modal.querySelector("#resume-round")?.addEventListener("click", () => {
     modal.remove();
-    
+
     const saved = JSON.parse(localStorage.getItem("holesData") || "[]");
     const lastGolfId = localStorage.getItem("currentGolf");
     if (saved.length && lastGolfId) {
       fetch("./data/golfs.json")
-        .then(res => res.json())
-        .then(golfs => {
-          window.currentGolf = golfs.find(g => g.id === lastGolfId);
+        .then((res) => res.json())
+        .then((golfs) => {
+          window.currentGolf = golfs.find((g) => g.id === lastGolfId);
           window.holes = saved;
-          window.currentHole = saved.findIndex(h => !h.score) + 1 || 1;
+          window.currentHole = saved.findIndex((h) => !h.score) + 1 || 1;
           renderHole(currentHole);
         });
     }
   });
 
-  // === NOUVELLE ===
   modal.querySelector("#new-round")?.addEventListener("click", () => {
     modal.remove();
     initGolfSelect();
@@ -72,7 +242,6 @@ function showResumeOrNewModal() {
 }
 
 window.showResumeOrNewModal = showResumeOrNewModal;
-
 
 // === Sélecteur de golf (MVP) ===
 async function initGolfSelect() {
@@ -97,16 +266,20 @@ async function initGolfSelect() {
     golfSelect.innerHTML = `
       <h3 style="color:#00ff99;margin:8px 0;">Choisis ton golf</h3>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${golfs.map(g => `
+        ${golfs
+          .map(
+            (g) => `
           <button class="btn" data-id="${g.id}">
             ⛳ ${g.name}<br>
             <small style="color:#aaa;">${g.location}</small>
           </button>
-        `).join("")}
+        `
+          )
+          .join("")}
       </div>
     `;
 
-    golfSelect.querySelectorAll("button[data-id]").forEach(btn => {
+    golfSelect.querySelectorAll("button[data-id]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-id");
         startNewRound(id);
@@ -129,7 +302,10 @@ async function startNewRound(golfId) {
   const golfSelect = document.getElementById("golf-select");
 
   if (golfSelect) golfSelect.style.display = "none";
-  if (holeCard) { holeCard.style.display = "block"; holeCard.innerHTML = ""; }
+  if (holeCard) {
+    holeCard.style.display = "block";
+    holeCard.innerHTML = "";
+  }
   if (gameArea) gameArea.style.display = "block";
 
   try {
@@ -141,12 +317,14 @@ async function startNewRound(golfId) {
       return;
     }
 
-    // 🛡️ Supporte plusieurs clés possibles
     const parsSource =
-      Array.isArray(golf.pars) ? golf.pars :
-      Array.isArray(golf.holes) ? golf.holes :
-      Array.isArray(golf.coursePars) ? golf.coursePars :
-      [];
+      Array.isArray(golf.pars)
+        ? golf.pars
+        : Array.isArray(golf.holes)
+        ? golf.holes
+        : Array.isArray(golf.coursePars)
+        ? golf.coursePars
+        : [];
 
     if (!parsSource.length) {
       console.warn("⚠️ Pas de tableau de pars dans ce golf:", golf);
@@ -154,13 +332,11 @@ async function startNewRound(golfId) {
       return;
     }
 
-    // ✅ Initialise le contexte partie
     currentGolf = golf;
     currentHole = 1;
     holes = parsSource.map((par, i) => ({ number: i + 1, par }));
     currentDiff = null;
 
-    // Sauvegardes
     localStorage.setItem("roundInProgress", "true");
     localStorage.setItem("currentGolf", golfId);
     localStorage.setItem("golfData", JSON.stringify(golf));
@@ -168,28 +344,27 @@ async function startNewRound(golfId) {
 
     console.log("✅ Partie initialisée", { currentGolf, holesLen: holes.length });
 
-    // 🧠 Mood/Strat → puis rendu
     showMoodAndStrategyModal(() => {
       const ga = document.getElementById("game-area");
       const hc = document.getElementById("hole-card");
       if (ga) ga.style.display = "block";
-      if (hc) { hc.style.display = "block"; hc.innerHTML = ""; }
+      if (hc) {
+        hc.style.display = "block";
+        hc.innerHTML = "";
+      }
       renderHole(1);
     });
-
   } catch (err) {
     console.error("❌ Erreur chargement golf :", err);
     if (holeCard) holeCard.innerHTML = `<p style="color:#f55;">Erreur de chargement du golf</p>`;
   }
 }
 
-
 // === Mood & Stratégie avant la partie ===
 function showMoodAndStrategyModal(onConfirm) {
   const modal = document.createElement("div");
   modal.className = "modal-backdrop";
   modal.style.zIndex = "12000";
-
   modal.innerHTML = `
     <div class="modal-card" style="max-width:400px;text-align:center;padding:20px;">
       <h3>😎 Mood du jour</h3>
@@ -215,66 +390,36 @@ function showMoodAndStrategyModal(onConfirm) {
         <button class="btn coach" data-coach="gauthier">Gauthier</button>
       </div>
 
-      <!-- 🆕 Résumé dynamique -->
-      <div id="choice-summary"
-           style="margin-top:18px;font-size:0.95rem;opacity:0.85;color:#00ff99;">
-        Mood : Focus · Stratégie : Mindset · Coach : Dorothée
-      </div>
-
-      <button id="start-round" class="btn" 
-        style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
     </div>
   `;
-
   document.body.appendChild(modal);
 
-  // === VAL. PAR DÉFAUT ===
   let mood = "focus";
   let strat = "mindset";
   let coach = "dorothee";
 
-  modal.querySelector('.mood[data-mood="focus"]')?.classList.add('active');
-  modal.querySelector('.strat[data-strat="mindset"]')?.classList.add('active');
-  modal.querySelector('.coach[data-coach="dorothee"]')?.classList.add('active');
-
-  const summary = modal.querySelector("#choice-summary");
-
-  function updateSummary() {
-    summary.textContent =
-      `Mood : ${capitalize(mood)} · ` +
-      `Stratégie : ${capitalize(strat)} · ` +
-      `Coach : ${capitalize(coach)}`;
-  }
-
-  function capitalize(txt) {
-    return txt.charAt(0).toUpperCase() + txt.slice(1);
-  }
-
-  // === LISTENERS ===
-  modal.querySelectorAll(".mood").forEach(btn => {
+  modal.querySelectorAll(".mood").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".mood").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".mood").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       mood = btn.dataset.mood;
-      updateSummary();
     });
   });
 
-  modal.querySelectorAll(".strat").forEach(btn => {
+  modal.querySelectorAll(".strat").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".strat").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".strat").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       strat = btn.dataset.strat;
-      updateSummary();
     });
   });
 
-  modal.querySelectorAll(".coach").forEach(btn => {
+  modal.querySelectorAll(".coach").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".coach").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".coach").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       coach = btn.dataset.coach;
-      updateSummary();
     });
   });
 
@@ -287,8 +432,6 @@ function showMoodAndStrategyModal(onConfirm) {
     showCoachIA?.(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat} · 🗣️ Coach: ${coach}`);
     if (typeof onConfirm === "function") onConfirm();
   });
-
-  updateSummary();
 }
 
 window.showMoodAndStrategyModal = showMoodAndStrategyModal;
@@ -298,9 +441,8 @@ function renderHole(number = currentHole) {
   const holeCard = document.getElementById("hole-card");
   if (!holeCard) return;
 
-  // 🛡️ Garde-fous
   if (!currentGolf) {
-    holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucune partie active (golf manquant).</p>`;
+    holeCard.innerHTML = `<p style="color:#f55;">⚠️ Aucune partie active (golf manquante).</p>`;
     return;
   }
   if (!Array.isArray(holes) || holes.length === 0) {
@@ -310,7 +452,6 @@ function renderHole(number = currentHole) {
 
   const hole = holes[number - 1];
   if (!hole) {
-    // Fin normale si on dépasse le nombre de trous
     summarizeRound();
     return;
   }
@@ -326,12 +467,17 @@ function renderHole(number = currentHole) {
   holeCard.classList.add("hole-animate-in");
   setTimeout(() => holeCard.classList.remove("hole-animate-in"), 400);
 
+  const fairwayCheckbox =
+    par === 3
+      ? "" // pas de fairway sur par 3
+      : `<label><input type="checkbox" id="fairway" ${saved.fairway ? "checked" : ""}> Fairway</label>`;
+
   holeCard.innerHTML = `
     <div class="scorecard" style="text-align:center;padding:12px;">
       <h3 style="color:#00ff99;">⛳ Trou ${number}/${holes.length}</h3>
       <p>Par ${par} — Total :
-        <strong style="color:${totalVsPar>0?'#ff6666':totalVsPar<0?'#00ff99':'#fff'}">
-          ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
+        <strong style="color:${totalVsPar > 0 ? "#ff6666" : totalVsPar < 0 ? "#00ff99" : "#fff"}">
+          ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}
         </strong>
       </p>
 
@@ -342,6 +488,7 @@ function renderHole(number = currentHole) {
         <button class="btn score-btn" data-diff="0">Par</button>
         <button class="btn score-btn" data-diff="1">Bogey</button>
         <button class="btn score-btn" data-diff="2">Double</button>
+        <button class="btn score-btn" data-diff="3">Triple</button>
       </div>
 
       <div style="margin-top:10px;">
@@ -349,29 +496,28 @@ function renderHole(number = currentHole) {
         <select id="dist2" style="margin-left:6px;padding:4px 6px;border-radius:6px;">
           <option value="">Choisir</option>
           <option value="1">1 putt</option>
-          <option value="2">Donné</option>
-          <option value="3">&lt; 2m</option>
-          <option value="4">&lt; 4m</option>
-          <option value="5">&lt; 6m</option>
+          <option value="2">2 putts Donné</option>
+          <option value="3">2 putts 2m</option>
+          <option value="4">2 putts 4m</option>
+          <option value="5">2 putts 6m</option>
           <option value="6">3 putts</option>
           <option value="7">4 putts</option>
         </select>
       </div>
 
       <div style="margin-top:14px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <label><input type="checkbox" id="fairway" ${saved.fairway?'checked':''}> Fairway</label>
-        <label><input type="checkbox" id="gir" ${saved.gir?'checked':''}> GIR</label>
-        <label><input type="checkbox" id="routine" ${saved.routine?'checked':''}> Routine</label>
+        ${fairwayCheckbox}
+        <label><input type="checkbox" id="gir" ${saved.gir ? "checked" : ""}> GIR</label>
+        <label><input type="checkbox" id="routine" ${saved.routine ? "checked" : ""}> Routine</label>
       </div>
 
       <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
-        <button id="prev-hole" class="btn" ${number===1?'disabled':''}>⬅️ Préc.</button>
+        <button id="prev-hole" class="btn" ${number === 1 ? "disabled" : ""}>⬅️ Préc.</button>
         <div id="hole-info" style="font-size:0.9rem;color:#aaa;">Trou ${number}/${holes.length}</div>
         <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Suivant ➡️</button>
       </div>
     </div>`;
 
-  // Sélection du score
   document.querySelectorAll(".score-btn").forEach((btn) =>
     btn.addEventListener("click", () => {
       document.querySelectorAll(".score-btn").forEach((b) => b.classList.remove("active"));
@@ -403,7 +549,6 @@ function renderHole(number = currentHole) {
   });
 }
 
-
 // === Analyse trou ===
 let lastCoachMessage = "";
 function analyzeHole(holeData) {
@@ -412,23 +557,43 @@ function analyzeHole(holeData) {
   const diff = score - par;
   let message = "";
 
-  if (diff === 0 && fairway && gir && ["1","2"].includes(dist2)) {
+  const hasFairway = par === 3 ? true : !!fairway; // Par 3 : fairway auto OK
+  const goodPutting = ["1", "2", "3", "4", "5"].includes(dist2); // putting OK 1→5
+
+  const isParfect =
+    diff <= 0 &&      // Par, Birdie, Eagle
+    hasFairway &&
+    gir &&
+    goodPutting;
+
+  if (isParfect) {
     totalParfects++;
     localStorage.setItem("totalParfects", totalParfects);
     updateParfectCounter();
     showConfetti();
-    message = "💚 Parfect collecté ! Par + Fairway + GIR + ≤2 putts !";
-  } else if (diff === 1 && fairway) {
+    message = "💚 Parfect collecté ! Par/Birdie/Eagle + GIR + putting 1 à 5 (et fairway sauf Par 3).";
+  } else if (diff === 1 && hasFairway) {
     message = "💙 Bogey’fect ! Bogey solide, mental propre.";
   } else if (diff < 0) {
     message = "🕊️ Birdie ! Fluide et en contrôle.";
+  } else if (diff >= 2) {
+    // Double ou plus : ouvre la modale “Que s’est-il passé ?”
+    showDoubleReasonModal((reasonKey) => {
+      const msg = buildDoubleCoachMessage(holeData, reasonKey);
+      if (msg && msg !== lastCoachMessage) {
+        lastCoachMessage = msg;
+        showCoachIA?.(msg);
+      }
+    });
   } else {
     message = "👌 Continue ton flow.";
   }
 
-  if (message !== lastCoachMessage) {
-    lastCoachMessage = message;
-    showCoachIA?.(message);
+  if (message && diff < 2) {
+    if (message !== lastCoachMessage) {
+      lastCoachMessage = message;
+      showCoachIA?.(message);
+    }
   }
 }
 
@@ -436,7 +601,7 @@ function analyzeHole(holeData) {
 function updateParfectCounter() {
   const el = document.getElementById("parfect-counter");
   if (el) {
-    el.textContent = `💚 ${totalParfects} Parfect${totalParfects>1?"s":""} collecté${totalParfects>1?"s":""}`;
+    el.textContent = `💚 ${totalParfects} Parfect${totalParfects > 1 ? "s" : ""} collecté${totalParfects > 1 ? "s" : ""}`;
     el.style.transform = "scale(1.3)";
     setTimeout(() => (el.style.transform = "scale(1)"), 300);
   }
@@ -467,12 +632,22 @@ function showConfetti() {
 
 // === Fin de partie ===
 function summarizeRound() {
-  const valid = holes.filter(h => h && typeof h.score === "number");
+  const valid = holes.filter((h) => h && typeof h.score === "number");
   const totalVsPar = valid.reduce((sum, h) => sum + (h.score - h.par), 0);
-  const parfects = valid.filter(h => h.score - h.par === 0 && h.fairway && h.gir && ["1","2"].includes(h.dist2)).length;
+  const parfects = valid.filter((h) => {
+    const diff = h.score - h.par;
+    const hasFairway = h.par === 3 ? true : !!h.fairway;
+    const goodPutting = ["1", "2", "3", "4", "5"].includes(h.dist2);
+    return diff <= 0 && hasFairway && h.gir && goodPutting;
+  }).length;
 
   const history = JSON.parse(localStorage.getItem("history") || "[]");
-  history.push({ date: new Date().toLocaleDateString(), golf: currentGolf?.name ?? "Inconnu", totalVsPar, parfects });
+  history.push({
+    date: new Date().toLocaleDateString(),
+    golf: currentGolf?.name ?? "Inconnu",
+    totalVsPar,
+    parfects,
+  });
   localStorage.setItem("history", JSON.stringify(history));
 
   const badge = document.createElement("div");
@@ -490,16 +665,18 @@ function summarizeRound() {
     box-shadow:0 0 20px #00ff99aa;
     z-index:12000;
   `;
-    badge.textContent = `🏅 ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`;
+  badge.textContent = `🏅 ${parfects} Parfect${parfects > 1 ? "s" : ""} collecté${parfects > 1 ? "s" : ""} !`;
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 3000);
 
-  showCoachIA?.(`🏁 Fin de partie ! Score total ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}, ${parfects} Parfect${parfects>1?"s":""} collecté${parfects>1?"s":""} !`);
+  showCoachIA?.(
+    `🏁 Fin de partie ! Score total ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}, ${parfects} Parfect${
+      parfects > 1 ? "s" : ""
+    } collecté${parfects > 1 ? "s" : ""} !`
+  );
 
-
-showShareBadge(totalVsPar, parfects);
-  }
-
+  showShareBadge(totalVsPar, parfects);
+}
 
 // === 🏆 BADGE INSTAGRAM DELUXE ===
 function showShareBadge(totalVsPar, parfects) {
@@ -536,11 +713,13 @@ function showShareBadge(totalVsPar, parfects) {
 
       <div style="background:rgba(255,255,255,0.15);padding:10px 14px;border-radius:16px;">
         <p style="margin:6px 0;font-size:1.3rem;">Score total : 
-          <strong style="color:${totalVsPar>0?'#ff3333':'#111'};">
-            ${totalVsPar>0?`+${totalVsPar}`:totalVsPar}
+          <strong style="color:${totalVsPar > 0 ? "#ff3333" : "#111"};">
+            ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}
           </strong>
         </p>
-        <p style="margin:6px 0;font-size:1.2rem;">💚 ${parfects} Parfect${parfects>1?'s':''} collecté${parfects>1?'s':''}</p>
+        <p style="margin:6px 0;font-size:1.2rem;">💚 ${parfects} Parfect${parfects > 1 ? "s" : ""} collecté${
+    parfects > 1 ? "s" : ""
+  }</p>
       </div>
 
       <div style="margin-top:10px;font-size:0.95rem;">
@@ -562,7 +741,6 @@ function showShareBadge(totalVsPar, parfects) {
 
   document.body.appendChild(badge);
 
-  // 📸 Télécharger le badge
   badge.querySelector("#download-badge").addEventListener("click", async () => {
     try {
       const canvas = await html2canvas(badge, { backgroundColor: "#00ff99" });
@@ -576,10 +754,8 @@ function showShareBadge(totalVsPar, parfects) {
     }
   });
 
-  // ❌ Fermer
   badge.querySelector("#close-badge").addEventListener("click", () => badge.remove());
 }
-
 
 // === Sauvegarde trou ===
 function saveCurrentHole() {
@@ -589,20 +765,19 @@ function saveCurrentHole() {
   const dist2 = $$("dist2")?.value || "";
   const par = holes[currentHole - 1]?.par ?? 4;
 
-  holes[currentHole - 1] = { 
-    number: currentHole, 
-    par, 
-    score: par + (currentDiff ?? 0), 
-    fairway, 
-    gir, 
-    routine, 
-    dist2 
+  holes[currentHole - 1] = {
+    number: currentHole,
+    par,
+    score: par + (currentDiff ?? 0),
+    fairway,
+    gir,
+    routine,
+    dist2,
   };
 
   localStorage.setItem("holesData", JSON.stringify(holes));
   localStorage.setItem("roundInProgress", "true");
 }
-
 
 // === Exports ===
 window.startNewRound = startNewRound;
