@@ -678,12 +678,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const trainingArea  = $("training-area");
   const swingAnalyzer = $("swing-analyzer");
   const friendsArea   = $("friends-area");
+  const justSwingArea = $("just-swing-area");
+
 
   // Boutons
   const playBtn     = $("play-btn");
   const trainingBtn = $("training-btn");
   const swingBtn    = $("swing-btn");
-  const justSwingBtn    = $("just-swing-btn");
+  const justSwingBtn = $("just-swing-btn");
   const historyBtn  = $("history-btn");
   const friendsBtn  = $("friends-btn");
 
@@ -705,9 +707,9 @@ function leaveSwingMode() {
       training:  trainingArea,
       swing:     swingAnalyzer,
       friends:   friendsArea,
-      justswing: just-swing-area
+      justswing: justSwingArea
     };
-    [gameArea, trainingArea, swingAnalyzer, friendsArea, just-swing-area].forEach(el => el && (el.style.display = "none"));
+    [gameArea, trainingArea, swingAnalyzer, friendsArea, justSwingArea].forEach(el => el && (el.style.display = "none"));
     map[view].style.display = "block";
   }
 
@@ -916,7 +918,7 @@ justSwingBtn?.addEventListener("click", () => {
   document.body.classList.add("mode-swing");
   
   setActive(justSwingBtn);
-  showOnly("just-swing-area");                    // ou "play" si tu veux plein écran caméra
+  showOnly("justswing");                    // ou "play" si tu veux plein écran caméra
 
   console.log("▶️ Just Swing lancé !");
   
