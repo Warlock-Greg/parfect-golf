@@ -698,7 +698,42 @@ document.addEventListener("DOMContentLoaded", () => {
  // réduit la vue coach dans swing
 function leaveSwingMode() {
   document.body.classList.remove("mode-swing");
+
+  // 1. Stopper la caméra de l'ancien swing analyzer (si elle existe)
+  if (window.stopCam) {
+    try {
+      window.stopCam();  // fonction standard dans ton Swing Analyzer V2
+      console.log("🛑 Caméra Swing Analyzer arrêtée");
+    } catch(e) {
+      console.warn("Impossible d'arrêter stopCam:", e);
+    }
+  }
+
+  // 2. Couper manuellement tout flux caméra attaché à #video-swing
+  const oldVideo = document.getElementById("video-swing");
+  if (oldVideo && oldVideo.srcObject) {
+    oldVideo.srcObject.getTracks().forEach(t => t.stop());
+    oldVideo.srcObject = null;
+    console.log("🛑 Stream vidéo Swing Analyzer coupé");
+  }
+
+  // 3. Nettoyer les timers swing si existants
+  if (window.swingLoop) {
+    cancelAnimationFrame(window.swingLoop);
+    window.swingLoop = null;
+  }
+
+  // 4. Couper les écouteurs du swing analyzer
+  if (window.cleanupSwing) {
+    try {
+      window.cleanupSwing();
+      console.log("🧹 Nettoyage Swing Analyzer effectué");
+    } catch(e) {
+      console.warn("cleanupSwing échoué", e);
+    }
+  }
 }
+
 
   // Montre une seule vue (sans vider)
   function showOnly(view) {
