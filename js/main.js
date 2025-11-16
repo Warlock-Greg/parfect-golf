@@ -8,6 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const trainingBtn = document.getElementById("training-btn");
   const friendsBtn = document.getElementById("friends-btn");
   const swingBtn = document.getElementById("swing-btn");
+  const justSwingBtn = document.getElementById("just-swing-btn");
+
 
   const gameArea = document.getElementById("game-area");
   const trainingArea = document.getElementById("training-area");
@@ -112,6 +114,21 @@ document.addEventListener("DOMContentLoaded", () => {
     window.injectSocialUI?.();
   });
 
+// ============================================
+// 🎥 Bouton JUST SWING (Module IA temps réel)
+// ============================================
+justSwingBtn?.addEventListener("click", () => {
+  // Option 1 : lancer directement Just Swing
+  JustSwing.startSession("swing"); // ou "putt"
+
+  // Si tu veux masquer toutes les sections actuelles :
+ showSection("swing");   // facultatif (selon ton UX)
+ coachIASetMode("swing"); // facultatif
+ showCoachIA?.("🟢 Just Swing activé — place-toi devant la caméra !");
+});
+
+
+  
   // ============================================
   // Mode par défaut : PLAY
   // ============================================
