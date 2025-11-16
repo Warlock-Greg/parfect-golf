@@ -579,7 +579,7 @@
     }
 
     // 📹 Démarrer la caméra automatiquement
-    startCam();
+    //startCam();
 
     // Charger Rory par défaut
     const defaultRef = (refSelect && refSelect.value) || "rory_faceon";
