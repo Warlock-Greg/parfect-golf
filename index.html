@@ -769,7 +769,7 @@ function showHomeScreen() {
   console.log("🏠 Retour à la home");
 
   // 1️⃣ Nettoie toutes les zones
-  [gameArea, trainingArea, swingAnalyzer, friendsArea, just-swing-area].forEach(el => el && (el.style.display = "none"));
+  [gameArea, trainingArea, swingAnalyzer, friendsArea, justSwingarea].forEach(el => el && (el.style.display = "none"));
   document.querySelectorAll(".modal-backdrop").forEach(m => m.remove());
   document.getElementById("mini-onboarding")?.remove();
 
