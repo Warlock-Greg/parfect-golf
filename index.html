@@ -484,27 +484,29 @@ footer button.active {
       </select>
   </div>
 
-// ✅ Just-Swing
-<div id="just-swing-screen" class="jsw-screen hidden">
-  <video id="jsw-video" autoplay playsinline muted></video>
-  <canvas id="jsw-overlay"></canvas>
+<!-- ✅ Just-Swing-->
+<div id="just-swing-area" style="display:none;">
+  <div id="just-swing-screen" class="jsw-screen hidden">
+    <video id="jsw-video" autoplay playsinline muted></video>
+    <canvas id="jsw-overlay"></canvas>
 
-  <div id="jsw-ui">
-    <div id="jsw-status-text"></div>
-    <div id="jsw-routine-steps"></div>
-    <div id="jsw-timer"></div>
-  </div>
+    <div id="jsw-ui">
+      <div id="jsw-status-text"></div>
+      <div id="jsw-routine-steps"></div>
+      <div id="jsw-timer"></div>
+    </div>
 
-  <div id="jsw-result-panel" class="hidden">
-    <div id="jsw-swing-label"></div>
-    <div id="jsw-score-global"></div>
-    <div id="jsw-score-details"></div>
-    <pre id="jsw-coach-comment" style="white-space:pre-wrap;"></pre>
-    <button id="jsw-btn-keep-reference">⭐ Définir comme swing de référence</button>
-    <button id="jsw-btn-next-swing">Analyser le prochain coup</button>
-    <button id="jsw-btn-exit">Quitter Just Swing</button>
+    <div id="jsw-result-panel" class="hidden">
+      <div id="jsw-swing-label"></div>
+      <div id="jsw-score-global"></div>
+      <div id="jsw-score-details"></div>
+      <pre id="jsw-coach-comment" style="white-space:pre-wrap;"></pre>
+      <button id="jsw-btn-keep-reference">⭐ Définir comme swing de référence</button>
+      <button id="jsw-btn-next-swing">Analyser le prochain coup</button>
+      <button id="jsw-btn-exit">Quitter Just Swing</button>
+    </div>
   </div>
-</div>
+</div>  
 
   
   <!-- 🎛️ Boutons -->
@@ -913,7 +915,7 @@ justSwingBtn?.addEventListener("click", () => {
   document.body.classList.add("mode-swing");
   
   setActive(justSwingBtn);
-  showOnly("swing");                    // ou "play" si tu veux plein écran caméra
+  showOnly("just-swing-area");                    // ou "play" si tu veux plein écran caméra
 
   console.log("▶️ Just Swing lancé !");
   
@@ -922,7 +924,7 @@ justSwingBtn?.addEventListener("click", () => {
 
   coachReact("🟢 Just Swing activé — place-toi plein pied 👣 !");
   
-  addCloseBar("swing-analyzer", "play"); // si tu veux un bouton retour
+ // addCloseBar("swing-analyzer", "play"); // si tu veux un bouton retour
 });
 
   
