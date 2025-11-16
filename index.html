@@ -482,6 +482,29 @@ footer button.active {
       </select>
   </div>
 
+// ✅ Just-Swing
+<div id="just-swing-screen" class="jsw-screen hidden">
+  <video id="jsw-video" autoplay playsinline muted></video>
+  <canvas id="jsw-overlay"></canvas>
+
+  <div id="jsw-ui">
+    <div id="jsw-status-text"></div>
+    <div id="jsw-routine-steps"></div>
+    <div id="jsw-timer"></div>
+  </div>
+
+  <div id="jsw-result-panel" class="hidden">
+    <div id="jsw-swing-label"></div>
+    <div id="jsw-score-global"></div>
+    <div id="jsw-score-details"></div>
+    <pre id="jsw-coach-comment" style="white-space:pre-wrap;"></pre>
+    <button id="jsw-btn-keep-reference">⭐ Définir comme swing de référence</button>
+    <button id="jsw-btn-next-swing">Analyser le prochain coup</button>
+    <button id="jsw-btn-exit">Quitter Just Swing</button>
+  </div>
+</div>
+
+  
   <!-- 🎛️ Boutons -->
   <div id="controls">
       <button id="analyze-btn">Analyser</button>
@@ -811,27 +834,7 @@ leaveSwingMode();     // <<< AJOUT
     coachReact("💪 Mode Entraînement — choisis ton exercice !");
   });
 
-// ✅ Just-Swing
-<div id="just-swing-screen" class="jsw-screen hidden">
-  <video id="jsw-video" autoplay playsinline muted></video>
-  <canvas id="jsw-overlay"></canvas>
 
-  <div id="jsw-ui">
-    <div id="jsw-status-text"></div>
-    <div id="jsw-routine-steps"></div>
-    <div id="jsw-timer"></div>
-  </div>
-
-  <div id="jsw-result-panel" class="hidden">
-    <div id="jsw-swing-label"></div>
-    <div id="jsw-score-global"></div>
-    <div id="jsw-score-details"></div>
-    <pre id="jsw-coach-comment" style="white-space:pre-wrap;"></pre>
-    <button id="jsw-btn-keep-reference">⭐ Définir comme swing de référence</button>
-    <button id="jsw-btn-next-swing">Analyser le prochain coup</button>
-    <button id="jsw-btn-exit">Quitter Just Swing</button>
-  </div>
-</div>
 
   
   // ✅ swing
