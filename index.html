@@ -699,40 +699,43 @@ document.addEventListener("DOMContentLoaded", () => {
 function leaveSwingMode() {
   document.body.classList.remove("mode-swing");
 
-  // 1. Stopper la caméra de l'ancien swing analyzer (si elle existe)
+  // 🛑 1. Stopper la caméra de l'ancien swing analyzer (s'il existe)
   if (window.stopCam) {
     try {
-      window.stopCam();  // fonction standard dans ton Swing Analyzer V2
-      console.log("🛑 Caméra Swing Analyzer arrêtée");
-    } catch(e) {
-      console.warn("Impossible d'arrêter stopCam:", e);
+      window.stopCam();
+      console.log("🛑 stopCam() exécuté");
+    } catch (e) {
+      console.warn("Erreur stopCam:", e);
     }
   }
 
-  // 2. Couper manuellement tout flux caméra attaché à #video-swing
+  // 🛑 2. Stopper TOUT flux caméra attaché à #video-swing
   const oldVideo = document.getElementById("video-swing");
-  if (oldVideo && oldVideo.srcObject) {
+  if (oldVideo?.srcObject) {
     oldVideo.srcObject.getTracks().forEach(t => t.stop());
     oldVideo.srcObject = null;
-    console.log("🛑 Stream vidéo Swing Analyzer coupé");
+    console.log("🛑 Flux #video-swing stoppé");
   }
 
-  // 3. Nettoyer les timers swing si existants
+  // 🛑 3. Stopper les timers du swing-analyzer V2 s'ils existent
   if (window.swingLoop) {
     cancelAnimationFrame(window.swingLoop);
     window.swingLoop = null;
+    console.log("🛑 swingLoop annulé");
   }
 
-  // 4. Couper les écouteurs du swing analyzer
-  if (window.cleanupSwing) {
-    try {
-      window.cleanupSwing();
-      console.log("🧹 Nettoyage Swing Analyzer effectué");
-    } catch(e) {
-      console.warn("cleanupSwing échoué", e);
-    }
+  if (window.swingTimer) {
+    clearTimeout(window.swingTimer);
+    window.swingTimer = null;
+    console.log("🛑 swingTimer annulé");
   }
+
+  // 🛑 4. Désactiver l'init auto (si existant)
+  window.initSwingAnalyzerV2 = () => {
+    console.log("⛔ initSwingAnalyzerV2 désactivé (Just Swing)");
+  };
 }
+
 
 
   // Montre une seule vue (sans vider)
