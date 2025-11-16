@@ -633,7 +633,7 @@ footer button.active {
   <button id="play-btn" title="Jouer">⛳</button>
   <button id="training-btn" title="S'entraîner">🧠</button>
   <button id="swing-btn" title="Analyser mon swing">🏌️‍♀️</button>
-  <button id="btn-just-swing">🎥 Just Swing</button>
+  <button id="just-swing-btn">🎥 Just Swing</button>
   <button id="history-btn" title="Historique">📜</button>
   <button id="friends-btn" title="Amis">👥</button>
 </nav>
@@ -679,6 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const playBtn     = $("play-btn");
   const trainingBtn = $("training-btn");
   const swingBtn    = $("swing-btn");
+  const justSwingBtn    = $("just-swing-btn");
   const historyBtn  = $("history-btn");
   const friendsBtn  = $("friends-btn");
 
@@ -903,6 +904,26 @@ leaveSwingMode();     // <<< AJOUT
     addCloseBar("friends-area", "play");
     coachReact("👥 Mode Social activé — partage tes stats !");
   });
+
+// 🎥 Just Swing — Mode IA Temps Réel
+justSwingBtn?.addEventListener("click", () => {
+  leaveSwingMode();                     // si tu étais dans swing V2
+  document.body.classList.add("mode-swing");
+  
+  setActive(justSwingBtn);
+  showOnly("swing");                    // ou "play" si tu veux plein écran caméra
+
+  console.log("▶️ Just Swing lancé !");
+  
+  // Lancement du module Just Swing
+  JustSwing.startSession("swing");
+
+  coachReact("🟢 Just Swing activé — place-toi plein pied 👣 !");
+  
+  addCloseBar("swing-analyzer", "play"); // si tu veux un bouton retour
+});
+
+  
 
   // Démarrage par défaut : Play
 // 🚀 Démarrage : uniquement l’onboarding
