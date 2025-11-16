@@ -704,9 +704,10 @@ function leaveSwingMode() {
       play:      gameArea,
       training:  trainingArea,
       swing:     swingAnalyzer,
-      friends:   friendsArea
+      friends:   friendsArea,
+      justswing: just-swing-area
     };
-    [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+    [gameArea, trainingArea, swingAnalyzer, friendsArea, just-swing-area].forEach(el => el && (el.style.display = "none"));
     map[view].style.display = "block";
   }
 
@@ -728,7 +729,7 @@ function showHomeScreen() {
   console.log("🏠 Retour à la home");
 
   // 1️⃣ Nettoie toutes les zones
-  [gameArea, trainingArea, swingAnalyzer, friendsArea].forEach(el => el && (el.style.display = "none"));
+  [gameArea, trainingArea, swingAnalyzer, friendsArea, just-swing-area].forEach(el => el && (el.style.display = "none"));
   document.querySelectorAll(".modal-backdrop").forEach(m => m.remove());
   document.getElementById("mini-onboarding")?.remove();
 
