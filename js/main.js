@@ -118,6 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🎥 Bouton JUST SWING (Module IA temps réel)
 // ============================================
 justSwingBtn?.addEventListener("click", () => {
+  console.log("▶️ Just Swing lancé !");
   // Option 1 : lancer directement Just Swing
   JustSwing.startSession("swing"); // ou "putt"
 
