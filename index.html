@@ -970,11 +970,24 @@ justSwingBtn?.addEventListener("click", () => {
 if (window.stopCam) {
   try { window.stopCam(); } catch(e){}
 }
+const oldUserVideo = document.getElementById("user-video");
+  if (oldUserVideo?.srcObject) {
+    oldUserVideo.srcObject.getTracks().forEach(t => t.stop());
+    oldUserVideo.srcObject = null;
+  }
+  
 if (window.stream) {
   try { window.stream.getTracks().forEach(t => t.stop()); } catch(e){}
   window.stream = null;
 }
 
+  // Tuer MoveNet/TF loops
+  window.initSwingAnalyzerV2 = () => {
+    console.log("⛔ Swing Analyzer V2 désactivé (Just Swing actif)");
+  };
+  window.tf = undefined;
+
+  
 // Empêche Swing Analyzer V2 de démarrer
 window.initSwingAnalyzerV2 = () => {
   console.log("⛔ Swing Analyzer V2 désactivé (Just Swing)");
@@ -1114,13 +1127,13 @@ document.getElementById("start-onboarding")?.addEventListener("click", () => {
 <!-- <script src="js/launchAngle.js"></script> -->
 
 <!-- TFJS + backends -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+<!--script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script-->
 
 <!-- Pose Detection (MoveNet via pose-detection) -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
+<!--script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script-->
 
 
 </body>
