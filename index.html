@@ -709,6 +709,12 @@ function leaveSwingMode() {
     }
   }
 
+  const oldUserVideo = document.getElementById("user-video");
+  if (oldUserVideo?.srcObject) {
+    oldUserVideo.srcObject.getTracks().forEach(t => t.stop());
+    oldUserVideo.srcObject = null;
+  }
+  
   // 🛑 2. Stopper TOUT flux caméra attaché à #video-swing
   const oldVideo = document.getElementById("video-swing");
   if (oldVideo?.srcObject) {
@@ -959,7 +965,25 @@ justSwingBtn?.addEventListener("click", () => {
   showOnly("justswing");                    // ou "play" si tu veux plein écran caméra
 
   console.log("▶️ Just Swing lancé !");
-  
+
+  // 🛑 KILL Swing Analyzer V2 COMPLETEMENT
+if (window.stopCam) {
+  try { window.stopCam(); } catch(e){}
+}
+if (window.stream) {
+  try { window.stream.getTracks().forEach(t => t.stop()); } catch(e){}
+  window.stream = null;
+}
+
+// Empêche Swing Analyzer V2 de démarrer
+window.initSwingAnalyzerV2 = () => {
+  console.log("⛔ Swing Analyzer V2 désactivé (Just Swing)");
+};
+
+// Empêche même MoveNet/Lampe TensorFlow de tourner
+window.tf = undefined;
+
+// 🔥 LANCEMENT SECURISÉ DE JUST SWING
   // Lancement du module Just Swing
   JustSwing.startSession("swing");
 
