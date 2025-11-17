@@ -394,6 +394,51 @@ footer button.active {
   background: rgba(0, 255, 153, 0.35);
 }
 
+    #just-swing-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+  z-index: 99999; /* au dessus de tout */
+}
+
+#jsw-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+}
+
+#jsw-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* UI (texte + routine + timer) */
+#jsw-ui {
+  position: absolute;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  color: white;
+  z-index: 30;
+}
+
+/* Halo couleur autour de l'écran */
+.jsw-halo-red    { box-shadow: inset 0 0 40px 5px rgba(255,0,0,0.7); }
+.jsw-halo-orange { box-shadow: inset 0 0 40px 5px rgba(255,165,0,0.7); }
+.jsw-halo-green  { box-shadow: inset 0 0 40px 5px rgba(0,255,0,0.7); }
+.jsw-halo-blue   { box-shadow: inset 0 0 40px 5px rgba(0,150,255,0.7); }
+
     
 /* === Responsive === */
 /@media (max-width: 768px) {
