@@ -162,10 +162,11 @@ const JustSwing = (() => {
   }
 
   function resizeOverlay() {
-    if (!overlayEl || !videoEl) return;
-    overlayEl.width = videoEl.clientWidth || window.innerWidth;
-    overlayEl.height = videoEl.clientHeight || window.innerHeight;
-  }
+  if (!overlayEl) return;
+  overlayEl.width = window.innerWidth;
+  overlayEl.height = window.innerHeight;
+}
+
 
   // Permet à mediapipe-init.js de fournir une fonction de démarrage caméra custom
   function setCameraStarter(fn) {
