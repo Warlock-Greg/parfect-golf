@@ -404,7 +404,7 @@ footer button.active {
 
 #jsw-video {
   position: absolute;
-  top: 0; left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover; /* important ! */
@@ -429,6 +429,20 @@ footer button.active {
   text-align: center;
   color: white;
   z-index: 30;
+}
+
+    /* UI en overlay */
+#jsw-ui {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  text-align: center;
+  width: 90%;
+  color: white;
+  text-shadow: 0 0 10px black;
+  font-size: 1.1rem;
 }
 
     .jsw-btn-restart {
