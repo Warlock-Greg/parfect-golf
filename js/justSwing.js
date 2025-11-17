@@ -109,6 +109,12 @@ const JustSwing = (() => {
 
   // === INIT ===
   function initJustSwing() {
+    const btnRestart = $$("jsw-restart");
+    if (btnRestart)
+      btnRestart.addEventListener("click", () => {
+    restartSession();
+      });
+ 
     screenEl = $$("just-swing-screen");
     videoEl = $$("jsw-video");
     overlayEl = $$("jsw-overlay");
@@ -276,6 +282,24 @@ const JustSwing = (() => {
       playerOutOfFrameSince = performance.now();
     }
   }
+
+  function restartSession() {
+  console.log("🔄 Recommencer Just Swing");
+
+  state = JSW_STATE.POSITIONING;
+  swings = [];
+  currentSwingIndex = 0;
+  swingInProgress = false;
+  sessionStartTime = performance.now();
+  addressStableSince = null;
+  playerOutOfFrameSince = performance.now();
+  frameBuffer = [];
+  currentImpactContext = null;
+
+  hideResultPanel();
+  updateUIForState();
+}
+
 
   // === State machine principal ===
   function updateStateMachine(now) {
