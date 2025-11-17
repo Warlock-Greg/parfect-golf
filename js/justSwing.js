@@ -1,16 +1,6 @@
-// === JUST SWING – Parfect.golfr – VERSION COMPLÈTE MVP+ ===
+// === JUST SWING – Parfect.golfr – VERSION CLEAN + UX ===
 //
-// Ce module gère :
-// - l'UX Just Swing (halo, messages, routine, etc.)
-// - la détection plein pied (full body)
-// - la machine à états (POSITIONING -> ROUTINE -> ADDRESS_READY -> SWING_CAPTURE -> REVIEW)
-// - la structure de scoring (routine / swing / régularité)
-// - la structure pour angle de décollage hybride (balle + club)
-//
-// Il est pensé pour être branché avec MediaPipe Pose via : JustSwing.onPoseFrame(landmarks)
-// Et la caméra via : JustSwing.setCameraStarter(fnAsync)
-//
-// API principale :
+// API publique :
 //   JustSwing.initJustSwing()
 //   JustSwing.startSession("swing" | "putt")
 //   JustSwing.stopSession()
@@ -20,7 +10,6 @@
 //   JustSwing.setClubType("fer7" / "driver" / etc.)
 //   JustSwing.getReferenceSwing()
 
-// Helper
 const $$ = (id) => document.getElementById(id);
 
 // États principaux
@@ -33,32 +22,17 @@ const JSW_STATE = {
   REVIEW: "REVIEW",
 };
 
-// Types de session
 const JSW_MODE = {
   SWING: "swing",
   PUTT: "putt",
 };
 
-// Routines par défaut (l'utilisateur pourra les customiser plus tard)
+// Routines par défaut
 const DEFAULT_ROUTINES = {
-  swing: [
-    "Respiration",
-    "Visualisation",
-    "Alignement",
-    "Swing d’essai",
-    "Adresse",
-    "Swing",
-  ],
-  putt: [
-    "Lecture du green",
-    "Visualisation",
-    "Alignement",
-    "Adresse",
-    "Putt",
-  ],
+  swing: ["Respiration", "Visualisation", "Alignement", "Swing d’essai", "Adresse", "Swing"],
+  putt:  ["Lecture du green", "Visualisation", "Alignement", "Adresse", "Putt"],
 };
 
-// Loft statique approximatif pour quelques clubs (°)
 const CLUB_BASE_LOFT = {
   driver: 10,
   bois3: 15,
@@ -78,14 +52,15 @@ const JustSwing = (() => {
   let screenEl, videoEl, overlayEl, ctx;
   let statusTextEl, routineStepsEl, timerEl;
   let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingLabelEl;
-  let btnKeepRefEl, btnNextSwingEl, btnExitEl;
+  let btnKeepRefEl, btnNextSwingEl, btnExitEl, restartBtnEl;
+  let bigMsgEl;
 
   let state = JSW_STATE.IDLE;
-  let mode = JSW_MODE.SWING; // "swing" ou "putt"
+  let mode = JSW_MODE.SWING;
   let routineConfig = { swing: DEFAULT_ROUTINES.swing, putt: DEFAULT_ROUTINES.putt };
 
   let sessionStartTime = null;
-  let maxSessionDurationMs = 30000; // 30s
+  let maxSessionDurationMs = 30000;
 
   let lastPose = null;
   let lastFullBodyOk = false;
@@ -94,32 +69,33 @@ const JustSwing = (() => {
   let playerOutOfFrameSince = null;
   let swingInProgress = false;
   let currentSwingIndex = 0;
-  let swings = []; // { index, total, etc. }
+  let swings = [];
 
   let referenceSwing = null;
-  let customStartCamera = null; // fonction fournie par mediapipe-init.js
-  let currentClubType = "fer7"; // valeur par défaut
+  let customStartCamera = null;
+  let currentClubType = "fer7";
 
-  // Pour la détection d'angle de balle (MVP)
   let captureCanvas = null;
   let captureCtx = null;
   let frameBuffer = [];
   const maxFrameBuffer = 12;
-  let currentImpactContext = null;
 
-  // === INIT ===
+  let currentImpactContext = null;
+  let loopId = null; // requestAnimationFrame handle
+
+  // === INIT DOM ===
   function initJustSwing() {
-    const btnRestart = $$("jsw-restart");
-    if (btnRestart)
-      btnRestart.addEventListener("click", () => {
-    restartSession();
-      });
- 
     screenEl = $$("just-swing-screen");
     videoEl = $$("jsw-video");
     overlayEl = $$("jsw-overlay");
-    if (!overlayEl) return;
-    ctx = overlayEl.getContext("2d");
+    bigMsgEl = $$("jsw-big-msg");
+
+    if (!overlayEl || !videoEl) {
+      console.warn("JustSwing: éléments vidéo/canvas manquants");
+      return;
+    }
+
+    ctx = overlayEl.getContext("2d", { willReadFrequently: true });
 
     statusTextEl = $$("jsw-status-text");
     routineStepsEl = $$("jsw-routine-steps");
@@ -134,60 +110,65 @@ const JustSwing = (() => {
     btnKeepRefEl = $$("jsw-btn-keep-reference");
     btnNextSwingEl = $$("jsw-btn-next-swing");
     btnExitEl = $$("jsw-btn-exit");
+    restartBtnEl = $$("jsw-restart");
 
-    // Panel résultat
-    if (btnKeepRefEl)
-      btnKeepRefEl.addEventListener("click", () => {
-        if (swings.length > 0) {
-          referenceSwing = swings[swings.length - 1];
-        }
-        hideResultPanel();
-      });
+    // Boutons panel résultat
+    btnKeepRefEl?.addEventListener("click", () => {
+      if (swings.length > 0) {
+        referenceSwing = swings[swings.length - 1];
+      }
+      hideResultPanel();
+    });
 
-    if (btnNextSwingEl)
-      btnNextSwingEl.addEventListener("click", () => {
-        hideResultPanel();
-        restartLoopForNextSwing();
-      });
+    btnNextSwingEl?.addEventListener("click", () => {
+      hideResultPanel();
+      restartLoopForNextSwing();
+    });
 
-    if (btnExitEl)
-      btnExitEl.addEventListener("click", () => {
-        stopSession();
-      });
+    btnExitEl?.addEventListener("click", () => {
+      stopSession();
+    });
 
-    window.addEventListener("resize", resizeOverlay);
-    resizeOverlay();
+    // Bouton Recommencer
+    restartBtnEl?.addEventListener("click", () => {
+      startSession(mode);
+    });
 
-    // Canvas de capture (pour frames balle)
+    // Canvas de capture pour la balle
     captureCanvas = document.createElement("canvas");
     captureCanvas.width = 160;
     captureCanvas.height = 160;
     captureCanvas.style.display = "none";
-    captureCtx = captureCanvas.getContext("2d");
+    captureCtx = captureCanvas.getContext("2d", { willReadFrequently: true });
     document.body.appendChild(captureCanvas);
+
+    window.addEventListener("resize", resizeOverlay);
+    resizeOverlay();
+
+    console.log("✅ JustSwing initialisé");
   }
 
   function resizeOverlay() {
-  if (!overlayEl) return;
-  overlayEl.width = window.innerWidth;
-  overlayEl.height = window.innerHeight;
-}
+    if (!overlayEl || !videoEl) return;
+    overlayEl.width = videoEl.clientWidth || window.innerWidth;
+    overlayEl.height = videoEl.clientHeight || window.innerHeight;
+  }
 
-
-  // Permet à mediapipe-init.js de fournir une fonction de démarrage caméra custom
+  // Camera starter fourni par mediapipe-init.js
   function setCameraStarter(fn) {
     customStartCamera = fn;
   }
 
-  // Permet de définir le club courant (impacte l'estimation de l'angle de décollage)
   function setClubType(clubType) {
     currentClubType = clubType;
   }
 
-  // === PUBLIC: démarrer une session Just Swing ===
+  // === SESSION ===
   async function startSession(selectedMode = JSW_MODE.SWING) {
+    console.log("▶ JustSwing.startSession(", selectedMode, ")");
     mode = selectedMode;
     state = JSW_STATE.POSITIONING;
+
     swings = [];
     currentSwingIndex = 0;
     sessionStartTime = performance.now();
@@ -197,23 +178,40 @@ const JustSwing = (() => {
     lastPose = null;
     lastFullBodyOk = false;
     frameBuffer = [];
+    currentImpactContext = null;
 
-    // Montrer l'écran
-    if (screenEl) screenEl.classList.remove("hidden");
+    // UI
+    resultPanelEl?.classList.add("hidden");
+    if (screenEl) {
+      screenEl.classList.remove("hidden");
+      setHalo("red");
+    }
 
-    // Démarrer la caméra (via fonction custom si présente)
+    showBigMsg("Place-toi plein pied 👣", 1800);
+    updateUIForState();
+
+    // Cancel ancienne boucle si besoin
+    if (loopId) {
+      cancelAnimationFrame(loopId);
+      loopId = null;
+    }
+
+    // Démarrage caméra
     if (customStartCamera) {
-      await customStartCamera();
+      try {
+        await customStartCamera();
+      } catch (e) {
+        console.error("Erreur customStartCamera:", e);
+      }
     } else {
       await defaultStartCamera();
     }
 
-    updateUIForState();
-    requestAnimationFrame(mainLoop);
+    // Nouvelle boucle
+    loopId = requestAnimationFrame(mainLoop);
   }
 
   async function defaultStartCamera() {
-    // Fallback simplifié : getUserMedia + pas de MediaPipe (juste vidéo)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "environment" },
@@ -222,20 +220,29 @@ const JustSwing = (() => {
       videoEl.srcObject = stream;
       await videoEl.play();
     } catch (err) {
-      console.error("Erreur caméra (fallback)", err);
+      console.error("Erreur caméra (fallback JustSwing)", err);
       if (statusTextEl) statusTextEl.textContent = "Impossible d'accéder à la caméra 😕";
     }
   }
 
   function stopSession() {
+    console.log("⏹ JustSwing.stopSession()");
     state = JSW_STATE.IDLE;
-    // Stop stream
+
+    if (loopId) {
+      cancelAnimationFrame(loopId);
+      loopId = null;
+    }
+
+    // Stop flux vidéo si présent
     if (videoEl && videoEl.srcObject) {
       const tracks = videoEl.srcObject.getTracks();
       tracks.forEach((t) => t.stop());
       videoEl.srcObject = null;
     }
+
     if (screenEl) screenEl.classList.add("hidden");
+    hideBigMsg();
   }
 
   // === MAIN LOOP ===
@@ -244,7 +251,6 @@ const JustSwing = (() => {
 
     const elapsed = now - sessionStartTime;
     if (elapsed > maxSessionDurationMs) {
-      // Fin de session automatique
       if (statusTextEl) statusTextEl.textContent = "Fin de la session (30s).";
       state = JSW_STATE.REVIEW;
       showFinalSummaryIfNeeded();
@@ -252,11 +258,11 @@ const JustSwing = (() => {
     }
 
     updateTimer(elapsed);
-    captureFrameForBall();  // enregistre un petit buffer d'images
+    captureFrameForBall();
     drawOverlay();
     updateStateMachine(now);
 
-    requestAnimationFrame(mainLoop);
+    loopId = requestAnimationFrame(mainLoop);
   }
 
   function updateTimer(elapsedMs) {
@@ -266,7 +272,7 @@ const JustSwing = (() => {
     timerEl.textContent = `Temps restant : ${remaining}s`;
   }
 
-  // === Pose frames (à appeler depuis MediaPipe) ===
+  // === POSE FRAMES ===
   function onPoseFrame(poseLandmarks) {
     lastPose = poseLandmarks || null;
 
@@ -283,25 +289,7 @@ const JustSwing = (() => {
     }
   }
 
-  function restartSession() {
-  console.log("🔄 Recommencer Just Swing");
-
-  state = JSW_STATE.POSITIONING;
-  swings = [];
-  currentSwingIndex = 0;
-  swingInProgress = false;
-  sessionStartTime = performance.now();
-  addressStableSince = null;
-  playerOutOfFrameSince = performance.now();
-  frameBuffer = [];
-  currentImpactContext = null;
-
-  hideResultPanel();
-  updateUIForState();
-}
-
-
-  // === State machine principal ===
+  // === STATE MACHINE ===
   function updateStateMachine(now) {
     switch (state) {
       case JSW_STATE.POSITIONING:
@@ -317,7 +305,6 @@ const JustSwing = (() => {
         handleSwingCaptureState(now);
         break;
       case JSW_STATE.REVIEW:
-        // Rien en continu
         break;
     }
   }
@@ -331,15 +318,16 @@ const JustSwing = (() => {
       if (routineStepsEl) routineStepsEl.textContent = "";
       return;
     }
-    // Full body OK -> on passe à la routine
+    // Full body OK -> routine
     setHalo("green");
     state = JSW_STATE.ROUTINE;
+    showBigMsg("Parfait, je te vois 👌", 1200);
     if (statusTextEl)
-      statusTextEl.textContent = "Parfait, je te vois 👌 Lance ta routine.";
+      statusTextEl.textContent = "Lance ta routine à ton rythme.";
     showRoutineSteps();
   }
 
-  // 2) Routine (détection adresse stable)
+  // 2) Routine
   function handleRoutineState(now) {
     if (!lastFullBodyOk) {
       setHalo("orange");
@@ -349,13 +337,12 @@ const JustSwing = (() => {
       return;
     }
 
-    // Adresse stable ?
     if (isAddressStable(lastPose)) {
       if (!addressStableSince) addressStableSince = now;
       const stableDuration = now - addressStableSince;
       if (stableDuration > 800) {
-        // Adresse validée
         state = JSW_STATE.ADDRESS_READY;
+        showBigMsg("Adresse OK 🤝", 1000);
         if (statusTextEl)
           statusTextEl.textContent =
             "Adresse solide 🤝 Tu peux swinguer quand tu veux.";
@@ -369,7 +356,7 @@ const JustSwing = (() => {
     setHalo("green");
   }
 
-  // 3) Adresse validée – on attend le début du swing
+  // 3) Adresse validée – on attend le swing
   function handleAddressReadyState(now) {
     setHalo("green");
     if (!lastFullBodyOk) {
@@ -379,16 +366,15 @@ const JustSwing = (() => {
       return;
     }
 
-    // Détection début swing (stub à affiner)
     if (detectSwingStart(lastPose)) {
       state = JSW_STATE.SWING_CAPTURE;
       swingInProgress = true;
       currentSwingIndex += 1;
+      showBigMsg("Swing détecté 🔥", 800);
       if (statusTextEl)
         statusTextEl.textContent = `Swing #${currentSwingIndex} en cours…`;
       setHalo("blue");
 
-      // Snapshot avant impact pour angle balle
       currentImpactContext = {
         framesAvantImpact: frameBuffer.slice(),
         framesApresImpact: [],
@@ -397,12 +383,11 @@ const JustSwing = (() => {
     }
   }
 
-  // 4) Swing capture – on attend le finish
+  // 4) Swing capture
   function handleSwingCaptureState(now) {
     setHalo("blue");
     if (!lastPose) return;
 
-    // Détection fin de swing (stub à affiner)
     if (detectSwingEnd(lastPose)) {
       swingInProgress = false;
       state = JSW_STATE.REVIEW;
@@ -414,8 +399,8 @@ const JustSwing = (() => {
 
       const swingData = computeSwingScore(mode, lastPose, currentImpactContext);
       swings.push(swingData);
-
       showSwingResult(swingData);
+      showBigMsg("Regardons ce swing 👀", 1000);
     }
   }
 
@@ -424,76 +409,60 @@ const JustSwing = (() => {
     currentImpactContext = null;
     if (!lastFullBodyOk) {
       state = JSW_STATE.POSITIONING;
+      showBigMsg("Reprends ta place plein pied 👣", 1200);
     } else {
       state = JSW_STATE.ROUTINE;
+      showBigMsg("On repart sur ta routine ⏱", 1200);
     }
     updateUIForState();
   }
 
-  // === Détection Full Body ===
+  // === FULL BODY DETECTION ===
   function detectFullBody(landmarks) {
     if (!landmarks || landmarks.length === 0) return false;
 
-    // indices MediaPipe Pose classiques
-    const idx = {
-      nose: 0,
-      leftAnkle: 27,
-      rightAnkle: 28,
-    };
+    const idx = { nose: 0, leftAnkle: 27, rightAnkle: 28 };
     const head = landmarks[idx.nose];
     const leftAnkle = landmarks[idx.leftAnkle];
     const rightAnkle = landmarks[idx.rightAnkle];
 
     if (!head || !leftAnkle || !rightAnkle) return false;
 
-    // In bounds
-    const inBounds = (p) =>
-      p.x >= 0.02 && p.x <= 0.98 && p.y >= 0.02 && p.y <= 0.98;
+    const inBounds = (p) => p.x >= 0.02 && p.x <= 0.98 && p.y >= 0.02 && p.y <= 0.98;
+    if (!inBounds(head) || !inBounds(leftAnkle) || !inBounds(rightAnkle)) return false;
 
-    if (!inBounds(head) || !inBounds(leftAnkle) || !inBounds(rightAnkle))
-      return false;
-
-    // Taille relative
     const height = Math.abs(head.y - Math.min(leftAnkle.y, rightAnkle.y));
-    if (height < 0.4 || height > 0.95) {
-      return false;
-    }
+    if (height < 0.4 || height > 0.95) return false;
 
     return true;
   }
 
-  // === Détection address stable (MVP) ===
   function isAddressStable(landmarks) {
     if (!landmarks) return false;
-    // Pour l'instant : plein pied = adresse "OK"
-    // Tu pourras affiner en suivant la variabilité de certains points.
     return lastFullBodyOk;
   }
 
-  // === Détection début de swing (stub MVP) ===
+  // === Détection début/fin de swing (stub MVP) ===
   function detectSwingStart(landmarks) {
     if (!landmarks) return false;
-    // À remplacer par un vrai calcul de vitesse/angle (hands/club).
-    // Stub : random faible prob pour test UX
+    // TODO: remplacer par algo basé sur vitesse ou rotation
     return Math.random() < 0.01;
   }
 
-  // === Détection fin de swing (stub MVP) ===
   function detectSwingEnd(landmarks) {
     if (!landmarks) return false;
-    // À remplacer par détection d'une pose de finish stable.
+    // TODO: remplacer par détection finish stable
     return Math.random() < 0.02;
   }
 
-  // === Scoring du swing + angle de décollage ===
+  // === Scoring & angle ===
   function computeSwingScore(mode, impactPoseFrame, impactContext) {
-    const routineScore = 17; // /20 placeholder
-    const swingScore = 62; // /70 placeholder
-    const regularityScore = 4; // /10 placeholder
+    const routineScore = 17;
+    const swingScore = 62;
+    const regularityScore = 4;
     const total = routineScore + swingScore + regularityScore;
 
     const launch = estimateLaunchAngleHybrid(impactPoseFrame, impactContext);
-
     const comment = generateCoachComment(
       mode,
       routineScore,
@@ -510,19 +479,17 @@ const JustSwing = (() => {
       swingScore,
       regularityScore,
       total,
-      launchAngle: launch, // { angleDeg, source, confidence }
+      launchAngle: launch,
       comment,
       timestamp: Date.now(),
     };
   }
 
-  // Hybride : balle d'abord, fallback club/pose
   function estimateLaunchAngleHybrid(impactPoseFrame, impactContext) {
-    const ctx = impactContext || {};
-    const framesApresImpact = ctx.framesApresImpact || [];
-    const clubType = ctx.clubType || currentClubType;
+    const ctxImpact = impactContext || {};
+    const framesApresImpact = ctxImpact.framesApresImpact || [];
+    const clubType = ctxImpact.clubType || currentClubType;
 
-    // 1) Tentative via trajectoire de balle
     let ballResult = null;
     if (framesApresImpact && framesApresImpact.length > 0) {
       ballResult = computeBallLaunchFromFrames(framesApresImpact);
@@ -536,7 +503,6 @@ const JustSwing = (() => {
       };
     }
 
-    // 2) Fallback via club + pose
     const clubResult = estimateLaunchFromClubAndPose(clubType, impactPoseFrame);
     return {
       angleDeg: clubResult.angleDeg,
@@ -545,16 +511,12 @@ const JustSwing = (() => {
     };
   }
 
-  // === Méthode 1 : angle via trajectoire de balle (MVP) ===
   function computeBallLaunchFromFrames(frames) {
     const points = [];
-
     for (let i = 0; i < Math.min(frames.length, 6); i++) {
       const frame = frames[i];
       const ball = detectBallCandidate(frame);
-      if (ball) {
-        points.push({ x: ball.x, y: ball.y });
-      }
+      if (ball) points.push({ x: ball.x, y: ball.y });
     }
 
     if (points.length < 3) return null;
@@ -576,18 +538,13 @@ const JustSwing = (() => {
     const denom = sumXX - n * meanX * meanX;
     if (Math.abs(denom) < 1e-6) return null;
 
-    const a = (sumXY - n * meanX * meanY) / denom; // pente
-    // Dans l'image, y augmente vers le bas -> on inverse pour angle
+    const a = (sumXY - n * meanX * meanY) / denom;
     const angleRad = Math.atan2(-a, 1);
     const angleDeg = (angleRad * 180) / Math.PI;
 
-    return {
-      angleDeg,
-      confidence: 0.7,
-    };
+    return { angleDeg, confidence: 0.7 };
   }
 
-  // Détection très naïve d'un point très clair (balle) dans l'image
   function detectBallCandidate(frame) {
     const { imageData, width, height } = frame;
     if (!imageData) return null;
@@ -604,35 +561,24 @@ const JustSwing = (() => {
           b = data[idx + 2];
         const brightness = (r + g + b) / 3;
 
-        if (brightness > 230) {
-          if (brightness > bestBrightness) {
-            bestBrightness = brightness;
-            best = { x, y };
-          }
+        if (brightness > 230 && brightness > bestBrightness) {
+          bestBrightness = brightness;
+          best = { x, y };
         }
       }
     }
-
     return best;
   }
 
-  // === Méthode 2 : estimation via club + pose (MVP) ===
   function estimateLaunchFromClubAndPose(clubType, poseLandmarks) {
     const baseLoft = CLUB_BASE_LOFT[clubType] ?? 20;
-
-    const shaftLeanDeg = estimateShaftLean(poseLandmarks); // positif = mains en avant
-    const angleAttackDeg = estimateAngleOfAttack(poseLandmarks); // positif = montant
-
+    const shaftLeanDeg = estimateShaftLean(poseLandmarks);
+    const angleAttackDeg = estimateAngleOfAttack(poseLandmarks);
     const dynamicLoft = baseLoft - 0.6 * shaftLeanDeg;
     const launchAngle = dynamicLoft + 0.5 * angleAttackDeg;
-
-    return {
-      angleDeg: launchAngle,
-      confidence: 0.6,
-    };
+    return { angleDeg: launchAngle, confidence: 0.6 };
   }
 
-  // Stubs à affiner (pour l'instant neutres)
   function estimateShaftLean(landmarks) {
     if (!landmarks) return 0;
     return 0;
@@ -643,7 +589,6 @@ const JustSwing = (() => {
     return 0;
   }
 
-  // === Commentaire coach ===
   function generateCoachComment(
     mode,
     routineScore,
@@ -669,9 +614,7 @@ const JustSwing = (() => {
     let launchTxt = "";
     if (launch && typeof launch.angleDeg === "number") {
       const src =
-        launch.source === "ball"
-          ? "mesuré sur la balle"
-          : "estimé via ton club";
+        launch.source === "ball" ? "mesuré sur la balle" : "estimé via ton club";
       launchTxt = `\nAngle de décollage : ${launch.angleDeg.toFixed(
         1
       )}° (${src}).`;
@@ -680,7 +623,7 @@ const JustSwing = (() => {
     return base + launchTxt;
   }
 
-  // === Capture de frames pour la balle ===
+  // === FRAMES POUR BALLE ===
   function captureFrameForBall() {
     if (!captureCtx || !videoEl || videoEl.readyState < 2) return;
 
@@ -690,12 +633,10 @@ const JustSwing = (() => {
     const imageData = captureCtx.getImageData(0, 0, w, h);
 
     frameBuffer.push({ imageData, width: w, height: h });
-    if (frameBuffer.length > maxFrameBuffer) {
-      frameBuffer.shift();
-    }
+    if (frameBuffer.length > maxFrameBuffer) frameBuffer.shift();
   }
 
-  // === AFFICHAGE RESULTAT SWING ===
+  // === RESULT UI ===
   function showSwingResult(swingData) {
     if (swingLabelEl)
       swingLabelEl.textContent = `Swing #${swingData.index} — Mode ${
@@ -705,16 +646,12 @@ const JustSwing = (() => {
       scoreGlobalEl.textContent = `Score Parfect : ${swingData.total}/100`;
     if (scoreDetailsEl)
       scoreDetailsEl.textContent = `Routine : ${swingData.routineScore}/20 · Swing : ${swingData.swingScore}/70 · Régularité : ${swingData.regularityScore}/10`;
-
-    if (coachCommentEl) {
-      coachCommentEl.textContent = swingData.comment;
-    }
-
+    if (coachCommentEl) coachCommentEl.textContent = swingData.comment;
     if (resultPanelEl) resultPanelEl.classList.remove("hidden");
   }
 
   function hideResultPanel() {
-    if (resultPanelEl) resultPanelEl.classList.add("hidden");
+    resultPanelEl?.classList.add("hidden");
   }
 
   function showFinalSummaryIfNeeded() {
@@ -728,7 +665,7 @@ const JustSwing = (() => {
     showSwingResult(last);
   }
 
-  // === UI / HALO / ROUTINE STEPS / OVERLAY ===
+  // === UI / HALO / BIG MSG / ROUTINE / OVERLAY ===
   function updateUIForState() {
     switch (state) {
       case JSW_STATE.POSITIONING:
@@ -776,6 +713,24 @@ const JustSwing = (() => {
     if (color === "blue") screenEl.classList.add("jsw-halo-blue");
   }
 
+  function showBigMsg(txt, duration = 1200) {
+    if (!bigMsgEl) return;
+    bigMsgEl.textContent = txt;
+    bigMsgEl.style.display = "block";
+    if (duration > 0) {
+      setTimeout(() => {
+        if (bigMsgEl.textContent === txt) {
+          bigMsgEl.style.display = "none";
+        }
+      }, duration);
+    }
+  }
+
+  function hideBigMsg() {
+    if (!bigMsgEl) return;
+    bigMsgEl.style.display = "none";
+  }
+
   function drawOverlay() {
     if (!ctx || !overlayEl) return;
     ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
@@ -784,7 +739,6 @@ const JustSwing = (() => {
       drawGhostSilhouetteCenter();
       return;
     }
-
     drawPoseSkeleton(lastPose);
   }
 
@@ -797,17 +751,17 @@ const JustSwing = (() => {
     const bottom = overlayEl.height * 0.9;
     const mid = (top + bottom) / 2;
     ctx.beginPath();
-    ctx.arc(cx, top + 30, 20, 0, Math.PI * 2); // tête
+    ctx.arc(cx, top + 30, 20, 0, Math.PI * 2);
     ctx.moveTo(cx, top + 50);
-    ctx.lineTo(cx, mid); // tronc
+    ctx.lineTo(cx, mid);
     ctx.moveTo(cx, mid);
-    ctx.lineTo(cx - 30, mid + 40); // jambe gauche
+    ctx.lineTo(cx - 30, mid + 40);
     ctx.moveTo(cx, mid);
-    ctx.lineTo(cx + 30, mid + 40); // jambe droite
+    ctx.lineTo(cx + 30, mid + 40);
     ctx.moveTo(cx, top + 70);
-    ctx.lineTo(cx - 30, top + 100); // bras gauche
+    ctx.lineTo(cx - 30, top + 100);
     ctx.moveTo(cx, top + 70);
-    ctx.lineTo(cx + 30, top + 100); // bras droit
+    ctx.lineTo(cx + 30, top + 100);
     ctx.stroke();
     ctx.restore();
   }
@@ -827,18 +781,18 @@ const JustSwing = (() => {
     };
 
     const segments = [
-      [11, 12], // épaules
+      [11, 12],
       [11, 23],
       [12, 24],
-      [23, 24], // bassin
+      [23, 24],
       [11, 13],
-      [13, 15], // bras gauche
+      [13, 15],
       [12, 14],
-      [14, 16], // bras droit
+      [14, 16],
       [23, 25],
-      [25, 27], // jambe gauche
+      [25, 27],
       [24, 26],
-      [26, 28], // jambe droite
+      [26, 28],
     ];
 
     segments.forEach(([a, b]) => {
