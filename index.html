@@ -433,6 +433,23 @@ footer button.active {
   z-index: 30;
 }
 
+    .jsw-btn-restart {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.55);
+  border: 1px solid #00ff99;
+  padding: 8px 14px;
+  color: #00ff99;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  z-index: 40;
+}
+
+.jsw-btn-restart:active {
+  transform: scale(0.93);
+}
+
 /* Halo couleur autour de l'écran */
 .jsw-halo-red    { box-shadow: inset 0 0 40px 5px rgba(255,0,0,0.7); }
 .jsw-halo-orange { box-shadow: inset 0 0 40px 5px rgba(255,165,0,0.7); }
@@ -500,6 +517,8 @@ footer button.active {
       <div id="jsw-status-text"></div>
       <div id="jsw-routine-steps"></div>
       <div id="jsw-timer"></div>
+      <!-- 🔥 Nouveau : bouton recommencer -->
+  <button id="jsw-restart" class="jsw-btn-restart">🔄 Recommencer</button>
     </div>
 
     <div id="jsw-result-panel" class="hidden">
