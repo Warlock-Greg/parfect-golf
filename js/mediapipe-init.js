@@ -18,22 +18,34 @@ document.addEventListener("DOMContentLoaded", () => {
     JustSwing.onPoseFrame(results.poseLandmarks || null);
   });
 
-  // Branche la caméra dans JustSwing
+  // === 🔥 CAMÉRA FULLSCREEN PORTRAIT + SELFIE ===
   JustSwing.setCameraStarter(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
+      video: {
+        facingMode: "user",   // 🔥 SELFIE
+        width: { ideal: 720 },
+        height: { ideal: 1280 },
+      },
       audio: false
     });
 
     videoElement.srcObject = stream;
-    await videoElement.play();
 
+    // ⚠️ Très important sur mobile
+    await videoElement.play().catch(e => console.warn("play() blocked:", e));
+
+    // Ajuste la vidéo pour remplir le viewport
+    videoElement.style.width = "100vw";
+    videoElement.style.height = "100vh";
+    videoElement.style.objectFit = "cover";
+
+    // Démarre MediaPipe Camera helper
     const camera = new Camera(videoElement, {
       onFrame: async () => {
         await mpPose.send({ image: videoElement });
       },
-      width: 720,
-      height: 1280
+      width: videoElement.videoWidth || 720,
+      height: videoElement.videoHeight || 1280
     });
 
     camera.start();
