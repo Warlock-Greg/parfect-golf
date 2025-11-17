@@ -395,22 +395,20 @@ footer button.active {
 }
 
     #just-swing-screen {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
+  position: relative;
+  width: 100%;
   height: 100vh;
-  background: #000;
   overflow: hidden;
-  z-index: 99999; /* au dessus de tout */
+
 }
 
 #jsw-video {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  object-fit: cover !important;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* important ! */
+  z-index: 1;
 }
 
 #jsw-overlay {
@@ -458,7 +456,7 @@ footer button.active {
 
     /* ————— BIG MESSAGE CENTRÉ ————— */
 #jsw-big-msg {
-  position: fixed;
+  position: absolute;
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -524,32 +522,44 @@ footer button.active {
      <div id="history-area" style="display:none;"></div>
 
 <!-- ✅ Just-Swing-->
+<!-- ✅ Just-Swing -->
 <div id="just-swing-area" style="display:none;">
   <div id="just-swing-screen" class="jsw-screen hidden">
+
+    <!-- 🎥 VIDÉO = layer 1 -->
     <video id="jsw-video" autoplay playsinline muted></video>
+
+    <!-- 🔥 BIG MESSAGE AU CENTRE = layer 3 -->
     <div id="jsw-big-msg"></div>
 
+    <!-- 🦴 SQUELETTE OVERLAY = layer 2 -->
     <canvas id="jsw-overlay"></canvas>
 
+    <!-- 🧠 UI (statuts / routine / timer / restart) = layer 4 -->
     <div id="jsw-ui">
       <div id="jsw-status-text"></div>
       <div id="jsw-routine-steps"></div>
       <div id="jsw-timer"></div>
-      <!-- 🔥 Nouveau : bouton recommencer -->
-  <button id="jsw-restart" class="jsw-btn-restart">🔄 Recommencer</button>
+
+      <!-- 🔄 Nouveau bouton RESTART -->
+      <button id="jsw-restart" class="jsw-btn-restart">🔄 Recommencer</button>
     </div>
 
+    <!-- 📊 PANEL RÉSULTAT (au-dessus de tout) -->
     <div id="jsw-result-panel" class="hidden">
       <div id="jsw-swing-label"></div>
       <div id="jsw-score-global"></div>
       <div id="jsw-score-details"></div>
       <pre id="jsw-coach-comment" style="white-space:pre-wrap;"></pre>
+
       <button id="jsw-btn-keep-reference">⭐ Définir comme swing de référence</button>
       <button id="jsw-btn-next-swing">Analyser le prochain coup</button>
       <button id="jsw-btn-exit">Quitter Just Swing</button>
     </div>
+
   </div>
 </div>
+
 
       
 <!-- === ANALYSE DU SWING (MVP) === -->
