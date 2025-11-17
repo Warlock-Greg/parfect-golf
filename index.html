@@ -728,6 +728,17 @@ footer button.active {
   <script src="js/main.js"></script>
 
 <script src="js/licence.js"></script>
+<script>
+  if (!window.coachReact) {
+    window.coachReact = (msg) => {
+      if (typeof appendCoachMessage === "function") {
+        appendCoachMessage(msg);
+      } else {
+        console.warn("appendCoachMessage non disponible :", msg);
+      }
+    };
+  }
+</script>
 
   <script src="js/router.js"></script>
 
