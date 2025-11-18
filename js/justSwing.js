@@ -51,6 +51,16 @@ const CLUB_BASE_LOFT = {
 const JustSwing = (() => {
   let screenEl, videoEl, overlayEl, ctx;
   let statusTextEl, routineStepsEl, timerEl;
+      bigMsgEl = $$("jsw-big-msg");
+    restartBtnEl = $$("jsw-restart");
+
+    if (restartBtnEl) {
+      restartBtnEl.addEventListener("click", () => {
+        restartLoopForNextSwing();
+        showBigMessage("On recommence 👌 Reprends ta routine à ton rythme.");
+      });
+    }
+
   let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingLabelEl;
   let btnKeepRefEl, btnNextSwingEl, btnExitEl, restartBtnEl;
   let bigMsgEl;
@@ -148,6 +158,19 @@ const JustSwing = (() => {
     console.log("✅ JustSwing initialisé");
   }
 
+    function showBigMessage(text, duration = 4000) {
+    if (!bigMsgEl) return;
+    bigMsgEl.textContent = text;
+    bigMsgEl.style.opacity = "1";
+    if (duration > 0) {
+      setTimeout(() => {
+        if (!bigMsgEl) return;
+        bigMsgEl.style.opacity = "0";
+      }, duration);
+    }
+  }
+
+
   function resizeOverlay() {
     if (!overlayEl || !videoEl) return;
     overlayEl.width = videoEl.clientWidth || window.innerWidth;
@@ -168,7 +191,7 @@ const JustSwing = (() => {
     console.log("▶ JustSwing.startSession(", selectedMode, ")");
     mode = selectedMode;
     state = JSW_STATE.POSITIONING;
-
+ 
     swings = [];
     currentSwingIndex = 0;
     sessionStartTime = performance.now();
@@ -178,6 +201,7 @@ const JustSwing = (() => {
     lastPose = null;
     lastFullBodyOk = false;
     frameBuffer = [];
+    document.body.classList.add("jsw-fullscreen");
     currentImpactContext = null;
 
     // UI
@@ -225,25 +249,30 @@ const JustSwing = (() => {
     }
   }
 
-  function stopSession() {
-    console.log("⏹ JustSwing.stopSession()");
+    function stopSession() {
     state = JSW_STATE.IDLE;
 
-    if (loopId) {
-      cancelAnimationFrame(loopId);
-      loopId = null;
-    }
-
-    // Stop flux vidéo si présent
+    // Stop stream utilisé par le fallback (au cas où)
     if (videoEl && videoEl.srcObject) {
       const tracks = videoEl.srcObject.getTracks();
       tracks.forEach((t) => t.stop());
       videoEl.srcObject = null;
     }
 
+    // Stop MediaPipe Camera si on a gardé une ref
+    if (window.__jswCamera && typeof window.__jswCamera.stop === "function") {
+      try { window.__jswCamera.stop(); } catch (e) {}
+      window.__jswCamera = null;
+    }
+    if (window.__jswStream) {
+      try { window.__jswStream.getTracks().forEach((t) => t.stop()); } catch (e) {}
+      window.__jswStream = null;
+    }
+
     if (screenEl) screenEl.classList.add("hidden");
-    hideBigMsg();
+    document.body.classList.remove("jsw-fullscreen");
   }
+
 
   // === MAIN LOOP ===
   function mainLoop(now) {
