@@ -83,4 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     },
   });
 
-  camer
+  camera.start();
+
+  console.log("📸 JustSwing Camera OK — mode :", isIOS ? "iPhone (Selfie)" : "PC (User)");
+});
