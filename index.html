@@ -470,6 +470,149 @@ footer button.active {
   backdrop-filter: blur(6px);
 }
 
+    /* === JUST SWING FULLSCREEN PAYSAGE === */
+
+body.jsw-fullscreen {
+  background:#000;
+  overflow:hidden;
+}
+
+/* On masque le header, le coach global et la nav pendant Just Swing */
+body.jsw-fullscreen header,
+body.jsw-fullscreen nav,
+body.jsw-fullscreen #coach-ia {
+  display:none !important;
+}
+
+/* Just Swing recouvre tout l'écran */
+#just-swing-area {
+  position:fixed;
+  inset:0;
+  z-index:20000;
+  background:#000;
+}
+
+#just-swing-screen.jsw-screen {
+  position:relative;
+  width:100vw;
+  height:100vh;
+  border-radius:0;
+  box-shadow:none;
+  overflow:hidden;
+}
+
+/* 📹 Vidéo plein écran, sans crop (zoom) + miroir selfie */
+#jsw-video {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;   /* très important : pas de zoom/crop */
+  transform:scaleX(-1); /* miroir pour selfie */
+  background:#000;
+  z-index:1;
+}
+
+/* 🦴 Overlay squelette par-dessus la vidéo */
+#jsw-overlay {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:2;
+}
+
+/* 🌈 Halo autour de l'écran Just Swing */
+.jsw-screen.jsw-halo-red {
+  box-shadow:0 0 40px rgba(255,0,0,0.9) inset,0 0 40px rgba(255,0,0,0.8);
+}
+.jsw-screen.jsw-halo-orange {
+  box-shadow:0 0 40px rgba(255,165,0,0.9) inset,0 0 40px rgba(255,165,0,0.8);
+}
+.jsw-screen.jsw-halo-green {
+  box-shadow:0 0 40px rgba(0,255,153,0.9) inset,0 0 40px rgba(0,255,153,0.8);
+}
+.jsw-screen.jsw-halo-blue {
+  box-shadow:0 0 40px rgba(0,136,255,0.9) inset,0 0 40px rgba(0,136,255,0.8);
+}
+
+/* 📝 Gros message central lisible de loin */
+#jsw-big-msg {
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  max-width:80vw;
+  text-align:center;
+  color:#fff;
+  font-size:1.4rem;
+  font-weight:600;
+  padding:12px 16px;
+  border-radius:12px;
+  background:rgba(0,0,0,0.45);
+  text-shadow:0 0 8px rgba(0,0,0,0.9);
+  z-index:5;
+  transition:opacity 0.3s ease;
+}
+
+/* 🧰 UI du bas (statut / routine / timer / restart) */
+#jsw-ui {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 8px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:4px 8px;
+  font-size:0.8rem;
+  color:#fff;
+  text-shadow:0 0 4px #000;
+  z-index:4;
+}
+
+#jsw-status-text {
+  font-size:0.9rem;
+  font-weight:600;
+}
+
+#jsw-routine-steps {
+  opacity:0.9;
+}
+
+#jsw-timer {
+  font-family:monospace;
+}
+
+/* 🔄 Bouton Recommencer */
+.jsw-btn-restart {
+  margin-top:4px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,0.7);
+  color:#00ff99;
+  font-size:0.8rem;
+}
+
+/* 🧾 Panel résultat au-dessus de l’UI bas */
+#jsw-result-panel {
+  position:absolute;
+  left:4vw;
+  right:4vw;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
+  background:rgba(0,0,0,0.85);
+  padding:10px;
+  border-radius:12px;
+  font-size:0.8rem;
+  z-index:6;
+}
+#jsw-result-panel.hidden {
+  display:none;
+}
+
     
 /* === Responsive === */
 /@media (max-width: 768px) {
