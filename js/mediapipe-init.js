@@ -1,85 +1,64 @@
+// === MEDIAPIPE INIT – AUTO CAMERA (iPhone = Selfie / PC = Default) ===
+// Version stable Safari + Chrome – Sans zoom forcé – Sans erreur play()
+
 document.addEventListener("DOMContentLoaded", async () => {
   const videoElement = document.getElementById("jsw-video");
-  if (!videoElement) return;
 
-  // === 1. Récupération des caméras ===
-  async function getSelfieCamera() {
+  if (!videoElement) {
+    console.error("❌ jsw-video introuvable");
+    return;
+  }
+
+  // 1️⃣ Détection iPhone / iPadOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  // 2️⃣ Préférence de caméra
+  // iPhone → Selfie
+  // PC → user aussi, mais on fallback
+  let preferredConstraints = {
+    video: {
+      facingMode: isIOS ? "user" : "user",
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    },
+    audio: false
+  };
+
+  async function tryGetStream(constraints) {
     try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(d => d.kind === "videoinput");
-
-      // 1) Chercher explicitement "front" ou "user"
-      let front = videoDevices.find(d =>
-        d.label.toLowerCase().includes("front") ||
-        d.label.toLowerCase().includes("user")
-      );
-      if (front) return { deviceId: front.deviceId };
-
-      // 2) Sinon facingMode:user (souvent ignoré en iOS mais on tente)
-      return { facingMode: "user" };
+      return await navigator.mediaDevices.getUserMedia(constraints);
     } catch (err) {
-      return { facingMode: "user" };
+      return null;
     }
   }
 
-  // === 2. Starter Caméra utilisé par JustSwing ===
-  JustSwing.setCameraStarter(async () => {
-    const cam = await getSelfieCamera();
+  // 3️⃣ Tentative caméra selfie
+  let stream = await tryGetStream(preferredConstraints);
 
-    const constraints = {
-      audio: false,
-      video: {
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        ...cam, // deviceId OU facingMode:user
-      }
-    };
+  // 4️⃣ Si échec → fallback automatique
+  if (!stream) {
+    console.warn("⚠️ Selfie impossible → fallback caméra par défaut");
+    stream = await tryGetStream({ video: true, audio: false });
+  }
 
-    let stream = null;
+  if (!stream) {
+    console.error("❌ Impossible d'accéder à AUCUNE caméra");
+    return;
+  }
 
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (err) {
-      // Fallback en dernier recours : facingMode:user obligatoire
-      console.warn("Fallback selfie", err);
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: { facingMode: "user" }
-      });
-    }
+  // 5️⃣ Branche la caméra dans la vidéo
+  videoElement.srcObject = stream;
 
-    videoElement.srcObject = stream;
-
-    const playSafe = () =>
-      videoElement.play().catch(() => {});
-
-    if (videoElement.readyState >= 2) {
-      await playSafe();
-    } else {
-      await new Promise((resolve) => {
-        videoElement.onloadedmetadata = async () => {
-          await playSafe();
-          resolve();
-        };
-      });
-    }
-
-    // MediaPipe camera
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await mpPose.send({ image: videoElement });
-      },
-      width: 1920,
-      height: 1080
+  // ⚠️ Safari nécessite une boucle pour être sûr que play() passe
+  const ensurePlay = () =>
+    videoElement.play().catch(() => {
+      setTimeout(ensurePlay, 50);
     });
 
-    camera.start();
+  ensurePlay();
 
-    window.__jswStream = stream;
-    window.__jswCamera = camera;
-  });
-
-  // === 3. MediaPipe Pose ===
+  // 6️⃣ MediaPipe pose
   const mpPose = new Pose({
     locateFile: (file) =>
       `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -96,4 +75,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   mpPose.onResults((results) => {
     JustSwing.onPoseFrame(results.poseLandmarks || null);
   });
-});
+
+  // 7️⃣ Camera utils (lecture en continu)
+  const camera = new Camera(videoElement, {
+    onFrame: async () => {
+      await mpPose.send({ image: videoElement });
+    },
+  });
+
+  camer
