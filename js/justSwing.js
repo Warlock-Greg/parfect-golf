@@ -51,16 +51,7 @@ const CLUB_BASE_LOFT = {
 const JustSwing = (() => {
   let screenEl, videoEl, overlayEl, ctx;
   let statusTextEl, routineStepsEl, timerEl;
-      bigMsgEl = $$("jsw-big-msg");
-    restartBtnEl = $$("jsw-restart");
-
-    if (restartBtnEl) {
-      restartBtnEl.addEventListener("click", () => {
-        restartLoopForNextSwing();
-        showBigMessage("On recommence 👌 Reprends ta routine à ton rythme.");
-      });
-    }
-
+  
   let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingLabelEl;
   let btnKeepRefEl, btnNextSwingEl, btnExitEl, restartBtnEl;
   let bigMsgEl;
@@ -99,6 +90,8 @@ const JustSwing = (() => {
     videoEl = $$("jsw-video");
     overlayEl = $$("jsw-overlay");
     bigMsgEl = $$("jsw-big-msg");
+ restartBtnEl = $$("jsw-restart");
+
 
     if (!overlayEl || !videoEl) {
       console.warn("JustSwing: éléments vidéo/canvas manquants");
@@ -141,7 +134,8 @@ const JustSwing = (() => {
 
     // Bouton Recommencer
     restartBtnEl?.addEventListener("click", () => {
-      startSession(mode);
+      restartLoopForNextSwing();
+      showBigMessage("On recommence 👌 Reprends ta routine à ton rythme.");
     });
 
     // Canvas de capture pour la balle
