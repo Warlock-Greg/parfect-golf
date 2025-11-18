@@ -1,18 +1,24 @@
-// === MEDIAPIPE INIT — VERSION FIXÉE ===
-
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("📸 MediaPipe init…");
-
+document.addEventListener("DOMContentLoaded", async () => {
   const videoElement = document.getElementById("jsw-video");
-  if (!videoElement) {
-    console.error("❌ jsw-video introuvable !");
-    return;
+
+  // Trouve les caméras dispo
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const cameras = devices.filter(d => d.kind === "videoinput");
+
+  let wideCamId = null;
+
+  // Cherche la caméra "ultra-wide"
+  for (const cam of cameras) {
+    const label = cam.label.toLowerCase();
+    if (label.includes("ultra") || label.includes("wide") || label.includes("0.5")) {
+      wideCamId = cam.deviceId;
+      break;
+    }
   }
 
-  // --- Setup Pose ---
+  // Setup MediaPipe Pose
   const mpPose = new Pose({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
   });
 
   mpPose.setOptions({
@@ -27,41 +33,26 @@ document.addEventListener("DOMContentLoaded", () => {
     JustSwing.onPoseFrame(results.poseLandmarks || null);
   });
 
-  // --- Démarrage caméra (facingMode = user pour selfie) ---
+  // Brancher le moteur dans JustSwing
   JustSwing.setCameraStarter(async () => {
-    console.log("🎥 Lancement caméra Selfie…");
-
-    // ⚠ Stop ancien stream si présent
-    if (videoElement.srcObject) {
-      videoElement.srcObject.getTracks().forEach((t) => t.stop());
-      videoElement.srcObject = null;
-    }
-
     const constraints = {
-      video: {
-        facingMode: "user", // ← Selfie
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      },
+      video: wideCamId
+        ? { deviceId: { exact: wideCamId } }
+        : { facingMode: "user" }, // fallback selfie
       audio: false
     };
 
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     videoElement.srcObject = stream;
 
-    try {
-      await videoElement.play();
-    } catch (err) {
-      console.warn("play() blocked:", err);
-    }
+    await videoElement.play();
 
-    // Camera loop MediaPipe
     const camera = new Camera(videoElement, {
       onFrame: async () => {
         await mpPose.send({ image: videoElement });
       },
-      width: 720,
-      height: 1280,
+      width: videoElement.videoWidth,
+      height: videoElement.videoHeight,
     });
 
     camera.start();
