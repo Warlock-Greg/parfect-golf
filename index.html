@@ -469,6 +469,21 @@ footer button.active {
     font-size: 1.1rem;
   }
 }
+
+    .jsw-select {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background: rgba(0,0,0,0.6);
+  color: #00ff99;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 1rem;
+  border: 1px solid #00ff99;
+}
+
   </style>
 </head>
 
@@ -506,11 +521,13 @@ footer button.active {
      <div id="history-area" style="display:none;"></div>
 
 <!-- ✅ Just-Swing-->
-<!-- ✅ Just-Swing -->
+
 <div id="just-swing-area" style="display:none;">
   <div id="just-swing-screen" class="jsw-screen hidden">
 
     <!-- 🎥 VIDÉO = layer 1 -->
+    <select id="jsw-camera-select" class="jsw-select hidden"></select>
+
     <video id="jsw-video" autoplay playsinline muted></video>
 
     <!-- 🔥 BIG MESSAGE AU CENTRE = layer 3 -->
