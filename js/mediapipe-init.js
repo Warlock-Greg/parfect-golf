@@ -1,56 +1,60 @@
-// === MEDIAPIPE INIT — UNE SEULE CAMERA, PLUS D'ERREUR "FAILED TO ACQUIRE" ===
+// === MEDIAPIPE INIT SANS CAMERA UTILS — Version stable mobile & desktop ===
+// Fonctionne iPhone, Android, Desktop — évite tous les crash de type ROI>0
 
 document.addEventListener("DOMContentLoaded", async () => {
   const videoElement = document.getElementById("jsw-video");
   if (!videoElement) {
-    console.error("❌ jsw-video introuvable dans le DOM");
+    console.error("❌ jsw-video introuvable");
     return;
   }
 
-  // 1️⃣ Choix très simple : on demande une caméra "user" (selfie),
-  // et si ça échoue, on prend n'importe quelle caméra dispo.
-  async function getCameraStream() {
+  console.log("🎥 Initialisation caméra…");
+
+  // 1️⃣ Sélection caméra : Selfie par défaut
+  let constraints = {
+    video: {
+      facingMode: "user", // selfie
+      width: { ideal: 1280 },
+      height: { ideal: 720 }
+    },
+    audio: false
+  };
+
+  // 2️⃣ Ouverture de la caméra
+  let stream = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (err) {
+    console.warn("⚠️ Selfie KO → fallback caméra par défaut");
     try {
-      console.log("🎥 Tentative caméra (facingMode:user)");
-      return await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",       // selfie par défaut
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      });
-    } catch (e) {
-      console.warn("⚠️ Selfie KO, fallback caméra générique", e);
-      try {
-        return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      } catch (e2) {
-        console.error("❌ Impossible d'acquérir un flux caméra DU TOUT", e2);
-        return null;
-      }
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (err2) {
+      console.error("❌ Aucune caméra accessible", err2);
+      return;
     }
-  }
-
-  const stream = await getCameraStream();
-  if (!stream) {
-    // Ici, c'est vraiment que le navigateur / permissions ne laissent rien passer.
-    return;
   }
 
   videoElement.srcObject = stream;
 
-  // 2️⃣ Assurer le play() (Android + iOS peuvent être capricieux)
-  const ensurePlay = () => {
-    videoElement
-      .play()
-      .catch((err) => {
-        console.warn("⏳ play() bloqué, on réessaie…", err);
-        setTimeout(ensurePlay, 80);
-      });
-  };
-  ensurePlay();
+  // 3️⃣ Attendre que la vidéo soit prête
+  await new Promise((resolve) => {
+    videoElement.onloadedmetadata = () => {
+      if (videoElement.videoWidth > 0) resolve();
+    };
+  });
 
-  // 3️⃣ MediaPipe Pose
+  await videoElement.play().catch(() => {});
+
+  const vw = videoElement.videoWidth;
+  const vh = videoElement.videoHeight;
+
+  console.log(`📸 Vidéo prête : ${vw}x${vh}`);
+
+  // Fixer dimensions (très important)
+  videoElement.width = vw;
+  videoElement.height = vh;
+
+  // 4️⃣ Initialisation MediaPipe Pose
   const mpPose = new Pose({
     locateFile: (file) =>
       `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -61,30 +65,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     smoothLandmarks: true,
     enableSegmentation: false,
     minDetectionConfidence: 0.5,
-    minTrackingConfidence: 0.5,
+    minTrackingConfidence: 0.5
   });
 
   mpPose.onResults((results) => {
-    if (window.JustSwing && typeof JustSwing.onPoseFrame === "function") {
+    // Envoi vers JustSwing
+    if (window.JustSwing && JustSwing.onPoseFrame) {
       JustSwing.onPoseFrame(results.poseLandmarks || null);
     }
   });
 
-  // 4️⃣ Boucle d'analyse : on envoie chaque frame vidéo à MediaPipe
-  async function poseLoop() {
-    try {
-      await mpPose.send({ image: videoElement });
-    } catch (e) {
-      console.warn("⚠️ Erreur mpPose.send, on continue quand même", e);
+  console.log("🧠 MediaPipe Pose prêt. Boucle de traitement lancée.");
+
+  // 5️⃣ Boucle de traitement maison (évite les crashs)
+  async function processFrame() {
+    if (videoElement.readyState >= 2) {
+      try {
+        await mpPose.send({ image: videoElement });
+      } catch (err) {
+        console.warn("⚠️ mpPose.send a échoué mais on continue :", err);
+      }
     }
-    requestAnimationFrame(poseLoop);
+    requestAnimationFrame(processFrame);
   }
 
-  // On démarre la boucle dès que la vidéo est prête
-  videoElement.addEventListener("loadeddata", () => {
-    console.log("✅ Vidéo prête, lancement boucle Pose");
-    poseLoop();
-  });
-
-  console.log("📸 Camera + MediaPipe initialisés");
+  requestAnimationFrame(processFrame);
 });
