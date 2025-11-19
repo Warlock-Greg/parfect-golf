@@ -1,64 +1,56 @@
-// === MEDIAPIPE INIT – AUTO CAMERA (iPhone = Selfie / PC = Default) ===
-// Version stable Safari + Chrome – Sans zoom forcé – Sans erreur play()
+// === MEDIAPIPE INIT — UNE SEULE CAMERA, PLUS D'ERREUR "FAILED TO ACQUIRE" ===
 
 document.addEventListener("DOMContentLoaded", async () => {
   const videoElement = document.getElementById("jsw-video");
-
   if (!videoElement) {
-    console.error("❌ jsw-video introuvable");
+    console.error("❌ jsw-video introuvable dans le DOM");
     return;
   }
 
-  // 1️⃣ Détection iPhone / iPadOS
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-  // 2️⃣ Préférence de caméra
-  // iPhone → Selfie
-  // PC → user aussi, mais on fallback
-  let preferredConstraints = {
-    video: {
-      facingMode: isIOS ? "user" : "user",
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    },
-    audio: false
-  };
-
-  async function tryGetStream(constraints) {
+  // 1️⃣ Choix très simple : on demande une caméra "user" (selfie),
+  // et si ça échoue, on prend n'importe quelle caméra dispo.
+  async function getCameraStream() {
     try {
-      return await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (err) {
-      return null;
+      console.log("🎥 Tentative caméra (facingMode:user)");
+      return await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user",       // selfie par défaut
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      });
+    } catch (e) {
+      console.warn("⚠️ Selfie KO, fallback caméra générique", e);
+      try {
+        return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      } catch (e2) {
+        console.error("❌ Impossible d'acquérir un flux caméra DU TOUT", e2);
+        return null;
+      }
     }
   }
 
-  // 3️⃣ Tentative caméra selfie
-  let stream = await tryGetStream(preferredConstraints);
-
-  // 4️⃣ Si échec → fallback automatique
+  const stream = await getCameraStream();
   if (!stream) {
-    console.warn("⚠️ Selfie impossible → fallback caméra par défaut");
-    stream = await tryGetStream({ video: true, audio: false });
-  }
-
-  if (!stream) {
-    console.error("❌ Impossible d'accéder à AUCUNE caméra");
+    // Ici, c'est vraiment que le navigateur / permissions ne laissent rien passer.
     return;
   }
 
-  // 5️⃣ Branche la caméra dans la vidéo
   videoElement.srcObject = stream;
 
-  // ⚠️ Safari nécessite une boucle pour être sûr que play() passe
-  const ensurePlay = () =>
-    videoElement.play().catch(() => {
-      setTimeout(ensurePlay, 50);
-    });
-
+  // 2️⃣ Assurer le play() (Android + iOS peuvent être capricieux)
+  const ensurePlay = () => {
+    videoElement
+      .play()
+      .catch((err) => {
+        console.warn("⏳ play() bloqué, on réessaie…", err);
+        setTimeout(ensurePlay, 80);
+      });
+  };
   ensurePlay();
 
-  // 6️⃣ MediaPipe pose
+  // 3️⃣ MediaPipe Pose
   const mpPose = new Pose({
     locateFile: (file) =>
       `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
@@ -73,17 +65,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   mpPose.onResults((results) => {
-    JustSwing.onPoseFrame(results.poseLandmarks || null);
+    if (window.JustSwing && typeof JustSwing.onPoseFrame === "function") {
+      JustSwing.onPoseFrame(results.poseLandmarks || null);
+    }
   });
 
-  // 7️⃣ Camera utils (lecture en continu)
-  const camera = new Camera(videoElement, {
-    onFrame: async () => {
+  // 4️⃣ Boucle d'analyse : on envoie chaque frame vidéo à MediaPipe
+  async function poseLoop() {
+    try {
       await mpPose.send({ image: videoElement });
-    },
+    } catch (e) {
+      console.warn("⚠️ Erreur mpPose.send, on continue quand même", e);
+    }
+    requestAnimationFrame(poseLoop);
+  }
+
+  // On démarre la boucle dès que la vidéo est prête
+  videoElement.addEventListener("loadeddata", () => {
+    console.log("✅ Vidéo prête, lancement boucle Pose");
+    poseLoop();
   });
 
-  camera.start();
-
-  console.log("📸 JustSwing Camera OK — mode :", isIOS ? "iPhone (Selfie)" : "PC (User)");
+  console.log("📸 Camera + MediaPipe initialisés");
 });
