@@ -32,7 +32,17 @@ window.startJustSwingCamera = async function() {
   }
 
   videoElement.srcObject = stream;
+// Détection auto selfie VS back-camera
+const track = stream.getVideoTracks()[0];
+const settings = track.getSettings();
+const isSelfie = settings.facingMode === "user" || settings.facingMode === "front";
 
+// Miroir seulement en selfie
+videoElement.style.transform = isSelfie
+  ? "translate(-50%, -50%) scaleX(-1)"
+  : "translate(-50%, -50%)";
+
+  
   // Safari fix
   const ensurePlay = () => videoElement.play().catch(() => setTimeout(ensurePlay, 50));
   ensurePlay();
