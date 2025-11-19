@@ -200,7 +200,15 @@ async function startSession(selectedMode = JSW_MODE.SWING) {
 
   updateUIForState();
 
-  // Boucle d'animation
+  // === LANCER LA CAMÉRA ICI ===
+  if (window.startJustSwingCamera) {
+    console.log("🎥 Appel startJustSwingCamera() depuis JustSwing");
+    await startJustSwingCamera();  // ← indispensable
+  } else {
+    console.error("❌ startJustSwingCamera() manquant !");
+  }
+
+  // Boucle d'animation (après que la vidéo soit lancée)
   if (loopId) cancelAnimationFrame(loopId);
   loopId = requestAnimationFrame(mainLoop);
 }
