@@ -180,92 +180,39 @@ const JustSwing = (() => {
     currentClubType = clubType;
   }
 
-  // === SESSION ===
-  async function startSession(selectedMode = JSW_MODE.SWING) {
-    console.log("▶ JustSwing.startSession(", selectedMode, ")");
-    mode = selectedMode;
-    state = JSW_STATE.POSITIONING;
- 
-    swings = [];
-    currentSwingIndex = 0;
-    sessionStartTime = performance.now();
-    swingInProgress = false;
-    addressStableSince = null;
-    playerOutOfFrameSince = performance.now();
-    lastPose = null;
-    lastFullBodyOk = false;
-    frameBuffer = [];
-    document.body.classList.add("jsw-fullscreen");
-    currentImpactContext = null;
+// === PUBLIC: démarrer une session Just Swing ===
+async function startSession(selectedMode = JSW_MODE.SWING) {
+  mode = selectedMode;
+  state = JSW_STATE.POSITIONING;
+  swings = [];
+  currentSwingIndex = 0;
+  sessionStartTime = performance.now();
+  swingInProgress = false;
+  addressStableSince = null;
+  playerOutOfFrameSince = performance.now();
+  lastPose = null;
+  lastFullBodyOk = false;
+  frameBuffer = [];
 
-    // UI
-    resultPanelEl?.classList.add("hidden");
-    if (screenEl) {
-      screenEl.classList.remove("hidden");
-      setHalo("red");
-    }
+  // Montrer l'écran Just Swing
+  if (screenEl) screenEl.classList.remove("hidden");
+  document.body.classList.add("jsw-fullscreen");
 
-    showBigMsg("Place-toi plein pied 👣", 1800);
-    updateUIForState();
+  updateUIForState();
 
-    // Cancel ancienne boucle si besoin
-    if (loopId) {
-      cancelAnimationFrame(loopId);
-      loopId = null;
-    }
+  // Boucle d'animation
+  if (loopId) cancelAnimationFrame(loopId);
+  loopId = requestAnimationFrame(mainLoop);
+}
 
-    // Démarrage caméra
-    if (customStartCamera) {
-      try {
-        await customStartCamera();
-      } catch (e) {
-        console.error("Erreur customStartCamera:", e);
-      }
-    } else {
-      await defaultStartCamera();
-    }
 
-    // Nouvelle boucle
-    loopId = requestAnimationFrame(mainLoop);
-  }
+function stopSession() {
+  state = JSW_STATE.IDLE;
 
-  async function defaultStartCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-        audio: false,
-      });
-      videoEl.srcObject = stream;
-      await videoEl.play();
-    } catch (err) {
-      console.error("Erreur caméra (fallback JustSwing)", err);
-      if (statusTextEl) statusTextEl.textContent = "Impossible d'accéder à la caméra 😕";
-    }
-  }
-
-    function stopSession() {
-    state = JSW_STATE.IDLE;
-
-    // Stop stream utilisé par le fallback (au cas où)
-    if (videoEl && videoEl.srcObject) {
-      const tracks = videoEl.srcObject.getTracks();
-      tracks.forEach((t) => t.stop());
-      videoEl.srcObject = null;
-    }
-
-    // Stop MediaPipe Camera si on a gardé une ref
-    if (window.__jswCamera && typeof window.__jswCamera.stop === "function") {
-      try { window.__jswCamera.stop(); } catch (e) {}
-      window.__jswCamera = null;
-    }
-    if (window.__jswStream) {
-      try { window.__jswStream.getTracks().forEach((t) => t.stop()); } catch (e) {}
-      window.__jswStream = null;
-    }
-
-    if (screenEl) screenEl.classList.add("hidden");
-    document.body.classList.remove("jsw-fullscreen");
-  }
+  // On ne touche plus à la caméra ici : c'est mediapipe-init qui la gère.
+  if (screenEl) screenEl.classList.add("hidden");
+  document.body.classList.remove("jsw-fullscreen");
+}
 
 
   // === MAIN LOOP ===
