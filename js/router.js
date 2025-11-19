@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🧹 Leave Swing (toujours utile)
   // ==========================
   function leaveSwingMode() {
-    document.body.classList.remove("mode-swing");
+    document.body.classList.remove("jsw-fullscreen");
     const video = document.querySelector("video");
     if (video?.srcObject) {
       video.srcObject.getTracks().forEach(t => t.stop());
@@ -112,13 +112,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   justSwingBtn.addEventListener("click", () => {
     leaveSwingMode();
+
+    document.body.classList.add("jsw-fullscreen");  // ✅ FULLSCREEN JUST SWING
+
     setActive(justSwingBtn);
     showOnly("justswing");
-    document.body.classList.add("mode-swing");
+
     console.log("▶️ JustSwing startSession()");
     JustSwing.startSession("swing");
+
     coachReact?.("🟢 Just Swing actif !");
-  });
+});
+
 
   friendsBtn.addEventListener("click", () => {
     leaveSwingMode();
