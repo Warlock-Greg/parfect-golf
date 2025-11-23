@@ -64,6 +64,14 @@ const JustSwing = (() => {
   let maxSessionDurationMs = 30000;
 
   let lastPose = null;
+   // Snapshots de pose pour le scoring
+  let poseAddress = null;
+  let poseTop = null;
+  let poseImpact = null;
+  let poseFinish = null;
+
+
+  
   let lastFullBodyOk = false;
   let addressStableSince = null;
   let playerInFrame = false;
@@ -194,6 +202,12 @@ async function startSession(selectedMode = JSW_MODE.SWING) {
   lastFullBodyOk = false;
   frameBuffer = [];
 
+  // reset poses pour le scoring
+  poseAddress = null;
+  poseTop = null;
+  poseImpact = null;
+  poseFinish = null;
+
   // Montrer l'écran Just Swing
   if (screenEl) screenEl.classList.remove("hidden");
   document.body.classList.add("jsw-fullscreen");
@@ -315,21 +329,26 @@ function stopSession() {
       return;
     }
 
-    if (isAddressStable(lastPose)) {
-      if (!addressStableSince) addressStableSince = now;
-      const stableDuration = now - addressStableSince;
-      if (stableDuration > 800) {
-        state = JSW_STATE.ADDRESS_READY;
-        showBigMsg("Adresse OK 🤝", 1000);
-        if (statusTextEl)
-          statusTextEl.textContent =
-            "Adresse solide 🤝 Tu peux swinguer quand tu veux.";
-      }
-    } else {
-      addressStableSince = null;
-      if (statusTextEl)
-        statusTextEl.textContent = "Mets-toi bien à l’adresse, prends ton temps.";
-    }
+   if (isAddressStable(lastPose)) {
+  if (!addressStableSince) addressStableSince = now;
+  const stableDuration = now - addressStableSince;
+  if (stableDuration > 800) {
+    // Adresse validée
+    state = JSW_STATE.ADDRESS_READY;
+
+    // ✅ snapshot de l’adresse pour le scoring
+    poseAddress = lastPose ? lastPose.map(p => ({ ...p })) : null;
+
+    if (statusTextEl)
+      statusTextEl.textContent =
+        "Adresse solide 🤝 Tu peux swinguer quand tu veux.";
+  }
+} else {
+  addressStableSince = null;
+  if (statusTextEl)
+    statusTextEl.textContent = "Mets-toi bien à l’adresse, prends ton temps.";
+}
+
 
     setHalo("green");
   }
@@ -348,6 +367,10 @@ function stopSession() {
       state = JSW_STATE.SWING_CAPTURE;
       swingInProgress = true;
       currentSwingIndex += 1;
+
+      // ✅ snapshot approximatif de "top" (pour l’instant = début de swing)
+  poseTop = lastPose ? lastPose.map(p => ({ ...p })) : null;
+
       showBigMsg("Swing détecté 🔥", 800);
       if (statusTextEl)
         statusTextEl.textContent = `Swing #${currentSwingIndex} en cours…`;
@@ -370,6 +393,11 @@ function stopSession() {
       swingInProgress = false;
       state = JSW_STATE.REVIEW;
       setHalo("green");
+
+      // ✅ snapshots impact + finish pour le scoring
+  poseImpact = lastPose ? lastPose.map(p => ({ ...p })) : null;
+  poseFinish = lastPose ? lastPose.map(p => ({ ...p })) : null;
+
 
       if (currentImpactContext) {
         currentImpactContext.framesApresImpact = frameBuffer.slice();
@@ -434,34 +462,46 @@ function stopSession() {
   }
 
   // === Scoring & angle ===
-  function computeSwingScore(mode, impactPoseFrame, impactContext) {
-    const routineScore = 17;
-    const swingScore = 62;
-    const regularityScore = 4;
-    const total = routineScore + swingScore + regularityScore;
+ function computeSwingScore() {
+  const phases = {
+    address: poseAddress,
+    top: poseTop,
+    impact: poseImpact,
+    finish: poseFinish,
+  };
 
-    const launch = estimateLaunchAngleHybrid(impactPoseFrame, impactContext);
-    const comment = generateCoachComment(
-      mode,
-      routineScore,
-      swingScore,
-      regularityScore,
-      total,
-      launch
-    );
+  let base = null;
 
-    return {
-      index: currentSwingIndex,
+  if (window.SwingScoring && SwingScoring.scoreSwingFromPhases) {
+    base = SwingScoring.scoreSwingFromPhases({
+      phases,
+      clubType: currentClubType,
       mode,
-      routineScore,
-      swingScore,
-      regularityScore,
-      total,
-      launchAngle: launch,
-      comment,
-      timestamp: Date.now(),
+    });
+  }
+
+  // Fallback si jamais SwingScoring n’est pas chargé
+  if (!base) {
+    base = {
+      total: 60,
+      routineScore: 15,
+      techniqueScore: 35,
+      impactScore: 10,
+      breakdown: {},
+      swingType: "iron",
+      clubType: currentClubType,
+      comment:
+        "Scoring simplifié (module détaillé indisponible). Mais tu as quand même un feedback 👍",
     };
   }
+
+  // ⚙️ Ajout de l’angle de décollage (hybride balle + club)
+  const launch = estimateLaunchAngleHybrid(poseImpact || lastPose, currentImpactContext);
+  base.launchAngle = launch;
+
+  return base;
+}
+
 
   function estimateLaunchAngleHybrid(impactPoseFrame, impactContext) {
     const ctxImpact = impactContext || {};
@@ -615,18 +655,39 @@ function stopSession() {
   }
 
   // === RESULT UI ===
-  function showSwingResult(swingData) {
-    if (swingLabelEl)
-      swingLabelEl.textContent = `Swing #${swingData.index} — Mode ${
-        swingData.mode === "swing" ? "Full swing" : "Putt"
-      }`;
-    if (scoreGlobalEl)
-      scoreGlobalEl.textContent = `Score Parfect : ${swingData.total}/100`;
-    if (scoreDetailsEl)
-      scoreDetailsEl.textContent = `Routine : ${swingData.routineScore}/20 · Swing : ${swingData.swingScore}/70 · Régularité : ${swingData.regularityScore}/10`;
-    if (coachCommentEl) coachCommentEl.textContent = swingData.comment;
-    if (resultPanelEl) resultPanelEl.classList.remove("hidden");
+ function showSwingResult(swingData) {
+  if (swingLabelEl)
+    swingLabelEl.textContent = `Swing #${swingData.index || ""} — ${
+      swingData.swingType === "putt"
+        ? "Putt"
+        : swingData.swingType === "chip"
+        ? "Petit jeu"
+        : "Full swing"
+    }`;
+
+  if (scoreGlobalEl)
+    scoreGlobalEl.textContent = `Score Parfect : ${swingData.total}/100`;
+
+  if (scoreDetailsEl) {
+    scoreDetailsEl.textContent =
+      `Routine : ${swingData.routineScore}/20 · ` +
+      `Technique : ${swingData.techniqueScore}/60 · ` +
+      `Impact : ${swingData.impactScore}/20`;
   }
+
+  if (coachCommentEl) {
+    let txt = swingData.comment || "";
+    if (swingData.launchAngle && typeof swingData.launchAngle.angleDeg === "number") {
+      txt += `\n\n🎯 Angle de décollage estimé : ${swingData.launchAngle.angleDeg.toFixed(
+        1
+      )}° (${swingData.launchAngle.source === "ball" ? "balle" : "club/pose"}).`;
+    }
+    coachCommentEl.textContent = txt;
+  }
+
+  if (resultPanelEl) resultPanelEl.classList.remove("hidden");
+}
+
 
   function hideResultPanel() {
     resultPanelEl?.classList.add("hidden");
