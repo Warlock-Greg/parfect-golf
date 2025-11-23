@@ -123,6 +123,12 @@ const JustSwing = (() => {
     btnExitEl = $$("jsw-btn-exit");
     restartBtnEl = $$("jsw-restart");
 
+    const exitTopBtn = $$("jsw-exit-top");
+
+exitTopBtn?.addEventListener("click", () => {
+  stopSession();
+});
+
     // Boutons panel résultat
     btnKeepRefEl?.addEventListener("click", () => {
       if (swings.length > 0) {
@@ -234,6 +240,27 @@ function stopSession() {
   // On ne touche plus à la caméra ici : c'est mediapipe-init qui la gère.
   if (screenEl) screenEl.classList.add("hidden");
   document.body.classList.remove("jsw-fullscreen");
+}
+
+  // Stop loop
+  if (loopId) cancelAnimationFrame(loopId);
+
+  // Stop cam
+  if (videoEl && videoEl.srcObject) {
+    videoEl.srcObject.getTracks().forEach(t => t.stop());
+    videoEl.srcObject = null;
+  }
+
+  // Masquer écran
+  screenEl?.classList.add("hidden");
+  document.body.classList.remove("jsw-fullscreen");
+
+  // Retour home visuel
+  showOnly("home");
+  setActive(document.getElementById("home-btn"));
+
+  // Message coach
+  coachReact?.("🏠 Retour à l’accueil — Ready quand tu veux !");
 }
 
 
