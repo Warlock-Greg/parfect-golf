@@ -184,6 +184,8 @@ const JustSwing = (() => {
       stopSession();
     });
 
+    
+
     // Bouton Recommencer (reboot session)
     restartBtnEl?.addEventListener("click", () => {
       startSession(mode);
@@ -1006,6 +1008,25 @@ const JustSwing = (() => {
   function setClubType(clubType) {
     currentClubType = clubType;
   }
+
+    // --- ROUTINE MODALE (connexion UI) ---
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "jsw-open-routine-modal") {
+      showRoutineModal();
+    }
+  });
+
+  // Permet d’ouvrir la modale avant une session
+  window.requestRoutineSetup = function () {
+    showRoutineModal();
+  };
+
+  // Callback quand l’utilisateur sauvegarde sa routine
+  window.saveRoutineConfig = function (userConfig) {
+    console.log("🧠 Routine enregistrée :", userConfig);
+    routineConfig.swing.user = userConfig; // stockage interne
+  };
+
 
   // API publique
   return {
