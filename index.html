@@ -359,6 +359,8 @@ footer button.active {
 }
 
 
+
+    
 /* ========= JUST SWING — FULLSCREEN VIDEO FIX ========= */
 
 #just-swing-screen {
@@ -383,6 +385,22 @@ footer button.active {
   z-index: 2;
 }
 
+/* 🔙 Bouton retour */
+.jsw-exit-top {
+  position: absolute;
+  top: env(safe-area-inset-top, 10px);
+  left: 10px;
+  z-index: 99999;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.55);
+  color: #00ff99;
+  border: 1px solid #00ff99;
+  font-size: 0.9rem;
+  backdrop-filter: blur(4px);
+}
+
+    
 /* Message central */
 #jsw-big-msg {
   position: absolute;
