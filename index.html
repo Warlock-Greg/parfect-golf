@@ -385,6 +385,18 @@ footer button.active {
   z-index: 2;
 }
 
+/* Bouton config routine dans l’UI Just Swing */
+.jsw-btn-config {
+  margin-top:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,0.7);
+  color:#00ff99;
+  font-size:0.8rem;
+}
+
+    
 /* 🔙 Bouton retour */
 .jsw-exit-top {
   position: absolute;
@@ -946,6 +958,58 @@ body.jsw-fullscreen #coach-ia {
   
   <script src="js/router.js"></script>
 
+<!-- === Modale Routine Just Swing === -->
+<div id="jsw-routine-modal" class="modal-backdrop" style="display:none;">
+  <div class="modal-card" style="max-width:420px;text-align:left;">
+    <h3 style="margin-top:0;">⚙️ Ma routine Just Swing</h3>
+    <p style="font-size:0.9rem;opacity:0.9;">
+      Dis-moi comment tu prépares tes coups. On combine ta routine perso + l’analyse IA
+      pour noter ton swing.
+    </p>
+
+    <label style="display:block;margin-top:8px;font-size:0.9rem;">
+      Type de coup principal :
+      <select id="jsw-routine-mode" style="width:100%;margin-top:4px;padding:6px;border-radius:6px;">
+        <option value="swing">Full swing (driver / fers)</option>
+        <option value="approche">Approches / wedges</option>
+        <option value="putt">Putting</option>
+      </select>
+    </label>
+
+    <label style="display:block;margin-top:8px;font-size:0.9rem;">
+      Swings d’essai avant la balle :
+      <input id="jsw-routine-trials" type="number" min="0" max="5"
+             value="1"
+             style="width:100%;margin-top:4px;padding:6px;border-radius:6px;">
+    </label>
+
+    <label style="display:block;margin-top:8px;font-size:0.9rem;">
+      Mini swings / waggle :
+      <input id="jsw-routine-mini" type="number" min="0" max="5"
+             value="0"
+             style="width:100%;margin-top:4px;padding:6px;border-radius:6px;">
+    </label>
+
+    <hr style="margin:12px 0;border-color:#333;">
+
+    <p style="font-size:0.85rem;opacity:0.85;">
+      <strong>Comment on calcule la note ?</strong><br>
+      • Routine : /20 → est-ce que tu respectes ta préparation et l’adresse.<br>
+      • Swing : /70 → qualité globale du mouvement (backswing, impact, finish).<br>
+      • Régularité : /10 → équilibre, tempo, finish tenu.<br>
+      On combine tout en un score /100 + cagnotte de <strong>Parfects</strong> si tu dépasses 75/100.
+    </p>
+
+    <div style="margin-top:10px;text-align:right;">
+      <button id="jsw-routine-cancel" class="btn" style="background:#333;color:#fff;margin-right:6px;">
+        Annuler
+      </button>
+      <button id="jsw-routine-save" class="btn">
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
 
 
 
