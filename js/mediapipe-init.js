@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
     videoElement.srcObject = stream;
 
     // ❗ PAS DE transform ici → on laisse brut
-    videoElement.style.transform = "none";
+    videoElement.style.transform = "scaleX(-1)";
 
     // Safari fix
     const ensurePlay = () =>
