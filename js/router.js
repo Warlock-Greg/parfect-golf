@@ -110,21 +110,18 @@ document.addEventListener("DOMContentLoaded", () => {
     coachReact?.("🎥 Mode Analyse Swing !");
   });
 
-  justSwingBtn.addEventListener("click", () => {
+  justSwingBtn.addEventListener("click", async () => {
     leaveSwingMode();
     setActive(justSwingBtn);
     showOnly("justswing");
 
-    //document.body.classList.add("jsw-fullscreen");  // ✅ FULLSCREEN JUST SWING
-
     document.body.classList.add("mode-swing");
 
-  console.log("▶️ Ouverture JustSwing…");
+    console.log("▶️ JustSwing startSession()");
 
-  // 1️⃣ LANCER LA CAMÉRA D’ABORD
-  await startJustSwingCamera();
+    // 🔥 IMPORTANT : on démarre la caméra AVANT tout
+    await window.startJustSwingCamera();
 
-  
     JustSwing.startSession("swing");
 
     coachReact?.("🟢 Just Swing actif !");
