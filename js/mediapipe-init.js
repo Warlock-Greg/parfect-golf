@@ -81,6 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     mpPose.onResults((results) => {
+      console.log("POSE:", results.poseLandmarks);   // 👈 AJOUTE CETTE LIGNE
+
       if (window.JustSwing?.onPoseFrame) {
         JustSwing.onPoseFrame(results.poseLandmarks || null);
       }
