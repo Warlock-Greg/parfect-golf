@@ -137,6 +137,55 @@ const JustSwing = (() => {
   let currentImpactContext = null;
   let loopId = null; // requestAnimationFrame
 
+
+  function showBigMessage(text) {
+    if (!bigMsgEl) return;
+    bigMsgEl.textContent = text;
+    bigMsgEl.style.opacity = "1";
+  }
+
+  function hideBigMessage() {
+    if (!bigMsgEl) return;
+    bigMsgEl.style.opacity = "0";
+    bigMsgEl.textContent = "";
+  }
+
+  function drawOverlay() {
+    if (!ctx || !overlayEl) return;
+    ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
+
+    if (!lastPose) {
+      drawGhostSilhouetteCenter();
+      return;
+    }
+
+    drawPoseSkeleton(lastPose);
+  }
+
+  function drawGhostSilhouetteCenter() {
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 2;
+    const cx = overlayEl.width / 2;
+    const top = overlayEl.height * 0.15;
+    const bottom = overlayEl.height * 0.9;
+    const mid = (top + bottom) / 2;
+    ctx.beginPath();
+    ctx.arc(cx, top + 30, 20, 0, Math.PI * 2);
+    ctx.moveTo(cx, top + 50);
+    ctx.lineTo(cx, mid);
+    ctx.moveTo(cx, mid);
+    ctx.lineTo(cx - 30, mid + 40);
+    ctx.moveTo(cx, mid);
+    ctx.lineTo(cx + 30, mid + 40);
+    ctx.moveTo(cx, top + 70);
+    ctx.lineTo(cx - 30, top + 100);
+    ctx.moveTo(cx, top + 70);
+    ctx.lineTo(cx + 30, top + 100);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // === INIT DOM ===
   function initJustSwing() {
     screenEl = $$("just-swing-screen");
@@ -878,53 +927,7 @@ const JustSwing = (() => {
     if (color === "blue") screenEl.classList.add("jsw-halo-blue");
   }
 
-  function showBigMessage(text) {
-    if (!bigMsgEl) return;
-    bigMsgEl.textContent = text;
-    bigMsgEl.style.opacity = "1";
-  }
-
-  function hideBigMessage() {
-    if (!bigMsgEl) return;
-    bigMsgEl.style.opacity = "0";
-    bigMsgEl.textContent = "";
-  }
-
-  function drawOverlay() {
-    if (!ctx || !overlayEl) return;
-    ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
-
-    if (!lastPose) {
-      drawGhostSilhouetteCenter();
-      return;
-    }
-
-    drawPoseSkeleton(lastPose);
-  }
-
-  function drawGhostSilhouetteCenter() {
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.25)";
-    ctx.lineWidth = 2;
-    const cx = overlayEl.width / 2;
-    const top = overlayEl.height * 0.15;
-    const bottom = overlayEl.height * 0.9;
-    const mid = (top + bottom) / 2;
-    ctx.beginPath();
-    ctx.arc(cx, top + 30, 20, 0, Math.PI * 2);
-    ctx.moveTo(cx, top + 50);
-    ctx.lineTo(cx, mid);
-    ctx.moveTo(cx, mid);
-    ctx.lineTo(cx - 30, mid + 40);
-    ctx.moveTo(cx, mid);
-    ctx.lineTo(cx + 30, mid + 40);
-    ctx.moveTo(cx, top + 70);
-    ctx.lineTo(cx - 30, top + 100);
-    ctx.moveTo(cx, top + 70);
-    ctx.lineTo(cx + 30, top + 100);
-    ctx.stroke();
-    ctx.restore();
-  }
+  
 
   // ⚠️ IMPORTANT :→ on inverse x
   function drawPoseSkeleton(landmarks) {
@@ -1052,3 +1055,6 @@ const JustSwing = (() => {
     setClubType,
   };
 })();
+
+window.JustSwing = JustSwing;
+
