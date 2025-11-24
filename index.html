@@ -500,10 +500,13 @@ body.jsw-fullscreen {
 
 /* On masque le header, le coach global et la nav pendant Just Swing */
 body.jsw-fullscreen header,
-body.jsw-fullscreen nav,
 body.jsw-fullscreen #coach-ia {
   display:none !important;
 }
+
+    /*body.jsw-fullscreen nav {
+  display:none !important;
+}*/
 
 /* Just Swing recouvre tout l'écran */
 #just-swing-area {
@@ -528,10 +531,10 @@ body.jsw-fullscreen #coach-ia {
   inset:0;
   width:100%;
   height:100%;
-  object-fit:contain;   /* très important : pas de zoom/crop */
-  transform:scaleX(-1)!important; /* miroir pour selfie */
+  object-fit:contain;  /* pas de crop */
   background:#000;
   z-index:1;
+  /* Pas de transform ici (géré par JS) */
 }
 
 /* 🦴 Overlay squelette par-dessus la vidéo */
