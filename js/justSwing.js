@@ -927,7 +927,7 @@ const JustSwing = (() => {
   }
 
   // ⚠️ IMPORTANT :→ on inverse x
-  ffunction drawPoseSkeleton(landmarks) {
+  function drawPoseSkeleton(landmarks) {
   if (!landmarks || !landmarks.length) return;
 
   ctx.save();
