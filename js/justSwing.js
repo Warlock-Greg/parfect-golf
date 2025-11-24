@@ -926,48 +926,61 @@ const JustSwing = (() => {
     ctx.restore();
   }
 
-  // ⚠️ IMPORTANT : la vidéo est en miroir (scaleX(-1)) → on inverse x
-  function drawPoseSkeleton(landmarks) {
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.7)";
-    ctx.lineWidth = 2;
+  // ⚠️ IMPORTANT :→ on inverse x
+  ffunction drawPoseSkeleton(landmarks) {
+  if (!landmarks || !landmarks.length) return;
 
-    const w = overlayEl.width;
-    const h = overlayEl.height;
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.7)";
+  ctx.lineWidth = 2;
 
-    const p = (i) => {
-      const lm = landmarks[i];
-      if (!lm) return null;
-      return { x: (1 - lm.x) * w, y: lm.y * h };
-    };
+  const w = overlayEl.width;
+  const h = overlayEl.height;
 
-    const segments = [
-      [11, 12],
-      [11, 23],
-      [12, 24],
-      [23, 24],
-      [11, 13],
-      [13, 15],
-      [12, 14],
-      [14, 16],
-      [23, 25],
-      [25, 27],
-      [24, 26],
-      [26, 28],
-    ];
+  // ❗ IMPORTANT : on NE retourne PLUS x
+  const p = (i) => {
+    const lm = landmarks[i];
+    if (!lm) return null;
+    return { x: lm.x * w, y: lm.y * h };
+  };
 
-    segments.forEach(([a, b]) => {
-      const pa = p(a);
-      const pb = p(b);
-      if (!pa || !pb) return;
-      ctx.beginPath();
-      ctx.moveTo(pa.x, pa.y);
-      ctx.lineTo(pb.x, pb.y);
-      ctx.stroke();
-    });
+  const segments = [
+    [11, 12],
+    [11, 23],
+    [12, 24],
+    [23, 24],
+    [11, 13],
+    [13, 15],
+    [12, 14],
+    [14, 16],
+    [23, 25],
+    [25, 27],
+    [24, 26],
+    [26, 28],
+  ];
 
-    ctx.restore();
+  segments.forEach(([a, b]) => {
+    const pa = p(a);
+    const pb = p(b);
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+  });
+
+  // petit point sur le nez pour debug visuel
+  const nose = p(0);
+  if (nose) {
+    ctx.beginPath();
+    ctx.arc(nose.x, nose.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,255,153,0.9)";
+    ctx.fill();
   }
+
+  ctx.restore();
+}
+
 
   // Parfect counter (badge global)
   function awardParfects(count) {
