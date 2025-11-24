@@ -1,36 +1,34 @@
-// === MEDIAPIPE INIT — VERSION FINALE JUSTSWING (STABLE iPhone + Android + Desktop) ===
-
-// ⚠️ Doit être chargé AVANT justSwing.js
-// ⚠️ Ne rien modifier dans jsw-video (pas de transform inline)
+// === MEDIAPIPE INIT — VERSION ULTRA STABLE POUR JUSTSWING ===
+// • Selfie detection auto
+// • Mirror propre
+// • AUCUN transform parasite
+// • Boucle Pose stable (sans Camera class)
+// • Callback vers JustSwing.onPoseFrame
+// • Recalibrage overlay dès que la vidéo connaît sa taille
 
 document.addEventListener("DOMContentLoaded", () => {
-
   window.startJustSwingCamera = async function () {
-    console.log("🎥 JustSwing → Initialisation caméra…");
+    console.log("🎥 Démarrage caméra pour JustSwing…");
 
-    const videoEl = document.getElementById("jsw-video");
-    if (!videoEl) {
+    const videoElement = document.getElementById("jsw-video");
+    if (!videoElement) {
       console.error("❌ jsw-video introuvable");
       return null;
     }
 
+    // --- 1) Tentative Selfie
     let stream = null;
-
-    // =============================
-    // 1️⃣ Tentative Selfie directe
-    // =============================
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: { ideal: "user" },
+          facingMode: "user",
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
         audio: false
       });
     } catch (err) {
-      console.warn("⚠️ Selfie KO → fallback caméra par défaut", err);
-
+      console.warn("⚠️ Selfie KO → fallback caméra", err);
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -42,48 +40,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // =============================
-    // 2️⃣ Associer flux → vidéo
-    // =============================
-    videoEl.srcObject = stream;
+    // --- 2) Affectation flux
+    videoElement.srcObject = stream;
 
     const track = stream.getVideoTracks()[0];
     const settings = track.getSettings();
     const isSelfie =
       settings.facingMode === "user" ||
-      settings.facingMode === "front" ||
-      settings.facingMode === "selfie";
+      settings.facingMode === "front";
 
-    // 🎭 Miroir SELFIE (sans translate, sans X/Y)
-    videoEl.style.transform = isSelfie ? "scaleX(-1)" : "none";
+    // --- 3) Miroir propre : scaleX(-1) UNIQUEMENT
+    videoElement.style.transform = isSelfie ? "scaleX(-1)" : "none";
 
-    // =============================
-    // 3️⃣ Safari autoplay fix
-    // =============================
+    // --- 4) Forcer lecture Safari
     const ensurePlay = () =>
-      videoEl.play().catch(() => setTimeout(ensurePlay, 50));
+      videoElement.play().catch(() => setTimeout(ensurePlay, 50));
     ensurePlay();
 
-    // Quand la vidéo a ses dimensions ↴ on peut calibrer le canvas
-    videoEl.addEventListener("loadedmetadata", () => {
+    // --- 5) Recalibrage overlay
+    videoElement.addEventListener("loadedmetadata", () => {
       console.log(
-        `📸 Caméra OK : ${videoEl.videoWidth}x${videoEl.videoHeight} (Selfie=${isSelfie})`
+        `📸 Vidéo OK : ${videoElement.videoWidth}x${videoElement.videoHeight} | Selfie=${isSelfie}`
       );
-
-      if (window.JustSwing?.resizeOverlay)
-        window.JustSwing.resizeOverlay(); // ← ajustement overlay
+      if (window.JustSwing?.resizeOverlay) {
+        window.JustSwing.resizeOverlay();
+      }
     });
 
-    // =============================
-    // 4️⃣ Setup MediaPipe Pose
-    // =============================
+    // --- 6) MediaPipe Pose
     const mpPose = new Pose({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+      locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}`
     });
 
     mpPose.setOptions({
-      modelComplexity: 2,
+      modelComplexity: 1,
       smoothLandmarks: true,
       enableSegmentation: false,
       minDetectionConfidence: 0.5,
@@ -91,30 +81,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     mpPose.onResults((results) => {
-      // Envoie des landmarks vers le moteur JustSwing
       if (window.JustSwing?.onPoseFrame) {
-        window.JustSwing.onPoseFrame(results.poseLandmarks || null);
+        JustSwing.onPoseFrame(results.poseLandmarks || null);
       }
     });
 
-    // =============================
-    // 5️⃣ Boucle frame → MediaPipe
-    // =============================
+    // --- 7) Boucle animation → envoi Pose
     async function processFrame() {
-      if (videoEl.readyState >= 2) {
+      if (videoElement.readyState >= 2) {
         try {
-          await mpPose.send({ image: videoEl });
-        } catch (err) {
-          console.warn("⚠️ MediaPipe error", err);
-          // On continue sans bloquer
+          await mpPose.send({ image: videoElement });
+        } catch (e) {
+          console.warn("⚠️ mpPose.send error", e);
         }
       }
       requestAnimationFrame(processFrame);
     }
 
-    console.log("🧠 MediaPipe Pose initialisé ✔");
     processFrame();
 
+    console.log("📸 Caméra JustSwing prête ✔");
     return stream;
   };
 });
