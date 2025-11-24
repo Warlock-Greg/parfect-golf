@@ -112,13 +112,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   justSwingBtn.addEventListener("click", () => {
     leaveSwingMode();
-
-    document.body.classList.add("jsw-fullscreen");  // ✅ FULLSCREEN JUST SWING
-
     setActive(justSwingBtn);
     showOnly("justswing");
 
-    console.log("▶️ JustSwing startSession()");
+    //document.body.classList.add("jsw-fullscreen");  // ✅ FULLSCREEN JUST SWING
+
+    document.body.classList.add("mode-swing");
+
+  console.log("▶️ Ouverture JustSwing…");
+
+  // 1️⃣ LANCER LA CAMÉRA D’ABORD
+  await startJustSwingCamera();
+
+  
     JustSwing.startSession("swing");
 
     coachReact?.("🟢 Just Swing actif !");
