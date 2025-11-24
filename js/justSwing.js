@@ -1052,10 +1052,3 @@ const JustSwing = (() => {
     setClubType,
   };
 })();
-
-// Initialisation DOM
-document.addEventListener("DOMContentLoaded", () => {
-  if (typeof JustSwing !== "undefined" && JustSwing.initJustSwing) {
-    JustSwing.initJustSwing();
-  }
-});
