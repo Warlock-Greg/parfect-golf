@@ -1055,6 +1055,7 @@ const JustSwing = (() => {
     setRoutineConfig,
     getReferenceSwing,
     setClubType,
+    mainLoop,
   };
 })();
 
