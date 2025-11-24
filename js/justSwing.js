@@ -150,6 +150,62 @@ const JustSwing = (() => {
     bigMsgEl.textContent = "";
   }
 
+ // ⚠️ IMPORTANT :→ on inverse x
+  function drawPoseSkeleton(landmarks) {
+  if (!landmarks || !landmarks.length) return;
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.7)";
+  ctx.lineWidth = 2;
+
+  const w = overlayEl.width;
+  const h = overlayEl.height;
+
+  // ❗ IMPORTANT : on NE retourne PLUS x
+  const p = (i) => {
+    const lm = landmarks[i];
+    if (!lm) return null;
+    return { x: lm.x * w, y: lm.y * h };
+  };
+
+  const segments = [
+    [11, 12],
+    [11, 23],
+    [12, 24],
+    [23, 24],
+    [11, 13],
+    [13, 15],
+    [12, 14],
+    [14, 16],
+    [23, 25],
+    [25, 27],
+    [24, 26],
+    [26, 28],
+  ];
+
+  segments.forEach(([a, b]) => {
+    const pa = p(a);
+    const pb = p(b);
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+  });
+
+  // petit point sur le nez pour debug visuel
+  const nose = p(0);
+  if (nose) {
+    ctx.beginPath();
+    ctx.arc(nose.x, nose.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0,255,153,0.9)";
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+  
   function drawOverlay() {
     if (!ctx || !overlayEl) return;
     ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
@@ -929,61 +985,7 @@ const JustSwing = (() => {
 
   
 
-  // ⚠️ IMPORTANT :→ on inverse x
-  function drawPoseSkeleton(landmarks) {
-  if (!landmarks || !landmarks.length) return;
-
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.7)";
-  ctx.lineWidth = 2;
-
-  const w = overlayEl.width;
-  const h = overlayEl.height;
-
-  // ❗ IMPORTANT : on NE retourne PLUS x
-  const p = (i) => {
-    const lm = landmarks[i];
-    if (!lm) return null;
-    return { x: lm.x * w, y: lm.y * h };
-  };
-
-  const segments = [
-    [11, 12],
-    [11, 23],
-    [12, 24],
-    [23, 24],
-    [11, 13],
-    [13, 15],
-    [12, 14],
-    [14, 16],
-    [23, 25],
-    [25, 27],
-    [24, 26],
-    [26, 28],
-  ];
-
-  segments.forEach(([a, b]) => {
-    const pa = p(a);
-    const pb = p(b);
-    if (!pa || !pb) return;
-    ctx.beginPath();
-    ctx.moveTo(pa.x, pa.y);
-    ctx.lineTo(pb.x, pb.y);
-    ctx.stroke();
-  });
-
-  // petit point sur le nez pour debug visuel
-  const nose = p(0);
-  if (nose) {
-    ctx.beginPath();
-    ctx.arc(nose.x, nose.y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(0,255,153,0.9)";
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
+ 
 
   // Parfect counter (badge global)
   function awardParfects(count) {
