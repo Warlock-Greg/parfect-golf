@@ -119,6 +119,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("▶️ JustSwing startSession()");
 
+// 1) Initialiser JustSwing une seule fois
+  if (!window._justSwingInitDone) {
+    if (window.JustSwing?.initJustSwing) {
+      JustSwing.initJustSwing();
+      window._justSwingInitDone = true;
+    }
+  }
+    
     // 🔥 IMPORTANT : on démarre la caméra AVANT tout
     await window.startJustSwingCamera();
 
