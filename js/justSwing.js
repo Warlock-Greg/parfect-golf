@@ -844,76 +844,116 @@ const JustSwing = (() => {
     }
   }
 
-  // === AFFICHAGE RESULTAT SWING ===
-  function showSwingResult(swingData) {
-    if (swingLabelEl)
-      swingLabelEl.textContent = `Swing #${swingData.index} — ${
+ // === AFFICHAGE RESULTAT SWING (version améliorée) ===
+function showSwingResult(swingData) {
+
+  // --- EN-TÊTE ---
+  if (swingLabelEl) {
+    swingLabelEl.textContent =
+      `Swing #${swingData.index} — ${
         swingData.mode === "swing"
           ? "Full swing"
           : swingData.mode === "putt"
           ? "Putt"
           : "Approche"
       } (${swingData.club})`;
-
-    if (scoreGlobalEl)
-      scoreGlobalEl.textContent = `Score Parfect : ${swingData.total}/100`;
-
-    if (scoreDetailsEl) {
-      scoreDetailsEl.textContent =
-        `Routine : ${swingData.routineScore}/20 · ` +
-        `Swing : ${swingData.swingScore}/70 · ` +
-        `Régularité : ${swingData.regularityScore}/10`;
-    }
-
-    if (coachCommentEl) {
-      coachCommentEl.textContent = swingData.comment;
-    }
-
-    // Exos suggérés
-    const drills = coachSuggestDrills(swingData);
-    if (drillsEl) {
-      drillsEl.innerHTML = "";
-      const title = document.createElement("div");
-      title.style.fontWeight = "600";
-      title.style.marginTop = "8px";
-      title.textContent = "🧪 Exos conseillés :";
-      drillsEl.appendChild(title);
-
-      drills.forEach((d) => {
-        const line = document.createElement("div");
-        line.style.fontSize = "0.8rem";
-        line.style.marginTop = "4px";
-        line.textContent = `• ${d.title} (${d.durationMin} min) — ${d.description}`;
-        drillsEl.appendChild(line);
-      });
-    }
-
-    // Push aussi dans le coach IA si présent
-    if (typeof window.appendCoachMessage === "function") {
-      window.appendCoachMessage(
-        `📊 Swing #${swingData.index} — ${swingData.total}/100.\n` +
-          `Routine ${swingData.routineScore}/20, swing ${swingData.swingScore}/70, régularité ${swingData.regularityScore}/10.`
-      );
-
-      const drillsText = drills
-        .map((d) => `• ${d.title} (${d.durationMin} min)`)
-        .join("\n");
-      window.appendCoachMessage(
-        "🧪 Je te propose ces exos pour la suite :\n" + drillsText
-      );
-    }
-
-    // Badge Parfect
-    if (swingData.parfectEarned > 0) {
-      if (typeof window.appendCoachMessage === "function") {
-        window.appendCoachMessage(
-          `💚 Parfect gagné sur ce swing (score ${swingData.total}/100 avec routine respectée).`
-        );
-      }
-    }
-
-    if (resultPanelEl) resultPanelEl.classList.remove("hidden");
   }
+
+  // --- SCORE GLOBAL ---
+  if (scoreGlobalEl) {
+    scoreGlobalEl.textContent = `Score Parfect : ${swingData.total}/100`;
+  }
+
+  // --- SCORE DÉTAILLÉ ---
+  if (scoreDetailsEl) {
+    scoreDetailsEl.textContent =
+      `Routine : ${swingData.routineScore}/20 · ` +
+      `Swing : ${swingData.swingScore}/70 · ` +
+      `Régularité : ${swingData.regularityScore}/10`;
+  }
+
+  // --- COMMENTAIRE COACH ---
+  if (coachCommentEl) {
+    coachCommentEl.textContent = swingData.comment;
+  }
+
+  // --- EXOS ---
+  const drills = coachSuggestDrills(swingData);
+  if (drillsEl) {
+    drillsEl.innerHTML = "";
+    const title = document.createElement("div");
+    title.style.fontWeight = "600";
+    title.style.marginTop = "8px";
+    title.textContent = "🧪 Exos conseillés :";
+    drillsEl.appendChild(title);
+
+    drills.forEach((d) => {
+      const line = document.createElement("div");
+      line.style.fontSize = "0.8rem";
+      line.style.marginTop = "4px";
+      line.textContent = `• ${d.title} (${d.durationMin} min) — ${d.description}`;
+      drillsEl.appendChild(line);
+    });
+  }
+
+  // --- ACTIONS ADDONS (Log + Replay + Référence) ---
+  const actionsEl = document.getElementById("jsw-result-actions");
+  if (actionsEl) {
+    actionsEl.innerHTML = "";
+
+    // 📊 Log détaillé
+    const logBtn = document.createElement("button");
+    logBtn.textContent = "📊 Log swing";
+    logBtn.className = "jsw-btn-secondary";
+    logBtn.onclick = () => window.JustSwingLog?.show(swingData);
+    actionsEl.appendChild(logBtn);
+
+    // 🎥 Replay
+    const replayBtn = document.createElement("button");
+    replayBtn.textContent = "🎥 Replay";
+    replayBtn.className = "jsw-btn-secondary";
+    replayBtn.onclick = () => window.JustSwingReplay?.show(swingData);
+    actionsEl.appendChild(replayBtn);
+
+    // ⭐ Définir comme swing de référence
+    const refBtn = document.createElement("button");
+    refBtn.textContent = "⭐ Référence";
+    refBtn.className = "jsw-btn-secondary";
+    refBtn.onclick = () => {
+      referenceSwing = swingData;
+      refBtn.textContent = "✔ Référence définie";
+    };
+    actionsEl.appendChild(refBtn);
+  }
+
+  // --- COACH IA SI PRÉSENT ---
+  if (typeof window.appendCoachMessage === "function") {
+    window.appendCoachMessage(
+      `📊 Swing #${swingData.index} — ${swingData.total}/100.\n` +
+        `Routine ${swingData.routineScore}/20, swing ${swingData.swingScore}/70, régularité ${swingData.regularityScore}/10.`
+    );
+
+    const drillsText = drills
+      .map((d) => `• ${d.title} (${d.durationMin} min)`)
+      .join("\n");
+    window.appendCoachMessage(`🧪 Exos conseillés :\n${drillsText}`);
+
+    if (swingData.parfectEarned > 0) {
+      window.appendCoachMessage(
+        `💚 Parfect gagné (routine OK + score ${swingData.total}/100)`
+      );
+    }
+  }
+
+  // --- BADGE PARFECT ---
+  if (swingData.parfectEarned > 0) {
+    // ton awardParfects est déjà appelé dans computeSwingScore()
+  }
+
+  // --- AFFICHAGE PANEL ---
+  if (resultPanelEl) resultPanelEl.classList.remove("hidden");
+}
+
 
   function hideResultPanel() {
     if (resultPanelEl) resultPanelEl.classList.add("hidden");
