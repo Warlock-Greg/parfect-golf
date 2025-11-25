@@ -717,6 +717,14 @@ const JustSwing = (() => {
     };
   }
 
+function debug() {
+  console.log("🔍 screenEl       =", screenEl);
+  console.log("🔍 statusTextEl  =", statusTextEl);
+  console.log("🔍 routineStepsEl=", routineStepsEl);
+  console.log("🔍 timerEl       =", timerEl);
+}
+
+  
   // -------------------------------------------------------
   //   EXPORT
   // -------------------------------------------------------
@@ -730,6 +738,7 @@ const JustSwing = (() => {
     setClubType: (c) => (currentClubType = c),
     showRoutineSteps,   //  ← ajouter ceci
     updateUI,
+    _debug: debug   // ← AJOUT
   };
 
 })();
