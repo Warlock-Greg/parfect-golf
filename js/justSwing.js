@@ -727,6 +727,7 @@ const JustSwing = (() => {
     setRoutineConfig,
     getReferenceSwing: () => referenceSwing,
     setClubType: (c) => (currentClubType = c),
+    showRoutineSteps,   //  ← ajouter ceci
   };
 
 })();
