@@ -199,6 +199,7 @@ const JustSwing = (() => {
 
     statusTextEl = $$("jsw-status-text");
     routineStepsEl = $$("jsw-routine-steps");
+    console.log("🔍 routineStepsEl =", routineStepsEl);
     timerEl = $$("jsw-timer");
 
     resultPanelEl = $$("jsw-result-panel");
