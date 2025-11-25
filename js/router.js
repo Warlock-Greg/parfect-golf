@@ -119,19 +119,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("▶️ JustSwing startSession()");
 
-// 1) Affiche la vue
-setActive(justSwingBtn);
-showOnly("justswing");
-document.body.classList.add("mode-swing");
+// 1) On s’assure que le DOM est prêt
+  await new Promise(r => requestAnimationFrame(r));
 
 // 2) Init quand le DOM est vraiment prêt
 if (!window._justSwingInitDone) {
-  setTimeout(() => {
-    console.log("⚙️ Initialisation JustSwing DOM Ready");
-    JustSwing.initJustSwing();
-    window._justSwingInitDone = true;
-  }, 0);
-}
+    if (window.JustSwing?.initJustSwing) {
+      JustSwing.initJustSwing();
+      window._justSwingInitDone = true;
+    }
+  }
 
 // 3) Démarrer la caméra PUIS la session
 await window.startJustSwingCamera();
