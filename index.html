@@ -737,58 +737,117 @@ body.jsw-fullscreen #coach-ia {
   </div>
 </div>
 
+<!-- ============================= -->
+<!--      JUST SWING   (JSW)      -->
+<!-- ============================= -->
 
+<section id="just-swing-area" style="display:none;">
+
+  <!-- == VIDÉO + OVERLAY == -->
+  <div id="just-swing-screen" class="jsw-screen">
+
+    <video id="jsw-video" autoplay playsinline></video>
+
+    <canvas id="jsw-overlay"></canvas>
+
+    <!-- Message centré (adresse, position, etc.) -->
+    <div id="jsw-big-msg" class="jsw-big-msg"></div>
+
+  </div>
+
+  <!-- == BARRE HAUTE (status + club + routine) == -->
+  <div class="jsw-topbar">
+
+    <!-- Statut -->
+    <div id="jsw-status-text" class="jsw-status">En attente…</div>
+
+    <!-- Choix club -->
+    <select id="jsw-club-select" class="jsw-select">
+      <option value="fer7">Fer 7</option>
+      <option value="fer8">Fer 8</option>
+      <option value="fer9">Fer 9</option>
+      <option value="pw">PW</option>
+      <option value="sw">SW</option>
+      <option value="driver">Driver</option>
+      <option value="bois3">Bois 3</option>
+    </select>
+
+    <!-- Ouvrir la modale routine -->
+    <button id="jsw-open-routine-modal" class="jsw-btn-secondary">
+      🧠 Routine
+    </button>
+
+    <!-- Timer -->
+    <div id="jsw-timer" class="jsw-timer"></div>
+
+  </div>
+
+  <!-- Routine affichée -->
+  <div id="jsw-routine-steps" class="jsw-routine-steps"></div>
+
+
+  <!-- =========================== -->
+  <!--   PANEL RÉSULTAT DU SWING   -->
+  <!-- =========================== -->
+
+  <div id="jsw-result-panel" class="jsw-result hidden">
+
+    <h2 id="jsw-swing-label">Swing #</h2>
+
+    <div id="jsw-score-global" class="jsw-score-global"></div>
+    <div id="jsw-score-details" class="jsw-score-details"></div>
+
+    <h3>Commentaire</h3>
+    <p id="jsw-coach-comment" class="jsw-coach-comment"></p>
+
+    <!-- Exos suggérés -->
+    <div id="jsw-drills" class="jsw-drills"></div>
+
+    <!-- Boutons natifs (garder / suivant / quitter) -->
+    <div class="jsw-buttons">
+      <button id="jsw-btn-keep-reference" class="jsw-btn-secondary">⭐ Garder comme référence</button>
+      <button id="jsw-btn-next-swing" class="jsw-btn-primary">➡️ Swing suivant</button>
+      <button id="jsw-btn-exit" class="jsw-btn-secondary">❌ Quitter</button>
+    </div>
+
+    <!-- 🔥 Nouvelle zone d’actions : LOG + REPLAY + RÉFÉRENCE -->
+    <div id="jsw-result-actions" class="jsw-actions"></div>
+
+  </div>
+
+
+  <!-- =========================== -->
+  <!--      MODALE ROUTINE         -->
+  <!-- =========================== -->
+
+  <div id="jsw-routine-modal" class="jsw-modal hidden">
+
+    <div class="jsw-modal-content">
       
-<!-- === ANALYSE DU SWING (MVP) === -->
-<div id="swing-analyzer" style="display:none;">
+      <h2>🧠 Personnalise ta routine</h2>
 
-  <!-- 📹 Vidéo de référence (grande) -->
-  <div id="ref-container">
-      <video id="ref-video" class="main-video" playsinline muted preload="auto"></video>
-      <canvas id="overlay-ref"></canvas>
+      <label>Routine Swing :</label>
+      <input id="routine-swing"
+             value="Respiration,Visualisation,Alignement,Swing d’essai,Adresse,Swing">
+
+      <label>Routine Putt :</label>
+      <input id="routine-putt"
+             value="Lecture du green,Visualisation,Alignement,Adresse,Putt">
+
+      <label>Routine Approche :</label>
+      <input id="routine-approche"
+             value="Choix de trajectoire,Visualisation,Alignement,Adresse,Swing d’approche">
+
+      <div class="jsw-modal-actions">
+        <button id="jsw-routine-save" class="jsw-btn-primary">💾 Sauvegarder</button>
+        <button id="jsw-routine-close" class="jsw-btn-secondary">Annuler</button>
+      </div>
+
+    </div>
+
   </div>
 
-  <!-- 🤳 Selfie cam (pip) -->
-  <div id="user-container">
-      <video id="user-video" class="pip-video" playsinline muted></video>
-      <canvas id="overlay-user"></canvas>
-  </div>
-
-  <!-- 🧮 Scores -->
-  <div id="score-panel"></div>
-
-  <!-- 🧠 Mini coach local -->
-  <!--div id="coach-ia-mini">🧠 Coach prêt pour l'analyse</div-->
-
-  <!-- 📋 Sélection club + référence -->
-  <div id="swing-options">
-      <select id="club-type">
-          <option value="driver">Driver</option>
-          <option value="iron">Fer</option>
-          <option value="wedge">Wedge</option>
-          <option value="chip">Chip</option>
-          <option value="putt">Putt</option>
-      </select>
-
-      <select id="ref-swing">
-          <option value="rory_faceon">Rory — Face On</option>
-          <option value="rory_dtl">Rory — Down The Line</option>
-          <!-- Tu pourras en rajouter -->
-      </select>
-  </div>  
-
-  
-  <!-- 🎛️ Boutons -->
-  <div id="controls">
-      <button id="analyze-btn">Analyser</button>
-      <button id="record">Enregistrer</button>
-      <button id="save-recording" disabled>Sauver</button>
-  </div>
-
-  <!-- ⏱️ Overlay 30s -->
-  <div id="countdown-overlay">30</div>
-</div>
-
+</section>
 
       
 <!-- === ANALYSE DU SWING (MVP) === -->
@@ -953,8 +1012,19 @@ body.jsw-fullscreen #coach-ia {
 <!-- Just Swing -->
 <script src="js/swingMetrics.js"></script>
 <script src="js/swingScoring.js"></script>
+  <!-- Modules UI JustSwing -->
+<script src="jsw-clubs.js"></script>
+<script src="jsw-routine-modal.js"></script>
+<script src="jsw-swing-log.js"></script>
+<script src="jsw-replay.js"></script>
+
+<!-- Module principal JustSwing -->
+<script src="justSwing.js"></script>
+
 <script src="js/justSwing.js"></script>
 <script src="js/mediapipe-init.js"></script>
+
+
 <!-- Si tu sépares l'angle -->
 <!-- <script src="js/launchAngle.js"></script> -->
 
