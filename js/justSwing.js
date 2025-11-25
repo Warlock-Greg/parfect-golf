@@ -256,6 +256,12 @@ const JustSwing = (() => {
   //   START SESSION
   // -------------------------------------------------------
   async function startSession(selectedMode = JSW_MODE.SWING) {
+   // 🔥 Correctif 1 — sécurité si initJustSwing n’a pas été exécuté
+  if (!screenEl) {
+    console.warn("❗ JustSwing non initialisé — initJustSwing() appelé automatiquement");
+    initJustSwing();
+  }
+    
     mode = selectedMode;
 
     state = JSW_STATE.POSITIONING;
