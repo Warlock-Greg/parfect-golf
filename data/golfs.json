@@ -13,9 +13,9 @@
   },
   {
     "id": "GOLF003",
-    "name": "Terre Blanche - Le Château",
-    "location": "Tourrettes, France",
-    "pars": [4,5,4,3,4,5,4,3,4,5,4,4,3,5,4,3,4,5]
+    "name": "Stade Français - Haras Lupin 9",
+    "location": "Vaucresson, France",
+    "pars": [3,4,3,4,4,3,3,4,4,3,4,3,4,4,3,3,4]
   },
 
   { 
@@ -23,6 +23,13 @@
     "name": "Golf Cicé Blossac", 
     "location": "Bruz, France",
     "pars": [4,5,3,4,4,3,5,4,4,4,3,4,5,3,4,5,4,4] 
+  },
+  
+  {
+    "id": "GOLF005",
+    "name": "Terre Blanche - Le Château",
+    "location": "Tourrettes, France",
+    "pars": [4,5,4,3,4,5,4,3,4,5,4,4,3,5,4,3,4,5]
   }
 
 ]
