@@ -118,12 +118,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // 🎥 Bouton JUST SWING (Module IA temps réel)
 // ============================================
 justSwingBtn?.addEventListener("click", () => {
-  console.log("▶️ Just Swing lancé !");
-  // Option 1 : lancer directement Just Swing
-  JustSwing.startSession("swing"); // ou "putt"
-
-  // Si tu veux masquer toutes les sections actuelles :
- showSection("swing");   // facultatif (selon ton UX)
+  console.log("▶️ Just Swing demandé (géré par Router !");
+  
  coachIASetMode("swing"); // facultatif
  showCoachIA?.("🟢 Just Swing activé — place-toi devant la caméra !");
 });
