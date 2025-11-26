@@ -267,7 +267,7 @@ window.JSW_DEBUG = {
   async function startSession(selectedMode = JSW_MODE.SWING) {
    // 🔥 Correctif 1 — sécurité si initJustSwing n’a pas été exécuté
 
-    / -------------------------------------------------------
+  
   // Correctif 1 : sécurité si initJustSwing n’a pas encore initialisé le DOM
   // -------------------------------------------------------
   if (!screenEl) {
