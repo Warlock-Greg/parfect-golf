@@ -266,7 +266,23 @@ window.JSW_DEBUG = {
   // -------------------------------------------------------
   async function startSession(selectedMode = JSW_MODE.SWING) {
    // 🔥 Correctif 1 — sécurité si initJustSwing n’a pas été exécuté
- 
+
+    / -------------------------------------------------------
+  // Correctif 1 : sécurité si initJustSwing n’a pas encore initialisé le DOM
+  // -------------------------------------------------------
+  if (!screenEl) {
+    console.warn("⚠️ JustSwing non initialisé — initJustSwing() forcé AVANT startSession");
+    initJustSwing();
+  }
+
+  // -------------------------------------------------------
+  // Correctif 2 : afficher la routine APRÈS init (sinon routineStepsEl était undefined)
+  // -------------------------------------------------------
+  showRoutineSteps();
+
+  // -------------------------------------------------------
+  // Session init
+  // -------------------------------------------------------
     
     mode = selectedMode;
 
