@@ -275,10 +275,7 @@ window.JSW_DEBUG = {
     initJustSwing();
   }
 
-  // -------------------------------------------------------
-  // Correctif 2 : afficher la routine APRÈS init (sinon routineStepsEl était undefined)
-  // -------------------------------------------------------
-  showRoutineSteps();
+
 
   // -------------------------------------------------------
   // Session init
@@ -295,6 +292,11 @@ window.JSW_DEBUG = {
     frameBuffer = [];
     currentImpactContext = null;
     addressStableSince = null;
+
+      // -------------------------------------------------------
+  // Correctif 2 : afficher la routine APRÈS init (sinon routineStepsEl était undefined)
+  // -------------------------------------------------------
+  showRoutineSteps();
 
     screenEl.classList.remove("hidden");
     document.body.classList.add("jsw-fullscreen");
