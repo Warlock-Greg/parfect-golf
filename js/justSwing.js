@@ -69,6 +69,14 @@ const JSW_DRILLS = [
 // =========================================================
 
 const JustSwing = (() => {
+// ==== DEBUG TEMPORAIRE ====
+// Permet de lire l'état interne facilement dans la console
+window.JSW_DEBUG = {
+  state: () => state,
+  fullBody: () => lastFullBodyOk,
+  pose: () => lastPose,
+  routineEl: () => routineStepsEl,
+};
 
   // DOM
   let screenEl, videoEl, overlayEl, ctx;
