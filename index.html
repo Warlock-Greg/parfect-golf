@@ -314,6 +314,96 @@ footer button.active {
 }
 
 
+.hidden {
+  display: none;
+}
+
+
+
+    
+/* ========= JUST SWING — FULLSCREEN VIDEO FIX ========= */
+
+#just-swing-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* IMPORTANT */
+  background: black;
+}
+
+
+
+/* Bouton config routine dans l’UI Just Swing */
+.jsw-btn-config {
+  margin-top:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:none;
+  background:rgba(0,0,0,0.7);
+  color:#00ff99;
+  font-size:0.8rem;
+}
+
+    
+/* 🔙 Bouton retour */
+.jsw-exit-top {
+  position: absolute;
+  top: env(safe-area-inset-top, 10px);
+  left: 10px;
+  z-index: 99999;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.55);
+  color: #00ff99;
+  border: 1px solid #00ff99;
+  font-size: 0.9rem;
+  backdrop-filter: blur(4px);
+}
+
+
+/* Bouton "recommencer" */
+.jsw-btn-restart {
+ margin-top: 6px;
+  background: #00ff99;
+  color: #111;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+
+
+    .jsw-select {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  background: rgba(0,0,0,0.65);
+  color: #00ff99;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  border: 1px solid #00ff99;
+  backdrop-filter: blur(6px);
+}
+
+    /* === JUST SWING FULLSCREEN PAYSAGE === */
+
+body.jsw-fullscreen {
+  background:#000;
+  overflow:hidden;
+}
+
+/* On masque le header, le coach global et la nav pendant Just Swing */
+body.jsw-fullscreen header,
+body.jsw-fullscreen #coach-ia {
+  display:none !important;
+}
+
+    
 
 #jsw-status-text {
   font-size: 15px;
@@ -354,155 +444,6 @@ footer button.active {
   font-weight: 600;
 }
 
-.hidden {
-  display: none;
-}
-
-
-
-    
-/* ========= JUST SWING — FULLSCREEN VIDEO FIX ========= */
-
-#just-swing-screen {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden; /* IMPORTANT */
-  background: black;
-}
-
-
-
-/* Overlay squelette + halo — par-dessus */
-#jsw-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vh;
-  height: 85vh;
-  pointer-events: none;
-  transform: scaleX(-1); /* miroir aussi */
-  z-index: 2;
-}
-
-/* Bouton config routine dans l’UI Just Swing */
-.jsw-btn-config {
-  margin-top:4px;
-  padding:4px 10px;
-  border-radius:999px;
-  border:none;
-  background:rgba(0,0,0,0.7);
-  color:#00ff99;
-  font-size:0.8rem;
-}
-
-    
-/* 🔙 Bouton retour */
-.jsw-exit-top {
-  position: absolute;
-  top: env(safe-area-inset-top, 10px);
-  left: 10px;
-  z-index: 99999;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.55);
-  color: #00ff99;
-  border: 1px solid #00ff99;
-  font-size: 0.9rem;
-  backdrop-filter: blur(4px);
-}
-
-    
-/* Message central */
-#jsw-big-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  max-width: 90%;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(0,0,0,0.7);
-}
-
-/* UI du bas */
-#jsw-ui {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  min-height: 15vh;      /* 🔥 zone restante sous la vidéo */
-  padding: 10px 0;
-  background: rgba(0,0,0,0.35);
-  color: #00ff99;
-  text-align: center;
-  font-size: 1.1rem;
-  z-index: 3;
-}
-
-/* Bouton "recommencer" */
-.jsw-btn-restart {
- margin-top: 6px;
-  background: #00ff99;
-  color: #111;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-/* HALO visible */
-.jsw-halo-red    { box-shadow: inset 0 0 80px rgba(255,0,0,0.8); }
-.jsw-halo-green  { box-shadow: inset 0 0 80px rgba(0,255,0,0.8); }
-.jsw-halo-orange { box-shadow: inset 0 0 80px rgba(255,165,0,0.8); }
-.jsw-halo-blue   { box-shadow: inset 0 0 80px rgba(0,120,255,0.8); }
-
-    /* Message central */
-#jsw-big-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 3;
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  max-width: 90%;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(0,0,0,0.7);
-}
-
-    .jsw-select {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  background: rgba(0,0,0,0.65);
-  color: #00ff99;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 1rem;
-  border: 1px solid #00ff99;
-  backdrop-filter: blur(6px);
-}
-
-    /* === JUST SWING FULLSCREEN PAYSAGE === */
-
-body.jsw-fullscreen {
-  background:#000;
-  overflow:hidden;
-}
-
-/* On masque le header, le coach global et la nav pendant Just Swing */
-body.jsw-fullscreen header,
-body.jsw-fullscreen #coach-ia {
-  display:none !important;
-}
 
     /*body.jsw-fullscreen nav {
   display:none !important;
@@ -637,6 +578,244 @@ body.jsw-fullscreen #coach-ia {
   display:none;
 }
 
+/* =========================================================
+   JUST SWING — FULLSCREEN UI 2025
+   Version premium + routine stylée
+   ========================================================= */
+
+#just-swing-area {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: #000;
+  display: none;
+  overflow: hidden;
+}
+
+/* 📹 Écran principal (vidéo + overlay + halo) */
+#just-swing-screen.jsw-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+/* 🌈 Halo dynamique */
+.jsw-screen.jsw-halo-red    { box-shadow: inset 0 0 80px rgba(255,0,0,0.9); }
+.jsw-screen.jsw-halo-orange { box-shadow: inset 0 0 80px rgba(255,165,0,0.9); }
+.jsw-screen.jsw-halo-green  { box-shadow: inset 0 0 80px rgba(0,255,153,0.9); }
+.jsw-screen.jsw-halo-blue   { box-shadow: inset 0 0 80px rgba(0,136,255,0.9); }
+
+/* ---------------------------------------------------------
+   VIDÉO + OVERLAY
+   --------------------------------------------------------- */
+
+#jsw-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;  /* pas de cadre coupé */
+  background: #000;
+  z-index: 1;
+}
+
+#jsw-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  transform: scaleX(-1); /* miroir selfie */
+}
+
+/* ---------------------------------------------------------
+   TOPBAR (statut, club, routine, timer)
+   --------------------------------------------------------- */
+
+.jsw-topbar {
+  position: absolute;
+  top: env(safe-area-inset-top, 10px);
+  left: 0;
+  width: 100%;
+  padding: 6px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  z-index: 35;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.jsw-topbar select,
+.jsw-topbar button {
+  z-index: 40;
+}
+
+/* Texte du statut (gauche) */
+#jsw-status-text {
+  color: #00ff99;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-shadow: 0 0 4px #000;
+}
+
+/* Select club */
+.jsw-select {
+  background: rgba(0,0,0,0.55);
+  color: #00ff99;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #00ff99;
+  backdrop-filter: blur(4px);
+  font-size: 0.9rem;
+}
+
+/* Routine modal button */
+.jsw-btn-secondary {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: 1px solid #00ff99;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+/* Timer */
+#jsw-timer {
+  color: #fff;
+  font-family: monospace;
+  opacity: 0.8;
+}
+
+/* ---------------------------------------------------------
+   ROUTINE — version premium ✨
+   --------------------------------------------------------- */
+
+#jsw-routine-steps {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 10px) + 55px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+
+  padding: 10px 18px;
+  border-radius: 12px;
+
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(0,0,0,0.7);
+  white-space: nowrap;
+
+  /* effet verre + glow léger */
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0,255,153,0.4);
+  box-shadow:
+    0 0 15px rgba(0,255,153,0.25),
+    inset 0 0 10px rgba(0,255,153,0.15);
+  
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Apparition */
+#jsw-routine-steps.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Disparition */
+#jsw-routine-steps.hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+
+/* ---------------------------------------------------------
+   MESSAGE CENTRAL (adresse / installation)
+   --------------------------------------------------------- */
+#jsw-big-msg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+
+  max-width: 80vw;
+  padding: 12px 18px;
+
+  background: rgba(0,0,0,0.45);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(0,0,0,0.9);
+  backdrop-filter: blur(8px);
+
+  transition: opacity 0.3s ease;
+}
+
+/* ---------------------------------------------------------
+   PANEL RÉSULTAT
+   --------------------------------------------------------- */
+
+#jsw-result-panel {
+  position: absolute;
+  bottom: calc(env(safe-area-inset-bottom,0px) + 85px);
+  left: 5vw;
+  right: 5vw;
+  z-index: 60;
+
+  background: rgba(0,0,0,0.85);
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #fff;
+  border: 1px solid rgba(0,255,153,0.2);
+  box-shadow: 0 0 12px rgba(0,255,153,0.15);
+
+  display: none;
+}
+
+#jsw-result-panel.show {
+  display: block;
+}
+
+/* Boutons du résultat */
+#jsw-result-panel button {
+  margin-top: 6px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  background: #00ff99;
+  color: #111;
+  font-weight: 600;
+  border: none;
+}
+
+/* ---------------------------------------------------------
+   MODE FULLSCREEN (cache header + coach + nav)
+   --------------------------------------------------------- */
+
+body.jsw-fullscreen {
+  background: #000;
+  overflow: hidden;
+}
+
+body.jsw-fullscreen header,
+body.jsw-fullscreen nav,
+body.jsw-fullscreen #coach-ia {
+  display: none !important;
+}
+
+    
     
 /* === Responsive === */
 /@media (max-width: 768px) {
