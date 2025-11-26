@@ -114,15 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     window.injectSocialUI?.();
   });
 
-// ============================================
-// 🎥 Bouton JUST SWING (Module IA temps réel)
-// ============================================
-justSwingBtn?.addEventListener("click", () => {
-  console.log("▶️ Just Swing demandé (géré par Router !");
-  
- coachIASetMode("swing"); // facultatif
- showCoachIA?.("🟢 Just Swing activé — place-toi devant la caméra !");
-});
 
 
   
