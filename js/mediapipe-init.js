@@ -1,9 +1,8 @@
-// === MEDIAPIPE INIT – JustSwing version simple & stable  24nov===
-// - Démarre la caméra
-// - Pas de miroir, pas de transform chelou
-// - Envoie les landmarks vers JustSwing.onPoseFrame
+// === MEDIAPIPE INIT – JustSwing version stable ===
+// 24 nov 2025
 
 document.addEventListener("DOMContentLoaded", () => {
+
   window.startJustSwingCamera = async function () {
     console.log("🎥 Démarrage caméra pour JustSwing…");
 
@@ -13,36 +12,36 @@ document.addEventListener("DOMContentLoaded", () => {
       return null;
     }
 
+    // -----------------------------
+    // 1) 🔥 RÉCUP CAMÉRA
+    // -----------------------------
     let stream = null;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: "user",      // on demande la selfie cam si possible
+          facingMode: "user",
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
         audio: false
       });
     } catch (err) {
-      console.warn("⚠️ Selfie KO → fallback caméra par défaut", err);
+      console.warn("⚠️ Selfie KO → fallback", err);
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: true,
           audio: false
         });
       } catch (err2) {
-        console.error("❌ Impossible d'accéder à une caméra", err2);
+        console.error("❌ Aucune caméra disponible", err2);
         return null;
       }
     }
 
     videoElement.srcObject = stream;
-
-    // ❗ PAS DE transform ici → on laisse brut
     videoElement.style.transform = "scaleX(-1)";
 
-    // Safari fix
     const ensurePlay = () =>
       videoElement.play().catch(() => setTimeout(ensurePlay, 50));
     ensurePlay();
@@ -53,7 +52,11 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-    // --- MediaPipe Pose ---
+    // -----------------------------
+    // 2) 🔥 MEDIAPIPE POSE
+    // -----------------------------
+    let mpReady = false;
+
     const mpPose = new Pose({
       locateFile: (file) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
@@ -63,20 +66,27 @@ document.addEventListener("DOMContentLoaded", () => {
       modelComplexity: 1,
       smoothLandmarks: true,
       enableSegmentation: false,
+      selfieMode: false,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
     });
 
-    mpPose.onResults((results) => {
-      console.log("POSE:", results.poseLandmarks); // debug
-      if (window.JustSwing?.onPoseFrame) {
-        JustSwing.onPoseFrame(results.poseLandmarks || null);
+    // 🟢 Callback UNIFIÉ — un seul onResults !
+    mpPose.onResults((res) => {
+      if (!mpReady) {
+        mpReady = true;
+        console.log("🟢 MediaPipe prêt !");
       }
+
+      window.JustSwing?.onPoseFrame?.(res.poseLandmarks || null);
     });
 
-    // Boucle frame → Pose via Camera util (stable)
+    // -----------------------------
+    // 3) 🔥 CAMERA → MP Pose
+    // -----------------------------
     const camera = new Camera(videoElement, {
       onFrame: async () => {
+        if (!mpReady) return; // empêche crash WASM
         try {
           await mpPose.send({ image: videoElement });
         } catch (err) {
@@ -86,13 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
       width: 1280,
       height: 720
     });
-
-    let mpReady = false;
-
-mpPose.onResults((res) => {
-  mpReady = true;
-  window.JustSwing?.onPoseFrame?.(res.poseLandmarks);
-});
 
     camera.start();
 
