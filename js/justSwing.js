@@ -302,7 +302,7 @@ window.JSW_DEBUG = {
     document.body.classList.add("jsw-fullscreen");
 
     updateUI();
-    showBigMessage("Place-toi plein pied 👣 au centre.");
+    showBigMessage("Adresse OK ✅ À toi de faire de ton mieux 💪");
 
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
@@ -494,52 +494,133 @@ window.JSW_DEBUG = {
     return Math.random() < 0.02;
   }
 
+
+  function dist(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+// Angle entre segments AB et CD
+function angleBetweenSegments(A, B, C, D) {
+  const v1 = { x: B.x - A.x, y: B.y - A.y };
+  const v2 = { x: D.x - C.x, y: D.y - C.y };
+
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x*v1.x + v1.y*v1.y);
+  const mag2 = Math.sqrt(v2.x*v2.x + v2.y*v2.y);
+
+  if (mag1 === 0 || mag2 === 0) return 0;
+
+  const cos = dot / (mag1 * mag2);
+  return Math.acos(Math.min(1, Math.max(-1, cos))) * 180 / Math.PI;
+}
+
+// Analyse du triangle bras + épaules
+function computeTriangleMetrics(pose) {
+  if (!pose) return null;
+
+  const L = pose;
+  const LS = L[11], RS = L[12];
+  const LH = L[15], RH = L[16];
+  if (!LS || !RS || !LH || !RH) return null;
+
+  const shoulderWidth = dist(LS, RS);
+
+  const midShoulders = {
+    x: (LS.x + RS.x) / 2,
+    y: (LS.y + RS.y) / 2
+  };
+
+  const handDistL = dist(LH, midShoulders);
+  const handDistR = dist(RH, midShoulders);
+  const avgHandDist = (handDistL + handDistR) / 2;
+
+  const angle = angleBetweenSegments(LS, RS, LH, RH);
+
+  return { shoulderWidth, avgHandDist, angle };
+}
+
   // -------------------------------------------------------
   //   SCORING
   // -------------------------------------------------------
-  function computeSwingScore(mode, pose, ctxImpact) {
-    const routineScore = lastFullBodyOk ? 15 + Math.floor(Math.random() * 5) : 10;
-    const swingScore = 50 + Math.floor(Math.random() * 20);
-    const regularityScore = 3 + Math.floor(Math.random() * 7);
+ function computeSwingScore(mode, pose, ctxImpact) {
 
-    const total = routineScore + swingScore + regularityScore;
+  // === TRIANGLE ======================================================
+  const tri = computeTriangleMetrics(pose);
+  let triangleScore = 10;   // fallback
+  
+  if (tri) {
+    // Normalisation empirique MVP
+    const idealShoulder = 0.25;        // largeur épaule typique
+    const idealHandDist = 0.18;        // distance mains-centre typique
+    const idealAngle = 25;             // angle bras/épaules stable
 
-    const phaseScores = {
-      address: clamp(routineScore * 0.5 / 2, 0, 10),
-      backswing: clamp((swingScore * 0.2) / 2, 0, 10),
-      top: clamp((swingScore * 0.15) / 2, 0, 10),
-      downswing: clamp((swingScore * 0.3) / 2, 0, 10),
-      impact: clamp((swingScore * 0.35) / 2, 0, 10),
-      release: clamp((regularityScore * 0.4), 0, 10),
-      finish: clamp((regularityScore * 0.6), 0, 10)
-    };
+    const s = 1 - Math.abs(tri.shoulderWidth - idealShoulder) / idealShoulder;
+    const h = 1 - Math.abs(tri.avgHandDist   - idealHandDist) / idealHandDist;
+    const a = 1 - Math.abs(tri.angle         - idealAngle) / idealAngle;
 
-    const detectedIssues = [];
-    if (routineScore < 14) detectedIssues.push("routine");
-    if (phaseScores.finish < 6) detectedIssues.push("balance_finish");
-    if (mode === JSW_MODE.APPROCHE && swingScore < 60)
-      detectedIssues.push("launch_control");
+    // Clamp
+    const triangleRaw = Math.max(0, (s + h + a) / 3);
 
-    const launch = estimateLaunchAngle(pose, ctxImpact);
-
-    const parfectEarned = routineScore >= 14 && total >= 75 ? 1 : 0;
-    if (parfectEarned) awardParfects(parfectEarned);
-
-    return {
-      index: currentSwingIndex,
-      mode,
-      club: currentClubType,
-      routineScore,
-      swingScore,
-      regularityScore,
-      total,
-      phaseScores,
-      detectedIssues,
-      parfectEarned,
-      launchAngle: launch,
-      timestamp: Date.now(),
-    };
+    // Score sur 20
+    triangleScore = Math.round(triangleRaw * 20);
   }
+
+  // === SCORES MVP EXISTANTS ==========================================
+  const routineScore = lastFullBodyOk ? 15 + Math.floor(Math.random() * 5) : 10;
+  const swingScore = 50 + Math.floor(Math.random() * 20);
+  const regularityScore = 3 + Math.floor(Math.random() * 7);
+
+  // === INTEGRATION TRIANGLE ==========================================
+  // Nouveau total = routine + swing + regularity + triangle
+  const total = routineScore + swingScore + regularityScore + triangleScore;
+
+  // === DETAILS PAR PHASE =============================================
+  const phaseScores = {
+    address: clamp(routineScore * 0.5 / 2, 0, 10),
+    backswing: clamp((swingScore * 0.2) / 2, 0, 10),
+    top: clamp((swingScore * 0.15) / 2, 0, 10),
+    downswing: clamp((swingScore * 0.3) / 2, 0, 10),
+    impact: clamp((swingScore * 0.35) / 2, 0, 10),
+    release: clamp((regularityScore * 0.4), 0, 10),
+    finish: clamp((regularityScore * 0.6), 0, 10),
+    triangle: triangleScore   // 👉 ajouté dans l’UI pour debug
+  };
+
+  // === DÉTECTION BASEE SUR TRIANGLE ==================================
+  const detectedIssues = [];
+
+  if (triangleScore < 10) detectedIssues.push("triangle_instable");
+
+  if (routineScore < 14) detectedIssues.push("routine");
+  if (phaseScores.finish < 6) detectedIssues.push("balance_finish");
+  if (mode === JSW_MODE.APPROCHE && swingScore < 60)
+    detectedIssues.push("launch_control");
+
+  // === ANGLE DE LANCEMENT EXISTANT ===================================
+  const launch = estimateLaunchAngle(pose, ctxImpact);
+
+  const parfectEarned = routineScore >= 14 && total >= 75 ? 1 : 0;
+  if (parfectEarned) awardParfects(parfectEarned);
+
+  return {
+    index: currentSwingIndex,
+    mode,
+    club: currentClubType,
+    routineScore,
+    swingScore,
+    regularityScore,
+    triangleScore,
+    total,
+    phaseScores,
+    detectedIssues,
+    parfectEarned,
+    launchAngle: launch,
+    triangleRaw: tri,   // 👉 données brutes pour analyse dans debug
+    timestamp: Date.now()
+  };
+}
 
   function clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
@@ -586,50 +667,106 @@ window.JSW_DEBUG = {
   //   AFFICHAGE RESULTAT
   // -------------------------------------------------------
 
-  function showSwingResult(data) {
-    swingLabelEl.textContent = `Swing #${data.index} — ${data.mode} (${data.club})`;
-    scoreGlobalEl.textContent = `Score Parfect : ${data.total}/100`;
-    scoreDetailsEl.textContent =
-      `Routine ${data.routineScore}/20 · Swing ${data.swingScore}/70 · Régularité ${data.regularityScore}/10`;
+ function showSwingResult(data) {
+  // --- Titre ---
+  swingLabelEl.textContent = `Swing #${data.index} — ${data.mode} (${data.club})`;
 
-    coachCommentEl.textContent = data.comment ?? "Bon travail 👌";
+  // --- Score global ---
+  scoreGlobalEl.textContent = `Score Parfect : ${data.total}/100`;
+  scoreDetailsEl.textContent =
+    `Routine ${data.routineScore}/20 · ` +
+    `Swing ${data.swingScore}/70 · ` +
+    `Régularité ${data.regularityScore}/10`;
 
-    const drills = coachSuggestDrills(data);
-    drillsEl.innerHTML = drills.map(
-      d => `<div>• <b>${d.title}</b> (${d.durationMin} min) — ${d.description}</div>`
-    ).join("");
+  // --- Commentaire coach (même si pas encore ultra smart) ---
+  coachCommentEl.textContent = data.comment ?? "Bon travail 👌";
 
-    // Actions avancées
-    const actionsEl = $$("jsw-result-actions");
-    actionsEl.innerHTML = "";
+  // --- Exos suggérés ---
+  const drills = coachSuggestDrills(data);
+  drillsEl.innerHTML = drills.map(
+    d => `<div>• <b>${d.title}</b> (${d.durationMin} min) — ${d.description}</div>`
+  ).join("");
 
-    if (window.JustSwingLog?.show) {
-      const logBtn = document.createElement("button");
-      logBtn.textContent = "📊 Log swing";
-      logBtn.className = "jsw-btn-secondary";
-      logBtn.onclick = () => window.JustSwingLog.show(data);
-      actionsEl.appendChild(logBtn);
-    }
-
-    if (window.JustSwingReplay?.show) {
-      const replayBtn = document.createElement("button");
-      replayBtn.textContent = "🎥 Replay";
-      replayBtn.className = "jsw-btn-secondary";
-      replayBtn.onclick = () => window.JustSwingReplay.show(data);
-      actionsEl.appendChild(replayBtn);
-    }
-
-    const refBtn = document.createElement("button");
-    refBtn.textContent = "⭐ Référence";
-    refBtn.className = "jsw-btn-secondary";
-    refBtn.onclick = () => {
-      referenceSwing = data;
-      refBtn.textContent = "✔ Défini";
-    };
-    actionsEl.appendChild(refBtn);
-
-    resultPanelEl.classList.remove("hidden");
+  // === 🧩 DÉTAIL DU SCORE PAR PHASE ===
+  const breakdownEl = document.getElementById("jsw-score-breakdown");
+  if (breakdownEl && data.phaseScores) {
+    const p = data.phaseScores;
+    breakdownEl.innerHTML = `
+      <h3>Détail du score</h3>
+      <table class="jsw-score-table">
+        <tbody>
+          <tr><td>Adresse</td><td>${p.address?.toFixed?.(1) ?? p.address}/10</td></tr>
+          <tr><td>Backswing</td><td>${p.backswing?.toFixed?.(1) ?? p.backswing}/10</td></tr>
+          <tr><td>Top</td><td>${p.top?.toFixed?.(1) ?? p.top}/10</td></tr>
+          <tr><td>Downswing</td><td>${p.downswing?.toFixed?.(1) ?? p.downswing}/10</td></tr>
+          <tr><td>Impact</td><td>${p.impact?.toFixed?.(1) ?? p.impact}/10</td></tr>
+          <tr><td>Release</td><td>${p.release?.toFixed?.(1) ?? p.release}/10</td></tr>
+          <tr><td>Finish</td><td>${p.finish?.toFixed?.(1) ?? p.finish}/10</td></tr>
+        </tbody>
+      </table>
+    `;
   }
+
+  // === 📜 HISTORIQUE DE LA SESSION (pour revoir les swings) ===
+  const historyEl = document.getElementById("jsw-session-history");
+  if (historyEl && Array.isArray(swings) && swings.length) {
+    historyEl.innerHTML = `
+      <h3>Historique de la session</h3>
+      <ul class="jsw-history-list">
+        ${swings.map(s => `
+          <li>
+            <button class="jsw-history-item" data-swing-index="${s.index}">
+              Swing #${s.index} — ${s.total}/100 — ${s.club}
+            </button>
+          </li>
+        `).join("")}
+      </ul>
+    `;
+
+    // On attache les handlers de clic pour revoir un swing donné
+    historyEl.querySelectorAll(".jsw-history-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.getAttribute("data-swing-index"));
+        const target = swings.find(s => s.index === idx);
+        if (target) {
+          showSwingResult(target);
+        }
+      });
+    });
+  }
+
+  // === Actions avancées (log / replay / référence) ===
+  const actionsEl = $$("jsw-result-actions");
+  actionsEl.innerHTML = "";
+
+  if (window.JustSwingLog?.show) {
+    const logBtn = document.createElement("button");
+    logBtn.textContent = "📊 Log swing brut";
+    logBtn.className = "jsw-btn-secondary";
+    logBtn.onclick = () => window.JustSwingLog.show(data);
+    actionsEl.appendChild(logBtn);
+  }
+
+  if (window.JustSwingReplay?.show) {
+    const replayBtn = document.createElement("button");
+    replayBtn.textContent = "🎥 Replay";
+    replayBtn.className = "jsw-btn-secondary";
+    replayBtn.onclick = () => window.JustSwingReplay.show(data);
+    actionsEl.appendChild(replayBtn);
+  }
+
+  const refBtn = document.createElement("button");
+  refBtn.textContent = "⭐ Référence";
+  refBtn.className = "jsw-btn-secondary";
+  refBtn.onclick = () => {
+    referenceSwing = data;
+    refBtn.textContent = "✔ Défini";
+  };
+  actionsEl.appendChild(refBtn);
+
+  resultPanelEl.classList.remove("hidden");
+}
+
 
   function hideResultPanel() {
     resultPanelEl.classList.add("hidden");
@@ -746,6 +883,66 @@ function debug() {
   console.log("🔍 routineStepsEl=", routineStepsEl);
   console.log("🔍 timerEl       =", timerEl);
 }
+
+  function computeTriangleStability(pose) {
+  if (!pose || pose.length < 17) return null;
+
+  const L = pose;
+
+  const leftShoulder  = L[11];
+  const rightShoulder = L[12];
+  const leftHand      = L[15];
+  const rightHand     = L[16];
+
+  if (!leftShoulder || !rightShoulder || !leftHand || !rightHand) return null;
+
+  // Distance entre épaules
+  const shoulderWidth = dist(leftShoulder, rightShoulder);
+
+  // Centre des épaules
+  const midShoulders = {
+    x: (leftShoulder.x + rightShoulder.x) / 2,
+    y: (leftShoulder.y + rightShoulder.y) / 2
+  };
+
+  // Distance mains ↔ centre épaules
+  const leftHandDist  = dist(leftHand, midShoulders);
+  const rightHandDist = dist(rightHand, midShoulders);
+
+  const avgHandDist = (leftHandDist + rightHandDist) / 2;
+
+  // Angle épaules ↔ mains
+  const angle = angleBetweenSegments(
+    leftShoulder, rightShoulder,
+    leftHand, rightHand
+  );
+
+  return {
+    shoulderWidth,
+    avgHandDist,
+    angle
+  };
+}
+
+function dist(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+function angleBetweenSegments(A, B, C, D) {
+  const v1 = { x: B.x - A.x, y: B.y - A.y };
+  const v2 = { x: D.x - C.x, y: D.y - C.y };
+
+  const dot = v1.x*v2.x + v1.y*v2.y;
+  const mag1 = Math.sqrt(v1.x*v1.x + v1.y*v1.y);
+  const mag2 = Math.sqrt(v2.x*v2.x + v2.y*v2.y);
+
+  if (mag1 * mag2 === 0) return 0;
+
+  return Math.acos(dot / (mag1 * mag2)) * 180 / Math.PI;
+}
+
 
   
   // -------------------------------------------------------
