@@ -87,6 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
       height: 720
     });
 
+    let mpReady = false;
+
+mpPose.onResults((res) => {
+  mpReady = true;
+  window.JustSwing?.onPoseFrame?.(res.poseLandmarks);
+});
+
     camera.start();
 
     console.log("📸 Caméra JustSwing prête ✔");
