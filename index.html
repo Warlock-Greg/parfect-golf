@@ -929,21 +929,32 @@ body.jsw-fullscreen #coach-ia {
   <div id="just-swing-screen" class="jsw-screen">
 
     <video id="jsw-video" autoplay playsinline></video>
-
     <canvas id="jsw-overlay"></canvas>
 
-    <!-- Message centré (adresse, position, etc.) -->
+    <!-- Message centré -->
     <div id="jsw-big-msg" class="jsw-big-msg"></div>
 
   </div>
 
-  <!-- == BARRE HAUTE (status + club + routine) == -->
-  <div class="jsw-topbar">
+  <!-- == UI BAS : status + routine + timer + restart == -->
+  <div id="jsw-ui">
 
-    <!-- Statut -->
-    <div id="jsw-status-text" class="jsw-status">En attente…</div>
+    <!-- Status -->
+    <div id="jsw-status-text"></div>
 
-    <!-- Choix club -->
+    <!-- Routine dynamique -->
+    <div id="jsw-routine-steps"></div>
+
+    <!-- Timer -->
+    <div id="jsw-timer"></div>
+
+    <!-- Restart -->
+    <button id="jsw-restart" class="jsw-btn-restart">Recommencer</button>
+
+  </div>
+
+  <!-- == TOP RIGHT : Choix club + bouton routine == -->
+  <div class="jsw-top-right">
     <select id="jsw-club-select" class="jsw-select">
       <option value="fer7">Fer 7</option>
       <option value="fer8">Fer 8</option>
@@ -954,19 +965,10 @@ body.jsw-fullscreen #coach-ia {
       <option value="bois3">Bois 3</option>
     </select>
 
-    <!-- Ouvrir la modale routine -->
     <button id="jsw-open-routine-modal" class="jsw-btn-secondary">
       🧠 Routine
     </button>
-
-    <!-- Timer -->
-    <div id="jsw-timer" class="jsw-timer"></div>
-
   </div>
-
-  <!-- Routine affichée -->
-  <div id="jsw-routine-steps" class="jsw-routine-steps"></div>
-
 
   <!-- =========================== -->
   <!--   PANEL RÉSULTAT DU SWING   -->
@@ -976,33 +978,26 @@ body.jsw-fullscreen #coach-ia {
 
     <h2 id="jsw-swing-label">Swing #</h2>
 
-    <div id="jsw-score-global" class="jsw-score-global"></div>
-    <div id="jsw-score-details" class="jsw-score-details"></div>
+    <div id="jsw-score-global"></div>
+    <div id="jsw-score-details"></div>
 
     <h3>Commentaire</h3>
-    <p id="jsw-coach-comment" class="jsw-coach-comment"></p>
+    <p id="jsw-coach-comment"></p>
 
-    <!-- Exos suggérés -->
-    <div id="jsw-drills" class="jsw-drills"></div>
+    <div id="jsw-drills"></div>
 
-    <!-- 🔽 🔥 AJOUTE ÇA JUSTE APRÈS -->
-  <div id="jsw-score-breakdown" class="jsw-score-breakdown"></div>
+    <div id="jsw-score-breakdown"></div>
+    <div id="jsw-session-history"></div>
 
-  <div id="jsw-session-history" class="jsw-session-history"></div>
-  <!-- 🔼 🔥 FIN AJOUT -->
-
-    <!-- Boutons natifs (garder / suivant / quitter) -->
     <div class="jsw-buttons">
       <button id="jsw-btn-keep-reference" class="jsw-btn-secondary">⭐ Garder comme référence</button>
       <button id="jsw-btn-next-swing" class="jsw-btn-primary">➡️ Swing suivant</button>
       <button id="jsw-btn-exit" class="jsw-btn-secondary">❌ Quitter</button>
     </div>
 
-    <!-- 🔥 Nouvelle zone d’actions : LOG + REPLAY + RÉFÉRENCE -->
     <div id="jsw-result-actions" class="jsw-actions"></div>
 
   </div>
-
 
   <!-- =========================== -->
   <!--      MODALE ROUTINE         -->
@@ -1036,6 +1031,7 @@ body.jsw-fullscreen #coach-ia {
   </div>
 
 </section>
+
 
       
 <!-- === ANALYSE DU SWING (MVP) === -->
