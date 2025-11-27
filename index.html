@@ -719,6 +719,61 @@ body.jsw-fullscreen #coach-ia {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+.jsw-score-breakdown {
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+
+.jsw-score-breakdown h3 {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+
+.jsw-score-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.jsw-score-table td {
+  padding: 2px 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.jsw-score-table td:first-child {
+  opacity: 0.8;
+}
+
+.jsw-session-history {
+  margin-top: 10px;
+  font-size: 0.8rem;
+}
+
+.jsw-session-history h3 {
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+
+.jsw-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.jsw-history-item {
+  width: 100%;
+  text-align: left;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+
+    
 /* Apparition */
 #jsw-routine-steps.show {
   opacity: 1;
@@ -929,6 +984,12 @@ body.jsw-fullscreen #coach-ia {
 
     <!-- Exos suggérés -->
     <div id="jsw-drills" class="jsw-drills"></div>
+
+    <!-- 🔽 🔥 AJOUTE ÇA JUSTE APRÈS -->
+  <div id="jsw-score-breakdown" class="jsw-score-breakdown"></div>
+
+  <div id="jsw-session-history" class="jsw-session-history"></div>
+  <!-- 🔼 🔥 FIN AJOUT -->
 
     <!-- Boutons natifs (garder / suivant / quitter) -->
     <div class="jsw-buttons">
