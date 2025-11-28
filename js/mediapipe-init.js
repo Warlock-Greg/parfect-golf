@@ -1,96 +1,88 @@
-// === MEDIAPIPE INIT – JustSwing version stable ===
-// 24 nov 2025
+// === MEDIAPIPE INIT — Version stable et compatible CDN ===
+// Fonctionne avec :
+// https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js
+// https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js
 
 document.addEventListener("DOMContentLoaded", () => {
-
   window.startJustSwingCamera = async function () {
-    console.log("🎥 Démarrage caméra pour JustSwing…");
+    console.log("🎥 Initialisation caméra + MediaPipe Pose…");
 
-    const videoElement = document.getElementById("jsw-video");
-    if (!videoElement) {
-      console.error("❌ jsw-video introuvable");
+    const videoEl = document.getElementById("jsw-video");
+    if (!videoEl) {
+      console.error("❌ jsw-video manquant");
       return null;
     }
 
-    // -----------------------------
-    // 1) 🔥 RÉCUP CAMÉRA
-    // -----------------------------
-    let stream = null;
+    // ----------------------------
+    // 1) Ouvre la caméra
+    // ----------------------------
+    let stream;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+        video: { facingMode: "user", width: 1280, height: 720 },
         audio: false
       });
     } catch (err) {
-      console.warn("⚠️ Selfie KO → fallback", err);
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
-        });
-      } catch (err2) {
-        console.error("❌ Aucune caméra disponible", err2);
-        return null;
-      }
+      console.warn("⚠️ Selfie KO, fallback caméra arrière", err);
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
     }
 
-    videoElement.srcObject = stream;
-    videoElement.style.transform = "scaleX(-1)";
+    videoEl.srcObject = stream;
+    videoEl.style.transform = "scaleX(-1)"; // miroir
 
-    const ensurePlay = () =>
-      videoElement.play().catch(() => setTimeout(ensurePlay, 50));
+    const ensurePlay = () => 
+      videoEl.play().catch(() => setTimeout(ensurePlay, 50));
     ensurePlay();
 
-    videoElement.addEventListener("loadedmetadata", () => {
-      console.log(
-        `📸 Vidéo OK : ${videoElement.videoWidth}x${videoElement.videoHeight}`
-      );
-    });
-
-    // -----------------------------
-    // 2) 🔥 MEDIAPIPE POSE
-    // -----------------------------
-    let mpReady = false;
-
-    const mpPose = new Pose({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    // ----------------------------
+    // 2) Initialise POSE
+    // ----------------------------
+    const mpPose = new Pose.Pose({
+      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
     });
 
     mpPose.setOptions({
       modelComplexity: 1,
       smoothLandmarks: true,
       enableSegmentation: false,
-      selfieMode: false,
+      selfieMode: true,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
     });
 
-    // 🟢 Callback UNIFIÉ — un seul onResults !
-    mpPose.onResults((res) => {
-      if (!mpReady) {
-        mpReady = true;
-        console.log("🟢 MediaPipe prêt !");
-      }
+    let mpReady = false;
 
-      window.JustSwing?.onPoseFrame?.(res.poseLandmarks || null);
+    mpPose.onResults(res => {
+      mpReady = true;
+      window.__lastPose = res.poseLandmarks; // debug global
+      if (window.JustSwing?.onPoseFrame) {
+        window.JustSwing.onPoseFrame(res.poseLandmarks);
+      }
     });
 
-    // -----------------------------
-    // 3) 🔥 CAMERA → MP Pose
-    // -----------------------------
-    const camera = new Camera(videoElement, {
+    // ----------------------------
+    // 3) Boucle caméra → pose.send()
+    // ----------------------------
+    const camera = new CameraUtils.Camera(videoEl, {
       onFrame: async () => {
-        if (!mpReady) return; // empêche crash WASM
+        if (!mpReady) {
+          try {
+            await mpPose.initialize();
+            mpReady = true;
+          } catch (err) {
+            console.warn("⚠️ Pose init error:", err);
+            return;
+          }
+        }
+
         try {
-          await mpPose.send({ image: videoElement });
+          await mpPose.send({ image: videoEl });
         } catch (err) {
-          console.warn("⚠️ Erreur mpPose.send", err);
+          console.warn("⚠️ Pose.send FAILED", err);
         }
       },
       width: 1280,
@@ -99,7 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     camera.start();
 
-    console.log("📸 Caméra JustSwing prête ✔");
+    console.log("📸 Caméra + Pose opérationnels ✔");
     return stream;
   };
 });
