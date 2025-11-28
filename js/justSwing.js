@@ -113,6 +113,68 @@ window.JSW_DEBUG = {
   let currentImpactContext = null;
   let loopId = null;
 
+// =============================================================
+//  ROUTINE GUIDÉE — ~30 secondes en big message
+// =============================================================
+
+const routineStepsAuto = [
+  "J’attends que tu te mettes en plain-pied 👣",
+  "Vérifie ton grip ✋",
+  "Vérifie ta posture 🧍‍♂️",
+  "Vérifie ton alignement 🎯",
+  "Fais un swing d’essai 🌀",
+  "Respire profondément 😮‍💨"
+];
+
+let routineStepIndex = 0;
+let routineInterval = null;
+const ROUTINE_STEP_DURATION = 4000; // 4s par étape ≈ 24s + final
+
+function startRoutineSequence() {
+  if (!bigMsgEl) return;
+
+  routineStepIndex = 0;
+  showBigMessage(routineStepsAuto[0]);
+
+  // On montre aussi la routine globale en bas
+  if (typeof showRoutineSteps === "function") {
+    showRoutineSteps();
+  }
+
+  if (routineInterval) {
+    clearInterval(routineInterval);
+    routineInterval = null;
+  }
+
+  routineInterval = setInterval(() => {
+    routineStepIndex++;
+
+    if (routineStepIndex < routineStepsAuto.length) {
+      showBigMessage(routineStepsAuto[routineStepIndex]);
+    } else {
+      // Fin des étapes → on arrête le timer
+      clearInterval(routineInterval);
+      routineInterval = null;
+
+      // Petit délai pour le message final
+      setTimeout(() => {
+        showBigMessage("À toi de faire de ton mieux 💥");
+      }, 200);
+
+      // 3s après → on cache le message et on passe en phase "prêt à swinguer"
+      setTimeout(() => {
+        hideBigMessage();
+        state = JSW_STATE.ADDRESS_READY;
+        updateUI();
+      }, 3200);
+    }
+  }, ROUTINE_STEP_DURATION);
+}
+
+
+
+
+  
   // -------------------------------------------------------
   //   MESSAGES UI
   // -------------------------------------------------------
@@ -377,40 +439,28 @@ window.JSW_DEBUG = {
     }
   }
 
-  function statePositioning() {
-    if (!lastFullBodyOk) {
-      setHalo("red");
-      showBigMessage("Recule un peu, je dois te voir en entier 👣");
-      return;
-    }
-
-    hideBigMessage();
-    setHalo("green");
-    state = JSW_STATE.ROUTINE;
-    updateUI();
-    showRoutineSteps();
+  function statePositioning(now) {
+  if (!lastFullBodyOk) {
+    showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+    return;
   }
+
+  // Une fois qu'on te voit bien → on lance la routine guidée UNE SEULE FOIS
+  hideBigMessage();
+  state = JSW_STATE.ROUTINE;
+  updateUI();
+  startRoutineSequence();
+}
+
 
   function stateRoutine(now) {
-    if (!lastFullBodyOk) {
-      setHalo("orange");
-      showBigMessage("Reviens plein cadre 👣");
-      return;
-    }
-
-    setHalo("green");
-
-    if (isAddressStable(lastPose)) {
-      addressStableSince ??= now;
-      if (now - addressStableSince > 800) {
-        state = JSW_STATE.ADDRESS_READY;
-        showBigMessage("Adresse OK ✅ Envoie quand tu veux");
-      }
-    } else {
-      addressStableSince = null;
-      showBigMessage("Prends ton temps pour t’installer.");
-    }
+    // Ici on ne fait plus rien de spécial :
+  // la séquence de routine est gérée par startRoutineSequence()
+  // On peut juste s'assurer que le joueur reste dans le cadre.
+  if (!lastFullBodyOk) {
+    showBigMessage("Reviens bien en plain-pied 👣");
   }
+}
 
   function stateAddressReady(now) {
     setHalo("green");
@@ -805,10 +855,7 @@ function computeTriangleMetrics(pose) {
   }
 
   function setHalo(color) {
-    screenEl.classList.remove(
-      "jsw-halo-red", "jsw-halo-orange", "jsw-halo-green", "jsw-halo-blue"
-    );
-    if (color) screenEl.classList.add(`jsw-halo-${color}`);
+    return;
   }
 
   function showRoutineSteps() {
