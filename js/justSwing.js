@@ -1100,6 +1100,23 @@ function coachTechnicalComment(data) {
   // -------------------------------------------------------
 
  function showSwingResult(data) {
+
+   showCoachIA(
+  `Ton score est ${data.total}/100 — continue comme ça 💪`
+);
+if (data.detectedIssues.includes("lag")) {
+  showCoachIA("Travaille ton retard du club, tu as un peu de mains actives 👋");
+}
+else if (data.detectedIssues.includes("plane")) {
+  showCoachIA("Descends plus dans le plan, c’est un peu au-dessus de la ligne 📉");
+}
+else if (data.detectedIssues.includes("finish")) {
+  showCoachIA("Tiens ton finish 2 secondes, c’est la clé de la régularité 🧘‍♂️");
+}
+else {
+  showCoachIA("Très bon swing 👌 Continue sur ce rythme !");
+}
+
   // --- Titre ---
   swingLabelEl.textContent = `Swing #${data.index} — ${data.mode} (${data.club})`;
 
@@ -1250,6 +1267,25 @@ function coachTechnicalComment(data) {
     const steps = cfg.user?.length ? cfg.user : cfg.default;
     routineStepsEl.textContent = `Routine : ${steps.join(" · ")}`;
   }
+
+  function showCoachIA(message) {
+  const el = document.getElementById("coach-log");
+  if (!el) {
+    console.warn("⚠️ coach-log introuvable :", message);
+    return;
+  }
+
+  el.style.display = "block";
+  el.textContent = message;
+
+  // Petite animation pour faire apparaître le coach
+  el.style.opacity = 0;
+  setTimeout(() => {
+    el.style.transition = "opacity 0.4s ease";
+    el.style.opacity = 1;
+  }, 10);
+}
+
 
   // -------------------------------------------------------
   //   PARFECT COUNTER
