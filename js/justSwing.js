@@ -412,14 +412,14 @@ function hideBigMessage() {
   function mainLoop(now) {
     if (state === JSW_STATE.IDLE) return;
 
-    const elapsed = now - sessionStartTime;
-    if (elapsed > maxSessionDurationMs) {
-      state = JSW_STATE.REVIEW;
-      showFinalSummary();
-      return;
-    }
+   // const elapsed = now - sessionStartTime;
+    //if (elapsed > maxSessionDurationMs) {
+      //state = JSW_STATE.REVIEW;
+      //showFinalSummary();
+      //return;
+    //}
 
-    updateTimer(elapsed);
+    updateTimer(performance.now() - sessionStartTime);
     captureFrame();
     drawOverlay();
     updateState(now);
