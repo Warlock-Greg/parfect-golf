@@ -374,31 +374,11 @@ function hideBigMessage() {
     document.body.classList.add("jsw-fullscreen");
 
     updateUI();
-    showBigMessage("Adresse OK ✅ À toi de faire de ton mieux 💪");
+    showBigMessage("J’attends que tu te mettes en plain-pied 👣");
 
-const routineSteps = [
-  "J’attends que tu te mettes en plain-pied 👣",
-  "OK… vérifie ton grip.",
-  "Place tes épaules et ton triangle",
-  "Aligne-toi vers ta cible",
-  "Fais un swing d’essai",
-  "Respire… concentre-toi…",
-  "À toi de faire de ton mieux ! 💚"
-];
-
-let step = 0;
-
-function runRoutineSteps() {
-  if (step >= routineSteps.length) {
-    state = JSW_STATE.READY; // 🔥 tu peux maintenant analyser
-    return;
-  }
-  showBigMessage(routineSteps[step]);
-  step++;
-  setTimeout(runRoutineSteps, 2500);
-}
-
-runRoutineSteps();
+// 🔥 Lancement de la routine OFFICIELLE
+  // (celle qui met automatiquement state = ADDRESS_READY à la fin)
+  startRoutineSequence();
 
 
     
