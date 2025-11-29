@@ -90,7 +90,7 @@ window.JSW_DEBUG = {
   let state = JSW_STATE.IDLE;
   let mode = JSW_MODE.SWING;
   let sessionStartTime = null;
-  let maxSessionDurationMs = 30000;
+  let maxSessionDurationMs = 120000;
 
   let lastPose = null;
   let lastFullBodyOk = false;
@@ -382,7 +382,7 @@ function hideBigMessage() {
   // 👉 IMPORTANT : on ne lance PAS la routine tant que le corps n'est pas bien détecté
   // Le passage réel en ROUTINE est déclenché dans statePositioning()
   // Mais ON DOIT armer la séquence ici.
-  startRoutineSequence();
+  //startRoutineSequence();
 
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
