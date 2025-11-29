@@ -830,7 +830,7 @@ function scoreRotation(pose) {
 
 // -------------------------------------------------------
 //   STABILITÉ DE LA TÊTE – bouge pas trop !
-– -------------------------------------------------------
+//-------------------------------------------------------
 function scoreHeadStability(frames) {
   if (!frames || frames.length < 5) return 8;
 
