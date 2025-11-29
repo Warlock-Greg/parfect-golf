@@ -689,127 +689,260 @@ function computeTriangleMetrics(pose) {
   return { shoulderWidth, avgHandDist, angle };
 }
 
-  // -------------------------------------------------------
-  //   SCORING
-  // -------------------------------------------------------
- function computeSwingScore(mode, pose, ctxImpact) {
+ // =======================================================
+//   SCORING COMPLET – Parfect.golfr (Triangle + Lag +
+//   Descente dans le plan + Rotation + Tête + Impact +
+//   Finish)
+// =======================================================
 
-  // === TRIANGLE ======================================================
-  const tri = computeTriangleMetrics(pose);
-  let triangleScore = 10;   // fallback
-  
-  if (tri) {
-    // Normalisation empirique MVP
-    const idealShoulder = 0.25;        // largeur épaule typique
-    const idealHandDist = 0.18;        // distance mains-centre typique
-    const idealAngle = 25;             // angle bras/épaules stable
 
-    const s = 1 - Math.abs(tri.shoulderWidth - idealShoulder) / idealShoulder;
-    const h = 1 - Math.abs(tri.avgHandDist   - idealHandDist) / idealHandDist;
-    const a = 1 - Math.abs(tri.angle         - idealAngle) / idealAngle;
+// -------------------------------------------------------
+//   UTILITAIRES GÉNÉRIQUES
+// -------------------------------------------------------
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
 
-    // Clamp
-    const triangleRaw = Math.max(0, (s + h + a) / 3);
+function dist(a, b) {
+  if (!a || !b) return 999;
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
-    // Score sur 20
-    triangleScore = Math.round(triangleRaw * 20);
-  }
+function angleBetweenSegments(A, B, C, D) {
+  if (!A || !B || !C || !D) return 0;
 
-  // === SCORES MVP EXISTANTS ==========================================
-  const routineScore = lastFullBodyOk ? 15 + Math.floor(Math.random() * 5) : 10;
-  const swingScore = 50 + Math.floor(Math.random() * 20);
-  const regularityScore = 3 + Math.floor(Math.random() * 7);
+  const v1 = { x: B.x - A.x, y: B.y - A.y };
+  const v2 = { x: D.x - C.x, y: D.y - C.y };
 
-  // === INTEGRATION TRIANGLE ==========================================
-  // Nouveau total = routine + swing + regularity + triangle
-  const total = routineScore + swingScore + regularityScore + triangleScore;
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x*v1.x + v1.y*v1.y);
+  const mag2 = Math.sqrt(v2.x*v2.x + v2.y*v2.y);
 
-  // === DETAILS PAR PHASE =============================================
-  const phaseScores = {
-    address: clamp(routineScore * 0.5 / 2, 0, 10),
-    backswing: clamp((swingScore * 0.2) / 2, 0, 10),
-    top: clamp((swingScore * 0.15) / 2, 0, 10),
-    downswing: clamp((swingScore * 0.3) / 2, 0, 10),
-    impact: clamp((swingScore * 0.35) / 2, 0, 10),
-    release: clamp((regularityScore * 0.4), 0, 10),
-    finish: clamp((regularityScore * 0.6), 0, 10),
-    triangle: triangleScore   // 👉 ajouté dans l’UI pour debug
+  if (!mag1 || !mag2) return 0;
+
+  const cos = clamp(dot / (mag1 * mag2), -1, 1);
+  return Math.acos(cos) * 180 / Math.PI;
+}
+
+
+// -------------------------------------------------------
+//   TRIANGLE (épaules ↔ mains)
+// -------------------------------------------------------
+function computeTriangleMetrics(pose) {
+  if (!pose) return null;
+
+  const LS = pose[11], RS = pose[12];
+  const LH = pose[15], RH = pose[16];
+  if (!LS || !RS || !LH || !RH) return null;
+
+  const shoulderWidth = dist(LS, RS);
+
+  const midShoulders = {
+    x: (LS.x + RS.x) / 2,
+    y: (LS.y + RS.y) / 2,
   };
 
-  // === DÉTECTION BASEE SUR TRIANGLE ==================================
+  const handDistL = dist(LH, midShoulders);
+  const handDistR = dist(RH, midShoulders);
+
+  const angle = angleBetweenSegments(LS, RS, LH, RH);
+
+  return {
+    shoulderWidth,
+    avgHandDist: (handDistL + handDistR) / 2,
+    angle,
+  };
+}
+
+function scoreTriangle(tri) {
+  if (!tri) return 8;
+
+  const idealShoulder = 0.25;
+  const idealHands = 0.18;
+  const idealAngle = 25;
+
+  const s = 1 - Math.abs(tri.shoulderWidth - idealShoulder) / idealShoulder;
+  const h = 1 - Math.abs(tri.avgHandDist - idealHands) / idealHands;
+  const a = 1 - Math.abs(tri.angle - idealAngle) / idealAngle;
+
+  return Math.round(clamp((s + h + a) / 3, 0, 1) * 20);
+}
+
+
+// -------------------------------------------------------
+//   LAG DU CLUB – Retard du poignet dans la descente
+// -------------------------------------------------------
+function scoreLag(pose) {
+  if (!pose) return 10;
+
+  const wrist = pose[15];  // main gauche
+  const elbow = pose[13];
+  if (!wrist || !elbow) return 10;
+
+  const dy = elbow.y - wrist.y;
+
+  const raw = clamp((dy - 0.01) / 0.10, 0, 1);
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   DESCENTE DANS LE PLAN – Angle shaft épaule→main
+// -------------------------------------------------------
+function scorePlane(pose) {
+  if (!pose) return 10;
+
+  const wrist = pose[15];
+  const shoulder = pose[11];
+  if (!wrist || !shoulder) return 10;
+
+  const angleDeg =
+    Math.atan2(wrist.y - shoulder.y, wrist.x - shoulder.x) * 180 / Math.PI;
+
+  const diff = Math.abs(angleDeg - 35);
+  const raw = clamp(1 - diff / 25, 0, 1);
+
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   ROTATION — Hanches ↔ Épaules
+// -------------------------------------------------------
+function scoreRotation(pose) {
+  if (!pose) return 8;
+
+  const LS = pose[11], RS = pose[12];
+  const LH = pose[23], RH = pose[24];
+  if (!LS || !RS || !LH || !RH) return 8;
+
+  const shoulderTilt = angleBetweenSegments(LS, RS, { x: LS.x, y: LS.y - 0.1 }, LS);
+  const hipTilt      = angleBetweenSegments(LH, RH, { x: LH.x, y: LH.y - 0.1 }, LH);
+
+  const diff = Math.abs(shoulderTilt - hipTilt);
+  const raw = clamp(1 - diff / 25, 0, 1);
+
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   STABILITÉ DE LA TÊTE – bouge pas trop !
+– -------------------------------------------------------
+function scoreHeadStability(frames) {
+  if (!frames || frames.length < 5) return 8;
+
+  const headPositions = frames.map(f => f.pose?.[0]).filter(Boolean);
+  if (headPositions.length < 5) return 8;
+
+  const xs = headPositions.map(h => h.x);
+  const ys = headPositions.map(h => h.y);
+
+  const dx = Math.max(...xs) - Math.min(...xs);
+  const dy = Math.max(...ys) - Math.min(...ys);
+
+  const move = Math.sqrt(dx*dx + dy*dy);
+  const raw = clamp(1 - move / 0.1, 0, 1);
+
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   IMPACT ZONE — 40 cm avant/après l’impact
+// -------------------------------------------------------
+function scoreImpactZone(ctxImpact) {
+  if (!ctxImpact) return 12;
+
+  const before = ctxImpact.framesAvantImpact;
+  const after  = ctxImpact.framesApresImpact;
+  if (!before || !after) return 12;
+
+  const lastFrame = after[0];
+  if (!lastFrame?.pose) return 12;
+
+  const wrist = lastFrame.pose[15];
+  if (!wrist) return 12;
+
+  const dy = Math.abs(wrist.y - 0.5); // valeur webcam, à calibrer
+
+  const raw = clamp(1 - dy / 0.25, 0, 1);
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   FINISH — équilibre et stabilité finale
+// -------------------------------------------------------
+function scoreFinish(pose) {
+  if (!pose) return 8;
+
+  const LS = pose[11], RS = pose[12];
+  if (!LS || !RS) return 8;
+
+  const tilt = Math.abs(LS.x - RS.x);
+  const raw = clamp(1 - tilt / 0.25, 0, 1);
+
+  return Math.round(raw * 15);
+}
+
+
+// -------------------------------------------------------
+//   SCORE FINAL COMPLET — LA VERSION À UTILISER
+// -------------------------------------------------------
+function computeSwingScore(mode, pose, ctxImpact) {
+  const tri = computeTriangleMetrics(pose);
+
+  const triangleScore = scoreTriangle(tri);
+  const lagScore      = scoreLag(pose);
+  const planeScore    = scorePlane(pose);
+  const rotationScore = scoreRotation(pose);
+  const headScore     = scoreHeadStability(frameBuffer);
+  const impactScore   = scoreImpactZone(ctxImpact);
+  const finishScore   = scoreFinish(pose);
+
+  const total =
+    triangleScore +
+    lagScore +
+    planeScore +
+    rotationScore +
+    headScore +
+    impactScore +
+    finishScore;
+
   const detectedIssues = [];
-
-  if (triangleScore < 10) detectedIssues.push("triangle_instable");
-
-  if (routineScore < 14) detectedIssues.push("routine");
-  if (phaseScores.finish < 6) detectedIssues.push("balance_finish");
-  if (mode === JSW_MODE.APPROCHE && swingScore < 60)
-    detectedIssues.push("launch_control");
-
-  // === ANGLE DE LANCEMENT EXISTANT ===================================
-  const launch = estimateLaunchAngle(pose, ctxImpact);
-
-  const parfectEarned = routineScore >= 14 && total >= 75 ? 1 : 0;
-  if (parfectEarned) awardParfects(parfectEarned);
+  if (triangleScore < 10) detectedIssues.push("triangle");
+  if (lagScore < 8)       detectedIssues.push("lag");
+  if (planeScore < 8)     detectedIssues.push("plane");
+  if (rotationScore < 8)  detectedIssues.push("rotation");
+  if (headScore < 8)      detectedIssues.push("head_move");
+  if (impactScore < 10)   detectedIssues.push("impact_zone");
+  if (finishScore < 8)    detectedIssues.push("finish");
 
   return {
     index: currentSwingIndex,
     mode,
     club: currentClubType,
-    routineScore,
-    swingScore,
-    regularityScore,
-    triangleScore,
+
     total,
-    phaseScores,
+
+    triangleScore,
+    lagScore,
+    planeScore,
+    rotationScore,
+    headScore,
+    impactScore,
+    finishScore,
+
     detectedIssues,
-    parfectEarned,
-    launchAngle: launch,
-    triangleRaw: tri,   // 👉 données brutes pour analyse dans debug
-    timestamp: Date.now()
+    timestamp: Date.now(),
+
+    raw: { triangle: tri, pose, ctxImpact }
   };
 }
 
-  function clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
-
-  // -------------------------------------------------------
-  //   ANGLE LANCEMENT
-  // -------------------------------------------------------
-  function estimateLaunchAngle(pose, ctxImpact) {
-    // Stub MVP (fixed loft)
-    const loft = CLUB_BASE_LOFT[currentClubType] ?? 25;
-    return { angleDeg: loft, source: "club", confidence: 0.5 };
-  }
-
-  // -------------------------------------------------------
-  //   EXOS
-  // -------------------------------------------------------
-  function coachSuggestDrills(swingData) {
-    const issues = swingData.detectedIssues;
-    const out = [];
-
-    if (issues.includes("routine")) out.push(JSW_DRILLS[0]);
-    if (issues.includes("balance_finish")) out.push(JSW_DRILLS[1]);
-    if (issues.includes("launch_control")) out.push(JSW_DRILLS[2]);
-
-    if (!out.length) out.push(JSW_DRILLS[0]);
-    return out.slice(0, 2);
-  }
-
-  // -------------------------------------------------------
-  //   CAPTURE BALLE
-  // -------------------------------------------------------
-  function captureFrame() {
-    if (!videoEl.readyState >= 2) return;
-
-    captureCtx.drawImage(videoEl, 0, 0, 160, 160);
-    const imageData = captureCtx.getImageData(0, 0, 160, 160);
-
-    frameBuffer.push({ imageData, width: 160, height: 160 });
-    if (frameBuffer.length > maxFrameBuffer) frameBuffer.shift();
-  }
 
   // -------------------------------------------------------
   //   AFFICHAGE RESULTAT
