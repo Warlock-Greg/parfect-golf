@@ -467,8 +467,6 @@ runRoutineSteps();
   // -------------------------------------------------------
 
   function updateState(now) {
-
-  function updateState(now) {
   if (!lastPose) return;
 
   switch (state) {
