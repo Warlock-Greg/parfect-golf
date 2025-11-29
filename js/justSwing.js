@@ -356,6 +356,9 @@ function hideBigMessage() {
     mode = selectedMode;
 
     state = JSW_STATE.POSITIONING;
+    statusTextEl.textContent = "Place-oit plein pied 👣";
+    timerEl.textContent = "Temps restant = 30s";
+
     swings = [];
     currentSwingIndex = 0;
     sessionStartTime = performance.now();
@@ -425,7 +428,7 @@ function hideBigMessage() {
   }
 
   function updateTimer(elapsedMs) {
-    const rem = Math.max(0, 30 - Math.floor(elapsedMs / 1000));
+    const rem = Math.max(0, 120 - Math.floor(elapsedMs / 1000));
     timerEl.textContent = `Temps restant : ${rem}s`;
   }
 
