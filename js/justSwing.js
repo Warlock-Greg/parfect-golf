@@ -452,31 +452,76 @@ function hideBigMessage() {
   // -------------------------------------------------------
 
   function updateState(now) {
+  // 0) Si on n'a pas de landmarks → on ne fait rien
   if (!lastPose) return;
 
   switch (state) {
 
-    case JSW_STATE.POSITIONING:
-      statePositioning(now);
-      break;
+    case JSW_STATE.POSITIONING: {
+      // On attend de te voir plein-pied
+      if (!lastFullBodyOk) {
+        // message déjà géré dans startSession + statePositioning,
+        // donc on ne spam pas ici
+        return;
+      }
+      // On t'a en plein-pied → on lance la routine guidée UNE FOIS
+      state = JSW_STATE.ROUTINE;
+      updateUI();
+      startRoutineSequence();
+      return;
+    }
 
-    case JSW_STATE.ROUTINE:
-      stateRoutine(now);
-      break;
+    case JSW_STATE.ROUTINE: {
+      // La routine est gérée par startRoutineSequence()
+      // Ici on peut juste surveiller si tu sors du cadre
+      if (!lastFullBodyOk) {
+        showBigMessage("Reviens bien en plain-pied 👣");
+      }
+      return;
+    }
 
-    case JSW_STATE.ADDRESS_READY:
-      stateAddressReady(now);
-      break;
+    case JSW_STATE.ADDRESS_READY: {
+      // Ici on attend le début du swing
+      // (pour l'instant détection MVP)
+      if (detectSwingStart(lastPose)) {
+        state = JSW_STATE.SWING_CAPTURE;
+        currentSwingIndex++;
 
-    case JSW_STATE.SWING_CAPTURE:
-      stateSwingCapture(now);
-      break;
+        currentImpactContext = {
+          framesAvantImpact: frameBuffer.slice(),
+          framesApresImpact: [],
+          clubType: currentClubType
+        };
+      }
+      return;
+    }
 
-    case JSW_STATE.REVIEW:
-      // rien ici, la fiche s'affiche
-      break;
+    case JSW_STATE.SWING_CAPTURE: {
+      // On attend la fin du swing
+      if (detectSwingEnd(lastPose)) {
+        state = JSW_STATE.REVIEW;
+
+        if (currentImpactContext) {
+          currentImpactContext.framesApresImpact = frameBuffer.slice();
+        }
+
+        const swingData = computeSwingScore(mode, lastPose, currentImpactContext);
+        swings.push(swingData);
+
+        window.JustSwingHistory?.pushSwing?.(swingData);
+
+        showSwingResult(swingData);
+      }
+      return;
+    }
+
+    case JSW_STATE.REVIEW: {
+      // Rien → on affiche la fiche.
+      return;
+    }
   }
 }
+
 
 
 
