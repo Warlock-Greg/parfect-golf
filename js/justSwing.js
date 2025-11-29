@@ -621,14 +621,20 @@ function hideBigMessage() {
   function isAddressStable() {
     return lastFullBodyOk;
   }
+let swingStartTime = null;
 
-  function detectSwingStart() {
-    return Math.random() < 0.015;
-  }
+function detectSwingStart() {
+  if (!swingStartTime) swingStartTime = performance.now();
+  return Math.random() < 0.015;
+}
 
-  function detectSwingEnd() {
-    return Math.random() < 0.02;
-  }
+function detectSwingEnd() {
+  if (!swingStartTime) return false;
+
+  // 🔥 fin de swing automatique après 800 ms
+  return performance.now() - swingStartTime > 800;
+}
+
 
 
   function dist(a, b) {
