@@ -178,17 +178,27 @@ function startRoutineSequence() {
   // -------------------------------------------------------
   //   MESSAGES UI
   // -------------------------------------------------------
-  function showBigMessage(text) {
-    if (!bigMsgEl) return;
-    bigMsgEl.textContent = text;
-    bigMsgEl.style.opacity = 1;
-  }
+  function showBigMessage(msg) {
+  if (!bigMsgEl) return;
 
-  function hideBigMessage() {
-    if (!bigMsgEl) return;
-    bigMsgEl.style.opacity = 0;
-    bigMsgEl.textContent = "";
-  }
+  bigMsgEl.textContent = msg;
+  bigMsgEl.style.opacity = 0;
+  bigMsgEl.style.transform = "translate(-50%, -50%) scale(0.9)";
+
+  setTimeout(() => {
+    bigMsgEl.style.opacity = 1;
+    bigMsgEl.style.transform = "translate(-50%, -50%) scale(1)";
+  }, 20);
+
+  // effacement automatique après 2,5s
+  setTimeout(() => hideBigMessage(), 2500);
+}
+
+function hideBigMessage() {
+  if (!bigMsgEl) return;
+  bigMsgEl.style.opacity = 0;
+}
+
 
   // -------------------------------------------------------
   //   DESSIN MÉDIAPIPE
@@ -366,6 +376,32 @@ function startRoutineSequence() {
     updateUI();
     showBigMessage("Adresse OK ✅ À toi de faire de ton mieux 💪");
 
+const routineSteps = [
+  "J’attends que tu te mettes en plain-pied 👣",
+  "OK… vérifie ton grip.",
+  "Place tes épaules et ton triangle",
+  "Aligne-toi vers ta cible",
+  "Fais un swing d’essai",
+  "Respire… concentre-toi…",
+  "À toi de faire de ton mieux ! 💚"
+];
+
+let step = 0;
+
+function runRoutineSteps() {
+  if (step >= routineSteps.length) {
+    state = JSW_STATE.READY; // 🔥 tu peux maintenant analyser
+    return;
+  }
+  showBigMessage(routineSteps[step]);
+  step++;
+  setTimeout(runRoutineSteps, 2500);
+}
+
+runRoutineSteps();
+
+
+    
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
   }
@@ -431,13 +467,35 @@ function startRoutineSequence() {
   // -------------------------------------------------------
 
   function updateState(now) {
-    switch (state) {
-      case JSW_STATE.POSITIONING: return statePositioning();
-      case JSW_STATE.ROUTINE: return stateRoutine(now);
-      case JSW_STATE.ADDRESS_READY: return stateAddressReady(now);
-      case JSW_STATE.SWING_CAPTURE: return stateSwingCapture(now);
-    }
+
+  function updateState(now) {
+  if (!lastPose) return;
+
+  switch (state) {
+
+    case JSW_STATE.POSITIONING:
+      statePositioning(now);
+      break;
+
+    case JSW_STATE.ROUTINE:
+      stateRoutine(now);
+      break;
+
+    case JSW_STATE.ADDRESS_READY:
+      stateAddressReady(now);
+      break;
+
+    case JSW_STATE.SWING_CAPTURE:
+      stateSwingCapture(now);
+      break;
+
+    case JSW_STATE.REVIEW:
+      // rien ici, la fiche s'affiche
+      break;
   }
+}
+
+
 
   function statePositioning(now) {
   if (!lastFullBodyOk) {
