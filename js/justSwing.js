@@ -436,6 +436,8 @@ function hideBigMessage() {
   //   MEDIAPIPE CALLBACK
   // -------------------------------------------------------
   function onPoseFrame(landmarks) {
+    console.log("POSE FRAME →", !!landmarks);
+
     lastPose = landmarks || null;
     lastFullBodyOk = detectFullBody(landmarks);
 
@@ -453,7 +455,9 @@ function hideBigMessage() {
 
   function updateState(now) {
   // 0) Si on n'a pas de landmarks → on ne fait rien
-  if (!lastPose) return;
+  console.log("UPDATE STATE →", state);
+
+    if (!lastPose) return;
 
   switch (state) {
 
@@ -566,6 +570,8 @@ function hideBigMessage() {
   }
 
   function stateSwingCapture(now) {
+    console.log("➡️  stateSwingCapture()");
+
     setHalo("blue");
 
     if (detectSwingEnd(lastPose)) {
