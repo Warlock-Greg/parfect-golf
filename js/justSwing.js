@@ -448,7 +448,29 @@ function hideBigMessage() {
       playerOutOfFrameSince = performance.now();
     }
   }
+// -------------------------------------------------------
+//   CAPTURE FRAME (vidéo + landmarks)
+// -------------------------------------------------------
+function captureFrame() {
+  if (!videoEl || videoEl.readyState < 2) return;
 
+  // On capture un carré 160x160
+  captureCtx.drawImage(videoEl, 0, 0, 160, 160);
+  const imageData = captureCtx.getImageData(0, 0, 160, 160);
+
+  // On stocke image + pose
+  frameBuffer.push({
+    imageData,
+    pose: lastPose,
+    width: 160,
+    height: 160
+  });
+
+  // On limite la taille
+  if (frameBuffer.length > maxFrameBuffer) frameBuffer.shift();
+}
+
+  
   // -------------------------------------------------------
   //   STATE MACHINE
   // -------------------------------------------------------
