@@ -376,12 +376,14 @@ function hideBigMessage() {
     updateUI();
     showBigMessage("J’attends que tu te mettes en plain-pied 👣");
 
-// 🔥 Lancement de la routine OFFICIELLE
-  // (celle qui met automatiquement state = ADDRESS_READY à la fin)
+// ------------------------
+  // LANCEMENT OFFICIEL DE LA ROUTINE
+  // ------------------------
+  // 👉 IMPORTANT : on ne lance PAS la routine tant que le corps n'est pas bien détecté
+  // Le passage réel en ROUTINE est déclenché dans statePositioning()
+  // Mais ON DOIT armer la séquence ici.
   startRoutineSequence();
 
-
-    
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
   }
