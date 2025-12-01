@@ -851,88 +851,60 @@ body.jsw-fullscreen nav,
 body.jsw-fullscreen #coach-ia {
   display: none !important;
 }
-.swing-review {
-  margin: 20px;
+/* ========================================= */
+/* SWING REVIEW PRO                           */
+/* ========================================= */
+
+#swing-review {
   padding: 16px;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 12px;
-  color: #eee;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  color: #fff;
 }
 
-.swing-review-main {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.swing-review-video {
+  max-width: 100%;
+  margin-bottom: 16px;
 }
 
 #swing-video {
   width: 100%;
-  max-width: 480px;
-  border-radius: 8px;
-  background: #000;
+  border-radius: 12px;
+  background: black;
 }
 
-.swing-video-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 480px;
-}
-
-.swing-video-controls .row {
+.swing-player-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding: 6px 0;
 }
 
-.swing-video-controls button,
-.swing-video-controls select {
-  background: #111;
-  color: #eee;
-  border: 1px solid #333;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 14px;
-  cursor: pointer;
+.swing-review-info {
+  margin: 12px 0;
 }
 
-#swing-timeline {
-  flex: 1;
+.swing-review-actions {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
 }
 
 .swing-history-list {
+  margin-top: 15px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
 }
 
 .swing-history-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.08);
   border-radius: 8px;
   cursor: pointer;
 }
-
 .swing-history-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.swing-history-thumb {
-  width: 80px;
-  height: 45px;
-  background: #000;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.swing-history-meta {
-  display: flex;
-  flex-direction: column;
-  font-size: 12px;
+  background: rgba(255,255,255,0.15);
 }
 
     
@@ -1103,95 +1075,53 @@ body.jsw-fullscreen #coach-ia {
 
 </section>
 
-<section id="swing-review" class="swing-review">
-  <h2>🎬 Revoir ton swing</h2>
-  <div class="swing-review-main">
+<!-- ========================================================= -->
+<!--  SWING REVIEW PRO                                         -->
+<!-- ========================================================= -->
+<section id="swing-review" class="hidden">
+
+  <!-- 1) Video Player -->
+  <div class="swing-review-video">
     <video id="swing-video" playsinline></video>
 
-    <div class="swing-video-controls">
-      <div class="row">
-        <button id="swing-play-pause">▶️</button>
-        <label>
-          Vitesse
-          <select id="swing-speed">
-            <option value="0.25">0.25x</option>
-            <option value="0.5">0.5x</option>
-            <option value="0.75">0.75x</option>
-            <option value="1" selected>1x</option>
-          </select>
-        </label>
-        <button id="swing-prev-frame">⏪ frame</button>
-        <button id="swing-next-frame">frame ⏩</button>
-      </div>
-      <div class="row">
-        <input id="swing-timeline" type="range" min="0" max="100" value="0" step="0.1" />
-        <span id="swing-time-label">0.0s</span>
-      </div>
+    <div class="swing-player-controls">
+      <button id="swing-play-pause">▶️</button>
+
+      <select id="swing-speed">
+        <option value="0.25">0.25×</option>
+        <option value="0.5">0.5×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+
+      <input id="swing-timeline" type="range" min="0" max="100" value="0">
+
+      <span id="swing-time-label">0.0s</span>
     </div>
   </div>
 
-  <h3>🕒 Historique local</h3>
-  <div id="swing-history-list" class="swing-history-list"></div>
+  <!-- 2) Score + Commentaire -->
+  <div class="swing-review-info">
+    <h2 id="swing-review-score">Score : --</h2>
+    <p id="swing-review-comment">Analyse technique…</p>
+  </div>
+
+  <!-- 3) Boutons actions -->
+  <div class="swing-review-actions">
+    <button id="swing-save-reference" class="jsw-btn-secondary">⭐ Définir comme référence</button>
+    <button id="swing-review-next" class="jsw-btn-secondary">⏭️ Swing suivant</button>
+  </div>
+
+  <!-- 4) Historique des swings -->
+  <h3>Historique</h3>
+  <div id="swing-history" class="swing-history-list">
+    <!-- rempli automatiquement -->
+  </div>
 </section>
 
       
-<!-- === ANALYSE DU SWING (MVP) === -->
-<!--div id="swing-analyzer" style="display:none;text-align:center;padding:20px;">
-  <h3>🎥 Analyse ton swing</h3>
-<div style="margin-top:8px;">
-  <label for="ref-swing">Référence :</label><br>
-  <select id="ref-swing" style="margin-top:6px;padding:6px;border-radius:6px;">
-    <option value="">(aucune)</option>
-    <option value="rory_faceon">Rory McIlroy (face-on)</option>
-    <option value="adam_dtl">Adam Scott (down-the-line)</option>
-    <option value="nelly_faceon">Nelly Korda (face-on)</option>
-    <option value="jin_dtl">Jin Young Ko (down-the-line)</option>
-  </select>
-</div>
 
-  <div style="margin-top:10px;">
-    <label for="swing-type">Type de coup :</label><br>
-    <select id="swing-type" style="margin-top:6px;padding:6px;border-radius:6px;">
-      <option value="drive">Drive</option>
-      <option value="iron">Fer</option>
-      <option value="approach">Approche</option>
-      <option value="putting">Putting</option>
-    </select>
-</div>
-
-  <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-  <!-- Caméra (iPhone ouvre l’appareil photo) -->
-  <!--input id="video-upload-camera" type="file" accept="video/*" capture="environment" style="display:none;">
-  <label for="video-upload-camera" class="btn" style="cursor:pointer;">🎥 Filmer</label>
-
-  <!-- Bibliothèque (album) -->
-  <!--input id="video-upload-library" type="file" accept="video/*" style="display:none;">
-  <label for="video-upload-library" class="btn" style="cursor:pointer;">📂 Choisir</label>
-    </div-->
-
-<!-- Zone de statut (créée ici pour éviter les erreurs) -->
-<!--div id="upload-status" style="margin-top:10px;font-size:0.9rem;color:#00ff99;opacity:0;transition:opacity .4s ease;"></div>
-
-
-
- <div style="position:relative;display:inline-block;">
-  <video 
-    id="video-preview"
-    controls 
-    playsinline 
-    preload="metadata"
-    style="max-width:100%;margin-top:10px;border-radius:8px;display:none;background:#000;"
-  ></video>
-  <canvas id="pose-overlay" 
-    style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;">
-    </canvas>
-</div>
-
-
-  <button id="analyze-btn" class="btn" style="margin-top:15px;background:#00ff99;color:#111;">Analyser mon swing</button>
-
-  <div id="analysis-result" style="margin-top:20px;font-size:0.95rem;color:#fff;"></div>
-    </div-->
 
      <!-- 💪 Entraînement --> 
       <div id="training-area" style="display:none;"></div>
