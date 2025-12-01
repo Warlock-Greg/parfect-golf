@@ -581,6 +581,7 @@ if (!window.__engine) {
 
   function debug() {
     console.log("JSW state =", state, "mode=", mode, "club=", currentClubType);
+   console.log("engine =", window.__engine);
   }
 
   // -----------------------------------------------------
