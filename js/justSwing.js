@@ -208,9 +208,30 @@ const JustSwing = (() => {
       console.log("🎯 KeyFrame détectée", evt);
     },
     onSwingComplete: (evt) => {
-      console.log("🏁 Swing COMPLET détecté", evt);
-      JustSwing.handleSwingComplete(evt.data); // ⭐ IMPORTANT
+  console.log("🏁 Swing COMPLET détecté", evt);
+
+  const raw = evt.data;
+
+  // =============================
+  // 🔥 SCORING PRO (computeSwingScore)
+  // =============================
+  raw.scores = computeSwingScore(
+    "swing",
+    null,
+    {
+      framesAvantImpact: raw.frames.slice(0, raw.keyFrames.impactIndex),
+      framesApresImpact:  raw.frames.slice(raw.keyFrames.impactIndex),
+      clubType: raw.club
     }
+  );
+
+  // dbg
+  console.log("📊 SCORE PRO =", raw.scores);
+
+  // appel UI
+  JustSwing.handleSwingComplete(raw);
+}
+
   });
 
   // =========================================================
