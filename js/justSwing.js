@@ -196,7 +196,24 @@ const JustSwing = (() => {
     if (window.SwingCapture && videoEl.srcObject) {
       window.SwingCapture.init(videoEl.srcObject);
     }
+  // =========================================================
+  //  SwingEngine PRO — Initialisation
+  // =========================================================
 
+  if (!window.__engine) {
+    console.log("🔧 Création du moteur SwingEngine PRO");
+
+    window.__engine = SwingEngine.create({
+    fps: 30,
+    onKeyFrame: (evt) => {
+      console.log("🎯 KeyFrame détectée", evt);
+      },
+    onSwingComplete: (evt) => {
+      console.log("🏁 Swing COMPLET détecté", evt);
+      handleSwingComplete(evt.data);
+      }
+    });
+    
     updateUI();
     showBigMessage("J’attends que tu te mettes en plain-pied 👣");
 
@@ -204,24 +221,6 @@ const JustSwing = (() => {
     loopId = requestAnimationFrame(mainLoop);
   }
 
-  // =========================================================
-//  SwingEngine PRO — Initialisation
-// =========================================================
-
-if (!window.__engine) {
-  console.log("🔧 Création du moteur SwingEngine PRO");
-
-  window.__engine = SwingEngine.create({
-    fps: 30,
-    onKeyFrame: (evt) => {
-      console.log("🎯 KeyFrame détectée", evt);
-    },
-    onSwingComplete: (evt) => {
-      console.log("🏁 Swing COMPLET détecté", evt);
-      handleSwingComplete(evt.data);
-    }
-  });
-}
 
 
   function stopSession() {
