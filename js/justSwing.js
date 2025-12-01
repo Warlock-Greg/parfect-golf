@@ -571,7 +571,7 @@ const JustSwing = (() => {
     setClubType: (c) => (currentClubType = c),
     showRoutineSteps,
     updateUI,
-    refreshSwingHistoryUI
+    refreshSwingHistoryUI,
     _debug: debug,
   };
 })();
