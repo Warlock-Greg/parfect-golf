@@ -364,45 +364,56 @@ const JustSwing = (() => {
   //   SWING COMPLETE → scoring + vidéo + historique
   // -----------------------------------------------------
   function handleSwingComplete(data) {
-    state = JSW_STATE.REVIEW;
-    updateUI();
+  state = JSW_STATE.REVIEW;
 
-    const { scores, club } = data;
-    const total = scores.total;
+  // pour debug
+  window.__lastSwing = data;
 
-    const swingData = {
-      index: currentSwingIndex,
-      mode,
-      club: club || currentClubType,
-      total,
-      scores,
-      keyFrames: data.keyFrames,
-      timestamp: Date.now(),
-    };
-    swings.push(swingData);
+  updateUI();
 
-    // UI simple pour l’instant
-    showSwingResult(swingData);
+  // 1) Affichage du panneau PRO
+  document.getElementById("swing-review").classList.remove("hidden");
 
-    // vidéo + historique async
-    if (window.SwingCapture) {
-      SwingCapture.stop().then((blob) => {
-        if (!blob) return;
-        swingData.videoBlob = blob;
-        if (window.SwingPlayer) {
-          SwingPlayer.loadBlob(blob);
-        }
-        if (window.SwingHistory) {
-          SwingHistory.save({
-            club: swingData.club,
-            score: swingData.total,
-            metrics: scores,
-            videoBlob: blob,
-          });
-        }
-      }).catch(console.error);
-    }
+  // 2) Score
+  const score = data.scores.total;
+  document.getElementById("swing-review-score").textContent = `Score : ${score}/100`;
+
+  // 3) Commentaire technique
+  document.getElementById("swing-review-comment").textContent =
+    coachTechnicalComment(data.scores);
+
+  // 4) Vidéo → chargée après SwingCapture
+  if (window.SwingCapture) {
+    SwingCapture.stop().then((blob) => {
+      if (!blob) return;
+      data.videoBlob = blob;
+      if (window.SwingPlayer) {
+        SwingPlayer.loadBlob(blob);
+      }
+      // 5) Historique
+      if (window.SwingHistory) {
+        SwingHistory.save({
+          club: data.club,
+          score,
+          metrics: data.scores,
+          videoBlob: blob,
+        }).then(refreshSwingHistoryUI);
+      }
+    });
   }
+
+  // 6) Boutons actions
+  document.getElementById("swing-save-reference").onclick = () => {
+    referenceSwing = data;
+    alert("Swing défini comme référence ⭐");
+  };
+
+  document.getElementById("swing-review-next").onclick = () => {
+    document.getElementById("swing-review").classList.add("hidden");
+    restartLoop();
+  };
+}
+
 
   // -----------------------------------------------------
   //   FULL BODY DETECTION
@@ -515,6 +526,34 @@ const JustSwing = (() => {
     }, 10);
   }
 
+  function refreshSwingHistoryUI() {
+  if (!window.SwingHistory) return;
+
+  SwingHistory.getAll().then(list => {
+    const container = document.getElementById("swing-history");
+    if (!container) return;
+
+    container.innerHTML = list.map(item => `
+      <div class="swing-history-item" data-id="${item.id}">
+        Swing du ${new Date(item.createdAt).toLocaleTimeString()} — ${item.score}/100 — ${item.club}
+      </div>
+    `).join("");
+
+    // clic pour revoir un swing
+    container.querySelectorAll(".swing-history-item").forEach(el => {
+      el.onclick = () => {
+        const id = Number(el.dataset.id);
+        const swing = list.find(s => s.id === id);
+        if (swing?.videoBlob) SwingPlayer.loadBlob(swing.videoBlob);
+        document.getElementById("swing-review-score").textContent = `Score : ${swing.score}/100`;
+        document.getElementById("swing-review-comment").textContent =
+          coachTechnicalComment(swing.metrics);
+      };
+    });
+  });
+}
+
+
   function debug() {
     console.log("JSW state =", state, "mode=", mode, "club=", currentClubType);
   }
@@ -532,6 +571,7 @@ const JustSwing = (() => {
     setClubType: (c) => (currentClubType = c),
     showRoutineSteps,
     updateUI,
+    refreshSwingHistoryUI
     _debug: debug,
   };
 })();
