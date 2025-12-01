@@ -179,47 +179,52 @@ const JustSwing = (() => {
   //   SESSION
   // -----------------------------------------------------
   function startSession(selectedMode = JSW_MODE.SWING) {
-    if (!screenEl) initJustSwing();
+  if (!screenEl) initJustSwing();
 
-    mode = selectedMode;
-    state = JSW_STATE.POSITIONING;
-    sessionStartTime = performance.now();
-    currentSwingIndex = 0;
-    swings = [];
-    lastPose = null;
-    lastFullBodyOk = false;
+  mode = selectedMode;
+  state = JSW_STATE.POSITIONING;
+  sessionStartTime = performance.now();
+  currentSwingIndex = 0;
+  swings = [];
+  lastPose = null;
+  lastFullBodyOk = false;
 
-    screenEl.classList.remove("hidden");
-    document.body.classList.add("jsw-fullscreen");
+  screenEl.classList.remove("hidden");
+  document.body.classList.add("jsw-fullscreen");
 
-    // init capture vidéo si possible
-    if (window.SwingCapture && videoEl.srcObject) {
-      window.SwingCapture.init(videoEl.srcObject);
-    }
+  // init vidéo
+  if (window.SwingCapture && videoEl.srcObject) {
+    window.SwingCapture.init(videoEl.srcObject);
+  }
+
   // =========================================================
-  //  SwingEngine PRO — Initialisation
+  // 🔧 CRÉATION / RESET SWINGENGINE PRO
   // =========================================================
+  console.log("🔧 Reset moteur SwingEngine PRO");
 
-  if (!window.__engine) {
-    console.log("🔧 Création du moteur SwingEngine PRO");
-
-    window.__engine = SwingEngine.create({
+  window.__engine = SwingEngine.create({
     fps: 30,
     onKeyFrame: (evt) => {
       console.log("🎯 KeyFrame détectée", evt);
-      },
+    },
     onSwingComplete: (evt) => {
       console.log("🏁 Swing COMPLET détecté", evt);
-      handleSwingComplete(evt.data);
-      }
-    });
-    
-    updateUI();
-    showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+      JustSwing.handleSwingComplete(evt.data); // ⭐ IMPORTANT
+    }
+  });
 
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = requestAnimationFrame(mainLoop);
-  }
+  // =========================================================
+  // 🔥 UI de départ
+  // =========================================================
+  updateUI();
+  showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+
+  // =========================================================
+  // 🔁 MAIN LOOP
+  // =========================================================
+  if (loopId) cancelAnimationFrame(loopId);
+  loopId = requestAnimationFrame(mainLoop);
+}
 
 
 
@@ -595,6 +600,7 @@ const JustSwing = (() => {
     getReferenceSwing: () => referenceSwing,
     setClubType: (c) => (currentClubType = c),
     showRoutineSteps,
+    handleSwingComplete,
     updateUI,
     refreshSwingHistoryUI,
     _debug: debug
