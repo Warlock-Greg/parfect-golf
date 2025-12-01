@@ -1094,6 +1094,136 @@ function coachTechnicalComment(data) {
   return comments.slice(0, 2).join(" ");
 }
 
+// -------------------------------------------------------
+//   COACH — Suggestions d’exercices basées sur detectedIssues
+// -------------------------------------------------------
+
+function coachSuggestDrills(data) {
+  const issues = data.detectedIssues || [];
+  const drills = [];
+
+  // Base de données ultra simple (MVP++)
+  const DRILL_DB = {
+    triangle: {
+      title: "Triangle stable",
+      durationMin: 5,
+      description: "Travaille sur un triangle solide mains-épaules."
+    },
+    lag: {
+      title: "Retard de club (Lag)",
+      durationMin: 8,
+      description: "Garde les poignets armés plus longtemps avant l’impact."
+    },
+    plane: {
+      title: "Descente dans le plan",
+      durationMin: 10,
+      description: "Sensation de ramener le club par l’intérieur."
+    },
+    rotation: {
+      title: "Rotation corps synchronisée",
+      durationMin: 10,
+      description: "Fais tourner le buste et les hanches ensemble."
+    },
+    head_move: {
+      title: "Tête stable",
+      durationMin: 4,
+      description: "Garde un point fixe derrière la balle."
+    },
+    impact_zone: {
+      title: "40 cm avant impact",
+      durationMin: 6,
+      description: "Travail du bas du corps avant les mains."
+    },
+    finish: {
+      title: "Équilibre au finish",
+      durationMin: 5,
+      description: "Tiens ton finish 3s sans bouger."
+    }
+  };
+
+  // → ajouter toutes les suggestions qui correspondent aux défauts détectés
+  issues.forEach(key => {
+    if (DRILL_DB[key]) drills.push(DRILL_DB[key]);
+  });
+
+  // Si aucun défaut :
+  if (!drills.length) {
+    drills.push({
+      title: "Routine solide",
+      durationMin: 5,
+      description: "Continue sur cette base régulière 👌"
+    });
+  }
+
+  // On retourne max 2 drills (lisibilité)
+  return drills.slice(0, 2);
+}
+
+
+  // -------------------------------------------------------
+//   COACH — Commentaire technique naturel comme un prof
+// -------------------------------------------------------
+function coachTechnicalComment(data) {
+  const issues = data.detectedIssues || [];
+  const comments = [];
+
+  // ⚠️ 1 — Triangle instable
+  if (issues.includes("triangle")) {
+    comments.push(
+      "Ton triangle mains/épaules manque un peu de stabilité. Garde les bras connectés au buste et évite que les mains s’éloignent trop au backswing."
+    );
+  }
+
+  // ⚠️ 2 — Retard du club (Lag)
+  if (issues.includes("lag")) {
+    comments.push(
+      "Le retard du club pourrait être meilleur. Garde les poignets armés plus longtemps pour libérer la vitesse au bon moment."
+    );
+  }
+
+  // ⚠️ 3 — Plan de swing
+  if (issues.includes("plane")) {
+    comments.push(
+      "La descente manque légèrement de plan. Sens le club revenir par l’intérieur plutôt que par-dessus."
+    );
+  }
+
+  // ⚠️ 4 — Rotation corps
+  if (issues.includes("rotation")) {
+    comments.push(
+      "La rotation n'est pas totalement synchronisée. Tourne les hanches et le buste ensemble pour conserver la posture."
+    );
+  }
+
+  // ⚠️ 5 — Stabilité de la tête
+  if (issues.includes("head_move")) {
+    comments.push(
+      "Ta tête bouge trop pendant le swing. Essaie de garder un point fixe juste derrière la balle pour stabiliser ton corps."
+    );
+  }
+
+  // ⚠️ 6 — Impact Zone (40 cm avant impact)
+  if (issues.includes("impact_zone")) {
+    comments.push(
+      "L’action des mains dans les 40 cm avant impact peut encore être améliorée. Laisse travailler le bas du corps avant la libération du club."
+    );
+  }
+
+  // ⚠️ 7 — Finish
+  if (issues.includes("finish")) {
+    comments.push(
+      "Ton finish manque un peu d’équilibre. Tiens ta pose 2 à 3 secondes pour ancrer un mouvement plus régulier."
+    );
+  }
+
+  // 🎉 Aucun défaut majeur → message positif
+  if (!comments.length) {
+    return "Très bon swing ! La structure est solide, continue comme ça 👌";
+  }
+
+  // 🔥 On renvoie 1 ou 2 conseils courts et pertinents
+  return comments.slice(0, 2).join(" ");
+}
 
   // -------------------------------------------------------
   //   AFFICHAGE RESULTAT
