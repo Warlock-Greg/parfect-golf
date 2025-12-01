@@ -572,7 +572,7 @@ const JustSwing = (() => {
     showRoutineSteps,
     updateUI,
     refreshSwingHistoryUI,
-    _debug: debug,
+    _debug: debug
   };
 })();
 
