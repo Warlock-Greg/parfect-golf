@@ -98,3 +98,43 @@ export function computeSwingScore(frames, keyFrames, club) {
 
   return Math.round(score);
 }
+
+export function computeSwingScoreWithDetails(frames, keyFrames, club) {
+  const { topIndex, impactIndex } = keyFrames;
+
+  const lag = scoreLag(
+    frames, topIndex,
+    LM.RIGHT_WRIST, LM.RIGHT_ELBOW, LM.RIGHT_INDEX
+  );
+  const shift   = scoreWeightShift(frames, topIndex, impactIndex);
+  const posture = scorePosture(frames, impactIndex);
+  const triangle= scoreTriangle(frames);
+
+  const CLUB_WEIGHTS = {
+    driver: { lag:0.35, shift:0.30, posture:0.20, triangle:0.15 },
+    fer:    { lag:0.30, shift:0.25, posture:0.25, triangle:0.20 },
+    wedge:  { lag:0.15, shift:0.15, posture:0.40, triangle:0.30 },
+    putter: { lag:0.00, shift:0.00, posture:0.60, triangle:0.40 },
+  };
+
+  const W = CLUB_WEIGHTS[club] ?? CLUB_WEIGHTS["fer"];
+
+  const total =
+    lag     * W.lag +
+    shift   * W.shift +
+    posture * W.posture +
+    triangle* W.triangle;
+
+  return {
+    total: Math.round(total),
+    lag,
+    shift,
+    posture,
+    triangle,
+  };
+}
+
+// Wrapper simple si tu veux garder computeSwingScore
+export function computeSwingScore(frames, keyFrames, club) {
+  return computeSwingScoreWithDetails(frames, keyFrames, club).total;
+}
