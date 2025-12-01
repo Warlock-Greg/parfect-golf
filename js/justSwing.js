@@ -351,14 +351,7 @@ const JustSwing = (() => {
   // ----------------------------------------------------
   // 🔥 JustSwing logic de posture / routine / UI
   // ----------------------------------------------------
-  if (state === JSW_STATE.POSITIONING) return;
-  if (state === JSW_STATE.ROUTINE) return;
-
-  if (state === JSW_STATE.ADDRESS_READY) {
-    // détecter simplement que le joueur commence à bouger
-    // (ou laisser SwingEngine gérer entièrement)
-    return;
-  }
+ 
 
   // Le reste de la logique swing est géré
   // à 100% par SwingEngine → plus rien ici
