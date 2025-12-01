@@ -314,37 +314,35 @@ const JustSwing = (() => {
   //   MEDIAPIPE CALLBACK
   // -----------------------------------------------------
   function onPoseFrame(landmarks) {
-    lastPose = landmarks || null;
-    lastFullBodyOk = detectFullBody(landmarks);
+  lastPose = landmarks || null;
+  lastFullBodyOk = detectFullBody(landmarks);
 
-    if (!swingEngine || !landmarks) return;
+  // pas de landmarks → pas d'analyse
+  if (!landmarks) return;
 
-    if (state === JSW_STATE.ADDRESS_READY || state === JSW_STATE.SWING_CAPTURE) {
-      const evt = swingEngine.processPose(landmarks, performance.now(), currentClubType);
+  // ----------------------------------------------------
+  // 🔥 Nouveau moteur SwingEngine PRO
+  // ----------------------------------------------------
+  if (window.__engine) {
+    window.__engine.pushPose(landmarks, performance.now());
+  }
 
-      if (evt.type === "swingStart") {
-        state = JSW_STATE.SWING_CAPTURE;
-        currentSwingIndex++;
-        if (window.SwingCapture) SwingCapture.start();
-        updateUI();
-      }
+  // ----------------------------------------------------
+  // 🔥 JustSwing logic de posture / routine / UI
+  // ----------------------------------------------------
+  if (state === JSW_STATE.POSITIONING) return;
+  if (state === JSW_STATE.ROUTINE) return;
 
-      if (evt.type === "swingRejected") {
-        showCoachIA("Swing incomplet, refais-en un 😉");
-        state = JSW_STATE.ADDRESS_READY;
-        updateUI();
-      }
+  if (state === JSW_STATE.ADDRESS_READY) {
+    // détecter simplement que le joueur commence à bouger
+    // (ou laisser SwingEngine gérer entièrement)
+    return;
+  }
 
-      if (evt.type === "swingComplete") {
-        handleSwingComplete(evt.data);
-      }
-
-    if (window.__engine && landmarks) {
-  __engine.pushPose(landmarks, performance.now());
+  // Le reste de la logique swing est géré
+  // à 100% par SwingEngine → plus rien ici
 }
 
-    }
-  }
 
   // -----------------------------------------------------
   //   STATE MACHINE
