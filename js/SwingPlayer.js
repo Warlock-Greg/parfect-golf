@@ -1,89 +1,79 @@
-// === SwingPlayer.js ===
+// =========================================================
+//  SwingPlayer.js – Replay vidéo du swing
+//  Global: window.SwingPlayer
+//  Requiert dans le DOM :
+//   <video id="swing-video" playsinline></video>
+//   <button id="swing-play-pause">▶️</button>
+//   <select id="swing-speed">…</select>
+//   <input id="swing-timeline" type="range" …>
+//   <span id="swing-time-label"></span>
+// =========================================================
 
-let swingVideoEl;
-let playPauseBtn;
-let speedSelect;
-let prevFrameBtn;
-let nextFrameBtn;
-let timelineInput;
-let timeLabel;
+(function () {
+  let videoEl, playPauseBtn, speedSel, timelineInput, timeLabel;
+  const FPS = 30;
 
-const ASSUMED_FPS = 30;
+  function init() {
+    videoEl = document.getElementById("swing-video");
+    playPauseBtn = document.getElementById("swing-play-pause");
+    speedSel = document.getElementById("swing-speed");
+    timelineInput = document.getElementById("swing-timeline");
+    timeLabel = document.getElementById("swing-time-label");
 
-export function initSwingPlayer() {
-  swingVideoEl = document.getElementById("swing-video");
-  playPauseBtn = document.getElementById("swing-play-pause");
-  speedSelect = document.getElementById("swing-speed");
-  prevFrameBtn = document.getElementById("swing-prev-frame");
-  nextFrameBtn = document.getElementById("swing-next-frame");
-  timelineInput = document.getElementById("swing-timeline");
-  timeLabel = document.getElementById("swing-time-label");
+    if (!videoEl) {
+      console.warn("SwingPlayer: #swing-video non trouvé");
+      return;
+    }
 
-  if (!swingVideoEl) {
-    console.warn("swing-video non trouvé");
-    return;
+    playPauseBtn?.addEventListener("click", togglePlay);
+    speedSel?.addEventListener("change", updateSpeed);
+    timelineInput?.addEventListener("input", onTimelineInput);
+    videoEl.addEventListener("timeupdate", syncTimeline);
   }
 
-  playPauseBtn.addEventListener("click", togglePlayPause);
-  speedSelect.addEventListener("change", onSpeedChange);
-  prevFrameBtn.addEventListener("click", () => stepFrame(-1));
-  nextFrameBtn.addEventListener("click", () => stepFrame(1));
-  timelineInput.addEventListener("input", onTimelineChange);
-
-  swingVideoEl.addEventListener("timeupdate", syncTimeline);
-  swingVideoEl.addEventListener("loadedmetadata", () => {
-    timelineInput.value = 0;
-    timeLabel.textContent = "0.0s";
-  });
-}
-
-function togglePlayPause() {
-  if (swingVideoEl.paused) {
-    swingVideoEl.play();
-    playPauseBtn.textContent = "⏸️";
-  } else {
-    swingVideoEl.pause();
-    playPauseBtn.textContent = "▶️";
+  function togglePlay() {
+    if (!videoEl) return;
+    if (videoEl.paused) {
+      videoEl.play();
+      if (playPauseBtn) playPauseBtn.textContent = "⏸️";
+    } else {
+      videoEl.pause();
+      if (playPauseBtn) playPauseBtn.textContent = "▶️";
+    }
   }
-}
 
-function onSpeedChange() {
-  const v = parseFloat(speedSelect.value || "1");
-  swingVideoEl.playbackRate = v;
-}
+  function updateSpeed() {
+    if (!videoEl || !speedSel) return;
+    const v = parseFloat(speedSel.value || "1");
+    videoEl.playbackRate = v;
+  }
 
-function stepFrame(direction) {
-  const dt = 1 / ASSUMED_FPS;
-  swingVideoEl.pause();
-  playPauseBtn.textContent = "▶️";
-  swingVideoEl.currentTime = Math.max(
-    0,
-    Math.min(swingVideoEl.duration || 0, swingVideoEl.currentTime + direction * dt)
-  );
-}
+  function onTimelineInput() {
+    if (!videoEl || !timelineInput) return;
+    const ratio = parseFloat(timelineInput.value || "0") / 100;
+    videoEl.currentTime = ratio * (videoEl.duration || 0);
+  }
 
-function onTimelineChange() {
-  const val = parseFloat(timelineInput.value);
-  const dur = swingVideoEl.duration || 0;
-  swingVideoEl.currentTime = (val / 100) * dur;
-}
+  function syncTimeline() {
+    if (!videoEl || !timelineInput || !timeLabel) return;
+    const dur = videoEl.duration || 0;
+    if (!dur) return;
+    const ratio = (videoEl.currentTime / dur) * 100;
+    timelineInput.value = ratio.toFixed(1);
+    timeLabel.textContent = `${videoEl.currentTime.toFixed(1)}s`;
+  }
 
-function syncTimeline() {
-  const dur = swingVideoEl.duration || 0;
-  if (!dur) return;
+  function loadBlob(blob) {
+    if (!videoEl || !blob) return;
+    const url = URL.createObjectURL(blob);
+    videoEl.src = url;
+    videoEl.playbackRate = speedSel ? parseFloat(speedSel.value || "1") : 1;
+    videoEl.play().catch(() => {});
+    if (playPauseBtn) playPauseBtn.textContent = "⏸️";
+  }
 
-  const ratio = (swingVideoEl.currentTime / dur) * 100;
-  timelineInput.value = ratio.toFixed(1);
-  timeLabel.textContent = `${swingVideoEl.currentTime.toFixed(1)}s`;
-}
-
-export function loadSwingVideoFromBlob(blob) {
-  if (!swingVideoEl) return;
-  const url = URL.createObjectURL(blob);
-  swingVideoEl.src = url;
-  swingVideoEl.playbackRate = parseFloat(speedSelect?.value || "1");
-  swingVideoEl.play().catch(() => {
-    // auto-play bloqué, c'est pas grave
-  });
-  playPauseBtn.textContent = "⏸️";
-}
+  window.SwingPlayer = {
+    init,
+    loadBlob,
+  };
+})();
