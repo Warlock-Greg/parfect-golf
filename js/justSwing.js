@@ -267,9 +267,16 @@ const JustSwing = (() => {
     if (engine) {
     const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-    if (evt?.type === "swingComplete") {
-      handleSwingComplete(evt.data);
-    }
+    // 🎬 DéBUT SWING = START capture vidéo
+  if (evt?.type === "swingStart") {
+    console.log("🎬 swingStart → SwingCapture.start()");
+    if (window.SwingCapture) SwingCapture.start();
+  }
+
+  // 🏁 FIN SWING = scoring + STOP capture + revue + replay
+  if (evt?.type === "swingComplete") {
+    handleSwingComplete(evt.data);
+  }
   }
 }
 
