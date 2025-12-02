@@ -335,6 +335,8 @@ const JustSwing = (() => {
   //   MEDIAPIPE CALLBACK
   // -----------------------------------------------------
   function onPoseFrame(landmarks) {
+    console.log("LANDMARK_FRAME", !!landmarks);
+
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
