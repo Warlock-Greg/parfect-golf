@@ -268,18 +268,21 @@ function onPoseFrame(landmarks) {
 
   const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // SAFE : evt peut être null/undefined
-  if (!captureStarted && evt && evt.type && evt.type !== "none" && evt.type !== "tracking") {
-    console.log("🎬 START capture vidéo (evt =", evt.type, ")");
+  // 🎬 DÉBUT SWING : moteur en mode TRACKING → on démarre la capture
+  if (!captureStarted && evt && evt.type === "tracking") {
+    console.log("🎬 START capture vidéo (tracking)");
     captureStarted = true;
     if (window.SwingCapture) SwingCapture.start();
   }
 
+  // 🏁 FIN SWING
   if (evt && evt.type === "swingComplete") {
+    console.log("🎬 swingComplete → STOP capture vidéo")
     captureStarted = false;
     handleSwingComplete(evt.data);
   }
 }
+
 
 
 
