@@ -197,6 +197,35 @@ const JustSwing = (() => {
     window.SwingCapture.init(videoEl.srcObject);
   }
 
+  // -------------------------------------------------------
+  // 🔥 Création du moteur SwingEngine PRO
+  // -------------------------------------------------------
+  window.__engine = SwingEngine.create({
+    fps: 30,
+
+    onKeyFrame: (evt) => {
+      console.log("🎯 KEYFRAME", evt);
+    },
+
+    onSwingComplete: (evt) => {
+      console.log("🏁 SWING COMPLETE", evt);
+      handleSwingComplete(evt.data);   // <— OBLIGATOIRE
+    }
+  });
+
+  console.log("🔧 SwingEngine PRO initialisé", window.__engine);
+
+  // -------------------------------------------------------
+  // Lancement de la boucle principale
+  // -------------------------------------------------------
+  updateUI();
+  showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+
+  if (loopId) cancelAnimationFrame(loopId);
+  loopId = requestAnimationFrame(mainLoop);
+}
+
+    
   // =========================================================
   // 🔧 CRÉATION / RESET SWINGENGINE PRO
   // =========================================================
