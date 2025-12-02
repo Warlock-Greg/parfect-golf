@@ -152,6 +152,7 @@ const JustSwing = (() => {
 
   mode = selectedMode;
   state = JSW_STATE.POSITIONING;
+  captureStarted = false;     // RESET ici ✔️
   sessionStartTime = performance.now();
   currentSwingIndex = 0;
   lastPose = null;
