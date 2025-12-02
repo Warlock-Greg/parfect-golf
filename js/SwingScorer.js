@@ -1,140 +1,117 @@
-import { LM } from "./SwingLandmarks.js";
+// =========================================================
+//   Parfect — Scoring PRO (Triangle, Lag, Plan, Rotation, Finish)
+// =========================================================
 
-// === UTILS ===
-const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-
-const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
-
-const angle = (a, b, c) => {
-  const ab = { x: a.x - b.x, y: a.y - b.y };
-  const cb = { x: c.x - b.x, y: c.y - b.y };
-  const dot = ab.x * cb.x + ab.y * cb.y;
-  const magA = Math.hypot(ab.x, ab.y);
-  const magC = Math.hypot(cb.x, cb.y);
-  return Math.acos(dot / (magA * magC)); // radians
-};
-
-// === MÉTRIQUES FONDAMENTALES ===
-
-// 1) LAG — angle avant-bras / poignet / shaft
-function scoreLag(frames, topIndex, wrist, elbow, index) {
-  const slice = frames.slice(topIndex, topIndex + 10);
-  const angles = slice.map(f => angle(f[elbow], f[wrist], f[index]));
-  const minAngle = Math.min(...angles); // plus petit = meilleur lag
-
-  return Math.max(0, 100 - (minAngle - 0.55) * 180); 
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
 }
 
-// 2) REPRISE D’APPUI — déplacement hanche → cible
-function scoreWeightShift(frames, topIndex, impactIndex) {
-  const hipX_start = mid(frames[0][LM.LEFT_HIP], frames[0][LM.RIGHT_HIP]).x;
-  const hipX_mid = mid(frames[Math.floor((topIndex + impactIndex) / 2)][LM.LEFT_HIP],
-                       frames[Math.floor((topIndex + impactIndex) / 2)][LM.RIGHT_HIP]).x;
-
-  const shift = hipX_start - hipX_mid; // positif = vers la cible
-
-  return Math.max(0, Math.min(100, shift * 2500));
+function dist(a, b) {
+  if (!a || !b) return 999;
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx*dx + dy*dy);
 }
 
-// 3) VERTICALITÉ — angle du buste
-function torsoAngle(frame) {
-  const s = mid(frame[LM.LEFT_SHOULDER], frame[LM.RIGHT_SHOULDER]);
-  const h = mid(frame[LM.LEFT_HIP], frame[LM.RIGHT_HIP]);
-  return Math.atan2(s.y - h.y, s.x - h.x);
-}
-function scorePosture(frames, impactIndex) {
-  const base = torsoAngle(frames[0]);
-  const final = torsoAngle(frames[impactIndex]);
-  const diff = Math.abs(final - base);
-  return Math.max(0, 100 - diff * 600);
-}
-
-// 4) TRIANGLE — cohérence bras / épaules
-function triangleWidth(f) {
-  const shoulders = dist(f[LM.LEFT_SHOULDER], f[LM.RIGHT_SHOULDER]);
-  const wrists = dist(f[LM.LEFT_WRIST], f[LM.RIGHT_WRIST]);
-  return wrists / shoulders; // ratio
-}
-function scoreTriangle(frames) {
-  const ref = triangleWidth(frames[0]);
-  let maxVar = 0;
-  for (let f of frames) {
-    maxVar = Math.max(maxVar, Math.abs(triangleWidth(f) - ref));
-  }
-  return Math.max(0, 100 - maxVar * 3000);
+function angleBetweenSegments(A, B, C, D) {
+  if (!A || !B || !C || !D) return 0;
+  const v1 = { x: B.x - A.x, y: B.y - A.y };
+  const v2 = { x: D.x - C.x, y: D.y - C.y };
+  const dot = (v1.x*v2.x + v1.y*v2.y);
+  const m1 = Math.sqrt(v1.x*v1.x + v1.y*v1.y);
+  const m2 = Math.sqrt(v2.x*v2.x + v2.y*v2.y);
+  const div = m1*m2;
+  if (!div) return 0;
+  return Math.acos(clamp(dot / div, -1, 1)) * 180 / Math.PI;
 }
 
-// =====================================================
-// === SCORE FINAL ADAPTÉ AU CLUB ===
-// =====================================================
+// ---------------- TRIANGLE ----------------
 
-export function computeSwingScore(frames, keyFrames, club) {
-  const { setupIndex, topIndex, impactIndex } = keyFrames;
+function computeTriangleMetrics(pose) {
+  const LS = pose[11], RS = pose[12];
+  const LH = pose[15], RH = pose[16];
+  if (!LS || !RS || !LH || !RH) return null;
 
-  // === COMMON METRICS ===
-  const lag = scoreLag(
-    frames, topIndex,
-    LM.RIGHT_WRIST, LM.RIGHT_ELBOW, LM.RIGHT_INDEX
-  );
-  const shift = scoreWeightShift(frames, topIndex, impactIndex);
-  const posture = scorePosture(frames, impactIndex);
-  const triangle = scoreTriangle(frames);
+  const shoulderWidth = dist(LS, RS);
 
-  // === WEIGHTS & TOLERANCES PAR CLUB ===
-  const CLUB_WEIGHTS = {
-    driver:  { lag:0.35, shift:0.30, posture:0.20, triangle:0.15 },
-    fer:     { lag:0.30, shift:0.25, posture:0.25, triangle:0.20 },
-    wedge:   { lag:0.15, shift:0.15, posture:0.40, triangle:0.30 },
-    putter:  { lag:0.00, shift:0.00, posture:0.60, triangle:0.40 },
-  };
+  const mid = { x:(LS.x+RS.x)/2, y:(LS.y+RS.y)/2 };
+  const handDist = (dist(LH, mid) + dist(RH, mid)) / 2;
 
-  const W = CLUB_WEIGHTS[club] ?? CLUB_WEIGHTS["fer"];
+  const angle = angleBetweenSegments(LS, RS, LH, RH);
 
-  const score =
-    lag     * W.lag +
-    shift   * W.shift +
-    posture * W.posture +
-    triangle* W.triangle;
-
-  return Math.round(score);
+  return { shoulderWidth, handDist, angle };
 }
 
-export function computeSwingScoreWithDetails(frames, keyFrames, club) {
-  const { topIndex, impactIndex } = keyFrames;
+function scoreTriangle(tri) {
+  if (!tri) return 20;
+  const s = 1 - Math.abs(tri.shoulderWidth - 0.25) / 0.25;
+  const h = 1 - Math.abs(tri.handDist - 0.18) / 0.18;
+  const a = 1 - Math.abs(tri.angle - 25) / 25;
+  return Math.round(clamp((s+h+a)/3, 0, 1) * 20);
+}
 
-  const lag = scoreLag(
-    frames, topIndex,
-    LM.RIGHT_WRIST, LM.RIGHT_ELBOW, LM.RIGHT_INDEX
-  );
-  const shift   = scoreWeightShift(frames, topIndex, impactIndex);
-  const posture = scorePosture(frames, impactIndex);
-  const triangle= scoreTriangle(frames);
+// ---------------- LAG ----------------
 
-  const CLUB_WEIGHTS = {
-    driver: { lag:0.35, shift:0.30, posture:0.20, triangle:0.15 },
-    fer:    { lag:0.30, shift:0.25, posture:0.25, triangle:0.20 },
-    wedge:  { lag:0.15, shift:0.15, posture:0.40, triangle:0.30 },
-    putter: { lag:0.00, shift:0.00, posture:0.60, triangle:0.40 },
-  };
+function scoreLag(pose) {
+  const wrist = pose[15], elbow = pose[13];
+  if (!wrist || !elbow) return 15;
+  const dy = elbow.y - wrist.y;
+  return Math.round(clamp((dy - 0.01)/0.1, 0, 1) * 15);
+}
 
-  const W = CLUB_WEIGHTS[club] ?? CLUB_WEIGHTS["fer"];
+// ---------------- PLANE ----------------
 
-  const total =
-    lag     * W.lag +
-    shift   * W.shift +
-    posture * W.posture +
-    triangle* W.triangle;
+function scorePlane(pose) {
+  const wrist = pose[15], shoulder = pose[11];
+  if (!wrist || !shoulder) return 15;
+  const angle = Math.atan2(wrist.y - shoulder.y, wrist.x - shoulder.x)*180/Math.PI;
+  return Math.round(clamp(1 - Math.abs(angle - 35)/25, 0, 1) * 15);
+}
+
+// ---------------- ROTATION ----------------
+
+function scoreRotation(pose) {
+  const LS = pose[11], RS = pose[12];
+  const LH = pose[23], RH = pose[24];
+  if (!LS || !RS || !LH || !RH) return 15;
+
+  const shoulderTilt = angleBetweenSegments(LS, RS, {x:LS.x,y:LS.y-0.1}, LS);
+  const hipTilt      = angleBetweenSegments(LH, RH, {x:LH.x,y:LH.y-0.1}, LH);
+
+  const diff = Math.abs(shoulderTilt - hipTilt);
+  return Math.round(clamp(1 - diff/25, 0, 1) * 15);
+}
+
+// ---------------- FINISH ----------------
+
+function scoreFinish(pose) {
+  const LS = pose[11], RS = pose[12];
+  if (!LS || !RS) return 15;
+  const tilt = Math.abs(LS.x - RS.x);
+  return Math.round(clamp(1 - tilt/0.25, 0, 1) * 15);
+}
+
+// ---------------- SCORE FINAL ----------------
+
+function computeSwingScore(mode, pose, ctx) {
+
+  const lastFrame = ctx.framesApresImpact?.[0]?.pose || pose;
+
+  const tri = computeTriangleMetrics(lastFrame);
+
+  const triangleScore = scoreTriangle(tri);
+  const lagScore      = scoreLag(lastFrame);
+  const planeScore    = scorePlane(lastFrame);
+  const rotationScore = scoreRotation(lastFrame);
+  const finishScore   = scoreFinish(lastFrame);
 
   return {
-    total: Math.round(total),
-    lag,
-    shift,
-    posture,
-    triangle,
+    total: triangleScore + lagScore + planeScore + rotationScore + finishScore,
+    triangleScore,
+    lagScore,
+    planeScore,
+    rotationScore,
+    finishScore
   };
 }
 
-// Wrapper simple si tu veux garder computeSwingScore
-export function computeSwingScore(frames, keyFrames, club) {
-  return computeSwingScoreWithDetails(frames, keyFrames, club).total;
-}
