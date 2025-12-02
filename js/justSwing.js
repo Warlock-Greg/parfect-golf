@@ -347,7 +347,7 @@ const JustSwing = (() => {
   // 🔥 Nouveau moteur SwingEngine PRO
   // ----------------------------------------------------
   if (window.__engine) {
-    window.__engine.pushPose(landmarks, performance.now());
+    window.__engine.processPose(landmarks, performance.now(), currentClubType);
   }
 
   // ----------------------------------------------------
