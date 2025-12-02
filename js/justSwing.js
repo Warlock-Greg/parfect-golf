@@ -146,49 +146,50 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   function startSession(selectedMode = JSW_MODE.SWING) {
 
-    if (!screenEl) initJustSwing();
+  if (!screenEl) initJustSwing();
 
-    mode = selectedMode;
-    state = JSW_STATE.POSITIONING;
-    sessionStartTime = performance.now();
-    currentSwingIndex = 0;
-    lastPose = null;
-    lastFullBodyOk = false;
+  mode = selectedMode;
+  state = JSW_STATE.POSITIONING;
+  sessionStartTime = performance.now();
+  currentSwingIndex = 0;
+  lastPose = null;
+  lastFullBodyOk = false;
 
-    screenEl.classList.remove("hidden");
-    document.body.classList.add("jsw-fullscreen");
+  screenEl.classList.remove("hidden");
+  document.body.classList.add("jsw-fullscreen");
 
-    // 🌟 init video recorder
-    if (window.SwingCapture && videoEl.srcObject) {
-      window.SwingCapture.init(videoEl.srcObject);
-    }
-
-    // 🌟 init SwingEngine PRO
-    engine = SwingEngine.create({
-      fps: 30,
-      onKeyFrame: (evt) => console.log("🎯 KEYFRAME", evt),
-      onSwingComplete: (evt) => {
-        console.log("🏁 SWING COMPLETE", evt);
-
-        // injection du SCORE PRO
-        evt.data.scores = computeSwingScore("swing", null, {
-          framesAvantImpact: evt.data.frames.slice(0, evt.data.keyFrames.impact),
-          framesApresImpact: evt.data.frames.slice(evt.data.keyFrames.impact),
-          clubType: evt.data.club
-        });
-
-        handleSwingComplete(evt.data);
-      }
-    });
-
-    console.log("🔧 Engine READY:", engine);
-
-    updateUI();
-    showBigMessage("J’attends que tu te mettes en plain-pied 👣");
-
-    if (loopId) cancelAnimationFrame(loopId);
-    loopId = requestAnimationFrame(mainLoop);
+  // init capture vidéo
+  if (window.SwingCapture && videoEl.srcObject) {
+    window.SwingCapture.init(videoEl.srcObject);
   }
+
+  // === SwingEngine PRO ===
+  engine = SwingEngine.create({
+    fps: 30,
+    onKeyFrame: (evt) => {
+      console.log("🎯 KEYFRAME", evt);
+    },
+    onSwingComplete: (evt) => {
+      console.log("🏁 SWING COMPLETE", evt);
+      const swing = evt.data;
+
+      // 💯 SCORING PREMIUM
+      swing.scores = computeSwingScorePremium(swing);
+      console.log("📊 SCORE PREMIUM =", swing.scores);
+
+      handleSwingComplete(swing);
+    }
+  });
+
+  console.log("🔧 Engine READY:", engine);
+
+  updateUI();
+  showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+
+  if (loopId) cancelAnimationFrame(loopId);
+  loopId = requestAnimationFrame(mainLoop);
+}
+
 
 
   function stopSession() {
@@ -298,34 +299,55 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   //   SWING COMPLETE → REVIEW
   // ---------------------------------------------------------
-  function handleSwingComplete(data) {
+  function handleSwingComplete(swing) {
+  state = JSW_STATE.REVIEW;
+  updateUI();
 
-    state = JSW_STATE.REVIEW;
-    updateUI();
-    window.__lastSwing = data;
+  window.__lastSwing = swing;
 
-    document.getElementById("swing-review").classList.remove("hidden");
-    document.getElementById("swing-review-score").textContent = `Score : ${data.scores.total}/100`;
-    document.getElementById("swing-review-comment").textContent =
-      coachTechnicalComment(data.scores);
+  const panel = document.getElementById("swing-review");
+  const scoreEl = document.getElementById("swing-review-score");
+  const commentEl = document.getElementById("swing-review-comment");
 
-    if (window.SwingCapture) {
-      SwingCapture.stop().then((blob) => {
-        if (!blob) return;
-        data.videoBlob = blob;
-        if (window.SwingPlayer) SwingPlayer.loadBlob(blob);
+  if (panel) panel.classList.remove("hidden");
 
-        if (window.SwingHistory) {
-          SwingHistory.save({
-            club: data.club,
-            score: data.scores.total,
-            metrics: data.scores,
-            videoBlob: blob
-          });
-        }
-      });
-    }
+  if (scoreEl && swing.scores) {
+    scoreEl.textContent = `Score : ${Math.round(swing.scores.total)}/100`;
   }
+
+  if (commentEl && swing.scores) {
+    commentEl.textContent = coachTechnicalComment(swing.scores);
+  }
+
+  // 🎥 Capture et replay vidéo
+  if (window.SwingCapture) {
+    SwingCapture.stop().then((blob) => {
+      if (!blob) return;
+
+      swing.videoBlob = blob;
+
+      // Replay
+      if (window.SwingPlayer) {
+        try {
+          SwingPlayer.loadBlob(blob);
+        } catch (e) {
+          console.warn("SwingPlayer.loadBlob error", e);
+        }
+      }
+
+      // Historique
+      if (window.SwingHistory) {
+        SwingHistory.save({
+          club: swing.club,
+          score: swing.scores.total,
+          metrics: swing.scores,
+          videoBlob: blob
+        }).catch((e) => console.warn("SwingHistory.save error", e));
+      }
+    });
+  }
+}
+
 
 
   // ---------------------------------------------------------
