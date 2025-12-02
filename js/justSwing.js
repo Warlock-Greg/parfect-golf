@@ -45,6 +45,8 @@ const JustSwing = (() => {
   let mode = JSW_MODE.SWING;
   let currentClubType = "fer7";
 
+  let captureStarted = false;
+
   let lastPose = null;
   let lastFullBodyOk = false;
   let sessionStartTime = null;
@@ -256,28 +258,28 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   //   MEDIAPIPE FRAME
   // ---------------------------------------------------------
-  let captureStarted = false;
 
 function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
+
   if (!landmarks || !engine) return;
 
   const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // 🎬 démarre la capture dès que ça bouge (backswing/top/down…)
-  if (!captureStarted && evt?.type !== "none" && evt?.type !== "tracking") {
+  // SAFE : evt peut être null/undefined
+  if (!captureStarted && evt && evt.type && evt.type !== "none" && evt.type !== "tracking") {
     console.log("🎬 START capture vidéo (evt =", evt.type, ")");
     captureStarted = true;
     if (window.SwingCapture) SwingCapture.start();
   }
 
-  // 🏁 FIN SWING
-  if (evt?.type === "swingComplete") {
-    captureStarted = false; // reset
+  if (evt && evt.type === "swingComplete") {
+    captureStarted = false;
     handleSwingComplete(evt.data);
   }
 }
+
 
 
   // ---------------------------------------------------------
