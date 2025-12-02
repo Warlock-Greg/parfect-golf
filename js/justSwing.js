@@ -265,10 +265,13 @@ const JustSwing = (() => {
 
     // 🚀 utiliser SwingEngine PRO
     if (engine) {
-      engine.processPose(landmarks, performance.now(), currentClubType);
+    const evt = engine.processPose(landmarks, performance.now(), currentClubType);
+
+    if (evt?.type === "swingComplete") {
+      handleSwingComplete(evt.data);
     }
   }
-
+}
 
   // ---------------------------------------------------------
   //   STATE MACHINE
