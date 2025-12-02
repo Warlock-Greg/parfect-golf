@@ -261,27 +261,49 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
 
 function onPoseFrame(landmarks) {
+  // --- Mise à jour overlay & posture ---
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
+  // Pas de landmarks ou moteur non dispo → on quitte
   if (!landmarks || !engine) return;
 
+  // --- Analyse par le moteur SwingEngine ---
   const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // 🎬 DÉBUT SWING : moteur en mode TRACKING → on démarre la capture
+  // ============================================================
+  // 🚀 DÉMARRAGE VIDÉO — dès que SwingEngine passe en TRACKING
+  // ============================================================
   if (!captureStarted && evt && evt.type === "tracking") {
-    console.log("🎬 START capture vidéo (tracking)");
+    console.log("🎬 START capture vidéo (evt = tracking)");
     captureStarted = true;
-    if (window.SwingCapture) SwingCapture.start();
+
+    if (window.SwingCapture) {
+      SwingCapture.start();
+    }
   }
 
-  // 🏁 FIN SWING
+  // ============================================================
+  // 🏁 FIN DU SWING — SwingEngine renvoie swingComplete
+  // ============================================================
   if (evt && evt.type === "swingComplete") {
-    console.log("🎬 swingComplete → STOP capture vidéo")
+    console.log("⏹️ swingComplete → STOP capture vidéo");
     captureStarted = false;
-    handleSwingComplete(evt.data);
+
+    // STOP AVANT handleSwingComplete → important
+    if (window.SwingCapture) {
+      SwingCapture.stop().then(() => {
+        handleSwingComplete(evt.data);
+      });
+    } else {
+      handleSwingComplete(evt.data);
+    }
   }
+
+  // (les autres evt.type peuvent être ignorés : "address", "top",
+  // "impact", "release", etc — SwingEngine gère toute la détection)
 }
+
 
 
 
