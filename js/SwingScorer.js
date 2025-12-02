@@ -95,15 +95,34 @@ function scoreFinish(pose) {
 
 function computeSwingScore(mode, pose, ctx) {
 
-  const lastFrame = ctx.framesApresImpact?.[0]?.pose || pose;
+  // récupère le frame juste après l’impact
+  const f1 = ctx.framesApresImpact?.[0];
+  const f0 = ctx.framesAvantImpact?.slice(-1)?.[0];
 
-  const tri = computeTriangleMetrics(lastFrame);
+  const lastFrame = f1 || f0 || pose;
+
+  if (!lastFrame) {
+    console.warn("⚠️ computeSwingScore: aucune frame valide");
+    return {
+      total: 0,
+      triangleScore: 0,
+      lagScore: 0,
+      planeScore: 0,
+      rotationScore: 0,
+      finishScore: 0
+    };
+  }
+
+  // ici lastFrame est directement le tableau landmarks
+  const landmarks = lastFrame;
+
+  const tri = computeTriangleMetrics(landmarks);
 
   const triangleScore = scoreTriangle(tri);
-  const lagScore      = scoreLag(lastFrame);
-  const planeScore    = scorePlane(lastFrame);
-  const rotationScore = scoreRotation(lastFrame);
-  const finishScore   = scoreFinish(lastFrame);
+  const lagScore      = scoreLag(landmarks);
+  const planeScore    = scorePlane(landmarks);
+  const rotationScore = scoreRotation(landmarks);
+  const finishScore   = scoreFinish(landmarks);
 
   return {
     total: triangleScore + lagScore + planeScore + rotationScore + finishScore,
@@ -114,4 +133,5 @@ function computeSwingScore(mode, pose, ctx) {
     finishScore
   };
 }
+
 
