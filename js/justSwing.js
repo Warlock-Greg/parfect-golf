@@ -323,52 +323,29 @@ function onPoseFrame(landmarks) {
   console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
   console.log("📊 Scores :", data.scores);
 
-  state = JSW_STATE.REVIEW;
-  updateUI();
+  // === 1) Mettre à jour le panneau texte ===
+  const reviewEl = document.getElementById("swing-review");
+  const scoreEl  = document.getElementById("swing-review-score");
+  const commentEl = document.getElementById("swing-review-comment");
 
-  // UI Review ON
-  const review = document.getElementById("swing-review");
-  review.classList.remove("hidden");
-
-  // Score
-  const score = data.scores?.total ?? 0;
-  document.getElementById("swing-review-score").textContent =
-    `Score : ${score}/100`;
-
-  // Commentaire technique
-  document.getElementById("swing-review-comment").textContent =
-    coachTechnicalComment(data.scores);
-
-  // ===============================
-  // 🚫 AUCUNE VIDÉO — capture OFF
-  // ===============================
-  console.log("📵 Vidéo désactivée — aucun replay à charger");
-
-  // ===============================
-  // 📘 Historique (sans vidéo)
-  // ===============================
-  if (window.SwingHistory) {
-    SwingHistory.save({
-      club: data.club,
-      score,
-      metrics: data.scores,
-      videoBlob: null // pour l’instant
-    }).then(refreshSwingHistoryUI);
+  if (reviewEl && scoreEl && commentEl) {
+    reviewEl.classList.remove("hidden");
+    scoreEl.textContent = `Score : ${data.scores.total}/100`;
+    commentEl.textContent = coachTechnicalComment(data.scores);
   }
 
-  // Actions
-  document.getElementById("swing-save-reference").onclick = () => {
-    referenceSwing = data;
-    alert("Swing défini comme référence ⭐");
-  };
+  // === 2) Désactiver toute logique vidéo ===
+  console.log("📵 Vidéo désactivée — aucun replay à charger");
 
-  document.getElementById("swing-review-next").onclick = () => {
-    review.classList.add("hidden");
-    restartLoop();
-  };
+  // === 3) Bouton "swing suivant" ===
+  const nextBtn = document.getElementById("swing-review-next");
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      reviewEl.classList.add("hidden");
+      restartLoop();
+    };
+  }
 }
-
-
 
 
   // ---------------------------------------------------------
