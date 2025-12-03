@@ -261,41 +261,27 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
 
 function onPoseFrame(landmarks) {
-  console.log("🔥 onPoseFrame CALLED");
-
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
-  // Récupère toujours le vrai moteur
-  const engine = window.__engine;
-
   if (!landmarks || !engine) return;
 
+  // Analyse SwingEngine
   const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // ----- START CAPTURE au backswing ou top -----
-  if (!captureStarted && evt && (evt.type === "backswing" || evt.type === "top")) {
-    console.log("🎬 START capture vidéo (evt =", evt.type, ")");
-    captureStarted = true;
+  // ==============================
+  //  🎬 DÉTECTION DE SWING SANS CAPTURE VIDÉO
+  // ==============================
 
-    if (window.SwingCapture) {
-      SwingCapture.start();
-    }
+  // TRACKING détecté → pas de capture vidéo
+  if (evt && evt.type === "tracking") {
+    console.log("⚠️ TRACKING détecté (capture vidéo désactivée)");
   }
 
-  // ----- STOP CAPTURE -----
+  // SWING COMPLET → scoring immédiat
   if (evt && evt.type === "swingComplete") {
-    console.log("⏹️ swingComplete → STOP capture vidéo");
-
-    captureStarted = false;
-
-    if (window.SwingCapture) {
-      SwingCapture.stop().then(() => {
-        handleSwingComplete(evt.data);
-      });
-    } else {
-      handleSwingComplete(evt.data);
-    }
+    console.log("🏁 swingComplete — MODE SCORING UNIQUEMENT");
+    handleSwingComplete(evt.data); // scoring OK
   }
 }
 
@@ -333,54 +319,55 @@ function onPoseFrame(landmarks) {
   // ---------------------------------------------------------
   //   SWING COMPLETE → REVIEW
   // ---------------------------------------------------------
-  function handleSwingComplete(swing) {
+  function handleSwingComplete(data) {
+  console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
+  console.log("📊 Scores :", data.scores);
+
   state = JSW_STATE.REVIEW;
   updateUI();
 
-  window.__lastSwing = swing;
+  // UI Review ON
+  const review = document.getElementById("swing-review");
+  review.classList.remove("hidden");
 
-  const panel = document.getElementById("swing-review");
-  const scoreEl = document.getElementById("swing-review-score");
-  const commentEl = document.getElementById("swing-review-comment");
+  // Score
+  const score = data.scores?.total ?? 0;
+  document.getElementById("swing-review-score").textContent =
+    `Score : ${score}/100`;
 
-  if (panel) panel.classList.remove("hidden");
+  // Commentaire technique
+  document.getElementById("swing-review-comment").textContent =
+    coachTechnicalComment(data.scores);
 
-  if (scoreEl && swing.scores) {
-    scoreEl.textContent = `Score : ${Math.round(swing.scores.total)}/100`;
+  // ===============================
+  // 🚫 AUCUNE VIDÉO — capture OFF
+  // ===============================
+  console.log("📵 Vidéo désactivée — aucun replay à charger");
+
+  // ===============================
+  // 📘 Historique (sans vidéo)
+  // ===============================
+  if (window.SwingHistory) {
+    SwingHistory.save({
+      club: data.club,
+      score,
+      metrics: data.scores,
+      videoBlob: null // pour l’instant
+    }).then(refreshSwingHistoryUI);
   }
 
-  if (commentEl && swing.scores) {
-    commentEl.textContent = coachTechnicalComment(swing.scores);
-  }
+  // Actions
+  document.getElementById("swing-save-reference").onclick = () => {
+    referenceSwing = data;
+    alert("Swing défini comme référence ⭐");
+  };
 
-  // 🎥 Capture et replay vidéo
-  if (window.SwingCapture) {
-    SwingCapture.stop().then((blob) => {
-      if (!blob) return;
-
-      swing.videoBlob = blob;
-
-      // Replay
-      if (window.SwingPlayer) {
-        try {
-          SwingPlayer.loadBlob(blob);
-        } catch (e) {
-          console.warn("SwingPlayer.loadBlob error", e);
-        }
-      }
-
-      // Historique
-      if (window.SwingHistory) {
-        SwingHistory.save({
-          club: swing.club,
-          score: swing.scores.total,
-          metrics: swing.scores,
-          videoBlob: blob
-        }).catch((e) => console.warn("SwingHistory.save error", e));
-      }
-    });
-  }
+  document.getElementById("swing-review-next").onclick = () => {
+    review.classList.add("hidden");
+    restartLoop();
+  };
 }
+
 
 
 
