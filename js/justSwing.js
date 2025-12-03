@@ -264,15 +264,16 @@ function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
-  // moteur SwingEngine
+  // Récupère toujours le vrai moteur
   const engine = window.__engine;
+
   if (!landmarks || !engine) return;
 
   const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // ----- START CAPTURE -----
-  if (!captureStarted && evt && evt.type === "tracking") {
-    console.log("🎬 START capture vidéo (tracking)");
+  // ----- START CAPTURE au backswing ou top -----
+  if (!captureStarted && evt && (evt.type === "backswing" || evt.type === "top")) {
+    console.log("🎬 START capture vidéo (evt =", evt.type, ")");
     captureStarted = true;
 
     if (window.SwingCapture) {
@@ -280,9 +281,10 @@ function onPoseFrame(landmarks) {
     }
   }
 
-  // ----- STOP CAPTURE + UI -----
+  // ----- STOP CAPTURE -----
   if (evt && evt.type === "swingComplete") {
     console.log("⏹️ swingComplete → STOP capture vidéo");
+
     captureStarted = false;
 
     if (window.SwingCapture) {
