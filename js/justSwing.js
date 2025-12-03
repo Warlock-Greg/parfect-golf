@@ -389,6 +389,21 @@ function onPoseFrame(landmarks) {
   }
 
 
+  // =========================================================
+//   Fallback minimal pour éviter l'erreur
+//   (historique non bloquant)
+// =========================================================
+
+function refreshSwingHistoryUI() {
+  console.warn("refreshSwingHistoryUI: fonction par défaut (aucun historique affiché)");
+  
+  const el = document.getElementById("swing-history");
+  if (!el) return;
+
+  el.innerHTML = "<p style='opacity:0.5;'>Historique désactivé pour le moment</p>";
+}
+
+
   // ---------------------------------------------------------
   //   COACH COMMENTAIRE
   // ---------------------------------------------------------
