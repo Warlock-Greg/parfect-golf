@@ -261,6 +261,8 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
 
 function onPoseFrame(landmarks) {
+  console.log("🔥 onPoseFrame CALLED");
+
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
