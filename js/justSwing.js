@@ -223,38 +223,64 @@ const JustSwing = (() => {
   //   DRAW OVERLAY
   // ---------------------------------------------------------
   function drawOverlay() {
-    if (!ctx) return;
+  if (!ctx) return;
 
-    ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
-    if (!lastPose) return;
+  ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
+  if (!lastPose) return;
+  
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.6)";
+  ctx.lineWidth = 2;
+
+  const w = overlayEl.width;
+  const h = overlayEl.height;
+
+  const p = (i) => lastPose[i] ? { x: lastPose[i].x*w, y: lastPose[i].y*h } : null;
+
+  // 👇 LIENS COMPLETS : épaules, bras, torse, hanches ET JAMBES
+  const links = [
+    // Épaules et torse
+    [11,12],   // épaules
+    [11,23],   // épaule gauche → hanche gauche
+    [12,24],   // épaule droite → hanche droite
+    [23,24],   // hanches
     
-    ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.6)";
-    ctx.lineWidth = 2;
+    // Bras gauche
+    [11,13],   // épaule → coude
+    [13,15],   // coude → poignet
+    
+    // Bras droit
+    [12,14],   // épaule → coude
+    [14,16],   // coude → poignet
+    
+    // 🦵 JAMBES (ajoutées ici)
+    [23,25],   // hanche gauche → genou gauche
+    [25,27],   // genou gauche → cheville gauche
+    [24,26],   // hanche droite → genou droit
+    [26,28],   // genou droit → cheville droite
+  ];
 
-    const w = overlayEl.width;
-    const h = overlayEl.height;
+  links.forEach(([a,b]) => {
+    const pa = p(a), pb = p(b);
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
 
-    const p = (i) => lastPose[i] ? { x: lastPose[i].x*w, y: lastPose[i].y*h } : null;
+    // Dessiner les points des articulations
+  ctx.fillStyle = "rgba(0,255,0,0.8)";
+  [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i => {
+    const pt = p(i);
+    if (!pt) return;
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+    ctx.fill();
 
-    const links = [
-      [11,12],[11,23],[12,24],
-      [23,24],[11,13],[13,15],
-      [12,14],[14,16]
-    ];
+  });
 
-    links.forEach(([a,b]) => {
-      const pa = p(a), pb = p(b);
-      if (!pa || !pb) return;
-      ctx.beginPath();
-      ctx.moveTo(pa.x, pa.y);
-      ctx.lineTo(pb.x, pb.y);
-      ctx.stroke();
-    });
-
-    ctx.restore();
-  }
-
+  ctx.restore();
+}
 
   // ---------------------------------------------------------
   //   MEDIAPIPE FRAME
