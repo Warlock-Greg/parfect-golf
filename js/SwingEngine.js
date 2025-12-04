@@ -239,4 +239,3 @@ const SwingEngine = (() => {
   return;
      }
 }
-)();
