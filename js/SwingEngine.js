@@ -236,6 +236,6 @@ const SwingEngine = (() => {
     releaseStartTime = null;
   }
 
-  return;
-     }
-}
+  return { create };
+
+})();
