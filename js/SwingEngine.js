@@ -23,6 +23,8 @@ const SwingEngine = (() => {
   const IMPACT_SPIKE = 0.06;          // brusque changement pour impact
   const FINISH_HOLD_MS = 250;         // stabilité finale
   const MAX_IDLE_MS = 1800;           // reset auto
+  const FINISH_TIMEOUT_MS = 600; // 0.6 seconde après le release
+
 
   function dist(a, b) {
     if (!a || !b) return 0;
@@ -57,6 +59,8 @@ const SwingEngine = (() => {
     let swingStartTime = null;
     let lastMotionTime = performance.now();
     let impactDetected = false;
+    let releaseStartTime = null;
+
 
     function reset() {
       frames = [];
@@ -74,6 +78,7 @@ const SwingEngine = (() => {
       impactDetected = false;
       lastPose = null;
       lastTime = null;
+      releaseStartTime = null;
     }
 
     function markKeyFrame(type, index) {
@@ -199,39 +204,38 @@ const SwingEngine = (() => {
       }
 
       // RELEASE → finish
-      if (state === "RELEASE") {
-        frames.push(pose);
-        timestamps.push(timeMs);
+     if (state === "RELEASE") {
+  frames.push(pose);
+  timestamps.push(timeMs);
 
-        // stabilité finale
-        if (speedWrist < 0.005 && speedHip < 0.005) {
-          state = "FINISH";
-          markKeyFrame("finish", frames.length - 1);
-
-          const duration = timeMs - swingStartTime;
-          if (duration > MIN_SWING_MS) {
-            
-            const data = {
-              frames: [...frames],
-              timestamps: [...timestamps],
-              keyFrames: { ...keyFrames },
-              club: clubType,
-            };
-
-            if (typeof onSwingComplete === "function") {
-              onSwingComplete({ type: "swingComplete", data });
-            }
-
-            reset();
-          }
-        }
-        return;
-      }
-    }
-
-    return { processPose, reset };
+  if (releaseStartTime === null) {
+    releaseStartTime = timeMs;
   }
 
-  return { create };
+  const timeInRelease = timeMs - releaseStartTime;
+  const stable = (speedWrist < 0.02 && speedHip < 0.015);
 
-})();
+  if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
+    state = "FINISH";
+    markKeyFrame("finish", frames.length - 1);
+
+    const duration = timeMs - swingStartTime;
+
+    const data = {
+      frames: [...frames],
+      timestamps: [...timestamps],
+      keyFrames: { ...keyFrames },
+      club: clubType,
+    };
+
+    if (typeof onSwingComplete === "function") {
+      onSwingComplete({ type: "swingComplete", data });
+    }
+
+    reset();
+    releaseStartTime = null;
+  }
+
+  return;
+}
+)();
