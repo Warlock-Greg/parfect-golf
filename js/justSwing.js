@@ -334,42 +334,72 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   //   SWING COMPLETE → REVIEW
   // ---------------------------------------------------------
-  function handleSwingComplete(data) {
-    console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
-    console.log("📊 Scores :", data.scores);
+  // ---------------------------------------------------------
+//   SWING COMPLETE → REVIEW
+// ---------------------------------------------------------
+function handleSwingComplete(data) {
+  console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
+  console.log("📊 Scores :", data.scores);
 
-    const reviewEl = document.getElementById("swing-review");
-    const scoreEl  = document.getElementById("swing-review-score");
-    const commentEl = document.getElementById("swing-review-comment");
+  // 🛡️ VALIDATION : Éviter les faux positifs
+  const swingDuration = data.keyframes?.finish?.index - data.keyframes?.address?.index || 0;
+  const MIN_FRAMES = 60; // Au moins 2 secondes à 30fps
+  
+  if (swingDuration < MIN_FRAMES) {
+    console.warn(`⚠️ SWING TROP COURT (${swingDuration} frames) - IGNORÉ`);
+    console.warn("Un vrai swing doit durer au moins 2 secondes");
+    return; // ❌ Ne pas afficher le résultat
+  }
 
-    console.log("reviewEl trouvé ?", reviewEl);
-    console.log("scoreEl trouvé ?", scoreEl);
-    console.log("commentEl trouvé ?", commentEl);
+  // ✅ Swing valide, afficher le résultat
+  const reviewEl = document.getElementById("swing-review");
+  const scoreEl  = document.getElementById("swing-review-score");
+  const commentEl = document.getElementById("swing-review-comment");
 
-    if (reviewEl && scoreEl && commentEl) {
-      reviewEl.style.display = 'block';
-      scoreEl.textContent = `Score : ${data.scores.total}/100`;
-      commentEl.textContent = coachTechnicalComment(data.scores);
-      
-      const nextBtn = document.getElementById("swing-review-next");
-if (nextBtn) {
-  nextBtn.onclick = () => {
-    console.log("🔄 Swing suivant cliqué");
-    reviewEl.style.display = 'none';  // ✅ Utilise display au lieu de classList
-    state = JSW_STATE.POSITIONING;
-    updateUI();
+  console.log("reviewEl trouvé ?", reviewEl);
+  console.log("scoreEl trouvé ?", scoreEl);
+  console.log("commentEl trouvé ?", commentEl);
+
+  if (reviewEl && scoreEl && commentEl) {
+    reviewEl.style.display = 'block';
+    scoreEl.textContent = `Score : ${data.scores.total}/100`;
+    commentEl.textContent = coachTechnicalComment(data.scores);
     
-    // Réinitialiser le moteur
-    if (engine) {
-      engine.reset();
-      console.log("🔄 Engine réinitialisé");
+    const nextBtn = document.getElementById("swing-review-next");
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        console.log("🔄 Swing suivant cliqué");
+        reviewEl.style.display = 'none';
+        state = JSW_STATE.POSITIONING;
+        updateUI();
+        
+        // Réinitialiser le moteur
+        if (engine) {
+          engine.reset();
+          console.log("🔄 Engine réinitialisé");
+        }
+        
+        // Relancer la boucle si nécessaire
+        if (!loopId) {
+          loopId = requestAnimationFrame(mainLoop);
+        }
+      };
     }
     
-    // Relancer la boucle si nécessaire
-    if (!loopId) {
-      loopId = requestAnimationFrame(mainLoop);
+    // Bouton "Définir comme référence"
+    const refBtn = document.getElementById("swing-save-reference");
+    if (refBtn) {
+      refBtn.onclick = () => {
+        console.log("⭐ Swing défini comme référence");
+        referenceSwing = data;
+        alert("✅ Ce swing est maintenant votre référence !");
+      };
     }
-  };
+  } else {
+    // FALLBACK : Créer modal dynamiquement
+    console.warn("⚠️ Éléments review manquants, création dynamique");
+    showResultModal(data.scores);
+  }
 }
 
 // Bouton "Définir comme référence"
