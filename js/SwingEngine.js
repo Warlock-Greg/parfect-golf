@@ -235,7 +235,13 @@ const SwingEngine = (() => {
     reset();
     releaseStartTime = null;
   }
+        return;  // ← MANQUAIT ICI !
+      }
+    }
 
-  return { create };
+    return { processPose, reset };  // ← MANQUAIT ICI !
+  }
+
+  return { create };  // ← C'était au mauvais endroit !
 
 })();
