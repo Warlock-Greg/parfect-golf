@@ -331,10 +331,7 @@ const JustSwing = (() => {
   }
 
 
-  // ---------------------------------------------------------
-  //   SWING COMPLETE → REVIEW
-  // ---------------------------------------------------------
-  // ---------------------------------------------------------
+// ---------------------------------------------------------
 //   SWING COMPLETE → REVIEW
 // ---------------------------------------------------------
 function handleSwingComplete(data) {
@@ -401,23 +398,6 @@ function handleSwingComplete(data) {
     showResultModal(data.scores);
   }
 }
-
-// Bouton "Définir comme référence"
-const refBtn = document.getElementById("swing-save-reference");
-if (refBtn) {
-  refBtn.onclick = () => {
-    console.log("⭐ Swing défini comme référence");
-    referenceSwing = data;
-    alert("✅ Ce swing est maintenant votre référence !");
-  };
-}
-    } else {
-      // FALLBACK : Créer modal dynamiquement
-      console.warn("⚠️ Éléments review manquants, création dynamique");
-      showResultModal(data.scores);
-    }
-  }
-
 
   // ---------------------------------------------------------
   //   MODAL DYNAMIQUE (si HTML manquant)
