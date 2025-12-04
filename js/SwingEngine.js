@@ -237,5 +237,6 @@ const SwingEngine = (() => {
   }
 
   return;
+     }
 }
 )();
