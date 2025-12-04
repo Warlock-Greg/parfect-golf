@@ -339,30 +339,28 @@ function handleSwingComplete(data) {
   console.log("📊 Scores :", data.scores);
 
   // 🛡️ VALIDATION : Éviter les faux positifs
- console.log("🔍 Debug data:", data);
-console.log("🔍 data.keyframes:", data.keyframes);
-console.log("🔍 data.frames:", data.frames);
-
-const addressIndex = data.keyframes?.address?.index || data.address?.index || 0;
-const finishIndex = data.keyframes?.finish?.index || data.finish?.index || data.frames?.length || 0;
-const swingDuration = finishIndex - addressIndex;
-
-console.log(`📏 Swing durée: ${swingDuration} frames (address:${addressIndex} → finish:${finishIndex})`);
-
+  console.log("🔍 Debug data.keyFrames:", data.keyFrames);
   
-  const MIN_FRAMES = 60; // Au moins 2 secondes à 30fps
-  
+  const addressIndex = data.keyFrames?.address?.index || 0;
+  const finishIndex = data.keyFrames?.finish?.index || data.frames?.length || 0;
+  const swingDuration = finishIndex - addressIndex;
+
+  console.log(`📏 Swing durée: ${swingDuration} frames (address:${addressIndex} → finish:${finishIndex})`);
+
+  const MIN_FRAMES = 40; // Au moins 1.3 secondes à 30fps (plus réaliste)
+
   if (swingDuration < MIN_FRAMES) {
     console.warn(`⚠️ SWING TROP COURT (${swingDuration} frames) - IGNORÉ`);
-    console.warn("Un vrai swing doit durer au moins 2 secondes");
+    console.warn(`Un vrai swing doit durer au moins ${MIN_FRAMES} frames (~${(MIN_FRAMES/30).toFixed(1)}s)`);
     return; // ❌ Ne pas afficher le résultat
   }
 
   // ✅ Swing valide, afficher le résultat
+  console.log(`✅ SWING VALIDE (${swingDuration} frames)`);
+  
   const reviewEl = document.getElementById("swing-review");
   const scoreEl  = document.getElementById("swing-review-score");
   const commentEl = document.getElementById("swing-review-comment");
-
   console.log("reviewEl trouvé ?", reviewEl);
   console.log("scoreEl trouvé ?", scoreEl);
   console.log("commentEl trouvé ?", commentEl);
