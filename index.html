@@ -1013,81 +1013,19 @@ body.jsw-fullscreen #coach-ia {
     </button>
   </div>
 </section>
-  <!-- =========================== -->
-  <!--   PANEL RÉSULTAT DU SWING   -->
-  <!-- =========================== -->
-<section>  
-  <div id="jsw-result-panel" class="jsw-result" style="display:none;">
-
-    <h2 id="jsw-swing-label">Swing #</h2>
-
-    <div id="jsw-score-global"></div>
-    <div id="jsw-score-details"></div>
-
-    <h3>Commentaire</h3>
-    <p id="jsw-coach-comment"></p>
-
-    <div id="jsw-drills"></div>
-
-    <div id="jsw-score-breakdown"></div>
-    <div id="jsw-session-history"></div>
-
-    <div class="jsw-buttons">
-      <button id="jsw-btn-keep-reference" class="jsw-btn-secondary">⭐ Garder comme référence</button>
-      <button id="jsw-btn-next-swing" class="jsw-btn-primary">➡️ Swing suivant</button>
-      <button id="jsw-btn-exit" class="jsw-btn-secondary">❌ Quitter</button>
-    </div>
-
-    <div id="jsw-result-actions" class="jsw-actions"></div>
-
-  </div>
-
-  <!-- =========================== -->
-  <!--      MODALE ROUTINE         -->
-  <!-- =========================== -->
-
-  <!--div id="jsw-routine-modal" class="jsw-modal hidden">
-
-    <div class="jsw-modal-content">
-      
-      <h2>🧠 Personnalise ta routine</h2>
-
-      <label>Routine Swing :</label>
-      <input id="routine-swing"
-             value="Respiration,Visualisation,Alignement,Swing d’essai,Adresse,Swing">
-
-      <label>Routine Putt :</label>
-      <input id="routine-putt"
-             value="Lecture du green,Visualisation,Alignement,Adresse,Putt">
-
-      <label>Routine Approche :</label>
-      <input id="routine-approche"
-             value="Choix de trajectoire,Visualisation,Alignement,Adresse,Swing d’approche">
-
-      <div class="jsw-modal-actions">
-        <button id="jsw-routine-save" class="jsw-btn-primary">💾 Sauvegarder</button>
-        <button id="jsw-routine-close" class="jsw-btn-secondary">Annuler</button>
-      </div>
-
-    </div>
-
-</div-->
-
-</section>
-
 <!-- ========================================================= -->
-<!--  SWING REVIEW PRO                                         -->
+<!--  SWING REVIEW PRO - COMPLET (SCORE + VIDEO + HISTORIQUE) -->
 <!-- ========================================================= -->
-<section id="swing-review" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; padding: 1.5rem 2rem; background: rgba(0,0,0,0.85); border-radius: 12px; text-align: center; border: 2px solid #4ade80; box-shadow: 0 4px 20px rgba(0,0,0,0.5); max-width: 400px;">
-
+<section id="swing-review" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25000; padding: 1.5rem; background: rgba(0,0,0,0.95); border-radius: 16px; border: 2px solid #4ade80; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto; width: 500px;">
+  
   <!-- 1) Video Player -->
-  <div class="swing-review-video">
-    <video id="swing-video" playsinline></video>
+  <div class="swing-review-video" style="margin-bottom: 1rem;">
+    <video id="swing-video" playsinline style="width: 100%; border-radius: 8px; background: #000; max-height: 300px;"></video>
 
-    <div class="swing-player-controls">
-      <button id="swing-play-pause">▶️</button>
-
-      <select id="swing-speed">
+    <div class="swing-player-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+      <button id="swing-play-pause" style="padding: 6px 12px; background: #00ff99; border: none; border-radius: 6px; cursor: pointer;">▶️</button>
+      
+      <select id="swing-speed" style="padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
         <option value="0.25">0.25×</option>
         <option value="0.5">0.5×</option>
         <option value="1" selected>1×</option>
@@ -1095,31 +1033,38 @@ body.jsw-fullscreen #coach-ia {
         <option value="2">2×</option>
       </select>
 
-      <input id="swing-timeline" type="range" min="0" max="100" value="0">
-
-      <span id="swing-time-label">0.0s</span>
+      <input id="swing-timeline" type="range" min="0" max="100" value="0" style="flex: 1; min-width: 100px;">
+      
+      <span id="swing-time-label" style="color: #fff; font-family: monospace; font-size: 0.9rem;">0.0s</span>
     </div>
   </div>
 
   <!-- 2) Score + Commentaire -->
-  <div class="swing-review-info">
-    <h2 id="swing-review-score">Score : --</h2>
-    <p id="swing-review-comment">Analyse technique…</p>
+  <div class="swing-review-info" style="margin: 1rem 0; padding: 1rem; background: rgba(74, 222, 128, 0.1); border-radius: 8px;">
+    <h2 id="swing-review-score" style="font-size: 2rem; margin: 0 0 0.5rem 0; color: #4ade80; text-align: center;">Score : --</h2>
+    <p id="swing-review-comment" style="font-size: 1rem; margin: 0; color: rgba(255,255,255,0.9); text-align: center;">Analyse technique…</p>
   </div>
 
   <!-- 3) Boutons actions -->
-  <div class="swing-review-actions">
-    <button id="swing-save-reference" class="jsw-btn-secondary">⭐ Définir comme référence</button>
-    <button id="swing-review-next" class="jsw-btn-secondary">⏭️ Swing suivant</button>
+  <div class="swing-review-actions" style="display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap;">
+    <button id="swing-save-reference" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #00ff99; border-radius: 8px; cursor: pointer;">⭐ Définir comme référence</button>
+    <button id="swing-review-next" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: #00ff99; color: #111; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">⏭️ Swing suivant</button>
   </div>
 
   <!-- 4) Historique des swings -->
-  <h3>Historique</h3>
-  <div id="swing-history" class="swing-history-list">
-    <!-- rempli automatiquement -->
+  <div style="margin-top: 1rem;">
+    <h3 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">Historique</h3>
+    <div id="swing-history" class="swing-history-list" style="max-height: 150px; overflow-y: auto;">
+      <!-- rempli automatiquement -->
+    </div>
   </div>
-</section>
 
+  <!-- Bouton fermer -->
+  <button onclick="document.getElementById('swing-review').style.display='none'" style="width: 100%; margin-top: 1rem; padding: 10px; background: rgba(255,0,0,0.2); color: #fff; border: 1px solid #f00; border-radius: 8px; cursor: pointer; font-weight: bold;">
+    ❌ Fermer
+  </button>
+
+</section>
       
 
 
