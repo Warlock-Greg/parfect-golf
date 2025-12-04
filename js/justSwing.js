@@ -352,13 +352,35 @@ const JustSwing = (() => {
       commentEl.textContent = coachTechnicalComment(data.scores);
       
       const nextBtn = document.getElementById("swing-review-next");
-      if (nextBtn) {
-        nextBtn.onclick = () => {
-          reviewEl.classList.add("hidden");
-          state = JSW_STATE.POSITIONING;
-          updateUI();
-        };
-      }
+if (nextBtn) {
+  nextBtn.onclick = () => {
+    console.log("🔄 Swing suivant cliqué");
+    reviewEl.style.display = 'none';  // ✅ Utilise display au lieu de classList
+    state = JSW_STATE.POSITIONING;
+    updateUI();
+    
+    // Réinitialiser le moteur
+    if (engine) {
+      engine.reset();
+      console.log("🔄 Engine réinitialisé");
+    }
+    
+    // Relancer la boucle si nécessaire
+    if (!loopId) {
+      loopId = requestAnimationFrame(mainLoop);
+    }
+  };
+}
+
+// Bouton "Définir comme référence"
+const refBtn = document.getElementById("swing-save-reference");
+if (refBtn) {
+  refBtn.onclick = () => {
+    console.log("⭐ Swing défini comme référence");
+    referenceSwing = data;
+    alert("✅ Ce swing est maintenant votre référence !");
+  };
+}
     } else {
       // FALLBACK : Créer modal dynamiquement
       console.warn("⚠️ Éléments review manquants, création dynamique");
