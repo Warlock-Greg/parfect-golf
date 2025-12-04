@@ -339,7 +339,17 @@ function handleSwingComplete(data) {
   console.log("📊 Scores :", data.scores);
 
   // 🛡️ VALIDATION : Éviter les faux positifs
-  const swingDuration = data.keyframes?.finish?.index - data.keyframes?.address?.index || 0;
+ console.log("🔍 Debug data:", data);
+console.log("🔍 data.keyframes:", data.keyframes);
+console.log("🔍 data.frames:", data.frames);
+
+const addressIndex = data.keyframes?.address?.index || data.address?.index || 0;
+const finishIndex = data.keyframes?.finish?.index || data.finish?.index || data.frames?.length || 0;
+const swingDuration = finishIndex - addressIndex;
+
+console.log(`📏 Swing durée: ${swingDuration} frames (address:${addressIndex} → finish:${finishIndex})`);
+
+  
   const MIN_FRAMES = 60; // Au moins 2 secondes à 30fps
   
   if (swingDuration < MIN_FRAMES) {
