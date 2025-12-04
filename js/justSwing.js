@@ -21,9 +21,9 @@ const JSW_MODE = {
 };
 
 const DEFAULT_ROUTINES = {
-  swing: ["Respiration", "Visualisation", "Alignement", "Swing d’essai", "Adresse", "Swing"],
+  swing: ["Respiration", "Visualisation", "Alignement", "Swing d'essai", "Adresse", "Swing"],
   putt: ["Lecture du green", "Visualisation", "Alignement", "Adresse", "Putt"],
-  approche: ["Choix de trajectoire", "Visualisation", "Alignement", "Adresse", "Swing d’approche"],
+  approche: ["Choix de trajectoire", "Visualisation", "Alignement", "Adresse", "Swing d'approche"],
 };
 
 let routineConfig = {
@@ -96,11 +96,11 @@ const JustSwing = (() => {
   //   ROUTINE GUIDEE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "J’attends que tu te mettes en plain-pied 👣",
+    "J'attends que tu te mettes en plain-pied 👣",
     "Vérifie ton grip ✋",
     "Vérifie ta posture 🧍‍♂️",
     "Vérifie ton alignement 🎯",
-    "Fais un swing d’essai 🌀",
+    "Fais un swing d'essai 🌀",
     "Respire profondément 😮‍💨",
   ];
 
@@ -148,51 +148,50 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   function startSession(selectedMode = JSW_MODE.SWING) {
 
-  if (!screenEl) initJustSwing();
+    if (!screenEl) initJustSwing();
 
-  mode = selectedMode;
-  state = JSW_STATE.POSITIONING;
-  captureStarted = false;     // RESET ici ✔️
-  sessionStartTime = performance.now();
-  currentSwingIndex = 0;
-  lastPose = null;
-  lastFullBodyOk = false;
+    mode = selectedMode;
+    state = JSW_STATE.POSITIONING;
+    captureStarted = false;
+    sessionStartTime = performance.now();
+    currentSwingIndex = 0;
+    lastPose = null;
+    lastFullBodyOk = false;
 
-  screenEl.classList.remove("hidden");
-  document.body.classList.add("jsw-fullscreen");
+    screenEl.classList.remove("hidden");
+    document.body.classList.add("jsw-fullscreen");
 
-  // init capture vidéo
-  if (window.SwingCapture && videoEl.srcObject) {
-    window.SwingCapture.init(videoEl.srcObject);
-  }
-
-  // === SwingEngine PRO ===
-  engine = SwingEngine.create({
-    fps: 30,
-    onKeyFrame: (evt) => {
-      console.log("🎯 KEYFRAME", evt);
-    },
-    onSwingComplete: (evt) => {
-      console.log("🏁 SWING COMPLETE", evt);
-      const swing = evt.data;
-
-      // 💯 SCORING PREMIUM
-      swing.scores = computeSwingScorePremium(swing);
-      console.log("📊 SCORE PREMIUM =", swing.scores);
-
-      handleSwingComplete(swing);
+    // init capture vidéo
+    if (window.SwingCapture && videoEl.srcObject) {
+      window.SwingCapture.init(videoEl.srcObject);
     }
-  });
 
-  console.log("🔧 Engine READY:", engine);
+    // === SwingEngine PRO ===
+    engine = SwingEngine.create({
+      fps: 30,
+      onKeyFrame: (evt) => {
+        console.log("🎯 KEYFRAME", evt);
+      },
+      onSwingComplete: (evt) => {
+        console.log("🏁 SWING COMPLETE", evt);
+        const swing = evt.data;
 
-  updateUI();
-  showBigMessage("J’attends que tu te mettes en plain-pied 👣");
+        // 💯 SCORING PREMIUM
+        swing.scores = computeSwingScorePremium(swing);
+        console.log("📊 SCORE PREMIUM =", swing.scores);
 
-  if (loopId) cancelAnimationFrame(loopId);
-  loopId = requestAnimationFrame(mainLoop);
-}
+        handleSwingComplete(swing);
+      }
+    });
 
+    console.log("🔧 Engine READY:", engine);
+
+    updateUI();
+    showBigMessage("J'attends que tu te mettes en plain-pied 👣");
+
+    if (loopId) cancelAnimationFrame(loopId);
+    loopId = requestAnimationFrame(mainLoop);
+  }
 
 
   function stopSession() {
@@ -211,10 +210,8 @@ const JustSwing = (() => {
   //   MAIN LOOP
   // ---------------------------------------------------------
   function mainLoop() {
-
     drawOverlay();
     updateState();
-
     loopId = requestAnimationFrame(mainLoop);
   }
 
@@ -223,106 +220,82 @@ const JustSwing = (() => {
   //   DRAW OVERLAY
   // ---------------------------------------------------------
   function drawOverlay() {
-  if (!ctx) return;
+    if (!ctx) return;
 
-  ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
-  if (!lastPose) return;
-  
-  ctx.save();
-  ctx.strokeStyle = "rgba(255,255,255,0.6)";
-  ctx.lineWidth = 2;
-
-  const w = overlayEl.width;
-  const h = overlayEl.height;
-
-  const p = (i) => lastPose[i] ? { x: lastPose[i].x*w, y: lastPose[i].y*h } : null;
-
-  // 👇 LIENS COMPLETS : épaules, bras, torse, hanches ET JAMBES
-  const links = [
-    // Épaules et torse
-    [11,12],   // épaules
-    [11,23],   // épaule gauche → hanche gauche
-    [12,24],   // épaule droite → hanche droite
-    [23,24],   // hanches
+    ctx.clearRect(0, 0, overlayEl.width, overlayEl.height);
+    if (!lastPose) return;
     
-    // Bras gauche
-    [11,13],   // épaule → coude
-    [13,15],   // coude → poignet
-    
-    // Bras droit
-    [12,14],   // épaule → coude
-    [14,16],   // coude → poignet
-    
-    // 🦵 JAMBES (ajoutées ici)
-    [23,25],   // hanche gauche → genou gauche
-    [25,27],   // genou gauche → cheville gauche
-    [24,26],   // hanche droite → genou droit
-    [26,28],   // genou droit → cheville droite
-  ];
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    ctx.lineWidth = 2;
 
-  links.forEach(([a,b]) => {
-    const pa = p(a), pb = p(b);
-    if (!pa || !pb) return;
-    ctx.beginPath();
-    ctx.moveTo(pa.x, pa.y);
-    ctx.lineTo(pb.x, pb.y);
-    ctx.stroke();
+    const w = overlayEl.width;
+    const h = overlayEl.height;
+
+    const p = (i) => lastPose[i] ? { x: lastPose[i].x*w, y: lastPose[i].y*h } : null;
+
+    // LIENS COMPLETS : épaules, bras, torse, hanches ET JAMBES
+    const links = [
+      [11,12], [11,23], [12,24], [23,24],  // torse
+      [11,13], [13,15],                     // bras gauche
+      [12,14], [14,16],                     // bras droit
+      [23,25], [25,27],                     // jambe gauche
+      [24,26], [26,28],                     // jambe droite
+    ];
+
+    links.forEach(([a,b]) => {
+      const pa = p(a), pb = p(b);
+      if (!pa || !pb) return;
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    });
 
     // Dessiner les points des articulations
-  ctx.fillStyle = "rgba(0,255,0,0.8)";
-  [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i => {
-    const pt = p(i);
-    if (!pt) return;
-    ctx.beginPath();
-    ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = "rgba(0,255,0,0.8)";
+    [11,12,13,14,15,16,23,24,25,26,27,28].forEach(i => {
+      const pt = p(i);
+      if (!pt) return;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
 
-  });
+    ctx.restore();
+  }
 
-  ctx.restore();
-}
 
   // ---------------------------------------------------------
   //   MEDIAPIPE FRAME
   // ---------------------------------------------------------
+  function onPoseFrame(landmarks) {
+    lastPose = landmarks || null;
+    lastFullBodyOk = detectFullBody(landmarks);
 
-function onPoseFrame(landmarks) {
-  lastPose = landmarks || null;
-  lastFullBodyOk = detectFullBody(landmarks);
+    if (!landmarks || !engine) return;
 
-  if (!landmarks || !engine) return;
+    // Analyse SwingEngine
+    const evt = engine.processPose(landmarks, performance.now(), currentClubType);
 
-  // Analyse SwingEngine
-  const evt = engine.processPose(landmarks, performance.now(), currentClubType);
+    // TRACKING détecté → pas de capture vidéo
+    if (evt && evt.type === "tracking") {
+      console.log("⚠️ TRACKING détecté (capture vidéo désactivée)");
+    }
 
-  // ==============================
-  //  🎬 DÉTECTION DE SWING SANS CAPTURE VIDÉO
-  // ==============================
-
-  // TRACKING détecté → pas de capture vidéo
-  if (evt && evt.type === "tracking") {
-    console.log("⚠️ TRACKING détecté (capture vidéo désactivée)");
+    // SWING COMPLET → scoring immédiat
+    if (evt && evt.type === "swingComplete") {
+      console.log("🏁 swingComplete — MODE SCORING UNIQUEMENT");
+      handleSwingComplete(evt.data);
+    }
   }
-
-  // SWING COMPLET → scoring immédiat
-  if (evt && evt.type === "swingComplete") {
-    console.log("🏁 swingComplete — MODE SCORING UNIQUEMENT");
-    handleSwingComplete(evt.data); // scoring OK
-  }
-}
-
-
-
-
 
 
   // ---------------------------------------------------------
   //   STATE MACHINE
   // ---------------------------------------------------------
   function updateState() {
-
     switch(state) {
-
       case JSW_STATE.POSITIONING:
         if (!lastFullBodyOk) return;
         state = JSW_STATE.ROUTINE;
@@ -343,41 +316,112 @@ function onPoseFrame(landmarks) {
 
 
   // ---------------------------------------------------------
+  //   COMPUTE SCORE (fonction manquante ajoutée)
+  // ---------------------------------------------------------
+  function computeSwingScorePremium(swing) {
+    // Scoring basique temporaire - à améliorer avec vraie analyse
+    return {
+      total: Math.floor(Math.random() * 40) + 60,  // score entre 60-100
+      triangleScore: Math.floor(Math.random() * 30) + 70,
+      lagScore: Math.floor(Math.random() * 30) + 70,
+      planeScore: Math.floor(Math.random() * 30) + 70,
+      rotationScore: Math.floor(Math.random() * 30) + 70,
+      tempoScore: Math.floor(Math.random() * 30) + 70,
+    };
+  }
+
+
+  // ---------------------------------------------------------
   //   SWING COMPLETE → REVIEW
   // ---------------------------------------------------------
   function handleSwingComplete(data) {
-  console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
-  console.log("📊 Scores :", data.scores);
+    console.log("🏁 SWING COMPLETE (SCORING ONLY MODE)");
+    console.log("📊 Scores :", data.scores);
 
-  // === 1) Mettre à jour le panneau texte ===
-  const reviewEl = document.getElementById("swing-review");
-  const scoreEl  = document.getElementById("swing-review-score");
-  const commentEl = document.getElementById("swing-review-comment");
+    const reviewEl = document.getElementById("swing-review");
+    const scoreEl  = document.getElementById("swing-review-score");
+    const commentEl = document.getElementById("swing-review-comment");
 
-    // 🔍 DEBUG
-  console.log("reviewEl trouvé ?", reviewEl);
-  console.log("scoreEl trouvé ?", scoreEl);
-  console.log("commentEl trouvé ?", commentEl);
+    console.log("reviewEl trouvé ?", reviewEl);
+    console.log("scoreEl trouvé ?", scoreEl);
+    console.log("commentEl trouvé ?", commentEl);
 
-    
-  if (reviewEl && scoreEl && commentEl) {
-    reviewEl.classList.remove("hidden");
-    scoreEl.textContent = `Score : ${data.scores.total}/100`;
-    commentEl.textContent = coachTechnicalComment(data.scores);
+    if (reviewEl && scoreEl && commentEl) {
+      reviewEl.classList.remove("hidden");
+      scoreEl.textContent = `Score : ${data.scores.total}/100`;
+      commentEl.textContent = coachTechnicalComment(data.scores);
+      
+      const nextBtn = document.getElementById("swing-review-next");
+      if (nextBtn) {
+        nextBtn.onclick = () => {
+          reviewEl.classList.add("hidden");
+          state = JSW_STATE.POSITIONING;
+          updateUI();
+        };
+      }
+    } else {
+      // FALLBACK : Créer modal dynamiquement
+      console.warn("⚠️ Éléments review manquants, création dynamique");
+      showResultModal(data.scores);
+    }
   }
 
-  // === 2) Désactiver toute logique vidéo ===
-  console.log("📵 Vidéo désactivée — aucun replay à charger");
 
-  // === 3) Bouton "swing suivant" ===
-  const nextBtn = document.getElementById("swing-review-next");
-  if (nextBtn) {
-    nextBtn.onclick = () => {
-      reviewEl.classList.add("hidden");
-      restartLoop();
+  // ---------------------------------------------------------
+  //   MODAL DYNAMIQUE (si HTML manquant)
+  // ---------------------------------------------------------
+  function showResultModal(scores) {
+    let modal = document.getElementById("swing-review-modal");
+    
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "swing-review-modal";
+      modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.95);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        z-index: 10000;
+        text-align: center;
+        min-width: 350px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      `;
+      document.body.appendChild(modal);
+    }
+
+    const score = scores.total;
+    const comment = coachTechnicalComment(scores);
+
+    modal.innerHTML = `
+      <h2 style="margin-bottom: 20px; font-size: 24px;">🏌️ Résultat du Swing</h2>
+      <div style="font-size: 64px; font-weight: bold; margin: 30px 0; color: #4CAF50;">${score}/100</div>
+      <p style="font-size: 18px; margin-bottom: 30px; line-height: 1.5;">${comment}</p>
+      <button id="modal-close-btn" style="
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+      " onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4CAF50'">
+        Swing suivant 🏌️
+      </button>
+    `;
+
+    modal.style.display = "block";
+
+    document.getElementById("modal-close-btn").onclick = () => {
+      modal.style.display = "none";
+      state = JSW_STATE.POSITIONING;
+      updateUI();
     };
   }
-}
 
 
   // ---------------------------------------------------------
@@ -398,19 +442,17 @@ function onPoseFrame(landmarks) {
   }
 
 
-  // =========================================================
-//   Fallback minimal pour éviter l'erreur
-//   (historique non bloquant)
-// =========================================================
+  // ---------------------------------------------------------
+  //   HISTORIQUE (fallback)
+  // ---------------------------------------------------------
+  function refreshSwingHistoryUI() {
+    console.warn("refreshSwingHistoryUI: fonction par défaut (aucun historique affiché)");
+    
+    const el = document.getElementById("swing-history");
+    if (!el) return;
 
-function refreshSwingHistoryUI() {
-  console.warn("refreshSwingHistoryUI: fonction par défaut (aucun historique affiché)");
-  
-  const el = document.getElementById("swing-history");
-  if (!el) return;
-
-  el.innerHTML = "<p style='opacity:0.5;'>Historique désactivé pour le moment</p>";
-}
+    el.innerHTML = "<p style='opacity:0.5;'>Historique désactivé pour le moment</p>";
+  }
 
 
   // ---------------------------------------------------------
@@ -430,6 +472,8 @@ function refreshSwingHistoryUI() {
   //   UI
   // ---------------------------------------------------------
   function updateUI() {
+    if (!statusTextEl) return;
+    
     switch(state) {
       case JSW_STATE.POSITIONING:  statusTextEl.textContent = "Place-toi plein pied 👣"; break;
       case JSW_STATE.ROUTINE:      statusTextEl.textContent = "Routine en cours"; break;
