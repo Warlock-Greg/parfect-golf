@@ -354,6 +354,12 @@ function onPoseFrame(landmarks) {
   const scoreEl  = document.getElementById("swing-review-score");
   const commentEl = document.getElementById("swing-review-comment");
 
+    // 🔍 DEBUG
+  console.log("reviewEl trouvé ?", reviewEl);
+  console.log("scoreEl trouvé ?", scoreEl);
+  console.log("commentEl trouvé ?", commentEl);
+
+    
   if (reviewEl && scoreEl && commentEl) {
     reviewEl.classList.remove("hidden");
     scoreEl.textContent = `Score : ${data.scores.total}/100`;
