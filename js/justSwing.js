@@ -347,7 +347,7 @@ const JustSwing = (() => {
     console.log("commentEl trouvé ?", commentEl);
 
     if (reviewEl && scoreEl && commentEl) {
-      reviewEl.classList.remove("hidden");
+      reviewEl.style.display = 'block';
       scoreEl.textContent = `Score : ${data.scores.total}/100`;
       commentEl.textContent = coachTechnicalComment(data.scores);
       
