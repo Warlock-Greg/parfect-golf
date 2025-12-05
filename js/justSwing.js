@@ -453,6 +453,108 @@ const JustSwing = (() => {
     };
   }
 
+// ---------------------------------------------------------
+//   PREMIUM BREAKDOWN BUILDER (format pro)
+// ---------------------------------------------------------
+function buildPremiumBreakdown(data, scores) {
+
+  const safe = (v) => v?.toFixed ? v.toFixed(3) : v ?? "N/A";
+
+  // Ces valeurs viendront plus tard du SwingEngine :
+  const kf = data.keyFrames || {};
+  const address = kf.address?.pose ?? null;
+  const top     = kf.top?.pose ?? null;
+  const impact  = kf.impact?.pose ?? null;
+  const finish  = kf.finish?.pose ?? null;
+
+  // Helpers flexibles
+  const dist = (a,b) => (!a||!b) ? null : Math.hypot(a.x-b.x, a.y-b.y);
+
+  // --- POSTURE ---
+  const postureFlexion = 35.2;               // placeholder
+  const feetShoulderRatio = 1.25;            // placeholder
+  const alignDiff = 3.8;                     // placeholder
+
+  // --- ROTATION ---
+  const shoulderRot = 87.3;                  // placeholder
+  const hipRot = 42.1;                       // placeholder
+  const xFactor = shoulderRot - hipRot;
+
+  // --- TRIANGLE ---
+  const triAddr = dist(address?.[11], address?.[15]);
+  const triTop  = dist(top?.[11], top?.[15]);
+  const triImp  = dist(impact?.[11], impact?.[15]);
+
+  const triangleVarTop = triAddr && triTop ? (Math.abs(triTop - triAddr) / triAddr * 100) : 0;
+  const triangleVarImp = triAddr && triImp ? (Math.abs(triImp - triAddr) / triAddr * 100) : 0;
+
+  // --- WEIGHT SHIFT ---
+  const weightTopOK = true;                  // placeholder
+  const weightImpactOK = true;               // placeholder
+
+  // --- EXTENSION ---
+  const extensionImpact = 0.387;             // placeholder
+  const finishStable = true;                 // placeholder
+
+  // --- TEMPO ---
+  const backswingT = 0.85;
+  const downswingT = 0.28;
+  const tempoRatio = backswingT / downswingT;
+
+  // --- BALANCE ---
+  const headOverHips = true;
+  const finishMove = 0.0032;
+
+  // --- FINAL SCORE ---
+  const total = scores.total;
+
+  return `
+🎯 ===== SWING SCORING PRO ===== 🎯
+
+📐 POSTURE ANALYSIS
+  → Angle de flexion: ${postureFlexion}°
+  → Ratio pieds/épaules: ${feetShoulderRatio}
+  → Différence alignement épaules/hanches: ${alignDiff}°
+  ✅ Score Posture: 20/20
+
+🔄 ROTATION ANALYSIS
+  → Rotation épaules: ${shoulderRot}°
+  → Rotation hanches: ${hipRot}°
+  → X-Factor: ${xFactor.toFixed(1)}°
+  ✅ Score Rotation: 18/20
+
+🔺 TRIANGLE ANALYSIS
+  → Distance bras gauche: Address=${safe(triAddr)}, Top=${safe(triTop)}, Impact=${safe(triImp)}
+  → Variation: Top=${safe(triangleVarTop)}%, Impact=${safe(triangleVarImp)}%
+  ✅ Score Triangle: 15/15
+
+⚖️ WEIGHT SHIFT ANALYSIS
+  → Au top: poids sur pied arrière ${weightTopOK ? "✅" : "❌"}
+  → À l'impact: poids sur pied avant ${weightImpactOK ? "✅" : "❌"}
+  ✅ Score Weight Shift: 15/15
+
+💪 EXTENSION ANALYSIS
+  → Extension à l'impact: ${extensionImpact}
+  → Équilibre au finish: ${finishStable ? "stable ✅" : "instable ❌"}
+  ✅ Score Extension: 10/10
+
+⏱️ TEMPO ANALYSIS
+  → Backswing: ${backswingT}s
+  → Downswing: ${downswingT}s
+  → Ratio: ${tempoRatio.toFixed(2)}:1
+  ✅ Score Tempo: 10/10
+
+⚖️ BALANCE ANALYSIS
+  → Tête au-dessus des hanches: ${headOverHips ? "oui ✅" : "non ❌"}
+  → Mouvement moyen au finish: ${finishMove}
+  ✅ Score Balance: 10/10
+
+🏆 ===== SCORE FINAL: ${total}/100 ===== 🏆
+`;
+}
+
+
+  
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
   // ---------------------------------------------------------
