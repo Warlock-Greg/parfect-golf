@@ -922,8 +922,8 @@ function activateRecording() {
       // 📝 BREAKDOWN PREMIUM
 const breakdownEl = document.getElementById("swing-score-breakdown");
 if (breakdownEl) {
-  breakdownEl.style.display = "block";
-  breakdownEl.textContent = buildPremiumBreakdown(data, data.scores);
+    breakdownEl.innerHTML = buildPremiumBreakdown(data, data.scores);
+    breakdownEl.style.display = "block";
 }
 
 
