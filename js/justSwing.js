@@ -7,6 +7,8 @@ const $$ = (id) => document.getElementById(id);
 
 const JSW_STATE = {
   IDLE: "IDLE",
+  WAITING_START: "WAITING_START",      // ✨ NOUVEAU : Attente du bouton
+  COUNTDOWN: "COUNTDOWN",                // ✨ NOUVEAU : Décompte 3-2-1
   POSITIONING: "POSITIONING",
   ROUTINE: "ROUTINE",
   ADDRESS_READY: "ADDRESS_READY",
@@ -46,6 +48,8 @@ const JustSwing = (() => {
   let currentClubType = "fer7";
 
   let captureStarted = false;
+  let isRecordingActive = false;  // ✨ NOUVEAU : Flag enregistrement
+  let countdownInterval = null;    // ✨ NOUVEAU : Timer décompte
 
   let lastPose = null;
   let lastFullBodyOk = false;
@@ -93,6 +97,114 @@ const JustSwing = (() => {
 
 
   // ---------------------------------------------------------
+  //   🎬 BOUTON DÉMARRER + DÉCOMPTE
+  // ---------------------------------------------------------
+  
+  function showStartButton() {
+    if (!bigMsgEl) return;
+    
+    bigMsgEl.innerHTML = `
+      <button id="jsw-start-btn" style="
+        background: #00ff99;
+        color: #111;
+        border: none;
+        border-radius: 12px;
+        padding: 20px 40px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,255,153,0.4);
+        transition: all 0.2s;
+      ">
+        🎬 Démarrer le swing
+      </button>
+    `;
+    bigMsgEl.style.opacity = '1';
+    
+    // Attache l'événement click
+    const btn = document.getElementById('jsw-start-btn');
+    if (btn) {
+      btn.onclick = startCountdown;
+    }
+  }
+
+  function startCountdown() {
+    if (!bigMsgEl) return;
+    
+    state = JSW_STATE.COUNTDOWN;
+    let countdown = 3;
+    
+    // Affiche le premier chiffre
+    bigMsgEl.innerHTML = `<div style="font-size: 5rem; font-weight: bold; color: #00ff99;">${countdown}</div>`;
+    bigMsgEl.style.opacity = '1';
+    
+    // Décompte
+    countdownInterval = setInterval(() => {
+      countdown--;
+      
+      if (countdown > 0) {
+        bigMsgEl.innerHTML = `<div style="font-size: 5rem; font-weight: bold; color: #00ff99;">${countdown}</div>`;
+      } else if (countdown === 0) {
+        bigMsgEl.innerHTML = `<div style="font-size: 5rem; font-weight: bold; color: #4ade80;">GO! 🏌️</div>`;
+        
+        // Démarre l'enregistrement après 500ms
+        setTimeout(() => {
+          activateRecording();
+        }, 500);
+        
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+    }, 1000);
+  }
+
+  function activateRecording() {
+    isRecordingActive = true;
+    console.log('🎬 ENREGISTREMENT ACTIVÉ');
+    
+    // Cache le message
+    hideBigMessage();
+    
+    // Change le statut
+    state = JSW_STATE.SWING_CAPTURE;
+    if (statusTextEl) {
+      statusTextEl.textContent = '🔴 Enregistrement en cours...';
+      statusTextEl.style.color = '#ff4444';
+    }
+    
+    // Reset du moteur
+    if (engine) {
+      engine.reset();
+    }
+    
+    // Sécurité : arrêt auto après 10 secondes
+    setTimeout(() => {
+      if (isRecordingActive) {
+        console.warn("⏱️ Timeout 10s - arrêt automatique");
+        stopRecording();
+      }
+    }, 10000);
+  }
+
+  function stopRecording() {
+    isRecordingActive = false;
+    console.log('🛑 ENREGISTREMENT ARRÊTÉ');
+    
+    state = JSW_STATE.WAITING_START;
+    
+    if (statusTextEl) {
+      statusTextEl.textContent = 'En attente...';
+      statusTextEl.style.color = '#00ff99';
+    }
+    
+    // Réaffiche le bouton après 1 seconde
+    setTimeout(() => {
+      showStartButton();
+    }, 1000);
+  }
+
+
+  // ---------------------------------------------------------
   //   ROUTINE GUIDEE
   // ---------------------------------------------------------
   const routineStepsAuto = [
@@ -134,7 +246,11 @@ const JustSwing = (() => {
   }
 
   function showBigMessage(msg) {
-    bigMsgEl.textContent = msg;
+    if (typeof msg === 'string') {
+      bigMsgEl.textContent = msg;
+    } else {
+      bigMsgEl.innerHTML = msg;
+    }
     bigMsgEl.style.opacity = 1;
   }
   
@@ -151,8 +267,9 @@ const JustSwing = (() => {
     if (!screenEl) initJustSwing();
 
     mode = selectedMode;
-    state = JSW_STATE.POSITIONING;
+    state = JSW_STATE.WAITING_START;  // ✨ NOUVEAU : On démarre en attente
     captureStarted = false;
+    isRecordingActive = false;        // ✨ NOUVEAU : Pas d'enregistrement au départ
     sessionStartTime = performance.now();
     currentSwingIndex = 0;
     lastPose = null;
@@ -187,7 +304,7 @@ const JustSwing = (() => {
     console.log("🔧 Engine READY:", engine);
 
     updateUI();
-    showBigMessage("J'attends que tu te mettes en plain-pied 👣");
+    showStartButton();  // ✨ NOUVEAU : Affiche le bouton au départ
 
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
@@ -196,10 +313,16 @@ const JustSwing = (() => {
 
   function stopSession() {
     state = JSW_STATE.IDLE;
+    isRecordingActive = false;
     hideBigMessage();
 
     if (loopId) cancelAnimationFrame(loopId);
     loopId = null;
+
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
 
     screenEl.classList.add("hidden");
     document.body.classList.remove("jsw-fullscreen");
@@ -273,6 +396,11 @@ const JustSwing = (() => {
     lastPose = landmarks || null;
     lastFullBodyOk = detectFullBody(landmarks);
 
+    // ⚠️ NOUVEAU : Ignore si pas en mode enregistrement
+    if (!isRecordingActive) {
+      return;
+    }
+
     if (!landmarks || !engine) return;
 
     // Analyse SwingEngine
@@ -286,6 +414,7 @@ const JustSwing = (() => {
     // SWING COMPLET → scoring immédiat
     if (evt && evt.type === "swingComplete") {
       console.log("🏁 swingComplete — MODE SCORING UNIQUEMENT");
+      isRecordingActive = false;  // ✨ NOUVEAU : Arrête l'enregistrement
       handleSwingComplete(evt.data);
     }
   }
@@ -296,6 +425,14 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   function updateState() {
     switch(state) {
+      case JSW_STATE.WAITING_START:
+        // En attente du clic sur le bouton
+        break;
+
+      case JSW_STATE.COUNTDOWN:
+        // Décompte en cours
+        break;
+
       case JSW_STATE.POSITIONING:
         if (!lastFullBodyOk) return;
         state = JSW_STATE.ROUTINE;
@@ -352,7 +489,10 @@ function handleSwingComplete(data) {
   if (swingDuration < MIN_FRAMES) {
     console.warn(`⚠️ SWING TROP COURT (${swingDuration} frames) - IGNORÉ`);
     console.warn(`Un vrai swing doit durer au moins ${MIN_FRAMES} frames (~${(MIN_FRAMES/30).toFixed(1)}s)`);
-    return; // ❌ Ne pas afficher le résultat
+    
+    // ✨ NOUVEAU : Réaffiche le bouton au lieu de rien faire
+    stopRecording();
+    return;
   }
 
   // ✅ Swing valide, afficher le résultat
@@ -375,7 +515,7 @@ function handleSwingComplete(data) {
       nextBtn.onclick = () => {
         console.log("🔄 Swing suivant cliqué");
         reviewEl.style.display = 'none';
-        state = JSW_STATE.POSITIONING;
+        state = JSW_STATE.WAITING_START;  // ✨ NOUVEAU : Retour à l'attente
         updateUI();
         
         // Réinitialiser le moteur
@@ -383,6 +523,9 @@ function handleSwingComplete(data) {
           engine.reset();
           console.log("🔄 Engine réinitialisé");
         }
+        
+        // Réaffiche le bouton
+        showStartButton();
         
         // Relancer la boucle si nécessaire
         if (!loopId) {
@@ -458,8 +601,9 @@ function handleSwingComplete(data) {
 
     document.getElementById("modal-close-btn").onclick = () => {
       modal.style.display = "none";
-      state = JSW_STATE.POSITIONING;
+      state = JSW_STATE.WAITING_START;  // ✨ NOUVEAU : Retour à l'attente
       updateUI();
+      showStartButton();  // ✨ NOUVEAU : Réaffiche le bouton
     };
   }
 
@@ -515,17 +659,20 @@ function handleSwingComplete(data) {
     if (!statusTextEl) return;
     
     switch(state) {
-      case JSW_STATE.POSITIONING:  statusTextEl.textContent = "Place-toi plein pied 👣"; break;
-      case JSW_STATE.ROUTINE:      statusTextEl.textContent = "Routine en cours"; break;
-      case JSW_STATE.ADDRESS_READY:statusTextEl.textContent = "Adresse solide"; break;
-      case JSW_STATE.SWING_CAPTURE:statusTextEl.textContent = "Swing en cours…"; break;
-      case JSW_STATE.REVIEW:       statusTextEl.textContent = "Analyse du swing"; break;
+      case JSW_STATE.WAITING_START: statusTextEl.textContent = "Prêt à démarrer 🎬"; break;
+      case JSW_STATE.COUNTDOWN:     statusTextEl.textContent = "Prépare-toi..."; break;
+      case JSW_STATE.POSITIONING:   statusTextEl.textContent = "Place-toi plein pied 👣"; break;
+      case JSW_STATE.ROUTINE:       statusTextEl.textContent = "Routine en cours"; break;
+      case JSW_STATE.ADDRESS_READY: statusTextEl.textContent = "Adresse solide"; break;
+      case JSW_STATE.SWING_CAPTURE: statusTextEl.textContent = "🔴 Enregistrement..."; break;
+      case JSW_STATE.REVIEW:        statusTextEl.textContent = "Analyse du swing"; break;
     }
   }
 
   function debug() {
     console.log("🔍 JSW State:", state);
     console.log("🔍 Engine:", engine);
+    console.log("🔍 isRecordingActive:", isRecordingActive);
   }
 
 
