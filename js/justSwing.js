@@ -235,7 +235,7 @@ const JustSwing = (() => {
     "Vérifie ta posture 🧍‍♂️",
     "Vérifie ton alignement 🎯",
     "Fais un swing d’essai 🌀",
-    "Respire profondément… 😮‍💨",
+    "Respire parfectement… 😮‍💨",
   ];
 
   function startRoutineSequence() {
