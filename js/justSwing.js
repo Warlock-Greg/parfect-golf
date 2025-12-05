@@ -789,6 +789,11 @@ function computeSwingScorePremium(swing) {
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.metrics)
 // ---------------------------------------------------------
 function buildPremiumBreakdown(data, scores) {
+
+  return `
+    <div style="font-family: monospace; white-space: pre-line;display: block;">
+
+
   const m = scores.metrics || {};
 
   const p  = m.posture   || {};
