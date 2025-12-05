@@ -59,6 +59,8 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   let screenEl, videoEl, overlayEl, ctx;
   let bigMsgEl, statusTextEl, routineStepsEl, timerEl;
+  
+  let frameIndex = 0;
 
   let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingLabelEl;
 
@@ -245,35 +247,40 @@ const JustSwing = (() => {
     showRoutineStepsText();
 
     routineIndex = 0;
-    showBigMessage(routineStepsAuto[0]);
+  showBigMessage(routineStepsAuto[0]);
 
-    if (routineTimer) clearInterval(routineTimer);
+  if (routineInterval) clearInterval(routineInterval);
 
-    routineTimer = setInterval(() => {
-      routineIndex++;
+  routineInterval = setInterval(() => {
+    routineIndex++;
 
-      if (routineIndex < routineStepsAuto.length) {
-        showBigMessage(routineStepsAuto[routineIndex]);
-      } else {
-        clearInterval(routineTimer);
-        routineTimer = null;
+    if (routineIndex < routineStepsAuto.length) {
+      showBigMessage(routineStepsAuto[routineIndex]);
+    } else {
+      clearInterval(routineInterval);
+      routineInterval = null;
 
-        // Message final
-        setTimeout(() => {
-          showBigMessage("À toi de faire de ton mieux 💥");
-        }, 300);
+      // 👇 NOUVEAU : On affiche un bouton GO pour démarrer la capture
+      setTimeout(showGoButtonAfterRoutine, 1500);
+    }
+  }, 3500);
+}
 
-        // Fin de routine → Address Ready + arm capture
-        setTimeout(() => {
-          hideBigMessage();
-          state = JSW_STATE.ADDRESS_READY;
-          captureArmed = true;
-          if (engine && engine.reset) engine.reset();
-          updateUI();
-        }, 3000);
-      }
-    }, 3500);
-  }
+function showGoButtonAfterRoutine() {
+  bigMsgEl.innerHTML = `
+      <button id="jsw-go-btn" style="
+        background:#00ff99; padding:20px 40px;
+        font-size:2rem; border-radius:14px;
+        font-weight:bold; cursor:pointer; border:none;
+      ">GO ! 🏌️</button>
+  `;
+  bigMsgEl.style.opacity = 1;
+
+  document.getElementById("jsw-go-btn").onclick = () => {
+    bigMsgEl.style.opacity = 0;
+    activateRecording();   // 👉 ACTIVATION SEULEMENT ICI
+  };
+}
 
   // ---------------------------------------------------------
   //   SESSION START / STOP
@@ -405,18 +412,29 @@ const JustSwing = (() => {
   //   MEDIAPIPE CALLBACK
   // ---------------------------------------------------------
   function onPoseFrame(landmarks) {
-    lastPose = landmarks || null;
-    lastFullBodyOk = detectFullBody(landmarks);
+  lastPose = landmarks || null;
+  lastFullBodyOk = detectFullBody(landmarks);
 
-    // Tant que la routine n'est pas finie → on ne pousse pas dans le moteur
-    if (!captureArmed || !engine || !landmarks) return;
+  // Si on n'enregistre pas → STOP
+  if (!isRecordingActive) return;
 
-    try {
-      engine.processPose(landmarks, performance.now(), currentClubType);
-    } catch (e) {
-      console.warn("⚠️ engine.processPose erreur", e);
-    }
+  // Le moteur ne doit tourner QUE pendant la capture
+  if (!landmarks || !engine) return;
+
+  // 🔥 FRAME INDEX ++ (clé de voûte du patch)
+  const evt = engine.processPose(landmarks, frameIndex++, currentClubType);
+
+  // Debug
+  if (evt) console.log("🎯 ENGINE EVENT:", evt);
+
+  // Le moteur a terminé un swing complet  
+  if (evt && evt.type === "swingComplete") {
+    console.log("🏁 swingComplete détecté !");
+    isRecordingActive = false;
+    handleSwingComplete(evt.data);
   }
+}
+
 
   // ---------------------------------------------------------
   //   FULL BODY DETECTION
@@ -831,6 +849,43 @@ function buildPremiumBreakdown(data, scores) {
 }
 
 
+function activateRecording() {
+  console.log("🎬 ENREGISTREMENT ACTIVÉ (post-routine)");
+
+  // --- Flags d'état ---
+  isRecordingActive = true;
+  state = JSW_STATE.SWING_CAPTURE;
+
+  // --- Reset index frame pour analyses tempo / progression ---
+  frameIndex = 0;
+
+  // --- UI ---
+  if (statusTextEl) {
+    statusTextEl.textContent = "🔴 Enregistrement en cours...";
+    statusTextEl.style.color = "#ff4444";
+  }
+
+  // --- Reset du moteur d’analyse ---
+  if (engine) {
+    console.log("🔄 RESET ENGINE");
+    engine.reset();
+  }
+
+  // --- Indication visuelle : halo rouge (optionnel si tu veux) ---
+  const halo = document.getElementById("jsw-halo");
+  if (halo) {
+    halo.style.background = "rgba(255,0,0,0.35)";
+    halo.style.boxShadow = "0 0 30px rgba(255,0,0,0.8)";
+  }
+
+  // --- Sécurité : arrêt auto après 10 secondes si aucun swing ---
+  setTimeout(() => {
+    if (isRecordingActive) {
+      console.warn("⏱️ Timeout 10s - arrêt automatique (aucun swing détecté)");
+      stopRecording();
+    }
+  }, 10000);
+}
 
   
   // ---------------------------------------------------------
