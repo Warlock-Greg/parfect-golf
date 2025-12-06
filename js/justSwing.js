@@ -16,11 +16,6 @@ const JSW_STATE = {
   REVIEW: "REVIEW",               // affichage score
 };
 
-// === FLAGS SESSION ===
-let isRecordingActive = false;
-let captureArmed = false;
-let frameIndex = 0;
-
 
 const JSW_MODE = {
   SWING: "swing",
@@ -65,6 +60,10 @@ const JustSwing = (() => {
   // ---------------------------------------------------------
   let screenEl, videoEl, overlayEl, ctx;
   let bigMsgEl, statusTextEl, routineStepsEl, timerEl;
+
+// === FLAGS SESSION ===
+let isRecordingActive = false;
+let captureArmed = false;
   
   let frameIndex = 0;
 
