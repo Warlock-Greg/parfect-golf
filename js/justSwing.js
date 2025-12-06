@@ -1122,7 +1122,7 @@ function activateRecording() {
     }
   }, 12000);
 
-
+}
   
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
