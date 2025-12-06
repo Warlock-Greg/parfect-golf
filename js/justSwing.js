@@ -241,6 +241,7 @@ let captureArmed = false;
     "Vérifie ton alignement 🎯",
     "Fais un swing d’essai 🌀",
     "Respire parfectement… 😮‍💨",
+    "3-2-1... Parfect swing",
   ];
 
   function startRoutineSequence() {
@@ -270,13 +271,13 @@ let captureArmed = false;
       routineInterval = null;
 
       setTimeout(() => {
-  bigMsgEl.innerHTML = "3-2-1... Parfect swing";
-  bigMsgEl.style.opacity = 1;
+  //bigMsgEl.innerHTML = "3-2-1... Parfect swing";
+ // bigMsgEl.style.opacity = 1;
 
-  state = JSW_STATE.ADDRESS_READY;
+  state = JSW_STATE..SWING_ARMED;
   captureArmed = true;
 
-  console.log("🏌️ Attente position adresse (full body)…");
+  console.log("🏌️ swing armé (full body)…");
   }, 1500);
 }
      }, 3500);
