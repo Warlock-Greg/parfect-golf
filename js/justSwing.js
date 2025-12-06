@@ -788,69 +788,251 @@ function computeSwingScorePremium(swing) {
 // ---------------------------------------------------------
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.metrics)
 // ---------------------------------------------------------
-function buildPremiumBreakdown(data, scores) {
+function buildPremiumBreakdown(swing, scores) {
+  const el = document.getElementById("swing-score-breakdown");
+  if (!el || !swing) return;
 
-  return `
-    <div style="font-family: monospace; white-space: pre-line;display: block;">
+  const frames     = swing.frames || [];
+  const KF         = swing.keyFrames || {};
+  const timestamps = swing.timestamps || [];
 
+  if (!frames.length) return;
 
-  const m = scores.metrics || {};
+  const addr = frames[KF.address]   || frames[0];
+  const top  = frames[KF.top]       || addr;
+  const imp  = frames[KF.impact]    || frames[frames.length - 1];
+  const fin  = frames[KF.finish]    || frames[frames.length - 1];
 
-  const p  = m.posture   || {};
-  const r  = m.rotation  || {};
-  const t  = m.triangle  || {};
-  const w  = m.weightShift || {};
-  const e  = m.extension || {};
-  const tm = m.tempo     || {};
-  const b  = m.balance   || {};
+  // --- helpers safe ---
+  const safeDeg = (v) => (v == null || isNaN(v) ? "--" : v.toFixed(1));
+  const safeNum = (v, d = 2) => (v == null || isNaN(v) ? "--" : v.toFixed(d));
 
-  const s = (v, digits = 2) =>
-    (typeof v === "number" ? v.toFixed(digits) : (v ?? "N/A"));
+  function angleLine(pA, pB) {
+    if (!pA || !pB) return null;
+    return Math.atan2(pB.y - pA.y, pB.x - pA.x) * 180 / Math.PI;
+  }
 
-  return `
-🎯 ===== SWING SCORING PRO ===== 🎯
+  function get(pose, idx) {
+    return pose && pose[idx] ? pose[idx] : null;
+  }
+
+  // =========== POSTURE (ADDRESS) ===========
+  const a_Ls = get(addr, 11), a_Rs = get(addr, 12);
+  const a_Lh = get(addr, 23), a_Rh = get(addr, 24);
+  const a_Lf = get(addr, 27), a_Rf = get(addr, 28);
+
+  let flexDeg   = null;
+  let feetShoulderRatio = null;
+  let diffAlign = null;
+
+  if (a_Ls && a_Rs && a_Lh && a_Rh && a_Lf && a_Rf) {
+    const shouldersMid = { x: (a_Ls.x + a_Rs.x)/2, y: (a_Ls.y + a_Rs.y)/2 };
+    const hipsMid      = { x: (a_Lh.x + a_Rh.x)/2, y: (a_Lh.y + a_Rh.y)/2 };
+
+    const vec = { x: shouldersMid.x - hipsMid.x, y: shouldersMid.y - hipsMid.y };
+    // angle vs vertical (caméra 2D, approximation)
+    flexDeg = Math.abs(Math.atan2(vec.y, vec.x) * 180 / Math.PI - 90);
+
+    const feetDist     = dist(a_Lf, a_Rf);
+    const shouldersDist= dist(a_Ls, a_Rs);
+    if (feetDist && shouldersDist && shouldersDist < 900) {
+      feetShoulderRatio = feetDist / shouldersDist;
+    }
+
+    const shAngle = angleLine(a_Ls, a_Rs);
+    const hipAngle= angleLine(a_Lh, a_Rh);
+    if (shAngle != null && hipAngle != null) {
+      diffAlign = Math.abs(shAngle - hipAngle);
+    }
+  }
+
+  // Score posture = on mappe addressAlign sur /20
+  const postureScore = scores && scores.addressA != null
+    ? Math.round(scores.addressA * 20)
+    : 0;
+
+  // =========== ROTATION ===========
+  const t_Ls = get(top, 11), t_Rs = get(top, 12);
+  const t_Lh = get(top, 23), t_Rh = get(top, 24);
+
+  let rotShoulders = null;
+  let rotHips      = null;
+  let xFactor      = null;
+
+  if (a_Ls && a_Rs && t_Ls && t_Rs && a_Lh && a_Rh && t_Lh && t_Rh) {
+    const addrShAngle = angleLine(a_Ls, a_Rs);
+    const topShAngle  = angleLine(t_Ls, t_Rs);
+    const addrHipAngle= angleLine(a_Lh, a_Rh);
+    const topHipAngle = angleLine(t_Lh, t_Rh);
+
+    if (addrShAngle != null && topShAngle != null) {
+      rotShoulders = topShAngle - addrShAngle;
+    }
+    if (addrHipAngle != null && topHipAngle != null) {
+      rotHips = topHipAngle - addrHipAngle;
+    }
+    if (rotShoulders != null && rotHips != null) {
+      xFactor = rotShoulders - rotHips;
+    }
+  }
+
+  const rotationScore = scores && scores.rotation != null
+    ? Math.round(scores.rotation * 20)
+    : 0;
+
+  // =========== TRIANGLE ===========
+  function computeTriangleMetrics(pose) {
+    const Ls2 = get(pose, 11), Rs2 = get(pose, 12);
+    const Lh2 = get(pose, 15), Rh2 = get(pose, 16);
+    if (!Ls2 || !Rs2 || !Lh2 || !Rh2) return null;
+
+    const shoulderWidth = dist(Ls2, Rs2);
+    const mid = { x: (Ls2.x + Rs2.x)/2, y: (Ls2.y + Rs2.y)/2 };
+    const dL = dist(Lh2, mid);
+    const dR = dist(Rh2, mid);
+
+    const shoulderAngle = angleLine(Ls2, Rs2);
+    const handAngle     = angleLine(Lh2, Rh2);
+    const angleDelta    = (shoulderAngle != null && handAngle != null)
+      ? Math.abs(shoulderAngle - handAngle)
+      : null;
+
+    return {
+      shoulderWidth,
+      distL: dL,
+      distR: dR,
+      angleDelta
+    };
+  }
+
+  const triAddr = computeTriangleMetrics(addr);
+  const triTop  = computeTriangleMetrics(top);
+  const triImp  = computeTriangleMetrics(imp);
+
+  function varPercent(ref, val) {
+    if (ref == null || val == null || ref === 0) return null;
+    return ( (val - ref) / ref ) * 100;
+  }
+
+  const varTop  = triAddr && triTop
+    ? varPercent(triAddr.distL + triAddr.distR, triTop.distL + triTop.distR)
+    : null;
+  const varImp  = triAddr && triImp
+    ? varPercent(triAddr.distL + triAddr.distR, triImp.distL + triImp.distR)
+    : null;
+
+  const triangleScore = scores && scores.triangle != null
+    ? Math.round(scores.triangle * 15)
+    : 0;
+
+  // =========== WEIGHT SHIFT ===========
+  function sideCOM(pose, left) {
+    const sh = get(pose, left ? 11 : 12);
+    const hip= get(pose, left ? 23 : 24);
+    const foot = get(pose, left ? 27 : 28);
+    if (!sh || !hip || !foot) return null;
+    return { body: (sh.x + hip.x)/2, foot: foot.x };
+  }
+
+  const addrRight = sideCOM(addr, false);
+  const addrLeft  = sideCOM(addr, true);
+  const impRight  = sideCOM(imp, false);
+  const impLeft   = sideCOM(imp, true);
+
+  const weightTopBack = addrRight && addrLeft
+    ? (addrRight.body > addrLeft.body) // très simplifié
+    : null;
+
+  const weightImpactFront = impRight && impLeft
+    ? (impLeft.body < impRight.body) // corps plus vers pied gauche
+    : null;
+
+  const weightShiftScore = Math.round(
+    ((scores && scores.addressA || 0) + (scores && scores.finishA || 0)) / 2 * 15
+  );
+
+  // =========== EXTENSION / FINISH ===========
+  const finishScore = scores && scores.finishA != null
+    ? Math.round(scores.finishA * 10)
+    : 0;
+
+  const finishStable = scores && scores.finishA != null
+    ? scores.finishA > 0.7
+    : false;
+
+  // =========== TEMPO ===========
+  let tBack = null, tDown = null, tempoRatio = null;
+  if (KF.address != null && KF.top != null && KF.impact != null &&
+      timestamps.length > KF.impact) {
+    tBack = timestamps[KF.top] - timestamps[KF.address];
+    tDown = timestamps[KF.impact] - timestamps[KF.top];
+    if (tBack > 0 && tDown > 0) {
+      tempoRatio = tBack / tDown;
+    }
+  }
+
+  const tempoScore = scores && scores.tempo != null
+    ? Math.round(scores.tempo * 10)
+    : 0;
+
+  // =========== BALANCE ===========
+
+  const balanceScore = scores && scores.head != null
+    ? Math.round(scores.head * 10)
+    : 0;
+
+  const headStable = scores && scores.head != null
+    ? scores.head > 0.7
+    : false;
+
+  // =========== TEXTE FINAL ===========
+
+  const finalScore = scores && scores.total != null ? scores.total : 0;
+
+  const txt =
+`🎯 ===== SWING SCORING PRO ===== 🎯
 
 📐 POSTURE ANALYSIS
-  → Angle de flexion: ${s(p.flexionDeg, 1)}°
-  → Ratio pieds/épaules: ${s(p.feetShoulderRatio, 2)}
-  → Différence alignement épaules/hanches: ${s(p.alignDiff, 1)}°
-  ✅ Score Posture: ${p.score ?? "N/A"}/20
+  → Angle de flexion: ${safeDeg(flexDeg)}°
+  → Ratio pieds/épaules: ${safeNum(feetShoulderRatio)}
+  → Différence alignement épaules/hanches: ${safeDeg(diffAlign)}°
+  ✅ Score Posture: ${postureScore}/20
 
 🔄 ROTATION ANALYSIS
-  → Rotation épaules: ${s(r.shoulderRot, 1)}°
-  → Rotation hanches: ${s(r.hipRot, 1)}°
-  → X-Factor: ${s(r.xFactor, 1)}°
-  ✅ Score Rotation: ${r.score ?? "N/A"}/20
+  → Rotation épaules: ${safeDeg(rotShoulders)}°
+  → Rotation hanches: ${safeDeg(rotHips)}°
+  → X-Factor: ${safeDeg(xFactor)}°
+  ✅ Score Rotation: ${rotationScore}/20
 
 🔺 TRIANGLE ANALYSIS
-  → Distance bras gauche: Address=${s(t.dAddress, 3)}, Top=${s(t.dTop, 3)}, Impact=${s(t.dImpact, 3)}
-  → Variation: Top=${s(t.varTopPct, 1)}%, Impact=${s(t.varImpactPct, 1)}%
-  ✅ Score Triangle: ${t.score ?? "N/A"}/15
+  → Distance bras (addr): ${triAddr ? safeNum(triAddr.distL + triAddr.distR) : "--"}
+  → Variation au top: ${varTop != null ? safeDeg(varTop) + "%" : "--"}
+  → Variation à l’impact: ${varImp != null ? safeDeg(varImp) + "%" : "--"}
+  ✅ Score Triangle: ${triangleScore}/15
 
 ⚖️ WEIGHT SHIFT ANALYSIS
-  → Shift vers pied arrière au top: ${s(w.shiftBack, 3)}
-  → Shift vers pied avant à l'impact: ${s(w.shiftFwd, 3)}
-  ✅ Score Weight Shift: ${w.score ?? "N/A"}/15
+  → Au top: poids sur pied arrière: ${weightTopBack == null ? "--" : (weightTopBack ? "oui ✅" : "non ❌")}
+  → À l’impact: poids sur pied avant: ${weightImpactFront == null ? "--" : (weightImpactFront ? "oui ✅" : "non ❌")}
+  ✅ Score Weight Shift: ${weightShiftScore}/15
 
-💪 EXTENSION ANALYSIS
-  → Extension à l'impact: ${s(e.extImpact, 3)}
-  → Extension au finish: ${s(e.extFinish, 3)}
-  → Mouvement de la tête: ${s(e.headMove, 3)}
-  ✅ Score Extension: ${e.score ?? "N/A"}/10
+💪 EXTENSION / FINISH ANALYSIS
+  → Équilibre au finish: ${finishStable ? "stable ✅" : "à stabiliser ❌"}
+  ✅ Score Extension / Finish: ${finishScore}/10
 
 ⏱️ TEMPO ANALYSIS
-  → Backswing: ${s(tm.backswingT, 2)}s
-  → Downswing: ${s(tm.downswingT, 2)}s
-  → Ratio: ${s(tm.ratio, 2)}:1
-  ✅ Score Tempo: ${tm.score ?? "N/A"}/10
+  → Backswing: ${tBack != null ? safeNum(tBack, 2) + "s" : "--"}
+  → Downswing: ${tDown != null ? safeNum(tDown, 2) + "s" : "--"}
+  → Ratio: ${tempoRatio != null ? safeNum(tempoRatio, 2) + ":1" : "--"}
+  ✅ Score Tempo: ${tempoScore}/10
 
 ⚖️ BALANCE ANALYSIS
-  → Tête au-dessus des hanches au finish: ${b.headOverHips ? "oui ✅" : "non ❌"}
-  → Mouvement des hanches (address → finish): ${s(b.finishMove, 3)}
-  ✅ Score Balance: ${b.score ?? "N/A"}/10
+  → Tête stable: ${headStable ? "oui ✅" : "à travailler ❌"}
+  ✅ Score Balance: ${balanceScore}/10
 
-🏆 ===== SCORE FINAL: ${scores.total}/100 ===== 🏆
-`;
+🏆 ===== SCORE FINAL: ${finalScore}/100 ===== 🏆`;
+
+  el.style.display = "block";
+  el.innerHTML = `<pre style="white-space:pre-wrap; margin:0; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size:0.85rem;">${txt}</pre>`;
 }
 
 
