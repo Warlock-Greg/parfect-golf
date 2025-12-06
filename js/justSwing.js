@@ -489,6 +489,8 @@ function showGoButtonAfterRoutine() {
   return h > 0.3 && h < 1.5;
 }
 
+  // 👇 Ajoute ceci !
+window.detectFullBody = detectFullBody;
 
 
   // ---------------------------------------------------------
