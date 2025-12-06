@@ -464,26 +464,33 @@ function showGoButtonAfterRoutine() {
   //   FULL BODY DETECTION
   // ---------------------------------------------------------
  function detectFullBody(lm) {
-  if (!lm) return false;
+  if (!lm || lm.length < 33) return false;
 
-  // Épaules + hanches
-  const torso = [11, 12, 23, 24];
-  if (!torso.every(i => lm[i] && lm[i].visibility > 0.4)) {
-    return false;
-  }
+  const head  = lm[0];   // Nose
+  const lfoot = lm[31];  // left_foot_index
+  const rfoot = lm[32];  // right_foot_index
 
-  // Option: tête visible
-  if (!lm[0] || lm[0].visibility < 0.4) {
-    return false;
-  }
+  // Tous doivent exister
+  if (!head || !lfoot || !rfoot) return false;
 
-  return true;
+  // Actuellement certaines valeurs peuvent être null ou 0 = hors cadre
+  const inside = (p) =>
+    p.visibility > 0.5 &&       // 👈 très important
+    p.x > 0.05 && p.x < 0.95 &&
+    p.y > 0.05 && p.y < 0.95;
+
+  if (!inside(head))  return false;
+  if (!inside(lfoot)) return false;
+  if (!inside(rfoot)) return false;
+
+  // Vérifier la hauteur (tête au-dessus des pieds)
+  const h = Math.abs(head.y - Math.min(lfoot.y, rfoot.y));
+
+  return h > 0.3 && h < 1.5;
 }
 
 
-  // ---------------------------------------------------------
-  //   SCORING MVP (à raffiner plus tard)
-  // ---------------------------------------------------------
+
   // ---------------------------------------------------------
 //   HELPERS SCORING
 // ---------------------------------------------------------
