@@ -273,6 +273,20 @@ let captureArmed = false;
       setTimeout(() => {
   //bigMsgEl.innerHTML = "3-2-1... Parfect swing";
  // bigMsgEl.style.opacity = 1;
+        // 🔥 On force une adresse artificielle pour débloquer les keyframes
+      state = JSW_STATE.ADDRESS_COMPLETE;
+
+    // Reset du moteur swing (toujours avant un nouveau swing)
+    if (SwingEngine.reset) SwingEngine.reset();
+
+    // Stocker une frame d'adresse artificielle avec la dernière pose connue
+    // (assure-toi que lastPoseLandmarks existe dans ton pipeline)
+      if (SwingEngine.addressFrame === undefined) SwingEngine.addressFrame = {};
+    SwingEngine.addressFrame.lm = lastPoseLandmarks; 
+    SwingEngine.addressFrame.t = performance.now();
+
+    console.log("📌 Adresse artificielle enregistrée → keyframes débloquées");
+
 
   state = JSW_STATE.SWING_ARMED;
   captureArmed = true;
