@@ -1,238 +1,261 @@
-// =========================================================
-//   Parfect – SwingScorer PREMIUM (adapté à SwingEngine PRO)
-//   Input attendu : un objet "swing" = { frames, keyFrames, timestamps, club }
-// =========================================================
+// ============================================================================
+//   PARFECT — SWINGSCORER PREMIUM PRO (FORMAT C + SCORE C PONDÉRÉ)
+//   Intégration complète avec SwingEngine PRO
+//   Export global : window.SwingScorer
+// ============================================================================
 
-function clamp(v, min, max) {
-  return Math.max(min, Math.min(max, v));
-}
+const SwingScorer = (() => {
 
-function dist(a, b) {
-  if (!a || !b) return 999;
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function angleBetweenSegments(A, B, C, D) {
-  if (!A || !B || !C || !D) return 0;
-  const v1 = { x: B.x - A.x, y: B.y - A.y };
-  const v2 = { x: D.x - C.x, y: D.y - C.y };
-  const dot = v1.x * v2.x + v1.y * v2.y;
-  const m1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-  const m2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-  if (!m1 || !m2) return 0;
-  return Math.acos(clamp(dot / (m1 * m2), -1, 1)) * 180 / Math.PI;
-}
-
-// ---------------------------------------------------------
-//   TRIANGLE (bras / épaules)
-// ---------------------------------------------------------
-function computeTriangleMetrics(pose) {
-  const LS = pose[11], RS = pose[12];
-  const LH = pose[15], RH = pose[16];
-  if (!LS || !RS || !LH || !RH) return null;
-
-  const shoulderWidth = dist(LS, RS);
-  const mid = { x: (LS.x + RS.x) / 2, y: (LS.y + RS.y) / 2 };
-  const handDist = (dist(LH, mid) + dist(RH, mid)) / 2;
-  const angle = angleBetweenSegments(LS, RS, LH, RH);
-
-  return { shoulderWidth, handDist, angle };
-}
-
-function scoreTriangle(poseAtImpact) {
-  const tri = computeTriangleMetrics(poseAtImpact);
-  if (!tri) return 10;
-  const s = 1 - Math.abs(tri.shoulderWidth - 0.25) / 0.25;
-  const h = 1 - Math.abs(tri.handDist - 0.18) / 0.18;
-  const a = 1 - Math.abs(tri.angle - 25) / 25;
-  return Math.round(clamp((s + h + a) / 3, 0, 1) * 20);
-}
-
-// ---------------------------------------------------------
-//   LAG (poignets au top)
-// ---------------------------------------------------------
-function scoreLag(poseAtTop) {
-  const wrist = poseAtTop[15];
-  const elbow = poseAtTop[13];
-  if (!wrist || !elbow) return 10;
-  const dy = elbow.y - wrist.y;
-  const raw = clamp((dy - 0.01) / 0.10, 0, 1);
-  return Math.round(raw * 15);
-}
-
-// ---------------------------------------------------------
-//   PLAN (angle épaule → main à l’impact)
-// ---------------------------------------------------------
-function scorePlane(poseAtImpact) {
-  const wrist = poseAtImpact[15];
-  const shoulder = poseAtImpact[11];
-  if (!wrist || !shoulder) return 10;
-  const angle =
-    Math.atan2(wrist.y - shoulder.y, wrist.x - shoulder.x) * 180 / Math.PI;
-  const diff = Math.abs(angle - 35);
-  const raw = clamp(1 - diff / 25, 0, 1);
-  return Math.round(raw * 15);
-}
-
-// ---------------------------------------------------------
-//   ROTATION (épaule vs hanches au downswing)
-// ---------------------------------------------------------
-function scoreRotation(poseAtDownswing) {
-  const LS = poseAtDownswing[11], RS = poseAtDownswing[12];
-  const LH = poseAtDownswing[23], RH = poseAtDownswing[24];
-  if (!LS || !RS || !LH || !RH) return 10;
-
-  const shoulderTilt = angleBetweenSegments(LS, RS, { x: LS.x, y: LS.y - 0.1 }, LS);
-  const hipTilt      = angleBetweenSegments(LH, RH, { x: LH.x, y: LH.y - 0.1 }, LH);
-
-  const diff = Math.abs(shoulderTilt - hipTilt);
-  const raw = clamp(1 - diff / 25, 0, 1);
-  return Math.round(raw * 15);
-}
-
-// ---------------------------------------------------------
-//   FINISH (équilibre + rotation)
-// ---------------------------------------------------------
-function scoreFinish(poseAtFinish) {
-  const LS = poseAtFinish[11], RS = poseAtFinish[12];
-  if (!LS || !RS) return 10;
-  const tilt = Math.abs(LS.x - RS.x);
-  const raw = clamp(1 - tilt / 0.25, 0, 1);
-  return Math.round(raw * 15);
-}
-
-// ---------------------------------------------------------
-//   HEAD STABILITY (tête address → impact)
-// ---------------------------------------------------------
-function scoreHeadStability(frames, keyFrames) {
-  const start = keyFrames.address ?? 0;
-  const end   = keyFrames.impact ?? (frames.length - 1);
-  const headPositions = [];
-
-  for (let i = start; i <= end; i++) {
-    const pose = frames[i];
-    if (pose && pose[0]) headPositions.push(pose[0]);
+  // ---------------------------------------------------------
+  // TOGGLE DEBUG (logs lisibles)
+  // ---------------------------------------------------------
+  let DEBUG = false;
+  function log(...msg) {
+    if (DEBUG) console.log("[SwingScorer]", ...msg);
   }
-  if (headPositions.length < 5) return 10;
 
-  const xs = headPositions.map(h => h.x);
-  const ys = headPositions.map(h => h.y);
-  const dx = Math.max(...xs) - Math.min(...xs);
-  const dy = Math.max(...ys) - Math.min(...ys);
-  const move = Math.sqrt(dx*dx + dy*dy);
+  // ---------------------------------------------------------
+  // 🔧 UTILS
+  // ---------------------------------------------------------
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
 
-  const raw = clamp(1 - move / 0.10, 0, 1);
-  return Math.round(raw * 10);
-}
+  function dist(a, b) {
+    if (!a || !b) return 999;
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 
-// ---------------------------------------------------------
-//   TEMPO (ratio backswing / downswing)
-// ---------------------------------------------------------
-function scoreTempo(timestamps, keyFrames) {
-  const a = keyFrames.address;
-  const t = keyFrames.top;
-  const i = keyFrames.impact;
+  function angleBetween(A, B) {
+    if (!A || !B) return 0;
+    return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
+  }
 
-  if (a == null || t == null || i == null) return 10;
+  // ---------------------------------------------------------
+  // 📐 TRIANGLE — stabilité bras/épaules
+  // ---------------------------------------------------------
+  function computeTriangle(pose) {
+    const Ls = pose[11], Rs = pose[12];
+    const Lh = pose[15], Rh = pose[16];
 
-  const tBack  = timestamps[t] - timestamps[a];
-  const tDown  = timestamps[i] - timestamps[t];
-  if (tBack <= 0 || tDown <= 0) return 10;
+    if (!Ls || !Rs || !Lh || !Rh) return null;
 
-  const ratio = tBack / tDown;      // idéal ≈ 3
-  const diff  = Math.abs(ratio - 3);
-  const raw   = clamp(1 - diff / 1.5, 0, 1);
-  return Math.round(raw * 10);
-}
+    const shoulderWidth = dist(Ls, Rs);
 
-// ---------------------------------------------------------
-//   PREMIUM SCORE GLOBAL
-// ---------------------------------------------------------
-function computeSwingScorePremium(swing) {
-  const frames     = swing.frames || [];
-  const keyFrames  = swing.keyFrames || {};
-  const timestamps = swing.timestamps || [];
+    const mid = { x: (Ls.x + Rs.x) / 2, y: (Ls.y + Rs.y) / 2 };
+    const handDist = (dist(Lh, mid) + dist(Rh, mid)) / 2;
 
-  if (!frames.length) {
+    const angle =
+      Math.abs(angleBetween(Ls, Rs) - angleBetween(Lh, Rh));
+
+    return { shoulderWidth, handDist, angle };
+  }
+
+  function scoreTriangle(pose) {
+    const t = computeTriangle(pose);
+    if (!t) return 0;
+
+    const sw = 1 - Math.abs(t.shoulderWidth - 0.25) / 0.25;
+    const hd = 1 - Math.abs(t.handDist - 0.18) / 0.18;
+    const ang = 1 - Math.abs(t.angle - 25) / 25;
+
+    return clamp((sw + hd + ang) / 3, 0, 1); // → normalisé
+  }
+
+  // ---------------------------------------------------------
+  // 🎯 LAG — différence poignet/coude au top
+  // ---------------------------------------------------------
+  function scoreLag(pose) {
+    const wrist = pose[15];
+    const elbow = pose[13];
+    if (!wrist || !elbow) return 0;
+    const dy = elbow.y - wrist.y;
+    return clamp((dy - 0.02) / 0.12, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🔺 PLAN — angle bras/épaule à l’impact
+  // ---------------------------------------------------------
+  function scorePlane(pose) {
+    const wrist = pose[15];
+    const sh = pose[11];
+    if (!wrist || !sh) return 0;
+
+    const ang =
+      Math.abs(angleBetween(sh, wrist));
+
+    const diff = Math.abs(ang - 35);
+    return clamp(1 - diff / 25, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🔄 ROTATION — dissociation épaule / hanches
+  // ---------------------------------------------------------
+  function scoreRotation(pose) {
+    const Ls = pose[11], Rs = pose[12];
+    const Lh = pose[23], Rh = pose[24];
+
+    if (!Ls || !Rs || !Lh || !Rh) return 0;
+
+    const shoulderTilt = angleBetween(Ls, Rs);
+    const hipTilt      = angleBetween(Lh, Rh);
+
+    const diff = Math.abs(shoulderTilt - hipTilt);
+    return clamp(1 - diff / 35, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🎯 ALIGNEMENT ADDRESS — épaules/hanches alignées sur les pieds
+  // ---------------------------------------------------------
+  function scoreAddressAlign(pose) {
+    const Rsh = pose[12], Lsh = pose[11];
+    const Rhip = pose[24], Lhip = pose[23];
+    const Rfoot = pose[28], Lfoot = pose[27];
+
+    if (!Rsh || !Lsh || !Rhip || !Lhip || !Rfoot || !Lfoot) return 0;
+
+    const errR = Math.abs(Rsh.x - Rfoot.x) + Math.abs(Rhip.x - Rfoot.x);
+    const errL = Math.abs(Lsh.x - Lfoot.x) + Math.abs(Lhip.x - Lfoot.x);
+
+    const err = (errR + errL) / 2;
+
+    return clamp(1 - err / 0.25, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🎯 ALIGNEMENT FINISH — corps au-dessus du pied gauche
+  // ---------------------------------------------------------
+  function scoreFinishAlign(pose) {
+    const Rsh = pose[12], Lsh = pose[11];
+    const Rhip = pose[24], Lhip = pose[23];
+    const Lfoot = pose[27];
+
+    if (!Rsh || !Lsh || !Rhip || !Lhip || !Lfoot) return 0;
+
+    const e1 = Math.abs(Rhip.x - Lfoot.x);
+    const e2 = Math.abs(Rsh.x - Lfoot.x);
+    const e3 = Math.abs(Lhip.x - Lfoot.x);
+    const e4 = Math.abs(Lsh.x - Lfoot.x);
+
+    const avg = (e1 + e2 + e3 + e4) / 4;
+
+    return clamp(1 - avg / 0.25, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🧠 HEAD STABILITY
+  // ---------------------------------------------------------
+  function scoreHead(frames, KF) {
+    const start = KF.address ?? 0;
+    const end = KF.impact ?? frames.length - 1;
+
+    const head = [];
+
+    for (let i = start; i <= end; i++) {
+      if (frames[i] && frames[i][0]) head.push(frames[i][0]);
+    }
+
+    if (head.length < 5) return 0;
+
+    const xs = head.map(h => h.x);
+    const ys = head.map(h => h.y);
+
+    const dx = Math.max(...xs) - Math.min(...xs);
+    const dy = Math.max(...ys) - Math.min(...ys);
+
+    const move = Math.sqrt(dx*dx + dy*dy);
+    return clamp(1 - move / 0.12, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🕒 TEMPO backswing/downsing
+  // ---------------------------------------------------------
+  function scoreTempo(timestamps, KF) {
+    const a = KF.address, t = KF.top, i = KF.impact;
+    if (a == null || t == null || i == null) return 0;
+
+    const tb = timestamps[t] - timestamps[a];
+    const td = timestamps[i] - timestamps[t];
+
+    if (tb <= 0 || td <= 0) return 0;
+    const ratio = tb / td;
+
+    return clamp(1 - Math.abs(ratio - 3) / 1.5, 0, 1);
+  }
+
+  // ---------------------------------------------------------
+  // 🏆 SCORE GLOBAL PONDÉRÉ (/100)
+  // ---------------------------------------------------------
+  function computeSwingScorePremium(swing) {
+
+    const F  = swing.frames;
+    const KF = swing.keyFrames;
+    const T  = swing.timestamps;
+
+    if (!F || !KF) return { total: 0 };
+
+    // Key phases
+    const addr = F[KF.address]   || F[0];
+    const top  = F[KF.top]       || addr;
+    const down = F[KF.downswing] || top;
+    const imp  = F[KF.impact]    || F[F.length - 1];
+    const fin  = F[KF.finish]    || F[F.length - 1];
+
+    // Compute all scores (normalized 0–1)
+    const triangle = scoreTriangle(imp);
+    const lag      = scoreLag(top);
+    const plane    = scorePlane(imp);
+    const rotation = scoreRotation(down);
+    const head     = scoreHead(F, KF);
+    const tempo    = scoreTempo(T, KF);
+    const addressA = scoreAddressAlign(addr);
+    const finishA  = scoreFinishAlign(fin);
+
+    // ---------------------------------------------------------
+    // 🧮 PONDÉRATION PRO (total = 100)
+    // ---------------------------------------------------------
+    const WEIGHTS = {
+      triangle: 22,
+      rotation: 20,
+      plane: 15,
+      lag: 10,
+      head: 10,
+      tempo: 8,
+      addressA: 8,
+      finishA: 7
+    };
+
+    const total =
+      triangle * WEIGHTS.triangle +
+      rotation * WEIGHTS.rotation +
+      plane    * WEIGHTS.plane +
+      lag      * WEIGHTS.lag +
+      head     * WEIGHTS.head +
+      tempo    * WEIGHTS.tempo +
+      addressA * WEIGHTS.addressA +
+      finishA  * WEIGHTS.finishA;
+
+    const scoreFinal = Math.round(total);
+
+    log("📊 SCORE PREMIUM =", scoreFinal);
+
     return {
-      total: 0,
-      triangleScore: 0,
-      lagScore: 0,
-      planeScore: 0,
-      rotationScore: 0,
-      finishScore: 0,
-      headScore: 0,
-      tempoScore: 0
+      total: scoreFinal,
+      triangle, lag, plane, rotation, head, tempo, addressA, finishA,
+      keyFrames: KF
     };
   }
 
-  const f_address   = frames[keyFrames.address]   || frames[0];
-  const f_top       = frames[keyFrames.top]       || f_address;
-  const f_downswing = frames[keyFrames.downswing] || f_top;
-  const f_impact    = frames[keyFrames.impact]    || frames[frames.length - 1];
-  const f_finish    = frames[keyFrames.finish]    || frames[frames.length - 1];
-
-  const triangleScore = scoreTriangle(f_impact);
-  const lagScore      = scoreLag(f_top);
-  const planeScore    = scorePlane(f_impact);
-  const rotationScore = scoreRotation(f_downswing);
-  const finishScore   = scoreFinish(f_finish);
-  const headScore     = scoreHeadStability(frames, keyFrames);
-  const tempoScore    = scoreTempo(timestamps, keyFrames);
-
-  // pondération vers /100
-  const total =
-    triangleScore +
-    lagScore +
-    planeScore +
-    rotationScore +
-    finishScore +
-    headScore +
-    tempoScore;
-
+  // ---------------------------------------------------------
+  // EXPORT
+  // ---------------------------------------------------------
   return {
-    total,
-    triangleScore,
-    lagScore,
-    planeScore,
-    rotationScore,
-    finishScore,
-    headScore,
-    tempoScore
+    compute: computeSwingScorePremium,
+    setDebug: v => (DEBUG = v),
   };
-}
 
-// Compat pour ancien code éventuel
-function computeSwingScore(modeOrSwing, pose, ctx) {
-  if (modeOrSwing && modeOrSwing.frames && modeOrSwing.keyFrames) {
-    return computeSwingScorePremium(modeOrSwing);
-  }
-  if (ctx && ctx.frames && ctx.keyFrames) {
-    return computeSwingScorePremium({
-      frames: ctx.frames,
-      keyFrames: ctx.keyFrames,
-      timestamps: ctx.timestamps || []
-    });
-  }
-// ========================================================
-//  EXPORT GLOBAL POUR JUSTSWING
-// ========================================================
-window.SwingScorer = {
-  compute: computeSwingScorePremium,
-  buildBreakdown: window.buildPremiumBreakdown || null
-};
+})();
 
-  
-  return {
-    total: 0,
-    triangleScore: 0,
-    lagScore: 0,
-    planeScore: 0,
-    rotationScore: 0,
-    finishScore: 0,
-    headScore: 0,
-    tempoScore: 0
-  };
-}
+window.SwingScorer = SwingScorer;
