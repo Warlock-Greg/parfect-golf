@@ -80,6 +80,8 @@ let captureArmed = false;
   let countdownInterval = null;
   let routineTimer = null;
   let routineIndex = 0;
+  let routineInterval = null;  // ← nécessaire pour la routine guidée
+
   let swingIndex = 0;
 
   let engine = null;
