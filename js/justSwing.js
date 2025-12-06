@@ -274,36 +274,35 @@ let captureArmed = false;
         console.log("⏳ Routine terminée → préparation swing…");
  
        
-    // Reset du moteur swing (toujours avant un nouveau swing)
-    if (SwingEngine.reset) SwingEngine.reset();
+   // 1️⃣ RESET ENGINE pour démarrer propre
+        if (engine && engine.reset) {
+          console.log("🔄 RESET ENGINE (clean start)");
+          engine.reset();
+        }
 
-     SwingEngine.state = "IDLE";
-        console.log("📌 SwingEngine → IDLE");
+        // 2️⃣ On active directement l'enregistrement
+        console.log("🎬 ENREGISTREMENT ACTIVÉ");
+        isRecordingActive = true;
 
-        // 2️⃣ On force immédiatement ADDRESS (clé pour débloquer backswing)
-        SwingEngine.state = "ADDRESS";
+        // 3️⃣ Armer la capture JSW
+        captureArmed = true;
+        state = JSW_STATE.SWING_CAPTURE;   // ⭐ ESSENTIEL ⭐
+        updateUI();
 
-        // Récupère la dernière pose connue (nécessaire pour keyframes)
-        if (SwingEngine.addressFrame === undefined) SwingEngine.addressFrame = {};
+        // 4️⃣ Feedback joueur
+        bigMsgEl.innerHTML = "Swing ! 🏌️";
+        bigMsgEl.style.opacity = 1;
 
-        SwingEngine.addressFrame.lm = lastPose;  // pose capturée par onPoseFrame()
-        SwingEngine.addressFrame.t = performance.now();
+        // 5️⃣ Reset des index frames
+        frameIndex = 0;
 
-        console.log("📌 Adresse artificielle enregistrée pour le moteur");
-        
+        console.log("🏌️ Swing prêt → moteur actif");
 
+      }, 1500);
+    }
 
-  state = JSW_STATE.SWING_ARMED;
-  captureArmed = true;
-
- bigMsgEl.innerHTML = "swing !";
- // bigMsgEl.style.opacity = 1;
-        
-  console.log("🏌️ swing armé (prêt à détecter BACKSWING)…");
-  }, 1500);
+  }, 3500);
 }
-     }, 3500);
-  }
 
 function showGoButtonAfterRoutine() {
   bigMsgEl.innerHTML = `
