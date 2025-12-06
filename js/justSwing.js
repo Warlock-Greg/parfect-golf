@@ -279,7 +279,7 @@ let captureArmed = false;
   console.log("🏌️ Attente position adresse (full body)…");
   }, 1500);
 }
-     }, 1500);
+     }, 3500);
   }
 
 function showGoButtonAfterRoutine() {
@@ -444,7 +444,7 @@ function showGoButtonAfterRoutine() {
   // ---------------------------------------------------------
   function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
-  //lastFullBodyOk = detectFullBody(landmarks);
+  lastFullBodyOk = detectFullBody(landmarks);
 
  
 // Le moteur ne doit tourner QUE pendant la capture
@@ -475,27 +475,27 @@ function showGoButtonAfterRoutine() {
  function detectFullBody(lm) {
   if (!lm || lm.length < 31) return false;
 
-  const head  = lm[0];   // Nose
-  const lfoot = lm[29];  // left_foot_index
-  const rfoot = lm[30];  // right_foot_index
+ const head = lm[0];         // Nose
+  const lhip = lm[23];        // left_hip
+  const rhip = lm[24];        // right_hip
 
   // Tous doivent exister
   if (!head || !lfoot || !rfoot) return false;
 
   // Actuellement certaines valeurs peuvent être null ou 0 = hors cadre
   const inside = (p) =>
-    p.visibility > 0.5 &&       // 👈 très important
-    p.x > 0.05 && p.x < 0.95 &&
-    p.y > 0.05 && p.y < 0.95;
+    p.visibility > 0.15 &&       // 👈 très important
+    p.x > 0.02 && p.x < 0.98 &&
+    p.y > 0.02 && p.y < 0.98;
 
-  if (!inside(head))  return false;
-  if (!inside(lfoot)) return false;
-  if (!inside(rfoot)) return false;
+if (!inside(head)) return false;
+  if (!inside(lhip)) return false;
+  if (!inside(rhip)) return false;
 
-  // Vérifier la hauteur (tête au-dessus des pieds)
-  const h = Math.abs(head.y - Math.min(lfoot.y, rfoot.y));
+  // Vérifier que la tête est au-dessus des hanches (évite les faux positifs)
+  const h = Math.abs(head.y - Math.min(lhip.y, rhip.y));
 
-  return h > 0.4 && h < 0.95;
+  return h > 0.15 && h < 0.95;
 }
 
   // 👇 Ajoute ceci !
