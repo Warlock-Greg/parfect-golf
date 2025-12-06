@@ -277,8 +277,7 @@ let captureArmed = false;
   captureArmed = true;
 
   console.log("🏌️ Attente position adresse (full body)…");
-    }
-  }, 3500);
+  }, 1500);
 }
 
 function showGoButtonAfterRoutine() {
