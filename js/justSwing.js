@@ -480,7 +480,7 @@ function showGoButtonAfterRoutine() {
   const rhip = lm[24];        // right_hip
 
   // Tous doivent exister
-  if (!head || !lfoot || !rfoot) return false;
+  if (!head || !lhip || !rhip) return false;
 
   // Actuellement certaines valeurs peuvent être null ou 0 = hors cadre
   const inside = (p) =>
