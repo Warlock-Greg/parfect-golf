@@ -80,8 +80,6 @@ let captureArmed = false;
   let countdownInterval = null;
   let routineTimer = null;
   let routineIndex = 0;
-
-  let captureArmed = false;    // prêt à analyser le swing (après routine)
   let swingIndex = 0;
 
   let engine = null;
