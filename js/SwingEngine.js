@@ -245,3 +245,9 @@ const SwingEngine = (() => {
   return { create };  // ← C'était au mauvais endroit !
 
 })();
+// -------------------------------------------------------------
+//  EXPORT GLOBAL POUR JUSTSWING (Ajout obligatoire)
+// -------------------------------------------------------------
+if (typeof window !== "undefined") {
+  window.SwingEngine = SwingEngine;
+}
