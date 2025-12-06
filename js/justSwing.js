@@ -464,11 +464,11 @@ function showGoButtonAfterRoutine() {
   //   FULL BODY DETECTION
   // ---------------------------------------------------------
  function detectFullBody(lm) {
-  if (!lm || lm.length < 33) return false;
+  if (!lm || lm.length < 31) return false;
 
   const head  = lm[0];   // Nose
-  const lfoot = lm[31];  // left_foot_index
-  const rfoot = lm[32];  // right_foot_index
+  const lfoot = lm[29];  // left_foot_index
+  const rfoot = lm[30];  // right_foot_index
 
   // Tous doivent exister
   if (!head || !lfoot || !rfoot) return false;
@@ -486,7 +486,7 @@ function showGoButtonAfterRoutine() {
   // Vérifier la hauteur (tête au-dessus des pieds)
   const h = Math.abs(head.y - Math.min(lfoot.y, rfoot.y));
 
-  return h > 0.3 && h < 1.5;
+  return h > 0.4 && h < 0.95;
 }
 
   // 👇 Ajoute ceci !
