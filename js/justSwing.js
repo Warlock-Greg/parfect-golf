@@ -271,27 +271,35 @@ let captureArmed = false;
       routineInterval = null;
 
       setTimeout(() => {
-  //bigMsgEl.innerHTML = "3-2-1... Parfect swing";
- // bigMsgEl.style.opacity = 1;
-        // 🔥 On force une adresse artificielle pour débloquer les keyframes
-      state = JSW_STATE.ADDRESS_COMPLETE;
-
+        console.log("⏳ Routine terminée → préparation swing…");
+ 
+       
     // Reset du moteur swing (toujours avant un nouveau swing)
     if (SwingEngine.reset) SwingEngine.reset();
 
-    // Stocker une frame d'adresse artificielle avec la dernière pose connue
-    // (assure-toi que lastPoseLandmarks existe dans ton pipeline)
-      if (SwingEngine.addressFrame === undefined) SwingEngine.addressFrame = {};
-    SwingEngine.addressFrame.lm = lastPoseLandmarks; 
-    SwingEngine.addressFrame.t = performance.now();
+     SwingEngine.state = "IDLE";
+        console.log("📌 SwingEngine → IDLE");
 
-    console.log("📌 Adresse artificielle enregistrée → keyframes débloquées");
+        // 2️⃣ On force immédiatement ADDRESS (clé pour débloquer backswing)
+        SwingEngine.state = "ADDRESS";
+
+        // Récupère la dernière pose connue (nécessaire pour keyframes)
+        if (SwingEngine.addressFrame === undefined) SwingEngine.addressFrame = {};
+
+        SwingEngine.addressFrame.lm = lastPoseLandmarks;  // pose capturée par onPoseFrame()
+        SwingEngine.addressFrame.t = performance.now();
+
+        console.log("📌 Adresse artificielle enregistrée pour le moteur");
+        markKeyFrame("address", 0);
 
 
   state = JSW_STATE.SWING_ARMED;
   captureArmed = true;
 
-  console.log("🏌️ swing armé (full body)…");
+ bigMsgEl.innerHTML = "swing !";
+ // bigMsgEl.style.opacity = 1;
+        
+  console.log("🏌️ swing armé (prêt à détecter BACKSWING)…");
   }, 1500);
 }
      }, 3500);
