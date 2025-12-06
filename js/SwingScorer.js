@@ -216,6 +216,15 @@ function computeSwingScore(modeOrSwing, pose, ctx) {
       timestamps: ctx.timestamps || []
     });
   }
+// ========================================================
+//  EXPORT GLOBAL POUR JUSTSWING
+// ========================================================
+window.SwingScorer = {
+  compute: computeSwingScorePremium,
+  buildBreakdown: window.buildPremiumBreakdown || null
+};
+
+  
   return {
     total: 0,
     triangleScore: 0,
