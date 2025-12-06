@@ -16,6 +16,12 @@ const JSW_STATE = {
   REVIEW: "REVIEW",               // affichage score
 };
 
+// === FLAGS SESSION ===
+let isRecordingActive = false;
+let captureArmed = false;
+let frameIndex = 0;
+
+
 const JSW_MODE = {
   SWING: "swing",
   PUTT: "putt",
