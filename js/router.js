@@ -130,12 +130,6 @@ if (!window._justSwingInitDone) {
     }
   }
 
-// 3) Démarrer la caméra PUIS la session
-await window.startJustSwingCamera();
-
-JustSwing.startSession("swing");
-coachReact?.("🟢 Just Swing actif !");
-
     
     // 🔥 IMPORTANT : on démarre la caméra AVANT tout
     await window.startJustSwingCamera();
