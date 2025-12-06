@@ -274,7 +274,7 @@ let captureArmed = false;
   //bigMsgEl.innerHTML = "3-2-1... Parfect swing";
  // bigMsgEl.style.opacity = 1;
 
-  state = JSW_STATE..SWING_ARMED;
+  state = JSW_STATE.SWING_ARMED;
   captureArmed = true;
 
   console.log("🏌️ swing armé (full body)…");
