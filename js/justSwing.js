@@ -241,7 +241,6 @@ let captureArmed = false;
     "Vérifie ton alignement 🎯",
     "Fais un swing d’essai 🌀",
     "Respire parfectement… 😮‍💨",
-    "3 2 1, parfect swing ..",
   ];
 
   function startRoutineSequence() {
@@ -269,21 +268,15 @@ let captureArmed = false;
     } else {
       clearInterval(routineInterval);
       routineInterval = null;
- // ⭐ ESSENTIEL : l'état doit passer en ADDRESS_READY
-  state = JSW_STATE.ADDRESS_READY;
 
-  // ⭐ Armer la capture : SwingEngine peut déclencher KEYFRAME
+      setTimeout(() => {
+  bigMsgEl.innerHTML = "3-2-1... Parfect swing";
+  bigMsgEl.style.opacity = 1;
+
+  state = JSW_STATE.ADDRESS_READY;
   captureArmed = true;
 
-  // ⭐ Reset index frames
-  frameIndex = 0;
-
-  updateUI();
-
-  // ⭐ Démarre réellement l’enregistrement
-    activateRecording();   // 👉 ACTIVATION SEULEMENT ICI
-      // 👇 NOUVEAU : On affiche un bouton GO pour démarrer la capture
-      //setTimeout(showGoButtonAfterRoutine, 1500);
+  console.log("🏌️ Attente position adresse (full body)…");
     }
   }, 3500);
 }
