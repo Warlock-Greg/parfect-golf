@@ -246,6 +246,10 @@ let captureArmed = false;
   function startRoutineSequence() {
     if (!bigMsgEl) return;
 
+    frameIndex = 0;
+    captureArmed = false;
+    isRecordingActive = false;
+
     state = JSW_STATE.ROUTINE;
     updateUI();
 
@@ -282,7 +286,22 @@ function showGoButtonAfterRoutine() {
   bigMsgEl.style.opacity = 1;
 
   document.getElementById("jsw-go-btn").onclick = () => {
+    console.log("🟢 GO pressed — starting capture");
     bigMsgEl.style.opacity = 0;
+    bigMsgEl.innerHTML = "";
+
+  // ⭐ ESSENTIEL : l'état doit passer en ADDRESS_READY
+  state = JSW_STATE.ADDRESS_READY;
+
+  // ⭐ Armer la capture : SwingEngine peut déclencher KEYFRAME
+  captureArmed = true;
+
+  // ⭐ Reset index frames
+  frameIndex = 0;
+
+  updateUI();
+
+  // ⭐ Démarre réellement l’enregistrement
     activateRecording();   // 👉 ACTIVATION SEULEMENT ICI
   };
 }
