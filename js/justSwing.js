@@ -1144,6 +1144,17 @@ if (breakdownEl) {
     return msgs.slice(0, 2).join(" ");
   }
 
+function stopRecording() {
+  console.log("🛑 stopRecording() appelé");
+
+  isRecordingActive = false;
+  captureArmed = false;
+  frameIndex = 0;
+
+  if (engine) engine.reset();
+}
+
+  
   function showResultModal(scores) {
     let modal = document.getElementById("jsw-result-modal");
     if (!modal) {
