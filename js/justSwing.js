@@ -286,7 +286,7 @@ let captureArmed = false;
         // Récupère la dernière pose connue (nécessaire pour keyframes)
         if (SwingEngine.addressFrame === undefined) SwingEngine.addressFrame = {};
 
-        SwingEngine.addressFrame.lm = lastPoseLandmarks;  // pose capturée par onPoseFrame()
+        SwingEngine.addressFrame.lm = lastPose;  // pose capturée par onPoseFrame()
         SwingEngine.addressFrame.t = performance.now();
 
         console.log("📌 Adresse artificielle enregistrée pour le moteur");
