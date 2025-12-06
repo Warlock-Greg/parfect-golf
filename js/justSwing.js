@@ -279,6 +279,8 @@ let captureArmed = false;
   console.log("🏌️ Attente position adresse (full body)…");
   }, 1500);
 }
+     }, 1500);
+  }
 
 function showGoButtonAfterRoutine() {
   bigMsgEl.innerHTML = `
@@ -443,6 +445,12 @@ function showGoButtonAfterRoutine() {
   function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
+
+    // ⭐ AUTO-START EN ADDRESS_READY
+if (state === JSW_STATE.ADDRESS_READY && lastFullBodyOk && !isRecordingActive) {
+    console.log("✅ Full body détecté → activation automatique de l’enregistrement");
+    activateRecording();
+}
 
   // Si on n'enregistre pas → STOP
   if (!isRecordingActive) return;
