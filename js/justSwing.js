@@ -290,7 +290,7 @@ let captureArmed = false;
         SwingEngine.addressFrame.t = performance.now();
 
         console.log("📌 Adresse artificielle enregistrée pour le moteur");
-        markKeyFrame("address", 0);
+        
 
 
   state = JSW_STATE.SWING_ARMED;
