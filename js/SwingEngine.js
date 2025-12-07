@@ -95,7 +95,7 @@ const SwingEngine = (() => {
 
       if (!pose) return;
 
-      const dt = lastTime ? (timeMs - lastTime) / 1000 : 1/fps;
+      const dt = lastTime != null ? (timeMs - lastTime) / 1000 : 1 / fps;
       lastTime = timeMs;
 
       const Rw = pose[LM.RIGHT_WRIST];
