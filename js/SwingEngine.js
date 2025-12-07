@@ -234,6 +234,7 @@ const SwingEngine = (() => {
       timestamps: [...timestamps],
       keyFrames: { ...keyFrames },
       club: clubType,
+      fps,
     };
 
     if (typeof onSwingComplete === "function") {
