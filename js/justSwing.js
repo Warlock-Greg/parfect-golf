@@ -477,6 +477,11 @@ function showGoButtonAfterRoutine() {
 
 
   // 🔥 FRAME INDEX ++ (clé de voûte du patch)
+    console.log(
+  `[DBG] engineState=${engine.state}, rec=${isRecordingActive}, ` +
+  `frame=${frameIndex}, pose=${landmarks ? "OK" : "NULL"}`
+);
+
   const evt = engine.processPose(landmarks, frameIndex++, currentClubType);
 
   // Debug
