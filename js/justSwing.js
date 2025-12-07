@@ -860,6 +860,15 @@ function computeSwingScorePremium(swing) {
   };
 }
 
+// Patch : rendre dist() disponible dans le breakdown premium
+function dist(a, b) {
+  if (!a || !b) return null;
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.hypot(dx, dy);
+}
+
+  
 
 // ---------------------------------------------------------
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.metrics)
@@ -1166,8 +1175,8 @@ function handleSwingComplete(swing) {
   // 5️⃣ — Score Card Premium
   // -------------------------------------------
   if (breakdownEl) {
-    breakdownEl.innerHTML = "";            // Reset
     breakdownEl.style.display = "block";
+    breakdownEl.innerHTML = "";            // Reset
     buildPremiumBreakdown(swing, scores);  // Injecte le breakdown
   }
 
@@ -1177,6 +1186,7 @@ function handleSwingComplete(swing) {
   if (resultPanelEl) {
     resultPanelEl.classList.add("hidden");
   }
+  console.log("📊 Replay panel updated with Premium Scoring.");
 }
 
   function coachTechnicalComment(scores) {
