@@ -90,6 +90,8 @@ const SwingEngine = (() => {
 
     // --- moteur principal
     function processPose(pose, timeMs, clubType) {
+    console.log("[ENG] state:", this.state, "speedWrist:", speedWrist?.toFixed(3));
+
 
       if (!pose) return;
 
