@@ -248,10 +248,11 @@ let captureArmed = false;
   if (!bigMsgEl) return;
 
   frameIndex = 0;
-  captureArmed = false;
+  captureArmed = true;
   isRecordingActive = false;
 
   state = JSW_STATE.ROUTINE;
+  console.log("state routine prete");
   updateUI();
 
   showRoutineStepsText();
@@ -355,7 +356,6 @@ function showGoButtonAfterRoutine() {
 
           isRecordingActive = true;   // ⭐ Enregistrement réel
           state = JSW_STATE.SWING_CAPTURE;
-
           frameIndex = 0;             // obligatoire pour back/front tempo
           
             updateUI();
@@ -363,6 +363,7 @@ function showGoButtonAfterRoutine() {
           console.log("🎯 KEYFRAME", evt);
         },
         onSwingComplete: (evt) => {
+          console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
           const swing = evt.data || evt;
           handleSwingComplete(swing);
         },
