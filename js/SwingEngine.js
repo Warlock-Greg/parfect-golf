@@ -84,14 +84,14 @@ const SwingEngine = (() => {
     function markKeyFrame(type, index, pose) {
   keyFrames[type] = {
     index,
-    pose: pose ? [...pose] : null   // ⭐ Sauvegarde réelle des landmarks
+    pose: pose ? JSON.parse(JSON.stringify(pose)) : null
   };
 
   if (typeof onKeyFrame === "function") {
     onKeyFrame({
       type,
       index,
-      pose: pose ? [...pose] : null
+      pose: pose ? JSON.parse(JSON.stringify(pose)) : null
     });
   }
 }
@@ -163,7 +163,7 @@ const SwingEngine = (() => {
         // détecter TOP = vitesse bras faible + inversion mouvement
         if (speedWrist < 0.01) {
           state = "TOP";
-          markKeyFrame("top", frames.length - 1, pose);
+          markKeyFrame("top", frames.length -1, pose);
           return;
         }
         return;
