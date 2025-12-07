@@ -282,7 +282,7 @@ let captureArmed = false;
         // 2️⃣ Passage en ADDRESS_READY & capture armée
         state = JSW_STATE.ADDRESS_READY;
         captureArmed = true;
-        isRecordingActive = true;   // 🟢 ENREGISTREMENT PERMANENT
+        //isRecordingActive = true;  
 
         frameIndex = 0;
 
@@ -353,7 +353,7 @@ function showGoButtonAfterRoutine() {
             state = JSW_STATE.SWING_CAPTURE;
             updateUI();
           }
-          // console.log("🎯 KEYFRAME", evt);
+          console.log("🎯 KEYFRAME", evt);
         },
         onSwingComplete: (evt) => {
           const swing = evt.data || evt;
