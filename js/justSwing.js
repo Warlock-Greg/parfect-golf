@@ -86,6 +86,15 @@ let captureArmed = false;
 
   let engine = null;
 
+    // ----- REPLAY SWING -----
+  let lastSwing = null;
+  let replayFrameIndex = 0;
+  let replayPlaying = false;
+  let replayTimer = null;
+  let replayCanvas = null;
+  let replayCtx = null;
+
+
   // ---------------------------------------------------------
   //   INIT DOM
   // ---------------------------------------------------------
@@ -465,6 +474,55 @@ if (window.SwingEngine && SwingEngine.create) {
 
     ctx.restore();
   }
+
+  // ---------------------------------------------------------
+  //   DRAW OVERLAY (reference)
+  // ---------------------------------------------------------
+    function drawPoseOnCanvas(pose, canvas, ctx) {
+    if (!canvas || !ctx || !pose) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 2;
+
+    const w = canvas.width;
+    const h = canvas.height;
+
+    const p = (i) =>
+      pose[i] ? { x: pose[i].x * w, y: pose[i].y * h } : null;
+
+    const links = [
+      [11, 12], [11, 23], [12, 24], [23, 24], // torse
+      [11, 13], [13, 15],                     // bras gauche
+      [12, 14], [14, 16],                     // bras droit
+      [23, 25], [25, 27],                     // jambe gauche
+      [24, 26], [26, 28],                     // jambe droite
+    ];
+
+    links.forEach(([a, b]) => {
+      const pa = p(a);
+      const pb = p(b);
+      if (!pa || !pb) return;
+      ctx.beginPath();
+      ctx.moveTo(pa.x, pa.y);
+      ctx.lineTo(pb.x, pb.y);
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = "rgba(0,255,153,0.9)";
+    [11,12,13,14,15,16,23,24,25,26,27,28].forEach((i) => {
+      const pt = p(i);
+      if (!pt) return;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.restore();
+  }
+
 
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
@@ -1091,6 +1149,14 @@ function handleSwingComplete(swing) {
   console.log("📊 Replay panel updated with Premium Scoring.");
 }
 
+  // -------------------------------------------
+    // 7️⃣ — 💥 INIT REPLAY PRO (overlay squelette)
+    // -------------------------------------------
+    initSwingReplay(swing, scores);
+  }
+
+  
+
   function coachTechnicalComment(scores) {
     const msgs = [];
     if (scores.triangleScore < 70) msgs.push("Garde ton triangle stable.");
@@ -1172,6 +1238,158 @@ function stopRecording() {
     }
   }
 
+   // ---------------------------------------------------------
+  //   replay : init + rendu + play/pause
+  // ---------------------------------------------------------
+
+  function initSwingReplay(swing, scores) {
+    if (!swing || !swing.frames || !swing.frames.length) {
+      console.warn("⏪ Pas de frames swing pour le replay");
+      return;
+    }
+
+    lastSwing = swing;
+    replayFrameIndex = 0;
+    replayPlaying = false;
+    if (replayTimer) {
+      clearInterval(replayTimer);
+      replayTimer = null;
+    }
+
+    const reviewEl = document.getElementById("swing-review");
+    const videoEl = document.getElementById("swing-video");
+    const playBtn = document.getElementById("swing-play-pause");
+    const speedSel = document.getElementById("swing-speed");
+    const timeline = document.getElementById("swing-timeline");
+    const timeLabel = document.getElementById("swing-time-label");
+
+    if (!reviewEl || !playBtn || !speedSel || !timeline || !timeLabel) {
+      console.warn("⏪ Elements replay swing manquants dans le DOM");
+      return;
+    }
+
+    // Affiche le panneau review (au cas où)
+    reviewEl.style.display = "block";
+
+    // Timeline configurée sur le nombre de frames
+    timeline.min = 0;
+    timeline.max = swing.frames.length - 1;
+    timeline.value = 0;
+
+    // Durée totale estimée
+    const fps = swing.fps || 30;
+    const totalTimeSec = (swing.frames.length / fps).toFixed(1);
+    timeLabel.textContent = `0.0s / ${totalTimeSec}s`;
+
+    // Création / récupération du canvas overlay dans le bloc vidéo
+    let overlay = document.getElementById("swing-overlay-canvas");
+    if (!overlay) {
+      overlay = document.createElement("canvas");
+      overlay.id = "swing-overlay-canvas";
+      overlay.style.position = "absolute";
+      overlay.style.left = "0";
+      overlay.style.top = "0";
+      overlay.style.width = "100%";
+      overlay.style.height = "100%";
+      overlay.style.pointerEvents = "none";
+
+      const container = videoEl.parentElement;
+      container.style.position = "relative";
+      container.appendChild(overlay);
+    }
+
+    // Adapter la taille du canvas aux dimensions de la vidéo
+    const resizeOverlayReplay = () => {
+      const rect = videoEl.getBoundingClientRect();
+      overlay.width = rect.width;
+      overlay.height = rect.height;
+    };
+    resizeOverlayReplay();
+    window.addEventListener("resize", resizeOverlayReplay);
+
+    replayCanvas = overlay;
+    replayCtx = overlay.getContext("2d");
+
+    function renderFrame(index) {
+      if (!lastSwing || !replayCanvas || !replayCtx) return;
+
+      const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
+      replayFrameIndex = idx;
+      const pose = lastSwing.frames[idx];
+
+      drawPoseOnCanvas(pose, replayCanvas, replayCtx);
+
+      timeline.value = idx;
+
+      const fps = lastSwing.fps || 30;
+      const t = (idx / fps).toFixed(2);
+      const total = (lastSwing.frames.length / fps).toFixed(2);
+      timeLabel.textContent = `${t}s / ${total}s`;
+    }
+
+    function startReplay() {
+      if (!lastSwing) return;
+      if (replayPlaying) return;
+      replayPlaying = true;
+      playBtn.textContent = "⏸️";
+
+      const fps = lastSwing.fps || 30;
+      const baseDt = 1000 / fps;
+
+      const getSpeed = () => parseFloat(speedSel.value || "1") || 1;
+
+      replayTimer = setInterval(() => {
+        if (!replayPlaying) return;
+        let next = replayFrameIndex + 1;
+        if (next >= lastSwing.frames.length) {
+          // Fin du swing → on arrête
+          replayPlaying = false;
+          clearInterval(replayTimer);
+          replayTimer = null;
+          playBtn.textContent = "▶️";
+          return;
+        }
+        renderFrame(next);
+      }, baseDt / getSpeed());
+    }
+
+    function stopReplay() {
+      replayPlaying = false;
+      playBtn.textContent = "▶️";
+      if (replayTimer) {
+        clearInterval(replayTimer);
+        replayTimer = null;
+      }
+    }
+
+    // Listeners
+    playBtn.onclick = () => {
+      if (replayPlaying) {
+        stopReplay();
+      } else {
+        startReplay();
+      }
+    };
+
+    speedSel.onchange = () => {
+      // On relance le timer avec le nouveau speed
+      if (replayPlaying) {
+        stopReplay();
+        // petit timeout pour éviter un conflit de timer
+        setTimeout(startReplay, 50);
+      }
+    };
+
+    timeline.oninput = (e) => {
+      const idx = parseInt(e.target.value, 10) || 0;
+      renderFrame(idx);
+    };
+
+    // Première frame affichée
+    renderFrame(0);
+  }
+
+  
   // ---------------------------------------------------------
   //   UI STATUS
   // ---------------------------------------------------------
