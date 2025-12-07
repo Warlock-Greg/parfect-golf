@@ -248,7 +248,7 @@ let captureArmed = false;
   if (!bigMsgEl) return;
 
   frameIndex = 0;
-  captureArmed = true;
+  captureArmed = false;
   isRecordingActive = false;
 
   state = JSW_STATE.ROUTINE;
@@ -345,33 +345,49 @@ function showGoButtonAfterRoutine() {
     lastFullBodyOk = false;
 
     // Init moteur SwingEngine
-    if (window.SwingEngine && SwingEngine.create) {
-      engine = SwingEngine.create({
-        fps: 30,
-        onKeyFrame: (evt) => {
-          console.log("🎯 KEYFRAME", evt);
-          // Dès qu’on a un vrai mouvement → on passe en SWING_CAPTURE
-          if (captureArmed && state === JSW_STATE.ADDRESS_READY) {
-            console.log("🏌️ Début du swing détecté");
+if (window.SwingEngine && SwingEngine.create) {
+  engine = SwingEngine.create({
+    fps: 30,
 
-          isRecordingActive = true;   // ⭐ Enregistrement réel
-          state = JSW_STATE.SWING_CAPTURE;
-          frameIndex = 0;             // obligatoire pour back/front tempo
-          
-            updateUI();
-          }
-          console.log("🎯 KEYFRAME", evt);
-        },
-        onSwingComplete: (evt) => {
-          console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
-          const swing = evt.data || evt;
-          handleSwingComplete(swing);
-        },
-      });
-      console.log("🔧 SwingEngine READY", engine);
-    } else {
-      console.warn("⚠️ SwingEngine non disponible");
-    }
+    onKeyFrame: (evt) => {
+      console.log("🎯 KEYFRAME", evt);
+
+      // ⛔ Tant que la capture n'est pas armée → on ignore tout
+      if (!captureArmed) return;
+
+      // ⛔ SwingEngine émet des keyframes avant le vrai début → on ignore
+      if (state !== JSW_STATE.ADDRESS_READY) return;
+
+      // ✅ Le swing démarre UNIQUEMENT quand le moteur détecte "address"
+      if (evt.type === "address") {
+        console.log("🏌️ Début du swing détecté (KEYFRAME=address)");
+
+        // Activation réelle du moteur
+        isRecordingActive = true;
+        state = JSW_STATE.SWING_CAPTURE;
+
+        // Repartir propre pour tempo, etc.
+        frameIndex = 0;
+        if (engine.reset) engine.reset();
+
+        updateUI();
+      }
+    },
+
+    onSwingComplete: (evt) => {
+      console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
+
+      const swing = evt.data || evt;
+      handleSwingComplete(swing);
+    },
+  });
+
+  console.log("🔧 SwingEngine READY", engine);
+
+} else {
+  console.warn("⚠️ SwingEngine non disponible");
+}
+
 
     // Affichage écran plein JustSwing
     screenEl.classList.remove("hidden");
