@@ -1242,6 +1242,11 @@ function stopRecording() {
   // ---------------------------------------------------------
 
   function initSwingReplay(swing, scores) {
+    console.log("🟪 JSW-REPLAY: initSwingReplay(swing, scores) CALLED");
+    console.log("🟪 Frames disponibles :", swing.frames?.length);
+    console.log("🟪 Keyframes:", swing.keyFrames);
+    console.log("🟪 Scores:", scores);
+
     if (!swing || !swing.frames || !swing.frames.length) {
       console.warn("⏪ Pas de frames swing pour le replay");
       return;
