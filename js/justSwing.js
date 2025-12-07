@@ -482,7 +482,9 @@ function showGoButtonAfterRoutine() {
   `frame=${frameIndex}, pose=${landmarks ? "OK" : "NULL"}`
 );
 
-  const evt = engine.processPose(landmarks, frameIndex++, currentClubType);
+ const now = performance.now();  // temps en ms, adapté à SwingEngine
+const evt = engine.processPose(landmarks, now, currentClubType);
+frameIndex++;
 
   // Debug
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
