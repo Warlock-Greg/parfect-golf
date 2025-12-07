@@ -90,9 +90,7 @@ const SwingEngine = (() => {
 
     // --- moteur principal
     function processPose(pose, timeMs, clubType) {
-    console.log("[ENG] state:");
-
-
+  
       if (!pose) return;
 
       const dt = lastTime != null ? (timeMs - lastTime) / 1000 : 1 / fps;
