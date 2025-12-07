@@ -1120,57 +1120,64 @@ function activateRecording() {
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
   // ---------------------------------------------------------
-  function handleSwingComplete(swing) {
-    console.log("🏁 handle SWING COMPLETE", swing);
-    captureArmed = false;
-    state = JSW_STATE.REVIEW;
-    updateUI();
+function handleSwingComplete(swing) {
+  console.log("🏁 handle SWING COMPLETE", swing);
 
-    const scores = computeSwingScorePremium(swing);
+  captureArmed = false;
+  isRecordingActive = false;
+  state = JSW_STATE.REVIEW;
+  updateUI();
 
-    // Si on a un panneau résultat natif JustSwing
-    if (resultPanelEl && scoreGlobalEl && scoreDetailsEl && swingLabelEl) {
-      swingIndex += 1;
+  const scores = computeSwingScorePremium(swing);
 
-      swingLabelEl.textContent = `Swing #${swingIndex}`;
-      scoreGlobalEl.textContent = `Score Parfect : ${scores.total}/100`;
-      scoreGlobalEl.style.fontSize = "1.8rem";
-      scoreGlobalEl.style.fontWeight = "800";
+  // -------------------------------------------
+  // 1️⃣ — Sélection des éléments du Replay (index.html)
+  // -------------------------------------------
+  const reviewEl = document.getElementById("swing-review");
+  const scoreEl = document.getElementById("swing-review-score");
+  const commentEl = document.getElementById("swing-review-comment");
+  const breakdownEl = document.getElementById("swing-score-breakdown");
 
-      scoreDetailsEl.textContent =
-        `Triangle ${scores.triangleScore}/100 · ` +
-        `Lag ${scores.lagScore}/100 · ` +
-        `Plan ${scores.planeScore}/100 · ` +
-        `Rotation ${scores.rotationScore}/100 · ` +
-        `Tempo ${scores.tempoScore}/100`;
-
-      if (coachCommentEl) {
-        coachCommentEl.textContent = coachTechnicalComment(scores);
-      }
-
-      // 📝 BREAKDOWN PREMIUM
-const breakdownEl = document.getElementById("swing-score-breakdown");
-if (breakdownEl) {
-    breakdownEl.innerHTML = buildPremiumBreakdown(swing, scores);
-    breakdownEl.style.display = "block";
-}
-
-
-      resultPanelEl.classList.remove("hidden");
-
-      // Auto-enchaînement après 10s
-      setTimeout(() => {
-        if (state !== JSW_STATE.REVIEW) return;
-        resultPanelEl.classList.add("hidden");
-        state = JSW_STATE.WAITING_START;
-        updateUI();
-        showStartButton();
-      }, 10000);
-    } else {
-      // Fallback : petite modale simple
-      showResultModal(scores);
-    }
+  if (!reviewEl) {
+    console.error("❌ swing-review panel not found in DOM !");
+    return;
   }
+
+  // -------------------------------------------
+  // 2️⃣ — Afficher le panneau Replay
+  // -------------------------------------------
+  reviewEl.style.display = "block";
+
+  // -------------------------------------------
+  // 3️⃣ — Score Global
+  // -------------------------------------------
+  if (scoreEl) {
+    scoreEl.textContent = `Score : ${scores.total}/100`;
+  }
+
+  // -------------------------------------------
+  // 4️⃣ — Commentaire Coach
+  // -------------------------------------------
+  if (commentEl) {
+    commentEl.textContent = coachTechnicalComment(scores);
+  }
+
+  // -------------------------------------------
+  // 5️⃣ — Score Card Premium
+  // -------------------------------------------
+  if (breakdownEl) {
+    breakdownEl.innerHTML = "";            // Reset
+    breakdownEl.style.display = "block";
+    buildPremiumBreakdown(swing, scores);  // Injecte le breakdown
+  }
+
+  // -------------------------------------------
+  // 6️⃣ — On masque totalement l’ancien panneau JustSwing
+  // -------------------------------------------
+  if (resultPanelEl) {
+    resultPanelEl.classList.add("hidden");
+  }
+}
 
   function coachTechnicalComment(scores) {
     const msgs = [];
