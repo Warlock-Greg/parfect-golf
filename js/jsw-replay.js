@@ -7,6 +7,9 @@
 // ============================================================
 
 (() => {
+console.log("🟦 JSW-REPLAY: module loaded");
+
+  
   let swing = null;
   let scores = null;
   let refSwing = null;
