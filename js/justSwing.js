@@ -235,7 +235,6 @@ let captureArmed = false;
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "J’attends que tu te mettes en plain-pied 👣",
     "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
     "Fais un swing d’essai 🌀",
     "Respire parfectement… 😮‍💨",
@@ -875,250 +874,153 @@ function dist(a, b) {
 // ---------------------------------------------------------
 function buildPremiumBreakdown(swing, scores) {
   const el = document.getElementById("swing-score-breakdown");
-  if (!el || !swing) return;
+  if (!el) return console.warn("No breakdown element found.");
 
-  const frames     = swing.frames || [];
-  const KF         = swing.keyFrames || {};
-  const timestamps = swing.timestamps || [];
-
-  if (!frames.length) return;
-
-  const addr = frames[KF.address]   || frames[0];
-  const top  = frames[KF.top]       || addr;
-  const imp  = frames[KF.impact]    || frames[frames.length - 1];
-  const fin  = frames[KF.finish]    || frames[frames.length - 1];
-
-  // --- helpers safe ---
-  const safeDeg = (v) => (v == null || isNaN(v) ? "--" : v.toFixed(1));
-  const safeNum = (v, d = 2) => (v == null || isNaN(v) ? "--" : v.toFixed(d));
-
-  function angleLine(pA, pB) {
-    if (!pA || !pB) return null;
-    return Math.atan2(pB.y - pA.y, pB.x - pA.x) * 180 / Math.PI;
-  }
-
-  function get(pose, idx) {
-    return pose && pose[idx] ? pose[idx] : null;
-  }
-
-  // =========== POSTURE (ADDRESS) ===========
-  const a_Ls = get(addr, 11), a_Rs = get(addr, 12);
-  const a_Lh = get(addr, 23), a_Rh = get(addr, 24);
-  const a_Lf = get(addr, 27), a_Rf = get(addr, 28);
-
-  let flexDeg   = null;
-  let feetShoulderRatio = null;
-  let diffAlign = null;
-
-  if (a_Ls && a_Rs && a_Lh && a_Rh && a_Lf && a_Rf) {
-    const shouldersMid = { x: (a_Ls.x + a_Rs.x)/2, y: (a_Ls.y + a_Rs.y)/2 };
-    const hipsMid      = { x: (a_Lh.x + a_Rh.x)/2, y: (a_Lh.y + a_Rh.y)/2 };
-
-    const vec = { x: shouldersMid.x - hipsMid.x, y: shouldersMid.y - hipsMid.y };
-    // angle vs vertical (caméra 2D, approximation)
-    flexDeg = Math.abs(Math.atan2(vec.y, vec.x) * 180 / Math.PI - 90);
-
-    const feetDist     = dist(a_Lf, a_Rf);
-    const shouldersDist= dist(a_Ls, a_Rs);
-    if (feetDist && shouldersDist && shouldersDist < 900) {
-      feetShoulderRatio = feetDist / shouldersDist;
-    }
-
-    const shAngle = angleLine(a_Ls, a_Rs);
-    const hipAngle= angleLine(a_Lh, a_Rh);
-    if (shAngle != null && hipAngle != null) {
-      diffAlign = Math.abs(shAngle - hipAngle);
-    }
-  }
-
-  // Score posture = on mappe addressAlign sur /20
-  const postureScore = scores && scores.addressA != null
-    ? Math.round(scores.addressA * 20)
-    : 0;
-
-  // =========== ROTATION ===========
-  const t_Ls = get(top, 11), t_Rs = get(top, 12);
-  const t_Lh = get(top, 23), t_Rh = get(top, 24);
-
-  let rotShoulders = null;
-  let rotHips      = null;
-  let xFactor      = null;
-
-  if (a_Ls && a_Rs && t_Ls && t_Rs && a_Lh && a_Rh && t_Lh && t_Rh) {
-    const addrShAngle = angleLine(a_Ls, a_Rs);
-    const topShAngle  = angleLine(t_Ls, t_Rs);
-    const addrHipAngle= angleLine(a_Lh, a_Rh);
-    const topHipAngle = angleLine(t_Lh, t_Rh);
-
-    if (addrShAngle != null && topShAngle != null) {
-      rotShoulders = topShAngle - addrShAngle;
-    }
-    if (addrHipAngle != null && topHipAngle != null) {
-      rotHips = topHipAngle - addrHipAngle;
-    }
-    if (rotShoulders != null && rotHips != null) {
-      xFactor = rotShoulders - rotHips;
-    }
-  }
-
-  const rotationScore = scores && scores.rotation != null
-    ? Math.round(scores.rotation * 20)
-    : 0;
-
-  // =========== TRIANGLE ===========
-  function computeTriangleMetrics(pose) {
-    const Ls2 = get(pose, 11), Rs2 = get(pose, 12);
-    const Lh2 = get(pose, 15), Rh2 = get(pose, 16);
-    if (!Ls2 || !Rs2 || !Lh2 || !Rh2) return null;
-
-    const shoulderWidth = dist(Ls2, Rs2);
-    const mid = { x: (Ls2.x + Rs2.x)/2, y: (Ls2.y + Rs2.y)/2 };
-    const dL = dist(Lh2, mid);
-    const dR = dist(Rh2, mid);
-
-    const shoulderAngle = angleLine(Ls2, Rs2);
-    const handAngle     = angleLine(Lh2, Rh2);
-    const angleDelta    = (shoulderAngle != null && handAngle != null)
-      ? Math.abs(shoulderAngle - handAngle)
-      : null;
-
-    return {
-      shoulderWidth,
-      distL: dL,
-      distR: dR,
-      angleDelta
-    };
-  }
-
-  const triAddr = computeTriangleMetrics(addr);
-  const triTop  = computeTriangleMetrics(top);
-  const triImp  = computeTriangleMetrics(imp);
-
-  function varPercent(ref, val) {
-    if (ref == null || val == null || ref === 0) return null;
-    return ( (val - ref) / ref ) * 100;
-  }
-
-  const varTop  = triAddr && triTop
-    ? varPercent(triAddr.distL + triAddr.distR, triTop.distL + triTop.distR)
-    : null;
-  const varImp  = triAddr && triImp
-    ? varPercent(triAddr.distL + triAddr.distR, triImp.distL + triImp.distR)
-    : null;
-
-  const triangleScore = scores && scores.triangle != null
-    ? Math.round(scores.triangle * 15)
-    : 0;
-
-  // =========== WEIGHT SHIFT ===========
-  function sideCOM(pose, left) {
-    const sh = get(pose, left ? 11 : 12);
-    const hip= get(pose, left ? 23 : 24);
-    const foot = get(pose, left ? 27 : 28);
-    if (!sh || !hip || !foot) return null;
-    return { body: (sh.x + hip.x)/2, foot: foot.x };
-  }
-
-  const addrRight = sideCOM(addr, false);
-  const addrLeft  = sideCOM(addr, true);
-  const impRight  = sideCOM(imp, false);
-  const impLeft   = sideCOM(imp, true);
-
-  const weightTopBack = addrRight && addrLeft
-    ? (addrRight.body > addrLeft.body) // très simplifié
-    : null;
-
-  const weightImpactFront = impRight && impLeft
-    ? (impLeft.body < impRight.body) // corps plus vers pied gauche
-    : null;
-
-  const weightShiftScore = Math.round(
-    ((scores && scores.addressA || 0) + (scores && scores.finishA || 0)) / 2 * 15
-  );
-
-  // =========== EXTENSION / FINISH ===========
-  const finishScore = scores && scores.finishA != null
-    ? Math.round(scores.finishA * 10)
-    : 0;
-
-  const finishStable = scores && scores.finishA != null
-    ? scores.finishA > 0.7
-    : false;
-
-  // =========== TEMPO ===========
-  let tBack = null, tDown = null, tempoRatio = null;
-  if (KF.address != null && KF.top != null && KF.impact != null &&
-      timestamps.length > KF.impact) {
-    tBack = timestamps[KF.top] - timestamps[KF.address];
-    tDown = timestamps[KF.impact] - timestamps[KF.top];
-    if (tBack > 0 && tDown > 0) {
-      tempoRatio = tBack / tDown;
-    }
-  }
-
-  const tempoScore = scores && scores.tempo != null
-    ? Math.round(scores.tempo * 10)
-    : 0;
-
-  // =========== BALANCE ===========
-
-  const balanceScore = scores && scores.head != null
-    ? Math.round(scores.head * 10)
-    : 0;
-
-  const headStable = scores && scores.head != null
-    ? scores.head > 0.7
-    : false;
-
-  // =========== TEXTE FINAL ===========
-
-  const finalScore = scores && scores.total != null ? scores.total : 0;
-
-  const txt =
-`🎯 ===== SWING SCORING PRO ===== 🎯
-
-📐 POSTURE ANALYSIS
-  → Angle de flexion: ${safeDeg(flexDeg)}°
-  → Ratio pieds/épaules: ${safeNum(feetShoulderRatio)}
-  → Différence alignement épaules/hanches: ${safeDeg(diffAlign)}°
-  ✅ Score Posture: ${postureScore}/20
-
-🔄 ROTATION ANALYSIS
-  → Rotation épaules: ${safeDeg(rotShoulders)}°
-  → Rotation hanches: ${safeDeg(rotHips)}°
-  → X-Factor: ${safeDeg(xFactor)}°
-  ✅ Score Rotation: ${rotationScore}/20
-
-🔺 TRIANGLE ANALYSIS
-  → Distance bras (addr): ${triAddr ? safeNum(triAddr.distL + triAddr.distR) : "--"}
-  → Variation au top: ${varTop != null ? safeDeg(varTop) + "%" : "--"}
-  → Variation à l’impact: ${varImp != null ? safeDeg(varImp) + "%" : "--"}
-  ✅ Score Triangle: ${triangleScore}/15
-
-⚖️ WEIGHT SHIFT ANALYSIS
-  → Au top: poids sur pied arrière: ${weightTopBack == null ? "--" : (weightTopBack ? "oui ✅" : "non ❌")}
-  → À l’impact: poids sur pied avant: ${weightImpactFront == null ? "--" : (weightImpactFront ? "oui ✅" : "non ❌")}
-  ✅ Score Weight Shift: ${weightShiftScore}/15
-
-💪 EXTENSION / FINISH ANALYSIS
-  → Équilibre au finish: ${finishStable ? "stable ✅" : "à stabiliser ❌"}
-  ✅ Score Extension / Finish: ${finishScore}/10
-
-⏱️ TEMPO ANALYSIS
-  → Backswing: ${tBack != null ? safeNum(tBack, 2) + "s" : "--"}
-  → Downswing: ${tDown != null ? safeNum(tDown, 2) + "s" : "--"}
-  → Ratio: ${tempoRatio != null ? safeNum(tempoRatio, 2) + ":1" : "--"}
-  ✅ Score Tempo: ${tempoScore}/10
-
-⚖️ BALANCE ANALYSIS
-  → Tête stable: ${headStable ? "oui ✅" : "à travailler ❌"}
-  ✅ Score Balance: ${balanceScore}/10
-
-🏆 ===== SCORE FINAL: ${finalScore}/100 ===== 🏆`;
+  const {
+    postureScore,
+    rotationScore,
+    triangleScore,
+    weightShiftScore,
+    extensionScore,
+    tempoScore,
+    balanceScore,
+    total,
+    metrics
+  } = scores;
 
   el.style.display = "block";
-  el.innerHTML = `<pre style="white-space:pre-wrap; margin:0; font-family:system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size:0.85rem;">${txt}</pre>`;
+
+  // --- 1) Helper rendering ---
+  const block = (title, score, subtitle, detailsHtml = "") => `
+    <div style="
+      padding: 1rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      margin-bottom: 1rem;
+      border-left: 4px solid ${scoreColor(score)};
+    ">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:1.2rem; color:#fff;">${title}</h3>
+        <div style="font-size:1.4rem; color:${scoreColor(score)}; font-weight:700;">
+          ${score}/20
+        </div>
+      </div>
+
+      <p style="margin:0.3rem 0; color:#aaa">${subtitle}</p>
+
+      <div style="
+        margin-top:0.5rem;
+        padding:0.6rem 0.8rem;
+        background:rgba(255,255,255,0.04);
+        border-radius:10px;
+        color:#ccc;
+        font-size:0.9rem;
+        line-height:1.35;
+      ">
+        ${detailsHtml}
+      </div>
+    </div>
+  `;
+
+  // --- 2) Color coding ---
+  function scoreColor(s) {
+    if (s >= 15) return "#4ade80"; // vert
+    if (s >= 8) return "#facc15";  // jaune
+    return "#f87171";              // rouge
+  }
+
+  // --- 3) Build the full premium card ---
+  el.innerHTML = `
+    <div style="padding:1.5rem;">
+
+      <!-- SCORE GLOBAL -->
+      <div style="text-align:center; margin-bottom:2rem;">
+        <h2 style="font-size:2.5rem; margin:0; color:#4ade80; font-weight:800;">
+          ${total}/100
+        </h2>
+        <p style="margin:0; color:#aaa; font-size:1rem;">
+          Score Parfect Premium
+        </p>
+      </div>
+
+      ${block(
+        "Posture à l’adresse",
+        postureScore,
+        "Alignement · Écart de pieds · Flexion",
+        `
+          Flexion: ${metrics.posture.flexionDeg?.toFixed(1)}°<br>
+          Ratio pieds/épaules: ${metrics.posture.feetShoulderRatio?.toFixed(2)}<br>
+          Alignement épaules/hanches: ${metrics.posture.alignDiff?.toFixed(1)}°
+        `
+      )}
+
+      ${block(
+        "Rotation",
+        rotationScore,
+        "Épaules · Hanches · X-Factor",
+        `
+          Rotation épaules: ${metrics.rotation.shoulderRot?.toFixed(1)}°<br>
+          Rotation hanches: ${metrics.rotation.hipRot?.toFixed(1)}°<br>
+          X-Factor: ${metrics.rotation.xFactor?.toFixed(1)}°
+        `
+      )}
+
+      ${block(
+        "Triangle bras/épaules",
+        triangleScore,
+        "Stabilité au top et à l’impact",
+        `
+          Variation Top: ${metrics.triangle.varTopPct?.toFixed(1)}%<br>
+          Variation Impact: ${metrics.triangle.varImpactPct?.toFixed(1)}%
+        `
+      )}
+
+      ${block(
+        "Transfert de poids",
+        weightShiftScore,
+        "Backswing → Impact",
+        `
+          Shift Back: ${metrics.weightShift.shiftBack?.toFixed(3)}<br>
+          Shift Forward: ${metrics.weightShift.shiftFwd?.toFixed(3)}
+        `
+      )}
+
+      ${block(
+        "Extension & Finish",
+        extensionScore,
+        "Extension bras + stabilité du finish",
+        `
+          Extension Impact: ${metrics.extension.extImpact?.toFixed(3)}<br>
+          Extension Finish: ${metrics.extension.extFinish?.toFixed(3)}<br>
+          Déplacement tête: ${metrics.extension.headMove?.toFixed(3)}
+        `
+      )}
+
+      ${block(
+        "Tempo",
+        tempoScore,
+        "Backswing / Downswing",
+        `
+          Backswing: ${metrics.tempo.backswingT?.toFixed(2)}s<br>
+          Downswing: ${metrics.tempo.downswingT?.toFixed(2)}s<br>
+          Ratio: ${metrics.tempo.ratio?.toFixed(2)}:1
+        `
+      )}
+
+      ${block(
+        "Balance & Équilibre",
+        balanceScore,
+        "Stabilité tête + hanches au finish",
+        `
+          Tête sur hanches: ${metrics.balance.headOverHips ? "oui" : "non"}<br>
+          Déplacement hanches: ${metrics.balance.finishMove?.toFixed(3)}
+        `
+      )}
+
+    </div>
+  `;
 }
+
 
 
 function activateRecording() {
