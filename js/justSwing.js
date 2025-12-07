@@ -1153,7 +1153,6 @@ function handleSwingComplete(swing) {
     // 7️⃣ — 💥 INIT REPLAY PRO (overlay squelette)
     // -------------------------------------------
     initSwingReplay(swing, scores);
-  }
 
   
 
