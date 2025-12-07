@@ -467,18 +467,24 @@ function showGoButtonAfterRoutine() {
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
   // ---------------------------------------------------------
-  function onPoseFrame(landmarks) {
+ function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
-  if (!engine) return;
-  if (!landmarks) return;
+  // ⚠️ Tant qu’on n’est PAS en phase swing → on NE donne rien au moteur
+  if (state !== JSW_STATE.SWING_CAPTURE) return;
 
-  const now = performance.now(); 
+  // ⚠️ Si capture pas armée → on ignore
+  if (!captureArmed) return;
+
+  // ⚠️ Si pas en enregistrement → on ignore
+  if (!isRecordingActive) return;
+
+  if (!engine || !landmarks) return;
+
+  const now = performance.now();
   const evt = engine.processPose(landmarks, now, currentClubType);
   frameIndex++;
-
-  if (!isRecordingActive) return;
 
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
 
@@ -489,6 +495,7 @@ function showGoButtonAfterRoutine() {
     handleSwingComplete(evt.data);
   }
 }
+
 
   // ---------------------------------------------------------
   //   FULL BODY DETECTION
