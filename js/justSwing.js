@@ -245,18 +245,18 @@ let captureArmed = false;
   ];
 
   function startRoutineSequence() {
-    if (!bigMsgEl) return;
+  if (!bigMsgEl) return;
 
-    frameIndex = 0;
-    captureArmed = false;
-    isRecordingActive = false;
+  frameIndex = 0;
+  captureArmed = false;
+  isRecordingActive = false;
 
-    state = JSW_STATE.ROUTINE;
-    updateUI();
+  state = JSW_STATE.ROUTINE;
+  updateUI();
 
-    showRoutineStepsText();
+  showRoutineStepsText();
 
-    routineIndex = 0;
+  routineIndex = 0;
   showBigMessage(routineStepsAuto[0]);
 
   if (routineInterval) clearInterval(routineInterval);
@@ -272,37 +272,32 @@ let captureArmed = false;
 
       setTimeout(() => {
         console.log("⏳ Routine terminée → préparation swing…");
- 
-       
-   // 1️⃣ RESET ENGINE pour démarrer propre
+
+        // 1️⃣ Reset complet du moteur
         if (engine && engine.reset) {
           console.log("🔄 RESET ENGINE (clean start)");
           engine.reset();
         }
 
-        // 2️⃣ On active directement l'enregistrement
-        console.log("🎬 ENREGISTREMENT ACTIVÉ");
-        isRecordingActive = true;
-
-        // 3️⃣ Armer la capture JSW
+        // 2️⃣ Passage en ADDRESS_READY & capture armée
+        state = JSW_STATE.ADDRESS_READY;
         captureArmed = true;
-        state = JSW_STATE.SWING_CAPTURE;   // ⭐ ESSENTIEL ⭐
-        updateUI();
+        isRecordingActive = true;   // 🟢 ENREGISTREMENT PERMANENT
 
-        // 4️⃣ Feedback joueur
-        bigMsgEl.innerHTML = "Swing ! 🏌️";
-        bigMsgEl.style.opacity = 1;
-
-        // 5️⃣ Reset des index frames
         frameIndex = 0;
 
-        console.log("🏌️ Swing prêt → moteur actif");
+        // 3️⃣ Message joueur
+        bigMsgEl.innerHTML = "Place-toi en adresse puis swing ! 🏌️";
+        bigMsgEl.style.opacity = 1;
+
+        updateUI();
 
       }, 1500);
     }
 
   }, 3500);
 }
+
 
 function showGoButtonAfterRoutine() {
   bigMsgEl.innerHTML = `
@@ -468,35 +463,23 @@ function showGoButtonAfterRoutine() {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
- 
-// Le moteur ne doit tourner QUE pendant la capture
-  if (!landmarks || !engine) return;
+  if (!engine) return;
+  //if (!isRecordingActive) return;
+  if (!landmarks) return;
 
-  // Si on n'enregistre pas → STOP
-  if (!isRecordingActive) return;
+  const now = performance.now(); 
+  const evt = engine.processPose(landmarks, now, currentClubType);
+  frameIndex++;
 
-
-  // 🔥 FRAME INDEX ++ (clé de voûte du patch)
-    console.log(
-  `[DBG] engineState=${engine.state}, rec=${isRecordingActive}, ` +
-  `frame=${frameIndex}, pose=${landmarks ? "OK" : "NULL"}`
-);
-
- const now = performance.now();  // temps en ms, adapté à SwingEngine
-const evt = engine.processPose(landmarks, now, currentClubType);
-frameIndex++;
-
-  // Debug
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
 
-  // Le moteur a terminé un swing complet  
   if (evt && evt.type === "swingComplete") {
     console.log("🏁 swingComplete détecté !");
     isRecordingActive = false;
+    captureArmed = false;
     handleSwingComplete(evt.data);
   }
 }
-
 
   // ---------------------------------------------------------
   //   FULL BODY DETECTION
@@ -1111,47 +1094,9 @@ function buildPremiumBreakdown(swing, scores) {
 
 
 function activateRecording() {
-  console.log("🎬 ENREGISTREMENT ACTIVÉ (post-routine)");
-
-// RESET D'ABORD !
-  if (engine) {
-    console.log("🔄 RESET ENGINE (avant capture)");
-    engine.reset();
-  }
-
-// --- Reset index frame pour analyses tempo / progression ---
-  frameIndex = 0;
-
-  
-  // --- Flags d'état ---
-  isRecordingActive = true;
-  state = JSW_STATE.SWING_CAPTURE;
-
-  
-  // --- UI ---
-  if (statusTextEl) {
-    statusTextEl.textContent = "🔴 Enregistrement en cours...";
-    statusTextEl.style.color = "#ff4444";
-  }
-
-  
-
-  // --- Indication visuelle : halo rouge (optionnel si tu veux) ---
-  const halo = document.getElementById("jsw-halo");
-  if (halo) {
-    halo.style.background = "rgba(255,0,0,0.35)";
-    halo.style.boxShadow = "0 0 30px rgba(255,0,0,0.8)";
-  }
-
-  // --- Sécurité : arrêt auto après 10 secondes si aucun swing ---
-  setTimeout(() => {
-    if (isRecordingActive) {
-      console.warn("⏱️ Timeout 12s - arrêt automatique (aucun swing détecté)");
-      stopRecording();
-    }
-  }, 12000);
-
+  console.warn("⚠️ activateRecording() temporairement désactivé (mode DEBUG).");
 }
+
   
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
