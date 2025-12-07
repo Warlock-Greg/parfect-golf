@@ -236,23 +236,21 @@ let captureArmed = false;
   // ---------------------------------------------------------
   const routineStepsAuto = [
     "J’attends que tu te mettes en plain-pied 👣",
-    "Vérifie ton grip ✋",
-    "Vérifie ta posture 🧍‍♂️",
-    "Vérifie ton alignement 🎯",
+    "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
     "Fais un swing d’essai 🌀",
     "Respire parfectement… 😮‍💨",
-    "3-2-1... Parfect swing",
   ];
 
   function startRoutineSequence() {
   if (!bigMsgEl) return;
 
+  // Reset des compteurs / flags
   frameIndex = 0;
   captureArmed = false;
   isRecordingActive = false;
 
   state = JSW_STATE.ROUTINE;
-  console.log("state routine prete");
+  console.log("▶️ Routine démarrée");
   updateUI();
 
   showRoutineStepsText();
@@ -271,8 +269,9 @@ let captureArmed = false;
       clearInterval(routineInterval);
       routineInterval = null;
 
+      // 👉 Fin de routine : on prépare DIRECT le swing
       setTimeout(() => {
-        console.log("⏳ Routine terminée → préparation swing…");
+        console.log("⏳ Routine terminée → passage en capture directe");
 
         // 1️⃣ Reset complet du moteur
         if (engine && engine.reset) {
@@ -280,24 +279,33 @@ let captureArmed = false;
           engine.reset();
         }
 
-        // 2️⃣ Passage en ADDRESS_READY & capture armée
-        state = JSW_STATE.ADDRESS_READY;
+        // 2️⃣ Passage DIRECT en capture
+        state = JSW_STATE.SWING_CAPTURE;
         captureArmed = true;
-        isRecordingActive = false;  
-
+        isRecordingActive = true;
         frameIndex = 0;
 
         // 3️⃣ Message joueur
-        bigMsgEl.innerHTML = "Place-toi en adresse puis swing ! 🏌️";
-        bigMsgEl.style.opacity = 1;
+        if (bigMsgEl) {
+          bigMsgEl.innerHTML = "Swing ! 🏌️";
+          bigMsgEl.style.opacity = 1;
+
+          // le message disparaît après 1s
+          setTimeout(() => {
+            bigMsgEl.style.opacity = 0;
+            bigMsgEl.innerHTML = "";
+          }, 1000);
+        }
 
         updateUI();
+        console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
       }, 1500);
     }
 
   }, 3500);
 }
+
 
 
 function showGoButtonAfterRoutine() {
@@ -350,33 +358,12 @@ if (window.SwingEngine && SwingEngine.create) {
     fps: 30,
 
     onKeyFrame: (evt) => {
+      // Debug uniquement
       console.log("🎯 KEYFRAME", evt);
-
-      // ⛔ Tant que la capture n'est pas armée → on ignore tout
-      if (!captureArmed) return;
-
-      // ⛔ SwingEngine émet des keyframes avant le vrai début → on ignore
-      if (state !== JSW_STATE.ADDRESS_READY) return;
-
-      // ✅ Le swing démarre UNIQUEMENT quand le moteur détecte "address"
-      if (evt.type === "address") {
-        console.log("🏌️ Début du swing détecté (KEYFRAME=address)");
-
-        // Activation réelle du moteur
-        isRecordingActive = true;
-        state = JSW_STATE.SWING_CAPTURE;
-
-        // Repartir propre pour tempo, etc.
-        frameIndex = 0;
-        if (engine.reset) engine.reset();
-
-        updateUI();
-      }
     },
 
     onSwingComplete: (evt) => {
       console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
-
       const swing = evt.data || evt;
       handleSwingComplete(swing);
     },
