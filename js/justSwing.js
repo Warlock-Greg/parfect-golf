@@ -282,7 +282,7 @@ let captureArmed = false;
         // 2️⃣ Passage en ADDRESS_READY & capture armée
         state = JSW_STATE.ADDRESS_READY;
         captureArmed = true;
-        //isRecordingActive = true;  
+        isRecordingActive = false;  
 
         frameIndex = 0;
 
@@ -348,9 +348,16 @@ function showGoButtonAfterRoutine() {
       engine = SwingEngine.create({
         fps: 30,
         onKeyFrame: (evt) => {
+          console.log("🎯 KEYFRAME", evt);
           // Dès qu’on a un vrai mouvement → on passe en SWING_CAPTURE
           if (captureArmed && state === JSW_STATE.ADDRESS_READY) {
-            state = JSW_STATE.SWING_CAPTURE;
+            console.log("🏌️ Début du swing détecté");
+
+          isRecordingActive = true;   // ⭐ Enregistrement réel
+          state = JSW_STATE.SWING_CAPTURE;
+
+          frameIndex = 0;             // obligatoire pour back/front tempo
+          
             updateUI();
           }
           console.log("🎯 KEYFRAME", evt);
@@ -464,12 +471,13 @@ function showGoButtonAfterRoutine() {
   lastFullBodyOk = detectFullBody(landmarks);
 
   if (!engine) return;
-  //if (!isRecordingActive) return;
   if (!landmarks) return;
 
   const now = performance.now(); 
   const evt = engine.processPose(landmarks, now, currentClubType);
   frameIndex++;
+
+  if (!isRecordingActive) return;
 
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
 
@@ -1102,7 +1110,7 @@ function activateRecording() {
   //   SWING COMPLETE → SCORE + UI
   // ---------------------------------------------------------
   function handleSwingComplete(swing) {
-    console.log("🏁 SWING COMPLETE", swing);
+    console.log("🏁 handle SWING COMPLETE", swing);
     captureArmed = false;
     state = JSW_STATE.REVIEW;
     updateUI();
@@ -1132,21 +1140,21 @@ function activateRecording() {
       // 📝 BREAKDOWN PREMIUM
 const breakdownEl = document.getElementById("swing-score-breakdown");
 if (breakdownEl) {
-    breakdownEl.innerHTML = buildPremiumBreakdown(data, data.scores);
+    breakdownEl.innerHTML = buildPremiumBreakdown(swing, scores);
     breakdownEl.style.display = "block";
 }
 
 
       resultPanelEl.classList.remove("hidden");
 
-      // Auto-enchaînement après 5s
+      // Auto-enchaînement après 10s
       setTimeout(() => {
         if (state !== JSW_STATE.REVIEW) return;
         resultPanelEl.classList.add("hidden");
         state = JSW_STATE.WAITING_START;
         updateUI();
         showStartButton();
-      }, 5000);
+      }, 10000);
     } else {
       // Fallback : petite modale simple
       showResultModal(scores);
