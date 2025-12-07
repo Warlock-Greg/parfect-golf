@@ -1135,9 +1135,9 @@ function handleSwingComplete(swing) {
   // 5️⃣ — Score Card Premium
   // -------------------------------------------
   if (breakdownEl) {
+    breakdownEl.innerHTML = "";   // Reset
     breakdownEl.style.display = "block";
-    breakdownEl.innerHTML = "";            // Reset
-    buildPremiumBreakdown(swing, scores);  // Injecte le breakdown
+    buildPremiumBreakdown(swing, scores); // ⬅️ On remplit l’élément depuis
   }
 
   // -------------------------------------------
@@ -1147,14 +1147,14 @@ function handleSwingComplete(swing) {
     resultPanelEl.classList.add("hidden");
   }
   console.log("📊 Replay panel updated with Premium Scoring.");
-}
+
 
   // -------------------------------------------
     // 7️⃣ — 💥 INIT REPLAY PRO (overlay squelette)
     // -------------------------------------------
     initSwingReplay(swing, scores);
 
-  
+}
 
   function coachTechnicalComment(scores) {
     const msgs = [];
