@@ -81,12 +81,20 @@ const SwingEngine = (() => {
       releaseStartTime = null;
     }
 
-    function markKeyFrame(type, index) {
-      keyFrames[type] = index;
-      if (typeof onKeyFrame === "function") {
-        onKeyFrame({ type, index });
-      }
-    }
+    function markKeyFrame(type, index, pose) {
+  keyFrames[type] = {
+    index,
+    pose: pose ? [...pose] : null   // ⭐ Sauvegarde réelle des landmarks
+  };
+
+  if (typeof onKeyFrame === "function") {
+    onKeyFrame({
+      type,
+      index,
+      pose: pose ? [...pose] : null
+    });
+  }
+}
 
     // --- moteur principal
     function processPose(pose, timeMs, clubType) {
@@ -129,7 +137,7 @@ const SwingEngine = (() => {
       if (state === "IDLE") {
         if (speedWrist < 0.005) {
           state = "ADDRESS";
-          markKeyFrame("address", 0);
+          markKeyFrame("address", 0, pose);
         }
         return;
       }
@@ -141,7 +149,7 @@ const SwingEngine = (() => {
           swingStartTime = timeMs;
           frames.push(pose);
           timestamps.push(timeMs);
-          markKeyFrame("backswing", frames.length - 1);
+          markKeyFrame("backswing", frames.length - 1, pose);
           return;
         }
         return;
@@ -155,7 +163,7 @@ const SwingEngine = (() => {
         // détecter TOP = vitesse bras faible + inversion mouvement
         if (speedWrist < 0.01) {
           state = "TOP";
-          markKeyFrame("top", frames.length - 1);
+          markKeyFrame("top", frames.length - 1, pose);
           return;
         }
         return;
@@ -169,7 +177,7 @@ const SwingEngine = (() => {
         // descente = augmentation vitesse
         if (speedWrist > 0.02) {
           state = "DOWNSWING";
-          markKeyFrame("downswing", frames.length - 1);
+          markKeyFrame("downswing", frames.length - 1, pose);
           return;
         }
         return;
@@ -184,7 +192,7 @@ const SwingEngine = (() => {
         if (!impactDetected && speedWrist > IMPACT_SPIKE) {
           impactDetected = true;
           state = "IMPACT";
-          markKeyFrame("impact", frames.length - 1);
+          markKeyFrame("impact", frames.length - 1, pose);
           return;
         }
         return;
@@ -197,7 +205,7 @@ const SwingEngine = (() => {
 
         if (speedWrist < 0.02) {
           state = "RELEASE";
-          markKeyFrame("release", frames.length - 1);
+          markKeyFrame("release", frames.length - 1, pose);
           return;
         }
         return;
@@ -217,7 +225,7 @@ const SwingEngine = (() => {
 
   if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
     state = "FINISH";
-    markKeyFrame("finish", frames.length - 1);
+    markKeyFrame("finish", frames.length - 1, pose);
 
     const duration = timeMs - swingStartTime;
 
