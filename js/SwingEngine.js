@@ -123,6 +123,13 @@ const SwingEngine = (() => {
       const speedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
       const speedHip   = dist(midHip, prevMidHip)     / (dt || 0.033);
 
+console.log(
+  "⚡ speedWrist =", speedWrist.toFixed(4),
+  "| speedHip =", speedHip.toFixed(4),
+  "| state =", state
+);
+
+      
       const now = timeMs;
 
       // RESET auto si plus de mouvement
