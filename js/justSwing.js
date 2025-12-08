@@ -624,6 +624,32 @@ function jswSafePoseFromKF(kf) {
   if (Array.isArray(kf)) return kf;
   return null;
 }
+// ---------------------------------------------------------
+//   DÉTECTION VUE CAMERA : FACE-ON vs DOWN-THE-LINE
+// ---------------------------------------------------------
+function jswDetectViewType(pose) {
+  if (!pose) return "unknown";
+  const LS = pose[11];
+  const RS = pose[12];
+  const LH = pose[23];
+  const RH = pose[24];
+  if (!LS || !RS || !LH || !RH) return "unknown";
+
+  const shoulderWidth = jswDist(LS, RS); // distance normalisée 0..1
+  const hipWidth      = jswDist(LH, RH);
+
+  const avgWidth = (shoulderWidth + hipWidth) / 2;
+
+  // Heuristique simple :
+  //  - Face-on : on voit toute la largeur → > 0.18
+  //  - DTL : largeur projetée faible      → < 0.12
+  if (avgWidth > 0.18) return "faceOn";
+  if (avgWidth < 0.12) return "downTheLine";
+
+  return "unknown";
+}
+
+  
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
@@ -636,6 +662,11 @@ function computeSwingScorePremium(swing) {
   const topPose     = jswSafePoseFromKF(kf.top);
   const impactPose  = jswSafePoseFromKF(kf.impact);
   const finishPose  = jswSafePoseFromKF(kf.finish);
+
+    const viewType = jswDetectViewType(addressPose);
+  metrics.viewType = viewType;
+  console.log("👁️ ViewType détecté :", viewType);
+
 
   // On va stocker toutes les métriques brutes ici
   const metrics = {
@@ -699,7 +730,7 @@ function computeSwingScorePremium(swing) {
     metrics.posture.score = 14;
   }
 
-  // ========= 2) ROTATION (address → top) =========
+    // ========= 2) ROTATION (address → top) =========
   if (addressPose && topPose) {
     const LS0 = addressPose[11];
     const RS0 = addressPose[12];
@@ -711,14 +742,39 @@ function computeSwingScorePremium(swing) {
     const LH1 = topPose[23];
     const RH1 = topPose[24];
 
-    const shAng0 = jswLineAngleDeg(LS0, RS0);
-    const shAng1 = jswLineAngleDeg(LS1, RS1);
-    const hipAng0 = jswLineAngleDeg(LH0, RH0);
-    const hipAng1 = jswLineAngleDeg(LH1, RH1);
+    let shoulderRot = 0;
+    let hipRot = 0;
+    let xFactor = 0;
 
-    const shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
-    const hipRot      = jswDegDiff(hipAng0, hipAng1) ?? 0;
-    const xFactor     = shoulderRot - hipRot;
+    if (metrics.viewType === "faceOn") {
+      // 🔵 MODE FACE-ON → on estime la rotation via la compression de largeur
+      const shW0 = jswDist(LS0, RS0);
+      const shW1 = jswDist(LS1, RS1);
+      const hipW0 = jswDist(LH0, RH0);
+      const hipW1 = jswDist(LH1, RH1);
+
+      if (shW0 && shW1) {
+        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // cos(theta) ~ ratio
+      }
+
+      if (hipW0 && hipW1) {
+        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+        hipRot = Math.acos(ratioH) * 180 / Math.PI;
+      }
+
+      xFactor = shoulderRot - hipRot;
+    } else {
+      // 🟠 MODE DTL / UNKNOWN → on reste sur l'angle de la ligne épaules/hanches
+      const shAng0 = jswLineAngleDeg(LS0, RS0);
+      const shAng1 = jswLineAngleDeg(LS1, RS1);
+      const hipAng0 = jswLineAngleDeg(LH0, RH0);
+      const hipAng1 = jswLineAngleDeg(LH1, RH1);
+
+      shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
+      hipRot      = jswDegDiff(hipAng0, hipAng1) ?? 0;
+      xFactor     = shoulderRot - hipRot;
+    }
 
     metrics.rotation.shoulderRot = shoulderRot;
     metrics.rotation.hipRot = hipRot;
@@ -733,6 +789,7 @@ function computeSwingScorePremium(swing) {
   } else {
     metrics.rotation.score = 14;
   }
+
 
   // ========= 3) TRIANGLE (address / top / impact) =========
   if (addressPose && topPose && impactPose) {
