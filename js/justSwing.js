@@ -649,6 +649,79 @@ function jswDetectViewType(pose) {
   return "unknown";
 }
 
+function computeTriangleStable(pose) {
+  if (!pose) return null;
+  const Ls = pose[11], Rs = pose[12];
+  const Lh = pose[15], Rh = pose[16];
+  if (!Ls || !Rs || !Lh || !Rh) return null;
+
+  const mid = { x: (Ls.x + Rs.x)/2, y:(Ls.y + Rs.y)/2 };
+  const left  = jswDist(Lh, mid);
+  const right = jswDist(Rh, mid);
+
+  return (left + right) / 2;
+}
+
+function scoreTriangleStable(addr, top, imp) {
+  const base = computeTriangleStable(addr);
+  const vTop = computeTriangleStable(top);
+  const vImp = computeTriangleStable(imp);
+
+  if (!base || !vTop || !vImp) return 0;
+
+  const dTop = Math.abs(vTop - base) / base;
+  const dImp = Math.abs(vImp - base) / base;
+
+  const sTop = jswClamp(1 - dTop / 0.15, 0, 1);
+  const sImp = jswClamp(1 - dImp / 0.10, 0, 1);
+
+  return (sTop + sImp) / 2;
+}
+
+function computeWeightShift(addr, top, imp) {
+  if (!addr || !top || !imp) return { back: 0, forward: 0 };
+
+  const hipMid = p => ({ x:(p[23].x+p[24].x)/2, y:(p[23].y+p[24].y)/2 });
+  const footMid = p => ({ x:(p[27].x+p[28].x)/2, y:(p[27].y+p[28].y)/2 });
+
+  const h0 = hipMid(addr);
+  const h1 = hipMid(top);
+  const h2 = hipMid(imp);
+
+  const scale = Math.abs(addr[27].x - addr[28].x);  
+  if (scale < 0.02) return { back: 0, forward: 0 };
+
+  const backShift = (h1.x - h0.x) / scale;
+  const fwdShift  = (h0.x - h2.x) / scale;
+
+  return {
+    back: jswClamp(backShift, -1, 1),
+    forward: jswClamp(fwdShift, -1, 1)
+  };
+}
+
+function scoreWeightShift(addr, top, imp) {
+  const w = computeWeightShift(addr, top, imp);
+  const sBack = jswClamp((w.back - 0.05) / 0.30, 0, 1);
+  const sFwd  = jswClamp((w.forward - 0.05) / 0.30, 0, 1);
+  return (sBack + sFwd) / 2;
+}
+
+function scoreTempoRobust(timestamps, kf) {
+  const a = kf.address?.index;
+  const t = kf.top?.index;
+  const i = kf.impact?.index;
+  if (a == null || t == null || i == null) return 0;
+
+  let tb = (timestamps[t] - timestamps[a]) / 1000;
+  let td = (timestamps[i] - timestamps[t]) / 1000;
+
+  if (tb < 0.15 || tb > 2.0) tb = 0.8;
+  if (td < 0.05 || td > 0.6) td = 0.25;
+
+  const ratio = tb / td;
+  return jswClamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
+}
   
 
 // ---------------------------------------------------------
@@ -791,67 +864,33 @@ function computeSwingScorePremium(swing) {
   }
 
 
-  // ========= 3) TRIANGLE (address / top / impact) =========
-  if (addressPose && topPose && impactPose) {
-    const LS0 = addressPose[11];
-    const LH0 = addressPose[15]; // main gauche (pour droitier)
-    const LS1 = topPose[11];
-    const LH1 = topPose[15];
-    const LS2 = impactPose[11];
-    const LH2 = impactPose[15];
+  // ========= 3) TRIANGLE ROBUSTE =========
+if (addressPose && topPose && impactPose) {
+  const tri = scoreTriangleStable(addressPose, topPose, impactPose);
+  metrics.triangle.score = Math.round(tri * 20);
 
-    const d0 = jswDist(LS0, LH0);
-    const d1 = jswDist(LS1, LH1);
-    const d2 = jswDist(LS2, LH2);
+  metrics.triangle.varTopPct =
+    computeTriangleStable(topPose) / computeTriangleStable(addressPose) - 1;
 
-    const varTop = (d0 && d1) ? Math.abs(d1 - d0)/d0*100 : 0;
-    const varImp = (d0 && d2) ? Math.abs(d2 - d0)/d0*100 : 0;
+  metrics.triangle.varImpactPct =
+    computeTriangleStable(impactPose) / computeTriangleStable(addressPose) - 1;
+} else {
+  metrics.triangle.score = 10;
+}
 
-    metrics.triangle.dAddress = d0;
-    metrics.triangle.dTop = d1;
-    metrics.triangle.dImpact = d2;
-    metrics.triangle.varTopPct = varTop;
-    metrics.triangle.varImpactPct = varImp;
-
-    // Cible : < 5% de variation
-    const scoreTop = jswClamp(1 - varTop/15, 0, 1);
-    const scoreImp = jswClamp(1 - varImp/10, 0, 1);
-    metrics.triangle.score = Math.round((scoreTop + scoreImp)/2 * 15);
-  } else {
-    metrics.triangle.score = 10;
-  }
 
   // ========= 4) WEIGHT SHIFT (hips & pieds) =========
-  if (addressPose && topPose && impactPose) {
-    const LH0 = addressPose[23], RH0 = addressPose[24];
-    const LH1 = topPose[23],     RH1 = topPose[24];
-    const LH2 = impactPose[23],  RH2 = impactPose[24];
-    const LA0 = addressPose[27], RA0 = addressPose[28];
+ if (addressPose && topPose && impactPose) {
+  const w = computeWeightShift(addressPose, topPose, impactPose);
 
-    const hips0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
-    const hips1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
-    const hips2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
-    const feet0 = (LA0 && RA0) ? { x:(LA0.x+RA0.x)/2, y:(LA0.y+RA0.y)/2 } : null;
+  metrics.weightShift.shiftBack = w.back;
+  metrics.weightShift.shiftFwd  = w.forward;
 
-    let shiftBack = 0, shiftFwd = 0;
-    if (hips0 && hips1 && feet0) {
-      shiftBack = hips1.x - hips0.x; // + vers la droite (pied arrière pour droitier si caméra face-on)
-    }
-    if (hips0 && hips2 && feet0) {
-      shiftFwd = hips0.x - hips2.x; // décalage vers la cible (gauche sur face-on droitier)
-    }
-
-    metrics.weightShift.shiftBack = shiftBack;
-    metrics.weightShift.shiftFwd = shiftFwd;
-
-    // On veut "beaucoup" vers pied arrière au top, puis vers pied avant à l'impact
-    const backScore = jswClamp((Math.abs(shiftBack) - 0.02)/0.15, 0, 1);
-    const fwdScore  = jswClamp((Math.abs(shiftFwd) - 0.02)/0.15, 0, 1);
-
-    metrics.weightShift.score = Math.round((backScore + fwdScore)/2 * 15);
-  } else {
-    metrics.weightShift.score = 10;
-  }
+  const scoreWS = scoreWeightShift(addressPose, topPose, impactPose);
+  metrics.weightShift.score = Math.round(scoreWS * 20);
+} else {
+  metrics.weightShift.score = 10;
+}
 
   // ========= 5) EXTENSION & FINISH =========
   if (impactPose && finishPose) {
@@ -883,28 +922,13 @@ function computeSwingScorePremium(swing) {
   }
 
   // ========= 6) TEMPO =========
-  const addrIndex   = kf.address?.index ?? 0;
-  const topIndex    = kf.top?.index     ?? null;
-  const impactIndex = kf.impact?.index  ?? null;
-
-  if (topIndex != null && impactIndex != null) {
-    const backswingFrames = topIndex - addrIndex;
-    const downswingFrames = impactIndex - topIndex;
-
-    const backswingT = backswingFrames / fps;
-    const downswingT = downswingFrames / fps;
-    const ratio = backswingT > 0 && downswingT > 0 ? backswingT / downswingT : 3.0;
-
-    metrics.tempo.backswingT = backswingT;
-    metrics.tempo.downswingT = downswingT;
-    metrics.tempo.ratio = ratio;
-
-    // cible ratio ~3:1
-    const tempoScore = jswClamp(1 - Math.abs(ratio - 3)/1.2, 0, 1);
-    metrics.tempo.score = Math.round(tempoScore * 10);
-  } else {
-    metrics.tempo.score = 7;
-  }
+ if (kf.address && kf.top && kf.impact) {
+  const tempo = scoreTempoRobust(swing.timestamps, kf);
+  metrics.tempo.ratio = tempo;
+  metrics.tempo.score = Math.round(tempo * 20);
+} else {
+  metrics.tempo.score = 10;
+}
 
   // ========= 7) BALANCE =========
   if (finishPose && addressPose) {
