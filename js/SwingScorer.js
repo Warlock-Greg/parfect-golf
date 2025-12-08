@@ -94,17 +94,30 @@ const SwingScorer = (() => {
   // 🔄 ROTATION — dissociation épaule / hanches
   // ---------------------------------------------------------
   function scoreRotation(pose) {
-    const Ls = pose[11], Rs = pose[12];
-    const Lh = pose[23], Rh = pose[24];
+  const Ls = pose[11], Rs = pose[12];
+  const Lh = pose[23], Rh = pose[24];
 
-    if (!Ls || !Rs || !Lh || !Rh) return 0;
+  if (!Ls || !Rs || !Lh || !Rh) return 0;
 
-    const shoulderTilt = angleBetween(Ls, Rs);
-    const hipTilt      = angleBetween(Lh, Rh);
+  // 1) Rotation épaules via profondeur (face-on compute)
+  const shoulderDZ = (Rs.z - Ls.z);       // >0 = épaule droite reculée = bon backswing
+  const hipDZ      = (Rh.z - Lh.z);
 
-    const diff = Math.abs(shoulderTilt - hipTilt);
-    return clamp(1 - diff / 35, 0, 1);
-  }
+  // Normalisation (valeurs typiques Mediapipe : 0.02 → 0.12)
+  const shoulderRotDeg = shoulderDZ * 900; // mapping empirique ≈ 0.10 → 90°
+  const hipRotDeg      = hipDZ * 600;      // hanches tournent moins que épaules
+
+  // X-Factor réel
+  const xFactor = shoulderRotDeg - hipRotDeg;
+
+  // Scoring
+  const sScore = clamp(1 - Math.abs(shoulderRotDeg - 90) / 70, 0, 1);
+  const hScore = clamp(1 - Math.abs(hipRotDeg - 45) / 40, 0, 1);
+  const xScore = clamp(1 - Math.abs(xFactor - 40) / 30, 0, 1);
+
+  return clamp((sScore + hScore + xScore) / 3, 0, 1);
+}
+
 
   // ---------------------------------------------------------
   // 🎯 ALIGNEMENT ADDRESS — épaules/hanches alignées sur les pieds
