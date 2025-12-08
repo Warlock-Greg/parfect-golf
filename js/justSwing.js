@@ -740,6 +740,15 @@ function computeSwingScorePremium(swing) {
   const fps = swing.fps || 30;
 
   const kf = swing.keyFrames || {};
+
+function extractIndex(kf) {
+  if (kf == null) return null;
+  if (typeof kf === "number") return kf;
+  if (typeof kf.index === "number") return kf.index;
+  return null;
+}
+
+  
   const addressPose = jswSafePoseFromKF(kf.address);
   const topPose     = jswSafePoseFromKF(kf.top);
   const impactPose  = jswSafePoseFromKF(kf.impact);
@@ -932,14 +941,41 @@ if (addressPose && topPose && impactPose) {
     metrics.extension.score = 7;
   }
 
-  // ========= 6) TEMPO =========
- if (kf.address && kf.top && kf.impact) {
-  const tempo = scoreTempoRobust(swing.timestamps, kf);
-  metrics.tempo.ratio = tempo;
-  metrics.tempo.score = Math.round(tempo * 20);
+// ========= 6) TEMPO ROBUSTE =========
+const addrIndex   = extractIndex(kf.address);
+const topIndex    = extractIndex(kf.top);
+const impactIndex = extractIndex(kf.impact);
+
+if (addrIndex != null && topIndex != null && impactIndex != null) {
+
+  const backswingFrames = topIndex - addrIndex;
+  const downswingFrames = impactIndex - topIndex;
+
+  const backswingT = backswingFrames / fps;
+  const downswingT = downswingFrames / fps;
+
+  metrics.tempo.backswingT = backswingT;
+  metrics.tempo.downswingT = downswingT;
+
+  const ratio =
+    backswingT > 0 && downswingT > 0
+      ? backswingT / downswingT
+      : 3.0;
+
+  metrics.tempo.ratio = ratio;
+
+  // Score tempo (target 3:1)
+  const tempoScore = jswClamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
+  metrics.tempo.score = Math.round(tempoScore * 10);
+
 } else {
-  metrics.tempo.score = 10;
+  console.warn("⚠️ TEMPO impossible : keyFrames manquants", kf);
+  metrics.tempo.score = 0;
+  metrics.tempo.ratio = 0;
+  metrics.tempo.backswingT = 0;
+  metrics.tempo.downswingT = 0;
 }
+
 
   // ========= 7) BALANCE =========
   if (finishPose && addressPose) {
