@@ -36,33 +36,43 @@ const SwingScorer = (() => {
   // ---------------------------------------------------------
   // 📐 TRIANGLE — stabilité bras/épaules
   // ---------------------------------------------------------
-  function computeTriangle(pose) {
-    const Ls = pose[11], Rs = pose[12];
-    const Lh = pose[15], Rh = pose[16];
+  function computeTriangleStable(pose) {
+  const Ls = pose[11], Rs = pose[12];
+  const Lh = pose[15], Rh = pose[16];
 
-    if (!Ls || !Rs || !Lh || !Rh) return null;
+  if (!Ls || !Rs || !Lh || !Rh) return null;
 
-    const shoulderWidth = dist(Ls, Rs);
+  // Milieu épaules
+  const midShoulders = { x: (Ls.x + Rs.x)/2, y: (Ls.y + Rs.y)/2 };
 
-    const mid = { x: (Ls.x + Rs.x) / 2, y: (Ls.y + Rs.y) / 2 };
-    const handDist = (dist(Lh, mid) + dist(Rh, mid)) / 2;
+  // Distance main ↔ centre épaules (l’échelle est stable)
+  const leftD  = dist(Lh, midShoulders);
+  const rightD = dist(Rh, midShoulders);
 
-    const angle =
-      Math.abs(angleBetween(Ls, Rs) - angleBetween(Lh, Rh));
+  // Taille du triangle
+  const size = (leftD + rightD) / 2;
 
-    return { shoulderWidth, handDist, angle };
-  }
+  return size;
+}
 
-  function scoreTriangle(pose) {
-    const t = computeTriangle(pose);
-    if (!t) return 0;
+function scoreTriangleStable(addr, top, impact) {
+  if (!addr || !top || !impact) return 0;
 
-    const sw = 1 - Math.abs(t.shoulderWidth - 0.25) / 0.25;
-    const hd = 1 - Math.abs(t.handDist - 0.18) / 0.18;
-    const ang = 1 - Math.abs(t.angle - 25) / 25;
+  const base  = computeTriangleStable(addr);
+  const vTop  = computeTriangleStable(top);
+  const vImp  = computeTriangleStable(impact);
 
-    return clamp((sw + hd + ang) / 3, 0, 1); // → normalisé
-  }
+  if (!base || !vTop || !vImp) return 0;
+
+  const deltaTop = Math.abs(vTop - base) / base;
+  const deltaImp = Math.abs(vImp - base) / base;
+
+  const sTop = clamp(1 - deltaTop / 0.15, 0, 1);
+  const sImp = clamp(1 - deltaImp / 0.10, 0, 1);
+
+  return (sTop + sImp) / 2;
+}
+
 
   // ---------------------------------------------------------
   // 🎯 LAG — différence poignet/coude au top
@@ -90,6 +100,43 @@ const SwingScorer = (() => {
     return clamp(1 - diff / 25, 0, 1);
   }
 
+  // ---------------------------------------------------------
+  // compute weight shift
+  // ---------------------------------------------------------
+function computeWeightShift(addr, top, impact) {
+  if (!addr || !top || !impact) return { back: 0, forward: 0 };
+
+  const hipMid = p => ({ x:(p[23].x + p[24].x)/2, y:(p[23].y + p[24].y)/2 });
+  const footMid = p => ({ x:(p[27].x + p[28].x)/2, y:(p[27].y + p[28].y)/2 });
+
+  const h0 = hipMid(addr);
+  const h1 = hipMid(top);
+  const h2 = hipMid(impact);
+  const f0 = footMid(addr);
+
+  const scale = Math.abs(addr[27].x - addr[28].x); // largeur pieds
+  if (scale < 0.02) return { back: 0, forward: 0 };
+
+  const backShift   = (h1.x - h0.x) / scale;
+  const fwdShift    = (h0.x - h2.x) / scale;
+
+  return {
+    back: clamp(backShift, -1, 1),
+    forward: clamp(fwdShift, -1, 1)
+  };
+}
+
+function scoreWeightShift(addr, top, imp) {
+  const W = computeWeightShift(addr, top, imp);
+
+  const sBack = clamp((W.back   - 0.05) / 0.30, 0, 1);
+  const sFwd  = clamp((W.forward - 0.05) / 0.30, 0, 1);
+
+  return (sBack + sFwd) / 2;
+}
+
+
+  
   // ---------------------------------------------------------
   // 🔄 ROTATION — dissociation épaule / hanches
   // ---------------------------------------------------------
@@ -185,18 +232,21 @@ const SwingScorer = (() => {
   // ---------------------------------------------------------
   // 🕒 TEMPO backswing/downsing
   // ---------------------------------------------------------
-  function scoreTempo(timestamps, KF) {
-    const a = KF.address, t = KF.top, i = KF.impact;
-    if (a == null || t == null || i == null) return 0;
+  function scoreTempoRobust(timestamps, KF) {
+  let a = KF.address, t = KF.top, i = KF.impact;
+  if (a == null || t == null || i == null) return 0;
 
-    const tb = timestamps[t] - timestamps[a];
-    const td = timestamps[i] - timestamps[t];
+  let tb = (timestamps[t] - timestamps[a]) / 1000;
+  let td = (timestamps[i] - timestamps[t]) / 1000;
 
-    if (tb <= 0 || td <= 0) return 0;
-    const ratio = tb / td;
+  // Corriger frames manquants
+  if (tb < 0.15 || tb > 2.0) tb = 0.8;  // moyenne humaine
+  if (td < 0.05 || td > 0.6) td = 0.25;
 
-    return clamp(1 - Math.abs(ratio - 3) / 1.5, 0, 1);
-  }
+  const ratio = tb / td;
+  return clamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
+}
+
 
   // ---------------------------------------------------------
   // 🏆 SCORE GLOBAL PONDÉRÉ (/100)
