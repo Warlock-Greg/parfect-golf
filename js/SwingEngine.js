@@ -142,18 +142,28 @@ const SwingEngine = (() => {
         return;
       }
 
-      // ADDRESS → backswing start
-      if (state === "ADDRESS") {
-        if (speedWrist > START_SPEED) {
-          state = "BACKSWING";
-          swingStartTime = timeMs;
-          frames.push(pose);
-          timestamps.push(timeMs);
-          markKeyFrame("backswing", frames.length - 1, pose);
-          return;
-        }
-        return;
-      }
+    // ADDRESS → backswing start
+if (state === "ADDRESS") {
+
+  // Toujours enregistrer la frame
+  frames.push(pose);
+  timestamps.push(timeMs);
+
+  // On attend d’avoir un minimum de frames pour détecter le start
+  if (frames.length < 3) return;
+
+  // Détection démarrage du swing
+  if (speedWrist > START_SPEED) {
+    state = "BACKSWING";
+    swingStartTime = timeMs;
+
+    // On met le keyframe un peu plus tard (index frames.length - 1)
+    markKeyFrame("backswing", frames.length - 1, pose);
+    return;
+  }
+
+  return;
+}
 
      // BACKSWING
 if (state === "BACKSWING") {
