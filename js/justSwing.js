@@ -708,20 +708,29 @@ function scoreWeightShift(addr, top, imp) {
 }
 
 function scoreTempoRobust(timestamps, kf) {
-  const a = kf.address?.index;
-  const t = kf.top?.index;
-  const i = kf.impact?.index;
-  if (a == null || t == null || i == null) return 0;
+  if (!timestamps || !kf.address || !kf.top || !kf.impact) return 0;
 
-  let tb = (timestamps[t] - timestamps[a]) / 1000;
-  let td = (timestamps[i] - timestamps[t]) / 1000;
+  const a = kf.address.index;
+  const t = kf.top.index;
+  const i = kf.impact.index;
 
-  if (tb < 0.15 || tb > 2.0) tb = 0.8;
-  if (td < 0.05 || td > 0.6) td = 0.25;
+  const tA = timestamps[a];
+  const tT = timestamps[t];
+  const tI = timestamps[i];
 
-  const ratio = tb / td;
-  return jswClamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
+  if (!tA || !tT || !tI) return 0;
+
+  const backswing = (tT - tA) / 1000;  // en secondes
+  const downswing = (tI - tT) / 1000;
+
+  if (backswing <= 0 || downswing <= 0) return 0;
+
+  const ratio = backswing / downswing;
+
+  // On normalise autour de 3:1 → score de 0 à 1
+  return Math.max(0, 1 - Math.abs(ratio - 3) / 2);
 }
+
   
 
 // ---------------------------------------------------------
