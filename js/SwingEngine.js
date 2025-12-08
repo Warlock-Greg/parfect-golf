@@ -155,19 +155,30 @@ const SwingEngine = (() => {
         return;
       }
 
-      // BACKSWING
-      if (state === "BACKSWING") {
-        frames.push(pose);
-        timestamps.push(timeMs);
+     // BACKSWING
+if (state === "BACKSWING") {
+  frames.push(pose);
+  timestamps.push(timeMs);
 
-        // détecter TOP = vitesse bras faible + inversion mouvement
-        if (speedWrist < 0.01) {
-          state = "TOP";
-          markKeyFrame("top", frames.length -1, pose);
-          return;
-        }
-        return;
-      }
+  // Anti-faux-positif : attendre au moins 6 frames avant de détecter un TOP
+  if (frames.length > 6) {
+
+    // Vitesse réellement faible
+    const lowSpeed = speedWrist < 0.012;
+
+    // Vérifier que la vitesse était plus élevée juste avant → signe d’un vrai backswing
+    const prevSpeed = dist(prevMidWrist, midWrist) / (dt || 0.033);
+    const momentumDrop = prevSpeed > 0.02 && speedWrist < 0.012;
+
+    if (lowSpeed && momentumDrop) {
+      state = "TOP";
+      markKeyFrame("top", frames.length - 1, pose);
+      return;
+    }
+  }
+
+  return;
+}
 
       // TOP
       if (state === "TOP") {
