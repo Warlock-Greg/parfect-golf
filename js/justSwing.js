@@ -736,10 +736,7 @@ function computeSwingScorePremium(swing) {
   const impactPose  = jswSafePoseFromKF(kf.impact);
   const finishPose  = jswSafePoseFromKF(kf.finish);
 
-    const viewType = jswDetectViewType(addressPose);
-  metrics.viewType = viewType;
-  console.log("👁️ ViewType détecté :", viewType);
-
+ 
 
   // On va stocker toutes les métriques brutes ici
   const metrics = {
@@ -752,6 +749,11 @@ function computeSwingScorePremium(swing) {
     balance: {}
   };
 
+   const viewType = jswDetectViewType(addressPose);
+  metrics.viewType = viewType;
+  console.log("👁️ ViewType détecté :", viewType);
+
+  
   // ========= 1) POSTURE (address) =========
   if (addressPose) {
     const LS = addressPose[11];
