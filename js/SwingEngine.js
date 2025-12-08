@@ -20,7 +20,7 @@ const SwingEngine = (() => {
   // --- paramètres
   const MIN_SWING_MS = 350;           // durée mini
   const START_SPEED = 0.015;          // vitesse poignet = démarrage
-  const IMPACT_SPIKE = 0.06;          // brusque changement pour impact
+  const IMPACT_SPIKE = 0.25;          // brusque changement pour impact
   const FINISH_HOLD_MS = 250;         // stabilité finale
   const MAX_IDLE_MS = 1800;           // reset auto
   const FINISH_TIMEOUT_MS = 600; // 0.6 seconde après le release
@@ -181,7 +181,7 @@ if (state === "BACKSWING") {
   if (frames.length > 6) {
 
     // Vitesse réellement faible
-    const lowSpeed = speedWrist < 0.012;
+    const lowSpeed = speedWrist < 0.05;
 
     // Vérifier que la vitesse était plus élevée juste avant → signe d’un vrai backswing
     const prevSpeed = dist(prevMidWrist, midWrist) / (dt || 0.033);
@@ -203,7 +203,7 @@ if (state === "BACKSWING") {
         timestamps.push(timeMs);
 
         // descente = augmentation vitesse
-        if (speedWrist > 0.02) {
+        if (speedWrist > 0.10) {
           state = "DOWNSWING";
           markKeyFrame("downswing", frames.length - 1, pose);
           return;
