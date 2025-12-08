@@ -60,6 +60,9 @@ const SwingEngine = (() => {
     let lastMotionTime = performance.now();
     let impactDetected = false;
     let releaseStartTime = null;
+    let prevSpeedWrist = 0;
+    let maxBackswingSpeed = 0;
+
 
 
     function reset() {
@@ -173,29 +176,43 @@ if (state === "ADDRESS") {
 }
 
      // BACKSWING
+// Variables globales à ajouter en haut du moteur :
+// let prevSpeedWrist = 0;
+// let maxBackswingSpeed = 0;
+
 if (state === "BACKSWING") {
   frames.push(pose);
   timestamps.push(timeMs);
 
-  // Anti-faux-positif : attendre au moins 6 frames avant de détecter un TOP
-  if (frames.length > 6) {
+  // --- enregistrer le pic de vitesse du backswing ---
+  maxBackswingSpeed = Math.max(maxBackswingSpeed, speedWrist);
 
-    // Vitesse réellement faible
-    const lowSpeed = speedWrist < 0.05;
+  // --- Condition TOP robuste ---
+  // 1) la vitesse a déjà été suffisamment élevée (backswing réel)
+  // 2) puis baisse d'au moins 30 %
+  const speedDrop = (maxBackswingSpeed > 0.10) && (speedWrist < maxBackswingSpeed * 0.7);
 
-    // Vérifier que la vitesse était plus élevée juste avant → signe d’un vrai backswing
-    const prevSpeed = dist(prevMidWrist, midWrist) / (dt || 0.033);
-    const momentumDrop = prevSpeed > 0.02 && speedWrist < 0.012;
+  // --- changement de direction ---
+  const dx = midWrist.x - prevMidWrist.x;
+  const dy = midWrist.y - prevMidWrist.y;
 
-    if (lowSpeed && momentumDrop) {
-      state = "TOP";
-      markKeyFrame("top", frames.length - 1, pose);
-      return;
-    }
+  const prevDx = prevMidWrist.x - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).x;
+  const prevDy = prevMidWrist.y - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).y;
+
+  const directionChange = (dx * prevDx + dy * prevDy) < 0;  
+  // produit scalaire négatif → inversion du mouvement → vrai TOP
+
+  // --- Détection finale du TOP ---
+  if (speedDrop || directionChange) {
+    state = "TOP";
+    markKeyFrame("top", frames.length - 1, pose);
+    return;
   }
 
+  prevSpeedWrist = speedWrist;
   return;
 }
+
 
       // TOP
       if (state === "TOP") {
