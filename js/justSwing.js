@@ -823,65 +823,61 @@ function extractIndex(kf) {
     metrics.posture.score = 14;
   }
 
+
+  
     // ========= 2) ROTATION (address → top) =========
-  if (addressPose && topPose) {
-    const LS0 = addressPose[11];
-    const RS0 = addressPose[12];
-    const LH0 = addressPose[23];
-    const RH0 = addressPose[24];
+  
+  // ========= 2) ROTATION (address → top) =========
+if (addressPose && topPose) {
 
-    const LS1 = topPose[11];
-    const RS1 = topPose[12];
-    const LH1 = topPose[23];
-    const RH1 = topPose[24];
+  const LS0 = addressPose[11], RS0 = addressPose[12];
+  const LH0 = addressPose[23], RH0 = addressPose[24];
+  const LS1 = topPose[11],     RS1 = topPose[12];
+  const LH1 = topPose[23],     RH1 = topPose[24];
 
-    let shoulderRot = 0;
-    let hipRot = 0;
-    let xFactor = 0;
+  let shoulderRot = 0, hipRot = 0, xFactor = 0;
 
-    if (metrics.viewType === "faceOn") {
-      // 🔵 MODE FACE-ON → on estime la rotation via la compression de largeur
-      const shW0 = jswDist(LS0, RS0);
-      const shW1 = jswDist(LS1, RS1);
-      const hipW0 = jswDist(LH0, RH0);
-      const hipW1 = jswDist(LH1, RH1);
+  if (metrics.viewType === "faceOn") {
+    // FACE ON → use width compression
+    const shW0 = jswDist(LS0, RS0);
+    const shW1 = jswDist(LS1, RS1);
+    const hipW0 = jswDist(LH0, RH0);
+    const hipW1 = jswDist(LH1, RH1);
 
-      if (shW0 && shW1) {
-        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
-        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // cos(theta) ~ ratio
-      }
-
-      if (hipW0 && hipW1) {
-        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
-        hipRot = Math.acos(ratioH) * 180 / Math.PI;
-      }
-
-      xFactor = shoulderRot - hipRot;
-    } else {
-      // 🟠 MODE DTL / UNKNOWN → on reste sur l'angle de la ligne épaules/hanches
-      const shAng0 = jswLineAngleDeg(LS0, RS0);
-      const shAng1 = jswLineAngleDeg(LS1, RS1);
-      const hipAng0 = jswLineAngleDeg(LH0, RH0);
-      const hipAng1 = jswLineAngleDeg(LH1, RH1);
-
-      shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
-      hipRot      = jswDegDiff(hipAng0, hipAng1) ?? 0;
-      xFactor     = shoulderRot - hipRot;
+    if (shW0 && shW1) {
+      const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+      shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
     }
 
-    metrics.rotation.shoulderRot = shoulderRot;
-    metrics.rotation.hipRot = hipRot;
-    metrics.rotation.xFactor = xFactor;
+    if (hipW0 && hipW1) {
+      const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+      hipRot = Math.acos(ratioH) * 180 / Math.PI;
+    }
 
-    // Cibles : épaules ~80-100°, hanches ~35-55°, xFactor ~30-50
-    const sScore = jswClamp(1 - Math.abs(shoulderRot - 90)/40, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRot - 45)/25, 0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactor - 40)/25, 0, 1);
-
-    metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
   } else {
-    metrics.rotation.score = 14;
+    // DTL mode fallback
+    const shAng0 = jswLineAngleDeg(LS0, RS0);
+    const shAng1 = jswLineAngleDeg(LS1, RS1);
+    const hipAng0 = jswLineAngleDeg(LH0, RH0);
+    const hipAng1 = jswLineAngleDeg(LH1, RH1);
+    shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
+    hipRot      = jswDegDiff(hipAng0, hipAng1) ?? 0;
   }
+
+  xFactor = shoulderRot - hipRot;
+
+  metrics.rotation.shoulderRot = shoulderRot;
+  metrics.rotation.hipRot = hipRot;
+  metrics.rotation.xFactor = xFactor;
+
+  // Scoring
+  const sScore = jswClamp(1 - Math.abs(shoulderRot - 90)/45, 0, 1);
+  const hScore = jswClamp(1 - Math.abs(hipRot - 45)/25, 0, 1);
+  const xScore = jswClamp(1 - Math.abs(xFactor - 40)/20, 0, 1);
+
+  metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
+}
+
 
 
   // ========= 3) TRIANGLE ROBUSTE =========
