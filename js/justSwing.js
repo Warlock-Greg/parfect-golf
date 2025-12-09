@@ -825,8 +825,7 @@ function extractIndex(kf) {
 
 
   
-    // ========= 2) ROTATION (address → top) =========
-  
+   
   // ========= 2) ROTATION (address → top) =========
 if (addressPose && topPose) {
 
@@ -880,19 +879,51 @@ if (addressPose && topPose) {
 
 
 
-  // ========= 3) TRIANGLE ROBUSTE =========
+// ========= 3) TRIANGLE (radius bras/épaules) =========
 if (addressPose && topPose && impactPose) {
-  const tri = scoreTriangleStable(addressPose, topPose, impactPose);
-  metrics.triangle.score = Math.round(tri * 20);
 
-  metrics.triangle.varTopPct =
-    computeTriangleStable(topPose) / computeTriangleStable(addressPose) - 1;
+  const LS0 = addressPose[11], RS0 = addressPose[12];
+  const LH0 = addressPose[15], RH0 = addressPose[16];
+  const LS1 = topPose[11],     RS1 = topPose[12];
+  const LH1 = topPose[15],     RH1 = topPose[16];
+  const LS2 = impactPose[11],  RS2 = impactPose[12];
+  const LH2 = impactPose[15],  RH2 = impactPose[16];
 
-  metrics.triangle.varImpactPct =
-    computeTriangleStable(impactPose) / computeTriangleStable(addressPose) - 1;
+  // Milieu épaules
+  const sh0 = (LS0 && RS0) ? { x:(LS0.x+RS0.x)/2, y:(LS0.y+RS0.y)/2 } : null;
+  const sh1 = (LS1 && RS1) ? { x:(LS1.x+RS1.x)/2, y:(LS1.y+RS1.y)/2 } : null;
+  const sh2 = (LS2 && RS2) ? { x:(LS2.x+RS2.x)/2, y:(LS2.y+RS2.y)/2 } : null;
+
+  // Milieu mains
+  const h0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
+  const h1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
+  const h2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
+
+  const d0 = (sh0 && h0) ? jswDist(sh0, h0) : null;
+  const d1 = (sh1 && h1) ? jswDist(sh1, h1) : null;
+  const d2 = (sh2 && h2) ? jswDist(sh2, h2) : null;
+
+  const varTop = (d0 && d1) ? Math.abs(d1 - d0)/d0 * 100 : 0;
+  const varImp = (d0 && d2) ? Math.abs(d2 - d0)/d0 * 100 : 0;
+
+  metrics.triangle.radiusAddress = d0;
+  metrics.triangle.radiusTop = d1;
+  metrics.triangle.radiusImpact = d2;
+  metrics.triangle.varTopPct = varTop;
+  metrics.triangle.varImpactPct = varImp;
+
+  // Scoring calibré pour humains :
+  // Top <= 6% = excellent
+  // Impact <= 12% = très bon
+  const scoreTop = jswClamp(1 - varTop / 12, 0, 1);
+  const scoreImp = jswClamp(1 - varImp / 18, 0, 1);
+
+  metrics.triangle.score = Math.round((scoreTop * 0.4 + scoreImp * 0.6) * 20);
+
 } else {
   metrics.triangle.score = 10;
 }
+
 
 
   // ========= 4) WEIGHT SHIFT (hips & pieds) =========
