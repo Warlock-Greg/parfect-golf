@@ -1584,6 +1584,35 @@ function stopRecording() {
     renderFrame(0);
   }
 
+// -------------------------------------------
+//  ⏭️ BOUTON "SWING SUIVANT"
+// -------------------------------------------
+const nextBtn = document.getElementById("swing-review-next");
+
+if (nextBtn) {
+  nextBtn.onclick = () => {
+    console.log("⏭️ Swing suivant → fermeture review & relance Just Swing");
+
+    // 1) Fermer la review
+    const reviewEl = document.getElementById("swing-review");
+    if (reviewEl) reviewEl.style.display = "none";
+
+    // 2) Nettoyer l’écran JustSwing
+    if (window.JustSwing?.stopSession) {
+      JustSwing.stopSession();
+    }
+
+    // 3) Relancer une session propre
+    setTimeout(() => {
+      if (window.JustSwing?.startSession) {
+        JustSwing.startSession();
+      }
+    }, 300);
+  };
+}
+
+
+  
   
   // ---------------------------------------------------------
   //   UI STATUS
