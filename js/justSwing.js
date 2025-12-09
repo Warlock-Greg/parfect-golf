@@ -731,7 +731,51 @@ function scoreTempoRobust(timestamps, kf) {
   return Math.max(0, 1 - Math.abs(ratio - 3) / 2);
 }
 
-  
+  function jswComputeTempoFromSpeed(frames, timestamps, kf) {
+  if (!frames || frames.length < 10) return { bs: null, ds: null, ratio: null };
+
+  // 33 = right wrist index (MediaPipe) → prends ton landmark réel
+  const WR = 16; 
+
+  const speeds = [];
+  for (let i = 1; i < frames.length; i++) {
+    const p0 = frames[i-1][WR];
+    const p1 = frames[i][WR];
+    if (!p0 || !p1) continue;
+
+    const dt = (timestamps[i] - timestamps[i-1]) / 1000;
+    if (dt <= 0) continue;
+
+    const dx = p1.x - p0.x;
+    const dy = p1.y - p0.y;
+    const v = Math.hypot(dx, dy) / dt;
+
+    speeds.push({ i, v });
+  }
+
+  if (speeds.length < 10) return { bs: null, ds: null, ratio: null };
+
+  // 1️⃣ Trouver le TOP = vitesse minimale du backswing
+  const minSpeed = speeds.reduce((a, b) => (b.v < a.v ? b : a));
+  const topIndex = minSpeed.i;
+
+  // 2️⃣ Impact = vitesse maximale dans la zone descendante
+  const impactSpeed = speeds.reduce((a,b)=> (b.v > a.v ? b : a));
+  const impactIndex = impactSpeed.i;
+
+  const addrIndex = kf.address?.index ?? 0;
+
+  // Durée backswing
+  const bs = (timestamps[topIndex] - timestamps[addrIndex]) / 1000;
+
+  // Durée downswing
+  const ds = (timestamps[impactIndex] - timestamps[topIndex]) / 1000;
+
+  const ratio = (bs > 0 && ds > 0) ? bs / ds : null;
+
+  return { bs, ds, ratio };
+}
+
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
@@ -968,39 +1012,21 @@ if (addressPose && topPose && impactPose) {
     metrics.extension.score = 7;
   }
 
-// ========= 6) TEMPO ROBUSTE =========
-const addrIndex   = extractIndex(kf.address);
-const topIndex    = extractIndex(kf.top);
-const impactIndex = extractIndex(kf.impact);
+// ========= 6) TEMPO (via vitesse réelle) =========
+const tempo = jswComputeTempoFromSpeed(swing.frames, swing.timestamps, kf);
 
-if (addrIndex != null && topIndex != null && impactIndex != null) {
+metrics.tempo.backswingT = tempo.bs;
+metrics.tempo.downswingT = tempo.ds;
+metrics.tempo.ratio = tempo.ratio;
 
-  const backswingFrames = topIndex - addrIndex;
-  const downswingFrames = impactIndex - topIndex;
-
-  const backswingT = backswingFrames / fps;
-  const downswingT = downswingFrames / fps;
-
-  metrics.tempo.backswingT = backswingT;
-  metrics.tempo.downswingT = downswingT;
-
-  const ratio =
-    backswingT > 0 && downswingT > 0
-      ? backswingT / downswingT
-      : 3.0;
-
-  metrics.tempo.ratio = ratio;
-
-  // Score tempo (target 3:1)
-  const tempoScore = jswClamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
-  metrics.tempo.score = Math.round(tempoScore * 10);
-
+// Scoring tempo
+if (tempo.ratio != null) {
+  const ideal = 3.0;
+  const diff = Math.abs(tempo.ratio - ideal);
+  const score = jswClamp(1 - diff / 1.5, 0, 1);
+  metrics.tempo.score = Math.round(score * 20);
 } else {
-  console.warn("⚠️ TEMPO impossible : keyFrames manquants", kf);
-  metrics.tempo.score = 0;
-  metrics.tempo.ratio = 0;
-  metrics.tempo.backswingT = 0;
-  metrics.tempo.downswingT = 0;
+  metrics.tempo.score = 10;
 }
 
 
