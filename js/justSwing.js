@@ -240,6 +240,40 @@ let captureArmed = false;
     }, 1000);
   }
 
+function jswGetViewMessage() {
+  const mode = window.JSW_VIEW_MODE || "auto";
+
+  if (mode === "faceon") {
+    return `
+      <div style="text-align:center;">
+        <div style="font-size:2.5rem;">📸</div>
+        <b>Face-On : Place la caméra devant toi</b><br>
+        Mets-toi de plein pied dans le cadre 👣
+      </div>
+    `;
+  }
+
+  if (mode === "dtl") {
+    return `
+      <div style="text-align:center;">
+        <div style="font-size:2.5rem;">📸➡️🏌️</div>
+        <b>Down-The-Line : place la caméra derrière toi</b><br>
+        Centre ton corps et ton club dans le cadre 🎯
+      </div>
+    `;
+  }
+
+  // AUTO
+  return `
+    <div style="text-align:center;">
+      <div style="font-size:2.5rem;">📸</div>
+      Mets-toi de plein pied dans le cadre 👣<br>
+      (Vue détectée automatiquement)
+    </div>
+  `;
+}
+
+  
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
@@ -264,7 +298,8 @@ let captureArmed = false;
   showRoutineStepsText();
 
   routineIndex = 0;
-  showBigMessage(routineStepsAuto[0]);
+  showBigMessage(jswGetViewMessage());
+
 
   if (routineInterval) clearInterval(routineInterval);
 
