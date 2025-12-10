@@ -848,12 +848,40 @@ function scoreTempoRobust(timestamps, kf) {
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
-    // 👁️ Détection de la vue (face-on / DTL) + override utilisateur
-  const viewType =
-    (window.jswViewOverride || "").toLowerCase() ||
-    jswDetectViewType(addressPose) ||
-    "faceOn";
 
+  const fps = swing.fps || 30;
+  const kf = swing.keyFrames || {};
+
+  // -- Helpers --
+  function extractIndex(k) {
+    if (!k) return null;
+    if (typeof k === "number") return k;
+    if (typeof k.index === "number") return k.index;
+    return null;
+  }
+
+  // -- Extract keyframe poses --
+  const addressPose = jswSafePoseFromKF(kf.address);
+  const topPose     = jswSafePoseFromKF(kf.top);
+  const impactPose  = jswSafePoseFromKF(kf.impact);
+  const finishPose  = jswSafePoseFromKF(kf.finish);
+
+  // ---------------------------------------------------------
+  // 👁️ Détection FO/DTL — priorité utilisateur
+  // ---------------------------------------------------------
+  let viewType = "faceOn";
+
+  if (window.jswViewOverride) {
+    viewType = window.jswViewOverride.toLowerCase();
+  } else if (addressPose) {
+    viewType = jswDetectViewType(addressPose) || "faceOn";
+  }
+
+  console.log("👁️ ViewType utilisé pour le scoring :", viewType);
+
+  // ---------------------------------------------------------
+  // INIT STRUCT METRICS
+  // ---------------------------------------------------------
   const metrics = {
     posture: {},
     rotation: {},
@@ -867,25 +895,7 @@ function computeSwingScorePremium(swing) {
 
   console.log("👁️ ViewType utilisé pour le scoring :", viewType);
 
-  
-  const fps = swing.fps || 30;
 
-  const kf = swing.keyFrames || {};
-
-function extractIndex(kf) {
-  if (kf == null) return null;
-  if (typeof kf === "number") return kf;
-  if (typeof kf.index === "number") return kf.index;
-  return null;
-}
-
-  
-  const addressPose = jswSafePoseFromKF(kf.address);
-  const topPose     = jswSafePoseFromKF(kf.top);
-  const impactPose  = jswSafePoseFromKF(kf.impact);
-  const finishPose  = jswSafePoseFromKF(kf.finish);
-
- 
 
 
    const viewType = jswDetectViewType(addressPose);
