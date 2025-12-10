@@ -1,324 +1,213 @@
 // ============================================================================
-//   PARFECT — SWINGSCORER PREMIUM PRO (FORMAT C + SCORE C PONDÉRÉ)
-//   Intégration complète avec SwingEngine PRO
-//   Export global : window.SwingScorer
+//                      SWING SCORER — VERSION PREMIUM PRO 
+//                        Calibrée sur données réelles 2025
 // ============================================================================
+
+window.JSW_VIEW_MODE = "auto"; 
+// valeurs possibles : "auto", "faceon", "dtl"
 
 const SwingScorer = (() => {
 
+  const DEBUG = false;
+  const log = (...m) => DEBUG && console.log("[Scorer]", ...m);
+
   // ---------------------------------------------------------
-  // TOGGLE DEBUG (logs lisibles)
+  //  UTILS
   // ---------------------------------------------------------
-  let DEBUG = false;
-  function log(...msg) {
-    if (DEBUG) console.log("[SwingScorer]", ...msg);
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const dist = (a, b) => (!a || !b) ? 0 : Math.hypot(a.x - b.x, a.y - b.y);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const lineAngle = (A, B) =>
+    (!A || !B) ? 0 : Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
+
+  // ---------------------------------------------------------
+  //  🔍 VIEW TYPE DETECTION
+  // ---------------------------------------------------------
+  function detectView(pAddress) {
+    if (window.JSW_VIEW_MODE === "faceon") return "faceon";
+    if (window.JSW_VIEW_MODE === "dtl") return "dtl";
+
+    const LS = pAddress[11], RS = pAddress[12];
+    if (!LS || !RS) return "faceon";
+
+    // Si la ligne épaules est horizontale → Face-On
+    const angle = Math.abs(lineAngle(LS, RS));
+    return angle < 25 ? "faceon" : "dtl";
   }
 
   // ---------------------------------------------------------
-  // 🔧 UTILS
+  //  ROTATION — compatible FO + DTL
   // ---------------------------------------------------------
-  function clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
+  function computeRotation(addressPose, topPose, view) {
+    const Ls0 = addressPose[11], Rs0 = addressPose[12];
+    const Ls1 = topPose[11], Rs1 = topPose[12];
 
-  function dist(a, b) {
-    if (!a || !b) return 999;
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
+    const Lh0 = addressPose[23], Rh0 = addressPose[24];
+    const Lh1 = topPose[23], Rh1 = topPose[24];
 
-  function angleBetween(A, B) {
-    if (!A || !B) return 0;
-    return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
-  }
+    if (!Ls0 || !Rs0 || !Ls1 || !Rs1) return { shoulder: 0, hip: 0, xFactor: 0, score: 0 };
 
-  // ---------------------------------------------------------
-  // 📐 TRIANGLE — stabilité bras/épaules
-  // ---------------------------------------------------------
-  function computeTriangleStable(pose) {
-  const Ls = pose[11], Rs = pose[12];
-  const Lh = pose[15], Rh = pose[16];
+    if (view === "faceon") {
+      // Face-On rotation: compression horizontale
+      const W0 = dist(Ls0, Rs0);
+      const W1 = dist(Ls1, Rs1);
+      const ratioS = clamp(W1 / W0, 0.1, 1);
 
-  if (!Ls || !Rs || !Lh || !Rh) return null;
+      const shoulder = Math.acos(ratioS) * 180 / Math.PI;
 
-  // Milieu épaules
-  const midShoulders = { x: (Ls.x + Rs.x)/2, y: (Ls.y + Rs.y)/2 };
+      const WH0 = dist(Lh0, Rh0);
+      const WH1 = dist(Lh1, Rh1);
+      const ratioH = clamp(WH1 / WH0, 0.1, 1);
+      const hip = Math.acos(ratioH) * 180 / Math.PI;
 
-  // Distance main ↔ centre épaules (l’échelle est stable)
-  const leftD  = dist(Lh, midShoulders);
-  const rightD = dist(Rh, midShoulders);
+      const xFactor = shoulder - hip;
 
-  // Taille du triangle
-  const size = (leftD + rightD) / 2;
+      const score =
+        (clamp(1 - Math.abs(shoulder - 90) / 40, 0, 1) +
+         clamp(1 - Math.abs(hip - 45) / 25, 0, 1) +
+         clamp(1 - Math.abs(xFactor - 40) / 30, 0, 1)) / 3;
 
-  return size;
-}
-
-function scoreTriangleStable(addr, top, impact) {
-  if (!addr || !top || !impact) return 0;
-
-  const base  = computeTriangleStable(addr);
-  const vTop  = computeTriangleStable(top);
-  const vImp  = computeTriangleStable(impact);
-
-  if (!base || !vTop || !vImp) return 0;
-
-  const deltaTop = Math.abs(vTop - base) / base;
-  const deltaImp = Math.abs(vImp - base) / base;
-
-  const sTop = clamp(1 - deltaTop / 0.15, 0, 1);
-  const sImp = clamp(1 - deltaImp / 0.10, 0, 1);
-
-  return (sTop + sImp) / 2;
-}
-
-
-  // ---------------------------------------------------------
-  // 🎯 LAG — différence poignet/coude au top
-  // ---------------------------------------------------------
-  function scoreLag(pose) {
-    const wrist = pose[15];
-    const elbow = pose[13];
-    if (!wrist || !elbow) return 0;
-    const dy = elbow.y - wrist.y;
-    return clamp((dy - 0.02) / 0.12, 0, 1);
-  }
-
-  // ---------------------------------------------------------
-  // 🔺 PLAN — angle bras/épaule à l’impact
-  // ---------------------------------------------------------
-  function scorePlane(pose) {
-    const wrist = pose[15];
-    const sh = pose[11];
-    if (!wrist || !sh) return 0;
-
-    const ang =
-      Math.abs(angleBetween(sh, wrist));
-
-    const diff = Math.abs(ang - 35);
-    return clamp(1 - diff / 25, 0, 1);
-  }
-
-  // ---------------------------------------------------------
-  // compute weight shift
-  // ---------------------------------------------------------
-function computeWeightShift(addr, top, impact) {
-  if (!addr || !top || !impact) return { back: 0, forward: 0 };
-
-  const hipMid = p => ({ x:(p[23].x + p[24].x)/2, y:(p[23].y + p[24].y)/2 });
-  const footMid = p => ({ x:(p[27].x + p[28].x)/2, y:(p[27].y + p[28].y)/2 });
-
-  const h0 = hipMid(addr);
-  const h1 = hipMid(top);
-  const h2 = hipMid(impact);
-  const f0 = footMid(addr);
-
-  const scale = Math.abs(addr[27].x - addr[28].x); // largeur pieds
-  if (scale < 0.02) return { back: 0, forward: 0 };
-
-  const backShift   = (h1.x - h0.x) / scale;
-  const fwdShift    = (h0.x - h2.x) / scale;
-
-  return {
-    back: clamp(backShift, -1, 1),
-    forward: clamp(fwdShift, -1, 1)
-  };
-}
-
-function scoreWeightShift(addr, top, imp) {
-  const W = computeWeightShift(addr, top, imp);
-
-  const sBack = clamp((W.back   - 0.05) / 0.30, 0, 1);
-  const sFwd  = clamp((W.forward - 0.05) / 0.30, 0, 1);
-
-  return (sBack + sFwd) / 2;
-}
-
-
-  
-  // ---------------------------------------------------------
-  // 🔄 ROTATION — dissociation épaule / hanches
-  // ---------------------------------------------------------
-  function scoreRotation(pose) {
-  const Ls = pose[11], Rs = pose[12];
-  const Lh = pose[23], Rh = pose[24];
-
-  if (!Ls || !Rs || !Lh || !Rh) return 0;
-
-  // 1) Rotation épaules via profondeur (face-on compute)
-  const shoulderDZ = (Rs.z - Ls.z);       // >0 = épaule droite reculée = bon backswing
-  const hipDZ      = (Rh.z - Lh.z);
-
-  // Normalisation (valeurs typiques Mediapipe : 0.02 → 0.12)
-  const shoulderRotDeg = shoulderDZ * 900; // mapping empirique ≈ 0.10 → 90°
-  const hipRotDeg      = hipDZ * 600;      // hanches tournent moins que épaules
-
-  // X-Factor réel
-  const xFactor = shoulderRotDeg - hipRotDeg;
-
-  // Scoring
-  const sScore = clamp(1 - Math.abs(shoulderRotDeg - 90) / 70, 0, 1);
-  const hScore = clamp(1 - Math.abs(hipRotDeg - 45) / 40, 0, 1);
-  const xScore = clamp(1 - Math.abs(xFactor - 40) / 30, 0, 1);
-
-  return clamp((sScore + hScore + xScore) / 3, 0, 1);
-}
-
-
-  // ---------------------------------------------------------
-  // 🎯 ALIGNEMENT ADDRESS — épaules/hanches alignées sur les pieds
-  // ---------------------------------------------------------
-  function scoreAddressAlign(pose) {
-    const Rsh = pose[12], Lsh = pose[11];
-    const Rhip = pose[24], Lhip = pose[23];
-    const Rfoot = pose[28], Lfoot = pose[27];
-
-    if (!Rsh || !Lsh || !Rhip || !Lhip || !Rfoot || !Lfoot) return 0;
-
-    const errR = Math.abs(Rsh.x - Rfoot.x) + Math.abs(Rhip.x - Rfoot.x);
-    const errL = Math.abs(Lsh.x - Lfoot.x) + Math.abs(Lhip.x - Lfoot.x);
-
-    const err = (errR + errL) / 2;
-
-    return clamp(1 - err / 0.25, 0, 1);
-  }
-
-  // ---------------------------------------------------------
-  // 🎯 ALIGNEMENT FINISH — corps au-dessus du pied gauche
-  // ---------------------------------------------------------
-  function scoreFinishAlign(pose) {
-    const Rsh = pose[12], Lsh = pose[11];
-    const Rhip = pose[24], Lhip = pose[23];
-    const Lfoot = pose[27];
-
-    if (!Rsh || !Lsh || !Rhip || !Lhip || !Lfoot) return 0;
-
-    const e1 = Math.abs(Rhip.x - Lfoot.x);
-    const e2 = Math.abs(Rsh.x - Lfoot.x);
-    const e3 = Math.abs(Lhip.x - Lfoot.x);
-    const e4 = Math.abs(Lsh.x - Lfoot.x);
-
-    const avg = (e1 + e2 + e3 + e4) / 4;
-
-    return clamp(1 - avg / 0.25, 0, 1);
-  }
-
-  // ---------------------------------------------------------
-  // 🧠 HEAD STABILITY
-  // ---------------------------------------------------------
-  function scoreHead(frames, KF) {
-    const start = KF.address ?? 0;
-    const end = KF.impact ?? frames.length - 1;
-
-    const head = [];
-
-    for (let i = start; i <= end; i++) {
-      if (frames[i] && frames[i][0]) head.push(frames[i][0]);
+      return { shoulder, hip, xFactor, score: Math.round(score * 20) };
     }
 
-    if (head.length < 5) return 0;
+    // DTL : rotation via mouvement vertical relatif du torse
+    const torso0 = { x: (Ls0.x + Rs0.x) / 2, y: (Ls0.y + Rs0.y) / 2 };
+    const torso1 = { x: (Ls1.x + Rs1.x) / 2, y: (Ls1.y + Rs1.y) / 2 };
 
-    const xs = head.map(h => h.x);
-    const ys = head.map(h => h.y);
+    // Plus le torse "remonte" en DTL, plus tu tournes
+    const deltaY = torso0.y - torso1.y; // négatif = monte
+    const shoulder = clamp(Math.abs(deltaY) * 600, 0, 100); // calibré d'après JSON
+    const hip = shoulder * 0.45;
+    const xFactor = shoulder - hip;
 
-    const dx = Math.max(...xs) - Math.min(...xs);
-    const dy = Math.max(...ys) - Math.min(...ys);
+    const score =
+      (clamp(shoulder / 100, 0, 1) +
+       clamp(hip / 60, 0, 1) +
+       clamp(xFactor / 40, 0, 1)) / 3;
 
-    const move = Math.sqrt(dx*dx + dy*dy);
-    return clamp(1 - move / 0.12, 0, 1);
+    return { shoulder, hip, xFactor, score: Math.round(score * 20) };
   }
 
   // ---------------------------------------------------------
-  // 🕒 TEMPO backswing/downsing
+  //  TRIANGLE — variation bras/torse robuste
   // ---------------------------------------------------------
-  function scoreTempoRobust(timestamps, KF) {
-  let a = KF.address, t = KF.top, i = KF.impact;
-  if (a == null || t == null || i == null) return 0;
+  function computeTriangle(addr, top, impact) {
+    if (!addr || !top || !impact) return { score: 10 };
 
-  let tb = (timestamps[t] - timestamps[a]) / 1000;
-  let td = (timestamps[i] - timestamps[t]) / 1000;
+    const LS0 = addr[11], LH0 = addr[15];
+    const LS1 = top[11],  LH1 = top[15];
+    const LS2 = impact[11], LH2 = impact[15];
 
-  // Corriger frames manquants
-  if (tb < 0.15 || tb > 2.0) tb = 0.8;  // moyenne humaine
-  if (td < 0.05 || td > 0.6) td = 0.25;
+    const d0 = dist(LS0, LH0);
+    const d1 = dist(LS1, LH1);
+    const d2 = dist(LS2, LH2);
 
-  const ratio = tb / td;
-  return clamp(1 - Math.abs(ratio - 3) / 1.2, 0, 1);
-}
+    const varTop = Math.abs(d1 - d0) / (d0 + 1e-6);
+    const varImp = Math.abs(d2 - d0) / (d0 + 1e-6);
 
-
-  // ---------------------------------------------------------
-  // 🏆 SCORE GLOBAL PONDÉRÉ (/100)
-  // ---------------------------------------------------------
-  function computeSwingScorePremium(swing) {
-
-    const F  = swing.frames;
-    const KF = swing.keyFrames;
-    const T  = swing.timestamps;
-
-    if (!F || !KF) return { total: 0 };
-
-    // Key phases
-    const addr = F[KF.address]   || F[0];
-    const top  = F[KF.top]       || addr;
-    const down = F[KF.downswing] || top;
-    const imp  = F[KF.impact]    || F[F.length - 1];
-    const fin  = F[KF.finish]    || F[F.length - 1];
-
-    // Compute all scores (normalized 0–1)
-    const triangle = scoreTriangle(imp);
-    const lag      = scoreLag(top);
-    const plane    = scorePlane(imp);
-    const rotation = scoreRotation(down);
-    const head     = scoreHead(F, KF);
-    const tempo    = scoreTempo(T, KF);
-    const addressA = scoreAddressAlign(addr);
-    const finishA  = scoreFinishAlign(fin);
-
-    // ---------------------------------------------------------
-    // 🧮 PONDÉRATION PRO (total = 100)
-    // ---------------------------------------------------------
-    const WEIGHTS = {
-      triangle: 22,
-      rotation: 20,
-      plane: 15,
-      lag: 10,
-      head: 10,
-      tempo: 8,
-      addressA: 8,
-      finishA: 7
-    };
-
-    const total =
-      triangle * WEIGHTS.triangle +
-      rotation * WEIGHTS.rotation +
-      plane    * WEIGHTS.plane +
-      lag      * WEIGHTS.lag +
-      head     * WEIGHTS.head +
-      tempo    * WEIGHTS.tempo +
-      addressA * WEIGHTS.addressA +
-      finishA  * WEIGHTS.finishA;
-
-    const scoreFinal = Math.round(total);
-
-    log("📊 SCORE PREMIUM =", scoreFinal);
+    const score =
+      (clamp(1 - varTop * 4, 0, 1) +
+       clamp(1 - varImp * 5, 0, 1)) / 2;
 
     return {
-      total: scoreFinal,
-      triangle, lag, plane, rotation, head, tempo, addressA, finishA,
-      keyFrames: KF
+      varTop: varTop * 100,
+      varImpact: varImp * 100,
+      score: Math.round(score * 20)
     };
   }
 
   // ---------------------------------------------------------
-  // EXPORT
+  //  WEIGHT SHIFT — calibré sur amplitudes Mediapipe réelles
   // ---------------------------------------------------------
-  return {
-    compute: computeSwingScorePremium,
-    setDebug: v => (DEBUG = v),
-  };
+  function computeWeightShift(addr, top, impact) {
+    const hips = p => p ? ( { x:(p[23].x+p[24].x)/2, y:(p[23].y+p[24].y)/2 } ) : null;
+    const h0 = hips(addr), h1 = hips(top), h2 = hips(impact);
 
+    if (!h0 || !h1 || !h2) return { score: 10 };
+
+    // Les valeurs Mediapipe tournent entre ±0.03 max en x → recalibrage
+    const shiftBack = h1.x - h0.x;
+    const shiftFwd  = h0.x - h2.x;
+
+    const score =
+      (clamp(Math.abs(shiftBack) / 0.03, 0, 1) +
+       clamp(Math.abs(shiftFwd)  / 0.03, 0, 1)) / 2;
+
+    return {
+      shiftBack,
+      shiftFwd,
+      score: Math.round(score * 15)
+    };
+  }
+
+  // ---------------------------------------------------------
+  //  TEMPO — robuste même si downswing très court
+  // ---------------------------------------------------------
+  function computeTempo(kf, timestamps, fps = 30) {
+    if (!kf.address || !kf.top || !kf.impact) return { score: 10 };
+
+    const a = kf.address.index;
+    const t = kf.top.index;
+    const i = kf.impact.index;
+
+    const backswing = (t - a) / fps;
+    const downswing = (i - t) / fps;
+
+    if (downswing < 0.03) return { backswing, downswing, ratio: 0, score: 5 };
+
+    const ratio = backswing / downswing;
+
+    const score =
+      clamp(1 - Math.abs(ratio - 3) / 2.5, 0, 1);
+
+    return {
+      backswing,
+      downswing,
+      ratio,
+      score: Math.round(score * 10)
+    };
+  }
+
+  // ---------------------------------------------------------
+  //  MAIN — compute scoring
+  // ---------------------------------------------------------
+  function compute(swing) {
+    const F   = swing.frames;
+    const kf  = swing.keyFrames;
+    const T   = swing.timestamps;
+    const fps = 30;
+
+    const addr   = F[kf.address?.index ?? 0];
+    const top    = F[kf.top?.index];
+    const imp    = F[kf.impact?.index];
+    const fin    = F[kf.finish?.index];
+
+    const view = detectView(addr);
+
+    const rotation  = computeRotation(addr, top, view);
+    const triangle  = computeTriangle(addr, top, imp);
+    const weight    = computeWeightShift(addr, top, imp);
+    const tempo     = computeTempo(kf, T, fps);
+
+    const total =
+      rotation.score +
+      triangle.score +
+      weight.score +
+      tempo.score +
+      14 + 7; // posture + extension placeholders
+
+    return {
+      total: Math.round(total),
+      viewType: view,
+      rotation,
+      triangle,
+      weight,
+      tempo
+    };
+  }
+
+  return { compute };
 })();
 
 window.SwingScorer = SwingScorer;
