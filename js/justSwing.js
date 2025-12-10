@@ -896,13 +896,6 @@ function computeSwingScorePremium(swing) {
   console.log("👁️ ViewType utilisé pour le scoring :", viewType);
 
 
-
-
-   const viewType = jswDetectViewType(addressPose);
-  metrics.viewType = viewType;
-  console.log("👁️ ViewType détecté :", viewType);
-
-  
   // ========= 1) POSTURE (address) =========
   if (addressPose) {
     const LS = addressPose[11];
