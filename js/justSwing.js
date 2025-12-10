@@ -848,6 +848,26 @@ function scoreTempoRobust(timestamps, kf) {
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
+    // 👁️ Détection de la vue (face-on / DTL) + override utilisateur
+  const viewType =
+    (window.jswViewOverride || "").toLowerCase() ||
+    jswDetectViewType(addressPose) ||
+    "faceOn";
+
+  const metrics = {
+    posture: {},
+    rotation: {},
+    triangle: {},
+    weightShift: {},
+    extension: {},
+    tempo: {},
+    balance: {},
+    viewType
+  };
+
+  console.log("👁️ ViewType utilisé pour le scoring :", viewType);
+
+  
   const fps = swing.fps || 30;
 
   const kf = swing.keyFrames || {};
@@ -867,16 +887,6 @@ function extractIndex(kf) {
 
  
 
-  // On va stocker toutes les métriques brutes ici
-  const metrics = {
-    posture: {},
-    rotation: {},
-    triangle: {},
-    weightShift: {},
-    extension: {},
-    tempo: {},
-    balance: {}
-  };
 
    const viewType = jswDetectViewType(addressPose);
   metrics.viewType = viewType;
@@ -936,57 +946,77 @@ function extractIndex(kf) {
 
 
   
-   
+  
   // ========= 2) ROTATION (address → top) =========
-if (addressPose && topPose) {
+  if (addressPose && topPose) {
+    const LS0 = addressPose[11];
+    const RS0 = addressPose[12];
+    const LH0 = addressPose[23];
+    const RH0 = addressPose[24];
 
-  const LS0 = addressPose[11], RS0 = addressPose[12];
-  const LH0 = addressPose[23], RH0 = addressPose[24];
-  const LS1 = topPose[11],     RS1 = topPose[12];
-  const LH1 = topPose[23],     RH1 = topPose[24];
+    const LS1 = topPose[11];
+    const RS1 = topPose[12];
+    const LH1 = topPose[23];
+    const RH1 = topPose[24];
 
-  let shoulderRot = 0, hipRot = 0, xFactor = 0;
+    let shoulderRotDeg = 0;
+    let hipRotDeg = 0;
+    let xFactorDeg = 0;
 
-  if (metrics.viewType === "faceOn") {
-    // FACE ON → use width compression
-    const shW0 = jswDist(LS0, RS0);
-    const shW1 = jswDist(LS1, RS1);
-    const hipW0 = jswDist(LH0, RH0);
-    const hipW1 = jswDist(LH1, RH1);
+    // ----- MODE FACE-ON : on utilise la "compression" de largeur épaules/hanches -----
+    if (viewType === "faceOn") {
+      const shW0 = jswDist(LS0, RS0);
+      const shW1 = jswDist(LS1, RS1);
+      const hipW0 = jswDist(LH0, RH0);
+      const hipW1 = jswDist(LH1, RH1);
 
-    if (shW0 && shW1) {
-      const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
-      shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
+      let ratioS = (shW0 && shW1) ? jswClamp(shW1 / shW0, 0.3, 1.0) : 1.0;
+      let ratioH = (hipW0 && hipW1) ? jswClamp(hipW1 / hipW0, 0.3, 1.0) : 1.0;
+
+      // On part de acos(ratio) (proj 2D) et on "amplifie" pour approx 3D
+      const rawS = Math.acos(ratioS) * 180 / Math.PI; // ~0–20° dans tes JSON
+      const rawH = Math.acos(ratioH) * 180 / Math.PI;
+
+      // 🔧 FACTEURS d’amplification calibrés sur tes swings
+      shoulderRotDeg = rawS * 4.5;  // épaules → vise 70–100° si tu tournes bien
+      hipRotDeg      = rawH * 4.0;  // hanches → ~35–60°
+      xFactorDeg     = shoulderRotDeg - hipRotDeg;
+
+    } else {
+      // ----- MODE DTL (ou inconnu) : on utilise l’angle de la ligne épaules/hanches -----
+      const shAng0 = jswLineAngleDeg(LS0, RS0);
+      const shAng1 = jswLineAngleDeg(LS1, RS1);
+      const hipAng0 = jswLineAngleDeg(LH0, RH0);
+      const hipAng1 = jswLineAngleDeg(LH1, RH1);
+
+      const dShoulder = jswDegDiff(shAng0, shAng1) ?? 0;
+      const dHip      = jswDegDiff(hipAng0, hipAng1) ?? 0;
+
+      shoulderRotDeg = dShoulder;
+      hipRotDeg      = dHip;
+      xFactorDeg     = shoulderRotDeg - hipRotDeg;
     }
 
-    if (hipW0 && hipW1) {
-      const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
-      hipRot = Math.acos(ratioH) * 180 / Math.PI;
-    }
+    metrics.rotation.shoulderRot = shoulderRotDeg;
+    metrics.rotation.hipRot      = hipRotDeg;
+    metrics.rotation.xFactor     = xFactorDeg;
 
+    // 🎯 Cibles "pros" (expressées en degrés *proxy*)
+    // épaules ~80–100°, hanches ~35–55°, X-Factor ~30–50°
+    const sScore = jswClamp(1 - Math.abs(shoulderRotDeg - 90) / 45, 0, 1);
+    const hScore = jswClamp(1 - Math.abs(hipRotDeg      - 45) / 25, 0, 1);
+    const xScore = jswClamp(1 - Math.abs(xFactorDeg     - 40) / 25, 0, 1);
+
+    metrics.rotation.score = Math.round(((sScore + hScore + xScore) / 3) * 20);
   } else {
-    // DTL mode fallback
-    const shAng0 = jswLineAngleDeg(LS0, RS0);
-    const shAng1 = jswLineAngleDeg(LS1, RS1);
-    const hipAng0 = jswLineAngleDeg(LH0, RH0);
-    const hipAng1 = jswLineAngleDeg(LH1, RH1);
-    shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
-    hipRot      = jswDegDiff(hipAng0, hipAng1) ?? 0;
+    // Pas assez d’info → note "neutre"
+    metrics.rotation = metrics.rotation || {};
+    metrics.rotation.score = 10;
+    metrics.rotation.shoulderRot = null;
+    metrics.rotation.hipRot = null;
+    metrics.rotation.xFactor = null;
   }
 
-  xFactor = shoulderRot - hipRot;
-
-  metrics.rotation.shoulderRot = shoulderRot;
-  metrics.rotation.hipRot = hipRot;
-  metrics.rotation.xFactor = xFactor;
-
-  // Scoring
-  const sScore = jswClamp(1 - Math.abs(shoulderRot - 90)/45, 0, 1);
-  const hScore = jswClamp(1 - Math.abs(hipRot - 45)/25, 0, 1);
-  const xScore = jswClamp(1 - Math.abs(xFactor - 40)/20, 0, 1);
-
-  metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
-}
 
 
 
