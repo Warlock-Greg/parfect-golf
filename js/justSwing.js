@@ -175,32 +175,64 @@ let captureArmed = false;
   //   BOUTON START + COUNTDOWN
   // ---------------------------------------------------------
   function showStartButton() {
-    if (!bigMsgEl) return;
-    state = JSW_STATE.WAITING_START;
-    updateUI();
+  if (!bigMsgEl) return;
+  state = JSW_STATE.WAITING_START;
+  updateUI();
 
+  bigMsgEl.innerHTML = `
+    <button id="jsw-start-btn" style="
+      background:#00ff99;
+      color:#111;
+      border:none;
+      border-radius:16px;
+      padding:16px 32px;
+      font-size:1.4rem;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 8px 20px rgba(0,255,153,0.4);
+    ">
+      🎬 Démarrer le swing
+    </button>
+  `;
+  bigMsgEl.style.opacity = 1;
+
+  const btn = document.getElementById("jsw-start-btn");
+  if (!btn) return;
+
+  btn.onclick = () => {
+    // 👉 Étape 1 — Choix DTL / Face-On
     bigMsgEl.innerHTML = `
-      <button id="jsw-start-btn" style="
-        background:#00ff99;
-        color:#111;
-        border:none;
-        border-radius:16px;
-        padding:16px 32px;
-        font-size:1.4rem;
-        font-weight:700;
-        cursor:pointer;
-        box-shadow:0 8px 20px rgba(0,255,153,0.4);
-      ">
-        🎬 Démarrer le swing
-      </button>
-    `;
-    bigMsgEl.style.opacity = 1;
+      <div style="font-size:1.3rem;margin-bottom:12px;color:#fff;">
+        📐 Où est placée la caméra ?
+      </div>
+      <button id="jsw-view-face" style="
+        background:#4ade80; padding:14px 26px;
+        font-size:1.2rem; border-radius:12px;
+        margin:8px; cursor:pointer; border:none;
+      ">📸 Face-On</button>
 
-    const btn = document.getElementById("jsw-start-btn");
-    if (btn) {
-      btn.onclick = startCountdown;
-    }
-  }
+      <button id="jsw-view-dtl" style="
+        background:#60a5fa; padding:14px 26px;
+        font-size:1.2rem; border-radius:12px;
+        margin:8px; cursor:pointer; border:none;
+      ">🎥 Down-The-Line</button>
+    `;
+
+    // 👉 Gestion des clics
+    document.getElementById("jsw-view-face").onclick = () => {
+      window.jswViewType = "faceOn";
+      console.log("📐 Vue sélectionnée : FACE-ON");
+      startCountdown();
+    };
+
+    document.getElementById("jsw-view-dtl").onclick = () => {
+      window.jswViewType = "dtl";
+      console.log("📐 Vue sélectionnée : DTL");
+      startCountdown();
+    };
+  };
+}
+
 
   function startCountdown() {
     if (!bigMsgEl) return;
