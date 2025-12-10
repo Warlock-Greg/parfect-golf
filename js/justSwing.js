@@ -848,55 +848,100 @@ function scoreTempoRobust(timestamps, kf) {
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
-
   const fps = swing.fps || 30;
+  const frames = swing.frames || [];
   const kf = swing.keyFrames || {};
 
-  // -- Helpers --
-  function extractIndex(k) {
-    if (!k) return null;
-    if (typeof k === "number") return k;
-    if (typeof k.index === "number") return k.index;
-    return null;
+  // -------------------------------------
+  // Helpers locaux
+  // -------------------------------------
+  function jswClamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
   }
 
-  // -- Extract keyframe poses --
+  function jswDist(a, b) {
+    if (!a || !b) return null;
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    return Math.hypot(dx, dy);
+  }
+
+  function jswLineAngleDeg(a, b) {
+    if (!a || !b) return null;
+    return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+  }
+
+  function jswDegDiff(a, b) {
+    if (a == null || b == null) return null;
+    let d = Math.abs(a - b);
+    if (d > 180) d = 360 - d;
+    return d;
+  }
+
+  function jswSafePoseFromKF(kfEntry) {
+    if (kfEntry == null) return null;
+    let idx = null;
+    if (typeof kfEntry === "number") {
+      idx = kfEntry;
+    } else if (typeof kfEntry.index === "number") {
+      idx = kfEntry.index;
+    }
+    if (idx == null || !frames[idx]) return null;
+    return frames[idx];
+  }
+
+  // 🌍 Détection automatique Face-On / DTL
+  function jswDetectViewType(addressPose) {
+    if (!addressPose) return "faceOn";
+
+    const nose = addressPose[0];
+    const Ls = addressPose[11];
+    const Rs = addressPose[12];
+
+    if (!nose || !Ls || !Rs) return "faceOn";
+
+    const shoulderWidth = Math.abs(Ls.x - Rs.x);
+    if (!shoulderWidth) return "faceOn";
+
+    const midX = (Ls.x + Rs.x) / 2;
+    const noseOffset = Math.abs(nose.x - midX);
+    const ratio = noseOffset / shoulderWidth;
+
+    // Si le nez est pile au milieu des épaules → plutôt DTL
+    // Si le nez est décalé (profil) → plutôt Face-on
+    return ratio < 0.25 ? "dtl" : "faceOn";
+  }
+
+  // -------------------------------------
+  // Récup des poses clés
+  // -------------------------------------
   const addressPose = jswSafePoseFromKF(kf.address);
   const topPose     = jswSafePoseFromKF(kf.top);
   const impactPose  = jswSafePoseFromKF(kf.impact);
   const finishPose  = jswSafePoseFromKF(kf.finish);
 
-  // ---------------------------------------------------------
-  // 👁️ Détection FO/DTL — priorité utilisateur
-  // ---------------------------------------------------------
-  let viewType = "faceOn";
+  // 👁️ ViewType = override user > auto-detect > faceOn
+  const viewType =
+    (window.jswViewOverride || "").toLowerCase() ||
+    jswDetectViewType(addressPose) ||
+    "faceOn";
 
-  if (window.jswViewOverride) {
-    viewType = window.jswViewOverride.toLowerCase();
-  } else if (addressPose) {
-    viewType = jswDetectViewType(addressPose) || "faceOn";
-  }
-
-  console.log("👁️ ViewType utilisé pour le scoring :", viewType);
-
-  // ---------------------------------------------------------
-  // INIT STRUCT METRICS
-  // ---------------------------------------------------------
   const metrics = {
-    posture: {},
-    rotation: {},
-    triangle: {},
+    posture:   {},
+    rotation:  {},
+    triangle:  {},
     weightShift: {},
     extension: {},
-    tempo: {},
-    balance: {},
+    tempo:     {},
+    balance:   {},
     viewType
   };
 
   console.log("👁️ ViewType utilisé pour le scoring :", viewType);
 
-
-  // ========= 1) POSTURE (address) =========
+  // =====================================================
+  // 1) POSTURE (Address)
+  // =====================================================
   if (addressPose) {
     const LS = addressPose[11];
     const RS = addressPose[12];
@@ -905,52 +950,52 @@ function computeSwingScorePremium(swing) {
     const LA = addressPose[27];
     const RA = addressPose[28];
 
-    // "colonne vertébrale" = milieu hanches → milieu épaules
     const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y:(LH.y + RH.y)/2 } : null;
     const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
 
-    let flexionDeg = 35; // fallback
+    let flexionDeg = 30; // fallback
+
     if (hipsMid && shMid) {
-      // vecteur hanches -> épaules
-      const vx = shMid.x - hipsMid.x;
-      const vy = shMid.y - hipsMid.y;
-      const ang = Math.atan2(vy, vx); // rad
-      // angle par rapport à la verticale (axe Y)
-      const angFromVertical = Math.abs( (ang * 180/Math.PI) - 90 );
-      flexionDeg = angFromVertical; // typiquement ~30-45°
+      // vecteur épaules → hanches (pour avoir un Y positif vers le bas)
+      const vx = hipsMid.x - shMid.x;
+      const vy = hipsMid.y - shMid.y;
+      const norm = Math.hypot(vx, vy) || 1;
+      const vyNorm = vy / norm;
+
+      // angle entre la colonne et la verticale (0,1)
+      // cos(theta) = vyNorm
+      const theta = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
+      // 0° = vertical, 30-45° = flexion "athlétique"
+      flexionDeg = theta;
     }
 
-    // ratio pieds / épaules
-    const feetWidth = jswDist(LA, RA);
-    const shoulderWidth = jswDist(LS, RS);
+    const feetWidth     = (LA && RA) ? jswDist(LA, RA) : null;
+    const shoulderWidth = (LS && RS) ? jswDist(LS, RS) : null;
     let feetShoulderRatio = 1.0;
     if (feetWidth && shoulderWidth) {
       feetShoulderRatio = feetWidth / shoulderWidth;
     }
 
-    // différentiel alignement épaules / hanches
     const shoulderAngle = jswLineAngleDeg(LS, RS);
     const hipAngle      = jswLineAngleDeg(LH, RH);
-    const alignDiff = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
+    const alignDiff     = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
 
-    metrics.posture.flexionDeg = flexionDeg;
+    metrics.posture.flexionDeg        = flexionDeg;
     metrics.posture.feetShoulderRatio = feetShoulderRatio;
-    metrics.posture.alignDiff = alignDiff;
+    metrics.posture.alignDiff         = alignDiff;
 
-    // Scoring posture (target ~35°, ratio ~1.2, diff ~0°)
-    const flexScore = jswClamp(1 - Math.abs(flexionDeg - 35)/25, 0, 1);
-    const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2)/0.6, 0, 1);
+    const flexScore  = jswClamp(1 - Math.abs(flexionDeg - 35)/25, 0, 1);
+    const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2)/0.7, 0, 1);
     const alignScore = jswClamp(1 - alignDiff/20, 0, 1);
 
     metrics.posture.score = Math.round((flexScore + ratioScore + alignScore)/3 * 20);
   } else {
-    metrics.posture.score = 14;
+    metrics.posture.score = 10;
   }
 
-
-  
-  
-  // ========= 2) ROTATION (address → top) =========
+  // =====================================================
+  // 2) ROTATION (Address → Top)  ⭐ FIX FO + DTL
+  // =====================================================
   if (addressPose && topPose) {
     const LS0 = addressPose[11];
     const RS0 = addressPose[12];
@@ -962,146 +1007,148 @@ function computeSwingScorePremium(swing) {
     const LH1 = topPose[23];
     const RH1 = topPose[24];
 
-    let shoulderRotDeg = 0;
-    let hipRotDeg = 0;
-    let xFactorDeg = 0;
+    let shoulderRot = 0;
+    let hipRot      = 0;
+    let xFactor     = 0;
 
-    // ----- MODE FACE-ON : on utilise la "compression" de largeur épaules/hanches -----
-    if (viewType === "faceOn") {
-      const shW0 = jswDist(LS0, RS0);
-      const shW1 = jswDist(LS1, RS1);
-      const hipW0 = jswDist(LH0, RH0);
-      const hipW1 = jswDist(LH1, RH1);
+    const view = viewType.toLowerCase();
 
-      let ratioS = (shW0 && shW1) ? jswClamp(shW1 / shW0, 0.3, 1.0) : 1.0;
-      let ratioH = (hipW0 && hipW1) ? jswClamp(hipW1 / hipW0, 0.3, 1.0) : 1.0;
+    if (view === "faceon" || view === "face_on" || view === "face-on") {
+      // 🔵 FACE-ON : on utilise la "compression" de la largeur
+      const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
+      const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
+      const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
+      const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
 
-      // On part de acos(ratio) (proj 2D) et on "amplifie" pour approx 3D
-      const rawS = Math.acos(ratioS) * 180 / Math.PI; // ~0–20° dans tes JSON
-      const rawH = Math.acos(ratioH) * 180 / Math.PI;
+      if (shW0 && shW1) {
+        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // 0 → face caméra, 90 → profil
+      }
 
-      // 🔧 FACTEURS d’amplification calibrés sur tes swings
-      shoulderRotDeg = rawS * 4.5;  // épaules → vise 70–100° si tu tournes bien
-      hipRotDeg      = rawH * 4.0;  // hanches → ~35–60°
-      xFactorDeg     = shoulderRotDeg - hipRotDeg;
+      if (hipW0 && hipW1) {
+        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+        hipRot = Math.acos(ratioH) * 180 / Math.PI;
+      }
 
+      xFactor = shoulderRot - hipRot;
     } else {
-      // ----- MODE DTL (ou inconnu) : on utilise l’angle de la ligne épaules/hanches -----
+      // 🟠 DTL : on utilise la variation d'angle de la ligne épaules / hanches
       const shAng0 = jswLineAngleDeg(LS0, RS0);
       const shAng1 = jswLineAngleDeg(LS1, RS1);
       const hipAng0 = jswLineAngleDeg(LH0, RH0);
       const hipAng1 = jswLineAngleDeg(LH1, RH1);
 
-      const dShoulder = jswDegDiff(shAng0, shAng1) ?? 0;
-      const dHip      = jswDegDiff(hipAng0, hipAng1) ?? 0;
+      const dSh = jswDegDiff(shAng0, shAng1) ?? 0;
+      const dHip = jswDegDiff(hipAng0, hipAng1) ?? 0;
 
-      shoulderRotDeg = dShoulder;
-      hipRotDeg      = dHip;
-      xFactorDeg     = shoulderRotDeg - hipRotDeg;
+      shoulderRot = dSh;
+      hipRot      = dHip;
+      xFactor     = shoulderRot - hipRot;
     }
 
-    metrics.rotation.shoulderRot = shoulderRotDeg;
-    metrics.rotation.hipRot      = hipRotDeg;
-    metrics.rotation.xFactor     = xFactorDeg;
+    metrics.rotation.shoulderRot = shoulderRot;
+    metrics.rotation.hipRot      = hipRot;
+    metrics.rotation.xFactor     = xFactor;
 
-    // 🎯 Cibles "pros" (expressées en degrés *proxy*)
-    // épaules ~80–100°, hanches ~35–55°, X-Factor ~30–50°
-    const sScore = jswClamp(1 - Math.abs(shoulderRotDeg - 90) / 45, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRotDeg      - 45) / 25, 0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactorDeg     - 40) / 25, 0, 1);
+    // 🎯 Cibles :
+    //   Face-On : épaules ~70-100°, hanches ~30-50°, X-Factor ~20-50°
+    //   DTL : diff d'angle plus modeste (on assouplit un peu)
+    const targetShoulder = (view === "faceon" ? 90 : 50);
+    const targetHip      = (view === "faceon" ? 45 : 25);
+    const targetX        = (view === "faceon" ? 35 : 20);
 
-    metrics.rotation.score = Math.round(((sScore + hScore + xScore) / 3) * 20);
+    const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/45, 0, 1);
+    const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/25,      0, 1);
+    const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/30,        0, 1);
+
+    metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
   } else {
-    // Pas assez d’info → note "neutre"
-    metrics.rotation = metrics.rotation || {};
     metrics.rotation.score = 10;
-    metrics.rotation.shoulderRot = null;
-    metrics.rotation.hipRot = null;
-    metrics.rotation.xFactor = null;
   }
 
+  // =====================================================
+  // 3) TRIANGLE (address / top / impact)
+  // =====================================================
+  if (addressPose && topPose && impactPose) {
+    const LS0 = addressPose[11];
+    const LH0 = addressPose[15]; // poignet lead (gauche droitier)
+    const LS1 = topPose[11];
+    const LH1 = topPose[15];
+    const LS2 = impactPose[11];
+    const LH2 = impactPose[15];
 
+    const d0 = jswDist(LS0, LH0);
+    const d1 = jswDist(LS1, LH1);
+    const d2 = jswDist(LS2, LH2);
 
+    const varTop = (d0 && d1) ? Math.abs(d1 - d0)/d0 * 100 : 0;
+    const varImp = (d0 && d2) ? Math.abs(d2 - d0)/d0 * 100 : 0;
 
-// ========= 3) TRIANGLE (radius bras/épaules) =========
-if (addressPose && topPose && impactPose) {
+    metrics.triangle.dAddress     = d0;
+    metrics.triangle.dTop         = d1;
+    metrics.triangle.dImpact      = d2;
+    metrics.triangle.varTopPct    = varTop;
+    metrics.triangle.varImpactPct = varImp;
 
-  const LS0 = addressPose[11], RS0 = addressPose[12];
-  const LH0 = addressPose[15], RH0 = addressPose[16];
-  const LS1 = topPose[11],     RS1 = topPose[12];
-  const LH1 = topPose[15],     RH1 = topPose[16];
-  const LS2 = impactPose[11],  RS2 = impactPose[12];
-  const LH2 = impactPose[15],  RH2 = impactPose[16];
+    const scoreTop = jswClamp(1 - varTop/15, 0, 1);  // <5-7% très bien
+    const scoreImp = jswClamp(1 - varImp/10, 0, 1);  // impact plus strict
+    metrics.triangle.score = Math.round((scoreTop + scoreImp)/2 * 15);
+  } else {
+    metrics.triangle.score = 10;
+  }
 
-  // Milieu épaules
-  const sh0 = (LS0 && RS0) ? { x:(LS0.x+RS0.x)/2, y:(LS0.y+RS0.y)/2 } : null;
-  const sh1 = (LS1 && RS1) ? { x:(LS1.x+RS1.x)/2, y:(LS1.y+RS1.y)/2 } : null;
-  const sh2 = (LS2 && RS2) ? { x:(LS2.x+RS2.x)/2, y:(LS2.y+RS2.y)/2 } : null;
+  // =====================================================
+  // 4) WEIGHT SHIFT (hips & pieds)
+  // =====================================================
+  if (addressPose && topPose && impactPose) {
+    const LH0 = addressPose[23], RH0 = addressPose[24];
+    const LH1 = topPose[23],     RH1 = topPose[24];
+    const LH2 = impactPose[23],  RH2 = impactPose[24];
+    const LA0 = addressPose[27], RA0 = addressPose[28];
 
-  // Milieu mains
-  const h0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
-  const h1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
-  const h2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
+    const hips0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
+    const hips1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
+    const hips2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
+    const feet0 = (LA0 && RA0) ? { x:(LA0.x+RA0.x)/2, y:(LA0.y+RA0.y)/2 } : null;
 
-  const d0 = (sh0 && h0) ? jswDist(sh0, h0) : null;
-  const d1 = (sh1 && h1) ? jswDist(sh1, h1) : null;
-  const d2 = (sh2 && h2) ? jswDist(sh2, h2) : null;
+    let shiftBack = 0, shiftFwd = 0;
+    if (hips0 && hips1) {
+      shiftBack = hips1.x - hips0.x;
+    }
+    if (hips0 && hips2) {
+      shiftFwd = hips0.x - hips2.x;
+    }
 
-  const varTop = (d0 && d1) ? Math.abs(d1 - d0)/d0 * 100 : 0;
-  const varImp = (d0 && d2) ? Math.abs(d2 - d0)/d0 * 100 : 0;
+    metrics.weightShift.shiftBack = shiftBack;
+    metrics.weightShift.shiftFwd  = shiftFwd;
 
-  metrics.triangle.radiusAddress = d0;
-  metrics.triangle.radiusTop = d1;
-  metrics.triangle.radiusImpact = d2;
-  metrics.triangle.varTopPct = varTop;
-  metrics.triangle.varImpactPct = varImp;
+    const backScore = jswClamp((Math.abs(shiftBack) - 0.01)/0.12, 0, 1);
+    const fwdScore  = jswClamp((Math.abs(shiftFwd) - 0.01)/0.12, 0, 1);
 
-  // Scoring calibré pour humains :
-  // Top <= 6% = excellent
-  // Impact <= 12% = très bon
-  const scoreTop = jswClamp(1 - varTop / 12, 0, 1);
-  const scoreImp = jswClamp(1 - varImp / 18, 0, 1);
+    metrics.weightShift.score = Math.round((backScore + fwdScore)/2 * 15);
+  } else {
+    metrics.weightShift.score = 10;
+  }
 
-  metrics.triangle.score = Math.round((scoreTop * 0.4 + scoreImp * 0.6) * 20);
-
-} else {
-  metrics.triangle.score = 10;
-}
-
-
-
-  // ========= 4) WEIGHT SHIFT (hips & pieds) =========
- if (addressPose && topPose && impactPose) {
-  const w = computeWeightShift(addressPose, topPose, impactPose);
-
-  metrics.weightShift.shiftBack = w.back;
-  metrics.weightShift.shiftFwd  = w.forward;
-
-  const scoreWS = scoreWeightShift(addressPose, topPose, impactPose);
-  metrics.weightShift.score = Math.round(scoreWS * 20);
-} else {
-  metrics.weightShift.score = 10;
-}
-
-  // ========= 5) EXTENSION & FINISH =========
+  // =====================================================
+  // 5) EXTENSION & FINISH
+  // =====================================================
   if (impactPose && finishPose) {
-    const LS_imp = impactPose[11];
-    const LH_imp = impactPose[15];
-    const LS_fin = finishPose[11];
-    const LH_fin = finishPose[15];
+    const LS_imp  = impactPose[11];
+    const LH_imp  = impactPose[15];
+    const LS_fin  = finishPose[11];
+    const LH_fin  = finishPose[15];
     const headImp = impactPose[0];
     const headFin = finishPose[0];
 
-    const extImpact = jswDist(LS_imp, LH_imp); // bras "tendu"
+    const extImpact = jswDist(LS_imp, LH_imp);
     const extFinish = jswDist(LS_fin, LH_fin);
 
     metrics.extension.extImpact = extImpact;
     metrics.extension.extFinish = extFinish;
 
-    // cible : extension "longue" (>= 0.28)
     const extScore = extImpact ? jswClamp((extImpact - 0.18)/0.15, 0, 1) : 0.6;
 
-    // équilibre finish via mouvement tête
     const headMove = (headImp && headFin) ? jswDist(headImp, headFin) : 0.02;
     metrics.extension.headMove = headMove;
 
@@ -1112,25 +1159,39 @@ if (addressPose && topPose && impactPose) {
     metrics.extension.score = 7;
   }
 
-// ========= 6) TEMPO (via vitesse réelle) =========
-const tempo = jswComputeTempoFromSpeed(swing.frames, swing.timestamps, kf);
+  // =====================================================
+  // 6) TEMPO
+  // =====================================================
+  if (kf.address && kf.top && kf.impact && swing.timestamps) {
+    const addrIdx   = typeof kf.address.index === "number" ? kf.address.index : kf.address;
+    const topIdx    = typeof kf.top.index     === "number" ? kf.top.index     : kf.top;
+    const impactIdx = typeof kf.impact.index  === "number" ? kf.impact.index  : kf.impact;
 
-metrics.tempo.backswingT = tempo.bs;
-metrics.tempo.downswingT = tempo.ds;
-metrics.tempo.ratio = tempo.ratio;
+    const T = swing.timestamps;
+    if (T[addrIdx] != null && T[topIdx] != null && T[impactIdx] != null) {
+      const tb = (T[topIdx]    - T[addrIdx]) / 1000; // ms → s
+      const td = (T[impactIdx] - T[topIdx])  / 1000;
 
-// Scoring tempo
-if (tempo.ratio != null) {
-  const ideal = 3.0;
-  const diff = Math.abs(tempo.ratio - ideal);
-  const score = jswClamp(1 - diff / 1.5, 0, 1);
-  metrics.tempo.score = Math.round(score * 20);
-} else {
-  metrics.tempo.score = 10;
-}
+      const backswingT = tb > 0 ? tb : 0;
+      const downswingT = td > 0 ? td : 0;
+      const ratio = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
 
+      metrics.tempo.backswingT = backswingT;
+      metrics.tempo.downswingT = downswingT;
+      metrics.tempo.ratio      = ratio;
 
-  // ========= 7) BALANCE =========
+      const tempoScore = jswClamp(1 - Math.abs(ratio - 3)/1.2, 0, 1);
+      metrics.tempo.score = Math.round(tempoScore * 10);
+    } else {
+      metrics.tempo.score = 7;
+    }
+  } else {
+    metrics.tempo.score = 7;
+  }
+
+  // =====================================================
+  // 7) BALANCE
+  // =====================================================
   if (finishPose && addressPose) {
     const hipsAddr = (() => {
       const LH = addressPose[23], RH = addressPose[24];
@@ -1157,32 +1218,34 @@ if (tempo.ratio != null) {
     }
 
     metrics.balance.headOverHips = headOverHips;
-    metrics.balance.finishMove = finishMove;
+    metrics.balance.finishMove   = finishMove;
 
-    const headScore   = headOverHips ? 1 : 0.4;
-    const moveScore   = jswClamp(1 - finishMove/0.25, 0, 1);
+    const headScore = headOverHips ? 1 : 0.4;
+    const moveScore = jswClamp(1 - finishMove/0.25, 0, 1);
+
     metrics.balance.score = Math.round((headScore*0.5 + moveScore*0.5) * 10);
-
   } else {
     metrics.balance.score = 7;
   }
 
-  // ========= TOTAL =========
-  const postureScore   = metrics.posture.score   ?? 0;
-  const rotationScore  = metrics.rotation.score  ?? 0;
-  const triangleScore  = metrics.triangle.score  ?? 0;
+  // =====================================================
+  // 8) TOTAL
+  // =====================================================
+  const postureScore   = metrics.posture.score    ?? 0;
+  const rotationScore  = metrics.rotation.score   ?? 0;
+  const triangleScore  = metrics.triangle.score   ?? 0;
   const weightScore    = metrics.weightShift.score ?? 0;
-  const extensionScore = metrics.extension.score ?? 0;
-  const tempoScore     = metrics.tempo.score     ?? 0;
-  const balanceScore   = metrics.balance.score   ?? 0;
+  const extensionScore = metrics.extension.score  ?? 0;
+  const tempoScore     = metrics.tempo.score      ?? 0;
+  const balanceScore   = metrics.balance.score    ?? 0;
 
   const total =
-    postureScore +
-    rotationScore +
-    triangleScore +
-    weightScore +
+    postureScore   +
+    rotationScore  +
+    triangleScore  +
+    weightScore    +
     extensionScore +
-    tempoScore +
+    tempoScore     +
     balanceScore;
 
   return {
@@ -1198,76 +1261,6 @@ if (tempo.ratio != null) {
   };
 }
 
-// Patch : rendre dist() disponible dans le breakdown premium
-function dist(a, b) {
-  if (!a || !b) return null;
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.hypot(dx, dy);
-}
-
-  function jswDumpLandmarksJSON(swing) {
-  const frames = swing.frames || [];
-  const ts = swing.timestamps || [];
-  const KF = swing.keyFrames || {};
-
-  const dump = {
-    meta: {
-      totalFrames: frames.length,
-      keyframes: {
-        address: KF.address?.index ?? null,
-        backswing: KF.backswing?.index ?? null,
-        top: KF.top?.index ?? null,
-        downswing: KF.downswing?.index ?? null,
-        impact: KF.impact?.index ?? null,
-        release: KF.release?.index ?? null,
-        finish: KF.finish?.index ?? null,
-      }
-    },
-    frames: []
-  };
-
-  for (let i = 0; i < frames.length; i++) {
-    const frameObj = {
-      index: i,
-      timestamp: ts[i] ?? null,
-      landmarks: []
-    };
-
-    const lm = frames[i];
-    if (!lm) {
-      dump.frames.push(frameObj);
-      continue;
-    }
-
-    for (let j = 0; j < lm.length; j++) {
-      const p = lm[j];
-      frameObj.landmarks.push({
-        id: j,
-        x: p.x,
-        y: p.y,
-        z: p.z ?? null,
-        visibility: p.visibility ?? null
-      });
-    }
-
-    dump.frames.push(frameObj);
-  }
-
-  // DOWNLOAD
-  const blob = new Blob([JSON.stringify(dump, null, 2)], {
-    type: "application/json"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "swing_dump.json";
-  a.click();
-  URL.revokeObjectURL(url);
-
-  console.log("📦 Swing JSON dump saved:", dump);
-}
 
 
 // ---------------------------------------------------------
