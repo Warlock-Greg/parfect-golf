@@ -993,78 +993,60 @@ function computeSwingScorePremium(swing) {
     metrics.posture.score = 10;
   }
 
-  // =====================================================
-  // 2) ROTATION (Address → Top)  ⭐ FIX FO + DTL
-  // =====================================================
-  if (addressPose && topPose) {
-    const LS0 = addressPose[11];
-    const RS0 = addressPose[12];
-    const LH0 = addressPose[23];
-    const RH0 = addressPose[24];
+ // =====================================================
+// 2) ROTATION (Address → Top)  ⭐ FIX FO + DTL + miroir
+// =====================================================
+if (addressPose && topPose) {
+    const LS0 = addressPose[11], RS0 = addressPose[12];
+    const LH0 = addressPose[23], RH0 = addressPose[24];
 
-    const LS1 = topPose[11];
-    const RS1 = topPose[12];
-    const LH1 = topPose[23];
-    const RH1 = topPose[24];
+    const LS1 = topPose[11],     RS1 = topPose[12];
+    const LH1 = topPose[23],     RH1 = topPose[24];
 
-    let shoulderRot = 0;
-    let hipRot      = 0;
-    let xFactor     = 0;
-
-    const view = viewType.toLowerCase();
-
-    if (view === "faceon" || view === "face_on" || view === "face-on") {
-      // 🔵 FACE-ON : on utilise la "compression" de la largeur
-      const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
-      const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
-      const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
-      const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
-
-      if (shW0 && shW1) {
-        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
-        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // 0 → face caméra, 90 → profil
-      }
-
-      if (hipW0 && hipW1) {
-        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
-        hipRot = Math.acos(ratioH) * 180 / Math.PI;
-      }
-
-      xFactor = shoulderRot - hipRot;
-    } else {
-      // 🟠 DTL : on utilise la variation d'angle de la ligne épaules / hanches
-      const shAng0 = jswLineAngleDeg(LS0, RS0);
-      const shAng1 = jswLineAngleDeg(LS1, RS1);
-      const hipAng0 = jswLineAngleDeg(LH0, RH0);
-      const hipAng1 = jswLineAngleDeg(LH1, RH1);
-
-      const dSh = jswDegDiff(shAng0, shAng1) ?? 0;
-      const dHip = jswDegDiff(hipAng0, hipAng1) ?? 0;
-
-      shoulderRot = dSh;
-      hipRot      = dHip;
-      xFactor     = shoulderRot - hipRot;
+    // ---------- FIX ANTI-MIROIR ----------
+    // Recentrage auto : on prend la ligne épaules et hanches et on la recentre
+    function center(p, refMid) {
+        return { x: p.x - refMid.x, y: p.y - refMid.y };
     }
+
+    function centeredPoints(A, B) {
+        const mid = { x:(A.x+B.x)/2, y:(A.y+B.y)/2 };
+        return [center(A, mid), center(B, mid)];
+    }
+
+    // Épaules centrées
+    let [LS0c, RS0c] = centeredPoints(LS0, RS0);
+    let [LS1c, RS1c] = centeredPoints(LS1, RS1);
+
+    // Hanches centrées
+    let [LH0c, RH0c] = centeredPoints(LH0, RH0);
+    let [LH1c, RH1c] = centeredPoints(LH1, RH1);
+
+    // ---------- ANGLES SOLIDES (indépendants du miroir) ----------
+    const shAng0 = jswLineAngleDeg(LS0c, RS0c);
+    const shAng1 = jswLineAngleDeg(LS1c, RS1c);
+
+    const hipAng0 = jswLineAngleDeg(LH0c, RH0c);
+    const hipAng1 = jswLineAngleDeg(LH1c, RH1c);
+
+    const shoulderRot = jswDegDiff(shAng0, shAng1);
+    const hipRot      = jswDegDiff(hipAng0, hipAng1);
+    const xFactor     = shoulderRot - hipRot;
 
     metrics.rotation.shoulderRot = shoulderRot;
     metrics.rotation.hipRot      = hipRot;
     metrics.rotation.xFactor     = xFactor;
 
-    // 🎯 Cibles :
-    //   Face-On : épaules ~70-100°, hanches ~30-50°, X-Factor ~20-50°
-    //   DTL : diff d'angle plus modeste (on assouplit un peu)
-    const targetShoulder = (view === "faceon" ? 90 : 50);
-    const targetHip      = (view === "faceon" ? 45 : 25);
-    const targetX        = (view === "faceon" ? 35 : 20);
-
-    const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/45, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/25,      0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/30,        0, 1);
+    // ---------- SCORING ----------
+    const sScore = jswClamp(1 - Math.abs(shoulderRot - 90)/50, 0, 1);
+    const hScore = jswClamp(1 - Math.abs(hipRot - 45)/30, 0, 1);
+    const xScore = jswClamp(1 - Math.abs(xFactor - 40)/30, 0, 1);
 
     metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
-  } else {
+} else {
     metrics.rotation.score = 10;
-  }
+}
+
 
   // =====================================================
   // 3) TRIANGLE (address / top / impact)
