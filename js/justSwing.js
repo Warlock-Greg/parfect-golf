@@ -1261,6 +1261,76 @@ function computeSwingScorePremium(swing) {
   };
 }
 
+// Patch : rendre dist() disponible dans le breakdown premium
+function dist(a, b) {
+  if (!a || !b) return null;
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.hypot(dx, dy);
+}
+
+  function jswDumpLandmarksJSON(swing) {
+  const frames = swing.frames || [];
+  const ts = swing.timestamps || [];
+  const KF = swing.keyFrames || {};
+
+  const dump = {
+    meta: {
+      totalFrames: frames.length,
+      keyframes: {
+        address: KF.address?.index ?? null,
+        backswing: KF.backswing?.index ?? null,
+        top: KF.top?.index ?? null,
+        downswing: KF.downswing?.index ?? null,
+        impact: KF.impact?.index ?? null,
+        release: KF.release?.index ?? null,
+        finish: KF.finish?.index ?? null,
+      }
+    },
+    frames: []
+  };
+
+  for (let i = 0; i < frames.length; i++) {
+    const frameObj = {
+      index: i,
+      timestamp: ts[i] ?? null,
+      landmarks: []
+    };
+
+    const lm = frames[i];
+    if (!lm) {
+      dump.frames.push(frameObj);
+      continue;
+    }
+
+    for (let j = 0; j < lm.length; j++) {
+      const p = lm[j];
+      frameObj.landmarks.push({
+        id: j,
+        x: p.x,
+        y: p.y,
+        z: p.z ?? null,
+        visibility: p.visibility ?? null
+      });
+    }
+
+    dump.frames.push(frameObj);
+  }
+
+  // DOWNLOAD
+  const blob = new Blob([JSON.stringify(dump, null, 2)], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "swing_dump.json";
+  a.click();
+  URL.revokeObjectURL(url);
+
+  console.log("📦 Swing JSON dump saved:", dump);
+}
 
 
 // ---------------------------------------------------------
