@@ -330,7 +330,7 @@ function jswGetViewMessage() {
   showRoutineStepsText();
 
   routineIndex = 0;
-  showBigMessage(jswGetViewMessage());
+ showBigMessage(routineStepsAuto[0]);
 
 
   if (routineInterval) clearInterval(routineInterval);
