@@ -1,4 +1,4 @@
-// =========================================================
+  // =========================================================
 //   JUST SWING — Orchestrateur PRO (Parfect 2025)
 //   Flow : START → COUNTDOWN → ROUTINE → SWING → SCORE
 //   Dépend : window.SwingEngine, window.JustSwing.onPoseFrame()
@@ -1284,10 +1284,13 @@ function buildPremiumBreakdown(swing, scores) {
         postureScore,
         "Alignement · Écart de pieds · Flexion",
         `
-          Flexion: ${metrics.posture.flexionDeg?.toFixed(1)}°<br>
-          Ratio pieds/épaules: ${metrics.posture.feetShoulderRatio?.toFixed(2)}<br>
-          Alignement épaules/hanches: ${metrics.posture.alignDiff?.toFixed(1)}°
-        `
+          Flexion: ${metrics.posture.flexionDeg?.toFixed(1)}°  
+  <span style="opacity:.7;">(cible 30–45°)</span><br>
+  Ratio pieds/épaules: ${metrics.posture.feetShoulderRatio?.toFixed(2)}  
+  <span style="opacity:.7;">(cible 1.1–1.3)</span><br>
+  Alignement épaules/hanches: ${metrics.posture.alignDiff?.toFixed(1)}°  
+  <span style="opacity:.7;">(cible ≤ 5°)</span>
+      `
       )}
 
       ${block(
@@ -1295,9 +1298,12 @@ function buildPremiumBreakdown(swing, scores) {
         rotationScore,
         "Épaules · Hanches · X-Factor",
         `
-          Rotation épaules: ${metrics.rotation.shoulderRot?.toFixed(1)}°<br>
-          Rotation hanches: ${metrics.rotation.hipRot?.toFixed(1)}°<br>
-          X-Factor: ${metrics.rotation.xFactor?.toFixed(1)}°
+          Rotation épaules: ${metrics.rotation.shoulderRot?.toFixed(1)}°  
+          <span style="opacity:.7;">(cible 80–100°)</span><br>
+  Rotation hanches: ${metrics.rotation.hipRot?.toFixed(1)}°  
+  <span style="opacity:.7;">(cible 35–55°)</span><br>
+  X-Factor: ${metrics.rotation.xFactor?.toFixed(1)}°  
+  <span style="opacity:.7;">(cible 30–50°)</span>
         `
       )}
 
@@ -1306,8 +1312,10 @@ function buildPremiumBreakdown(swing, scores) {
         triangleScore,
         "Stabilité au top et à l’impact",
         `
-          Variation Top: ${metrics.triangle.varTopPct?.toFixed(1)}%<br>
-          Variation Impact: ${metrics.triangle.varImpactPct?.toFixed(1)}%
+         Variation Top: ${metrics.triangle.varTopPct?.toFixed(1)}%  
+  <span style="opacity:.7;">(cible ≤ 5%)</span><br>
+  Variation Impact: ${metrics.triangle.varImpactPct?.toFixed(1)}%  
+  <span style="opacity:.7;">(cible ≤ 5%)</span>
         `
       )}
 
@@ -1316,8 +1324,10 @@ function buildPremiumBreakdown(swing, scores) {
         weightShiftScore,
         "Backswing → Impact",
         `
-          Shift Back: ${metrics.weightShift.shiftBack?.toFixed(3)}<br>
-          Shift Forward: ${metrics.weightShift.shiftFwd?.toFixed(3)}
+          Shift Back: ${metrics.weightShift.shiftBack?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≥ 0.10)</span><br>
+  Shift Forward: ${metrics.weightShift.shiftFwd?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≥ 0.10)</span>
         `
       )}
 
@@ -1326,9 +1336,12 @@ function buildPremiumBreakdown(swing, scores) {
         extensionScore,
         "Extension bras + stabilité du finish",
         `
-          Extension Impact: ${metrics.extension.extImpact?.toFixed(3)}<br>
-          Extension Finish: ${metrics.extension.extFinish?.toFixed(3)}<br>
-          Déplacement tête: ${metrics.extension.headMove?.toFixed(3)}
+          Extension Impact: ${metrics.extension.extImpact?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≥ 0.28)</span><br>
+  Extension Finish: ${metrics.extension.extFinish?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≥ 0.30)</span><br>
+  Déplacement tête: ${metrics.extension.headMove?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≤ 0.04)</span>
         `
       )}
 
@@ -1337,9 +1350,12 @@ function buildPremiumBreakdown(swing, scores) {
         tempoScore,
         "Backswing / Downswing",
         `
-          Backswing: ${metrics.tempo.backswingT?.toFixed(2)}s<br>
-          Downswing: ${metrics.tempo.downswingT?.toFixed(2)}s<br>
-          Ratio: ${metrics.tempo.ratio?.toFixed(2)}:1
+          Backswing: ${metrics.tempo.backswingT?.toFixed(2)}s  
+  <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
+  Downswing: ${metrics.tempo.downswingT?.toFixed(2)}s  
+  <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
+  Ratio: ${metrics.tempo.ratio?.toFixed(2)}:1  
+  <span style="opacity:.7;">(cible 3:1)</span>
         `
       )}
 
@@ -1348,8 +1364,10 @@ function buildPremiumBreakdown(swing, scores) {
         balanceScore,
         "Stabilité tête + hanches au finish",
         `
-          Tête sur hanches: ${metrics.balance.headOverHips ? "oui" : "non"}<br>
-          Déplacement hanches: ${metrics.balance.finishMove?.toFixed(3)}
+         Tête sur hanches: ${metrics.balance.headOverHips ? "oui" : "non"}  
+  <span style="opacity:.7;">(cible = OUI)</span><br>
+  Déplacement hanches: ${metrics.balance.finishMove?.toFixed(3)}  
+  <span style="opacity:.7;">(cible ≤ 0.12)</span>
         `
       )}
 
