@@ -853,11 +853,12 @@ function scoreTempoRobust(timestamps, kf) {
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
+//   + vue choisie par l’utilisateur : faceOn / mobileFaceOn / dtl
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
-  const fps = swing.fps || 30;
+  const fps    = swing.fps || 30;
   const frames = swing.frames || [];
-  const kf = swing.keyFrames || {};
+  const kf     = swing.keyFrames || {};
 
   // -------------------------------------
   // Helpers locaux
@@ -897,50 +898,35 @@ function computeSwingScorePremium(swing) {
     return frames[idx];
   }
 
-  // 🌍 Détection automatique Face-On / DTL
-  function jswDetectViewType(addressPose) {
-    if (!addressPose) return "faceOn";
-
-    const nose = addressPose[0];
-    const Ls = addressPose[11];
-    const Rs = addressPose[12];
-
-    if (!nose || !Ls || !Rs) return "faceOn";
-
-    const shoulderWidth = Math.abs(Ls.x - Rs.x);
-    if (!shoulderWidth) return "faceOn";
-
-    const midX = (Ls.x + Rs.x) / 2;
-    const noseOffset = Math.abs(nose.x - midX);
-    const ratio = noseOffset / shoulderWidth;
-
-    // Si le nez est pile au milieu des épaules → plutôt DTL
-    // Si le nez est décalé (profil) → plutôt Face-on
-    return ratio < 0.25 ? "dtl" : "faceOn";
-  }
-
   // -------------------------------------
-  // Récup des poses clés
+  // Poses clés
   // -------------------------------------
   const addressPose = jswSafePoseFromKF(kf.address);
   const topPose     = jswSafePoseFromKF(kf.top);
   const impactPose  = jswSafePoseFromKF(kf.impact);
   const finishPose  = jswSafePoseFromKF(kf.finish);
 
-  // 👁️ ViewType = override user > auto-detect > faceOn
-  const viewType =
-    (window.jswViewOverride || "").toLowerCase() ||
-    jswDetectViewType(addressPose) ||
-    "faceOn";
+  // -------------------------------------
+  // Vue choisie par l’utilisateur
+  // -------------------------------------
+  const rawView = (window.jswViewType || "faceOn").toLowerCase().trim();
+  let viewType;
+  if (rawView === "dtl" || rawView === "down-the-line") {
+    viewType = "dtl";
+  } else if (rawView === "mobilefaceon" || rawView === "mobile-face-on" || rawView === "mobilefo") {
+    viewType = "mobileFaceOn";
+  } else {
+    viewType = "faceOn";
+  }
 
   const metrics = {
-    posture:   {},
-    rotation:  {},
-    triangle:  {},
+    posture:     {},
+    rotation:    {},
+    triangle:    {},
     weightShift: {},
-    extension: {},
-    tempo:     {},
-    balance:   {},
+    extension:   {},
+    tempo:       {},
+    balance:     {},
     viewType
   };
 
@@ -960,19 +946,21 @@ function computeSwingScorePremium(swing) {
     const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y:(LH.y + RH.y)/2 } : null;
     const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
 
-    let flexionDeg = 30; // fallback
+    let flexionDeg = 30; // fallback safe
 
     if (hipsMid && shMid) {
-      // vecteur épaules → hanches (pour avoir un Y positif vers le bas)
-      const vx = hipsMid.x - shMid.x;
-      const vy = hipsMid.y - shMid.y;
-      const norm = Math.hypot(vx, vy) || 1;
-      const vyNorm = vy / norm;
+      // vecteur épaules -> hanches (Y positif vers le bas)
+      let vx = hipsMid.x - shMid.x;
+      let vy = hipsMid.y - shMid.y;
 
-      // angle entre la colonne et la verticale (0,1)
-      // cos(theta) = vyNorm
-      const theta = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
-      // 0° = vertical, 30-45° = flexion "athlétique"
+      // sécurité : si on a un bug (épaules sous les hanches), on corrige le sens
+      if (vy < 0) vy = Math.abs(vy);
+
+      const norm   = Math.hypot(vx, vy) || 1;
+      const vyNorm = vy / norm;
+      const theta  = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
+
+      // 0° = vertical, ~30-45° = flexion athlétique
       flexionDeg = theta;
     }
 
@@ -1000,60 +988,97 @@ function computeSwingScorePremium(swing) {
     metrics.posture.score = 10;
   }
 
- // =====================================================
-// 2) ROTATION (Address → Top)  ⭐ FIX FO + DTL + miroir
-// =====================================================
-if (addressPose && topPose) {
-    const LS0 = addressPose[11], RS0 = addressPose[12];
-    const LH0 = addressPose[23], RH0 = addressPose[24];
+  // =====================================================
+  // 2) ROTATION (Address → Top)  ⭐ Vue-dépendant
+  // =====================================================
+  if (addressPose && topPose) {
+    const LS0 = addressPose[11];
+    const RS0 = addressPose[12];
+    const LH0 = addressPose[23];
+    const RH0 = addressPose[24];
 
-    const LS1 = topPose[11],     RS1 = topPose[12];
-    const LH1 = topPose[23],     RH1 = topPose[24];
+    const LS1 = topPose[11];
+    const RS1 = topPose[12];
+    const LH1 = topPose[23];
+    const RH1 = topPose[24];
 
-    // ---------- FIX ANTI-MIROIR ----------
-    // Recentrage auto : on prend la ligne épaules et hanches et on la recentre
-    function center(p, refMid) {
-        return { x: p.x - refMid.x, y: p.y - refMid.y };
+    let shoulderRot = 0;
+    let hipRot      = 0;
+    let xFactor     = 0;
+
+    const view = viewType; // "faceOn", "mobileFaceOn", "dtl"
+
+    if (view === "faceOn" || view === "mobileFaceOn") {
+      // 🔵 FACE-ON & MOBILE FACE-ON : on utilise la compression de largeur
+      const shW0  = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
+      const shW1  = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
+      const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
+      const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
+
+      if (shW0 && shW1) {
+        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // 0 → face caméra, 90 → profil
+      }
+
+      if (hipW0 && hipW1) {
+        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+        hipRot = Math.acos(ratioH) * 180 / Math.PI;
+      }
+
+      xFactor = shoulderRot - hipRot;
+    } else {
+      // 🟠 DTL : variation de l’angle de la ligne épaules / hanches
+      const shAng0 = jswLineAngleDeg(LS0, RS0);
+      const shAng1 = jswLineAngleDeg(LS1, RS1);
+      const hipAng0 = jswLineAngleDeg(LH0, RH0);
+      const hipAng1 = jswLineAngleDeg(LH1, RH1);
+
+      const dSh  = jswDegDiff(shAng0, shAng1) ?? 0;
+      const dHip = jswDegDiff(hipAng0, hipAng1) ?? 0;
+
+      shoulderRot = dSh;
+      hipRot      = dHip;
+      xFactor     = shoulderRot - hipRot;
     }
-
-    function centeredPoints(A, B) {
-        const mid = { x:(A.x+B.x)/2, y:(A.y+B.y)/2 };
-        return [center(A, mid), center(B, mid)];
-    }
-
-    // Épaules centrées
-    let [LS0c, RS0c] = centeredPoints(LS0, RS0);
-    let [LS1c, RS1c] = centeredPoints(LS1, RS1);
-
-    // Hanches centrées
-    let [LH0c, RH0c] = centeredPoints(LH0, RH0);
-    let [LH1c, RH1c] = centeredPoints(LH1, RH1);
-
-    // ---------- ANGLES SOLIDES (indépendants du miroir) ----------
-    const shAng0 = jswLineAngleDeg(LS0c, RS0c);
-    const shAng1 = jswLineAngleDeg(LS1c, RS1c);
-
-    const hipAng0 = jswLineAngleDeg(LH0c, RH0c);
-    const hipAng1 = jswLineAngleDeg(LH1c, RH1c);
-
-    const shoulderRot = jswDegDiff(shAng0, shAng1);
-    const hipRot      = jswDegDiff(hipAng0, hipAng1);
-    const xFactor     = shoulderRot - hipRot;
 
     metrics.rotation.shoulderRot = shoulderRot;
     metrics.rotation.hipRot      = hipRot;
     metrics.rotation.xFactor     = xFactor;
 
-    // ---------- SCORING ----------
-    const sScore = jswClamp(1 - Math.abs(shoulderRot - 90)/50, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRot - 45)/30, 0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactor - 40)/30, 0, 1);
+    // 🎯 Cibles & tolérances selon la vue
+    let targetShoulder, targetHip, targetX, denS, denH, denX;
+
+    if (view === "faceOn") {
+      targetShoulder = 90;
+      targetHip      = 45;
+      targetX        = 35;
+      denS = 45; denH = 25; denX = 30;
+    } else if (view === "mobileFaceOn") {
+      // 👉 Mobile Face-On : rotation "vue du bas" → compression plus faible
+      targetShoulder = 60;
+      targetHip      = 30;
+      targetX        = 20;
+      denS = 60;    // plus tolérant
+      denH = 35;
+      denX = 35;
+    } else {
+      // DTL : variation d’angle plus petite
+      targetShoulder = 50;
+      targetHip      = 25;
+      targetX        = 20;
+      denS = 50;
+      denH = 30;
+      denX = 30;
+    }
+
+    const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/denS, 0, 1);
+    const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/denH,      0, 1);
+    const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/denX,        0, 1);
 
     metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
-} else {
+  } else {
     metrics.rotation.score = 10;
-}
-
+  }
 
   // =====================================================
   // 3) TRIANGLE (address / top / impact)
@@ -1079,8 +1104,8 @@ if (addressPose && topPose) {
     metrics.triangle.varTopPct    = varTop;
     metrics.triangle.varImpactPct = varImp;
 
-    const scoreTop = jswClamp(1 - varTop/15, 0, 1);  // <5-7% très bien
-    const scoreImp = jswClamp(1 - varImp/10, 0, 1);  // impact plus strict
+    const scoreTop = jswClamp(1 - varTop/15, 0, 1);
+    const scoreImp = jswClamp(1 - varImp/10, 0, 1);
     metrics.triangle.score = Math.round((scoreTop + scoreImp)/2 * 15);
   } else {
     metrics.triangle.score = 10;
@@ -1093,12 +1118,10 @@ if (addressPose && topPose) {
     const LH0 = addressPose[23], RH0 = addressPose[24];
     const LH1 = topPose[23],     RH1 = topPose[24];
     const LH2 = impactPose[23],  RH2 = impactPose[24];
-    const LA0 = addressPose[27], RA0 = addressPose[28];
 
     const hips0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
     const hips1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
     const hips2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
-    const feet0 = (LA0 && RA0) ? { x:(LA0.x+RA0.x)/2, y:(LA0.y+RA0.y)/2 } : null;
 
     let shiftBack = 0, shiftFwd = 0;
     if (hips0 && hips1) {
@@ -1149,21 +1172,21 @@ if (addressPose && topPose) {
   }
 
   // =====================================================
-  // 6) TEMPO
+  // 6) TEMPO (backswing / downswing)
   // =====================================================
   if (kf.address && kf.top && kf.impact && swing.timestamps) {
-    const addrIdx   = typeof kf.address.index === "number" ? kf.address.index : kf.address;
-    const topIdx    = typeof kf.top.index     === "number" ? kf.top.index     : kf.top;
-    const impactIdx = typeof kf.impact.index  === "number" ? kf.impact.index  : kf.impact;
+    const addrIdx   = (typeof kf.address.index === "number") ? kf.address.index : kf.address;
+    const topIdx    = (typeof kf.top.index     === "number") ? kf.top.index     : kf.top;
+    const impactIdx = (typeof kf.impact.index  === "number") ? kf.impact.index  : kf.impact;
 
     const T = swing.timestamps;
     if (T[addrIdx] != null && T[topIdx] != null && T[impactIdx] != null) {
-      const tb = (T[topIdx]    - T[addrIdx]) / 1000; // ms → s
+      const tb = (T[topIdx]    - T[addrIdx]) / 1000;
       const td = (T[impactIdx] - T[topIdx])  / 1000;
 
       const backswingT = tb > 0 ? tb : 0;
       const downswingT = td > 0 ? td : 0;
-      const ratio = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
+      const ratio      = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
 
       metrics.tempo.backswingT = backswingT;
       metrics.tempo.downswingT = downswingT;
@@ -1195,7 +1218,7 @@ if (addressPose && topPose) {
     const headFin = finishPose[0];
 
     let headOverHips = true;
-    let finishMove = 0;
+    let finishMove   = 0;
 
     if (hipsFin && headFin) {
       const dx = Math.abs(headFin.x - hipsFin.x);
@@ -1220,13 +1243,13 @@ if (addressPose && topPose) {
   // =====================================================
   // 8) TOTAL
   // =====================================================
-  const postureScore   = metrics.posture.score    ?? 0;
-  const rotationScore  = metrics.rotation.score   ?? 0;
-  const triangleScore  = metrics.triangle.score   ?? 0;
-  const weightScore    = metrics.weightShift.score ?? 0;
-  const extensionScore = metrics.extension.score  ?? 0;
-  const tempoScore     = metrics.tempo.score      ?? 0;
-  const balanceScore   = metrics.balance.score    ?? 0;
+  const postureScore   = metrics.posture.score      ?? 0;
+  const rotationScore  = metrics.rotation.score     ?? 0;
+  const triangleScore  = metrics.triangle.score     ?? 0;
+  const weightScore    = metrics.weightShift.score  ?? 0;
+  const extensionScore = metrics.extension.score    ?? 0;
+  const tempoScore     = metrics.tempo.score        ?? 0;
+  const balanceScore   = metrics.balance.score      ?? 0;
 
   const total =
     postureScore   +
@@ -1249,6 +1272,7 @@ if (addressPose && topPose) {
     metrics
   };
 }
+
 
 // Patch : rendre dist() disponible dans le breakdown premium
 function dist(a, b) {
