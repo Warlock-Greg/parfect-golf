@@ -989,10 +989,8 @@ function computeSwingScorePremium(swing) {
     metrics.posture.score = 10;
   }
 
-  // =====================================================
-  // 2) ROTATION (Address → Top)
-  //     - faceOn / mobileFaceOn : compression largeur
-  //     - dtl : angle de ligne épaules/hanches
+    // =====================================================
+  // 2) ROTATION (Address → Top)  — calibré mobile face-on
   // =====================================================
   if (addressPose && topPose) {
     const LS0 = addressPose[11];
@@ -1009,62 +1007,49 @@ function computeSwingScorePremium(swing) {
     let hipRot      = 0;
     let xFactor     = 0;
 
-    const view = viewType; // "faceOn" | "mobileFaceOn" | "dtl"
+    // vue choisie par l'utilisateur : faceOn / dtl / mobileFaceOn
+    const view =
+      (window.jswViewType || metrics.viewType || "faceOn")
+        .toLowerCase();
 
-    if (view === "faceOn" || view === "mobileFaceOn") {
-      // 🔵 FACE-ON / MOBILE FACE-ON : compression largeur
+    if (view === "faceon" || view === "mobilefaceon") {
+      // 🔵 MOBILE FACE-ON : on garde la "compression" de largeur
       const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
       const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
       const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
       const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
 
       if (shW0 && shW1) {
-        const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+        let ratioS = shW1 / shW0;
+        ratioS = jswClamp(ratioS, 0.1, 1); // jamais >1
         shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
       }
 
       if (hipW0 && hipW1) {
-        const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+        let ratioH = hipW1 / hipW0;
+        ratioH = jswClamp(ratioH, 0.1, 1);
         hipRot = Math.acos(ratioH) * 180 / Math.PI;
       }
 
-      xFactor = Math.abs(shoulderRot - hipRot);
+      xFactor = shoulderRot - hipRot;
 
-      // 🎯 Cibles différentes pour le mobile
-      let targetShoulder, targetHip, targetX, shRange, hipRange, xRange;
+      // 🎚 CALIBRATION "MOBILE" :
+      //  - ~20–25° de rotation caméra = rotation très bonne
+      //  - tout ce qui est au-dessus sature le score
+      const shoulderIndex = jswClamp(shoulderRot / 22, 0, 1); // 22° ≈ top
+      const hipIndex      = jswClamp(hipRot / 12, 0, 1);      // 12° ≈ top
+      const xIndex        = jswClamp(xFactor / 10, 0, 1);     // 10° ≈ bon X-Factor caméra
 
-      if (view === "mobileFaceOn") {
-        // 👉 Calibré sur tes JSON mobile : on observe ~7–12° / 4–15°
-        targetShoulder = 12; // "bon" = 8–16°
-        targetHip      = 8;
-        targetX        = 6;
-        shRange        = 8;  // tolérance ±8°
-        hipRange       = 6;
-        xRange         = 4;
-      } else {
-        // Face-On classique (caméra plus haut)
-        targetShoulder = 90;
-        targetHip      = 45;
-        targetX        = 35;
-        shRange        = 45;
-        hipRange       = 25;
-        xRange         = 30;
-      }
+      // On donne plus de poids aux épaules
+      const rotNorm =
+        shoulderIndex * 0.6 +
+        hipIndex      * 0.2 +
+        xIndex        * 0.2;
 
-      const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/shRange, 0, 1);
-      const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/hipRange,  0, 1);
-      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/xRange,      0, 1);
-
-      metrics.rotation.shoulderRot = shoulderRot;
-      metrics.rotation.hipRot      = hipRot;
-      metrics.rotation.xFactor     = xFactor;
-      metrics.rotation.score       = Math.round((sScore + hScore + xScore)/3 * 20);
-
-      console.log("🔄 ROTATION (FO/mobile) :",
-        { shoulderRot, hipRot, xFactor, view });
+      metrics.rotation.score = Math.round(rotNorm * 20);
 
     } else {
-      // 🟠 DTL : variation d’angle de la ligne épaules / hanches
+      // 🟠 DTL : on reste sur la variation d'angle classique
       const shAng0 = jswLineAngleDeg(LS0, RS0);
       const shAng1 = jswLineAngleDeg(LS1, RS1);
       const hipAng0 = jswLineAngleDeg(LH0, RH0);
@@ -1075,27 +1060,29 @@ function computeSwingScorePremium(swing) {
 
       shoulderRot = dSh;
       hipRot      = dHip;
-      xFactor     = Math.abs(shoulderRot - hipRot);
+      xFactor     = shoulderRot - hipRot;
 
-      const targetShoulder = 60;
-      const targetHip      = 35;
-      const targetX        = 20;
+      // Cibles un peu plus "classiques" en DTL
+      const targetShoulder = 80;
+      const targetHip      = 40;
+      const targetX        = 35;
 
       const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/40, 0, 1);
       const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/25,      0, 1);
-      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/20,        0, 1);
+      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/25,        0, 1);
 
-      metrics.rotation.shoulderRot = shoulderRot;
-      metrics.rotation.hipRot      = hipRot;
-      metrics.rotation.xFactor     = xFactor;
-      metrics.rotation.score       = Math.round((sScore + hScore + xScore)/3 * 20);
-
-      console.log("🔄 ROTATION (DTL) :", { shoulderRot, hipRot, xFactor });
+      metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
     }
+
+    // On stocke les valeurs brutes pour la scorecard
+    metrics.rotation.shoulderRot = shoulderRot;
+    metrics.rotation.hipRot      = hipRot;
+    metrics.rotation.xFactor     = xFactor;
 
   } else {
     metrics.rotation.score = 10;
   }
+
 
   // =====================================================
   // 3) TRIANGLE (address / top / impact)
