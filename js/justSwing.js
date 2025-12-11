@@ -172,13 +172,15 @@ let captureArmed = false;
   }
 
   // ---------------------------------------------------------
-  //   BOUTON START + COUNTDOWN
-  // ---------------------------------------------------------
-  function showStartButton() {
+//   BOUTON START + CHOIX VUE + COUNTDOWN
+// ---------------------------------------------------------
+function showStartButton() {
   if (!bigMsgEl) return;
+
   state = JSW_STATE.WAITING_START;
   updateUI();
 
+  // ---- Bouton Démarrer ----
   bigMsgEl.innerHTML = `
     <button id="jsw-start-btn" style="
       background:#00ff99;
@@ -200,36 +202,41 @@ let captureArmed = false;
   if (!btn) return;
 
   btn.onclick = () => {
-    // 👉 Étape 1 — Choix DTL / Face-On
+    // ---- Étape 1 : Choix de la vue ----
     bigMsgEl.innerHTML = `
       <div style="font-size:1.3rem;margin-bottom:12px;color:#fff;">
         📐 Où est placée la caméra ?
       </div>
-      <button id="jsw-view-face" style="
+
+      <button class="jsw-view-btn" data-view="faceOn" style="
         background:#4ade80; padding:14px 26px;
         font-size:1.2rem; border-radius:12px;
         margin:8px; cursor:pointer; border:none;
       ">📸 Face-On</button>
 
-      <button id="jsw-view-dtl" style="
+      <button class="jsw-view-btn" data-view="dtl" style="
         background:#60a5fa; padding:14px 26px;
         font-size:1.2rem; border-radius:12px;
         margin:8px; cursor:pointer; border:none;
       ">🎥 Down-The-Line</button>
+
+      <button class="jsw-view-btn" data-view="mobileFaceOn" style="
+        background:#facc15; padding:14px 26px;
+        font-size:1.2rem; border-radius:12px;
+        margin:8px; cursor:pointer; border:none;
+      ">📱 Mobile Face-On</button>
     `;
 
-    // 👉 Gestion des clics
-    document.getElementById("jsw-view-face").onclick = () => {
-      window.jswViewType = "faceOn";
-      console.log("📐 Vue sélectionnée : FACE-ON");
-      startCountdown();
-    };
+    // ---- Gestion des clics ----
+    document.querySelectorAll(".jsw-view-btn").forEach(btn => {
+      btn.onclick = () => {
+        const selected = btn.dataset.view;
+        window.jswViewType = selected; // 🔥 STOCKAGE global
+        console.log("📐 Vue sélectionnée :", selected);
 
-    document.getElementById("jsw-view-dtl").onclick = () => {
-      window.jswViewType = "dtl";
-      console.log("📐 Vue sélectionnée : DTL");
-      startCountdown();
-    };
+        startCountdown(); // On enchaîne
+      };
+    });
   };
 }
 
@@ -240,7 +247,7 @@ let captureArmed = false;
     state = JSW_STATE.COUNTDOWN;
     updateUI();
 
-    let n = 3;
+    let n = 5;
     bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:#00ff99;">${n}</div>`;
 
     if (countdownInterval) clearInterval(countdownInterval);
