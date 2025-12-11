@@ -171,16 +171,14 @@ let captureArmed = false;
     routineStepsEl.textContent = `Routine : ${steps.join(" · ")}`;
   }
 
-  // ---------------------------------------------------------
-//   BOUTON START + CHOIX VUE + COUNTDOWN
+// ---------------------------------------------------------
+//   BOUTON START + CHOIX VUE (Face-On / Mobile FO / DTL)
 // ---------------------------------------------------------
 function showStartButton() {
   if (!bigMsgEl) return;
-
   state = JSW_STATE.WAITING_START;
   updateUI();
 
-  // ---- Bouton Démarrer ----
   bigMsgEl.innerHTML = `
     <button id="jsw-start-btn" style="
       background:#00ff99;
@@ -202,43 +200,47 @@ function showStartButton() {
   if (!btn) return;
 
   btn.onclick = () => {
-    // ---- Étape 1 : Choix de la vue ----
+    // 👉 Étape 1 — Choix de la vue caméra
     bigMsgEl.innerHTML = `
       <div style="font-size:1.3rem;margin-bottom:12px;color:#fff;">
         📐 Où est placée la caméra ?
       </div>
 
-      <button class="jsw-view-btn" data-view="faceOn" style="
-        background:#4ade80; padding:14px 26px;
-        font-size:1.2rem; border-radius:12px;
-        margin:8px; cursor:pointer; border:none;
-      ">📸 Face-On</button>
+      <button id="jsw-view-face" style="
+        background:#4ade80; padding:12px 18px;
+        font-size:1.1rem; border-radius:10px;
+        margin:6px; cursor:pointer; border:none;
+      ">📸 Face-On (caméra à hauteur de poitrine)</button>
 
-      <button class="jsw-view-btn" data-view="dtl" style="
-        background:#60a5fa; padding:14px 26px;
-        font-size:1.2rem; border-radius:12px;
-        margin:8px; cursor:pointer; border:none;
-      ">🎥 Down-The-Line</button>
+      <button id="jsw-view-mobile" style="
+        background:#22c55e; padding:12px 18px;
+        font-size:1.1rem; border-radius:10px;
+        margin:6px; cursor:pointer; border:none;
+      ">📱 Mobile Face-On (téléphone au sol devant toi)</button>
 
-      <button class="jsw-view-btn" data-view="mobileFaceOn" style="
-        background:#facc15; padding:14px 26px;
-        font-size:1.2rem; border-radius:12px;
-        margin:8px; cursor:pointer; border:none;
-      ">📱 Mobile Face-On</button>
+      <button id="jsw-view-dtl" style="
+        background:#60a5fa; padding:12px 18px;
+        font-size:1.1rem; border-radius:10px;
+        margin:6px; cursor:pointer; border:none;
+      ">🎥 Down-The-Line (derrière la ligne de jeu)</button>
     `;
 
-    // ---- Gestion des clics ----
-    document.querySelectorAll(".jsw-view-btn").forEach(btn => {
-      btn.onclick = () => {
-        const selected = btn.dataset.view;
-        window.jswViewType = selected; // 🔥 STOCKAGE global
-        console.log("📐 Vue sélectionnée :", selected);
+    const setViewAndStart = (view) => {
+      window.jswViewType = view;   // 🔑 utilisé dans le scorer
+      console.log("📐 Vue sélectionnée :", view);
+      startCountdown();
+    };
 
-        startCountdown(); // On enchaîne
-      };
-    });
+    const btnFace   = document.getElementById("jsw-view-face");
+    const btnMobile = document.getElementById("jsw-view-mobile");
+    const btnDtl    = document.getElementById("jsw-view-dtl");
+
+    if (btnFace)   btnFace.onclick   = () => setViewAndStart("faceOn");
+    if (btnMobile) btnMobile.onclick = () => setViewAndStart("mobileFaceOn");
+    if (btnDtl)    btnDtl.onclick    = () => setViewAndStart("dtl");
   };
 }
+
 
 
   function startCountdown() {
@@ -853,7 +855,7 @@ function scoreTempoRobust(timestamps, kf) {
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
-//   + vue choisie par l’utilisateur : faceOn / mobileFaceOn / dtl
+//   Gère les vues : faceOn / mobileFaceOn / dtl
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
   const fps    = swing.fps || 30;
@@ -899,7 +901,7 @@ function computeSwingScorePremium(swing) {
   }
 
   // -------------------------------------
-  // Poses clés
+  // Récup des poses clés
   // -------------------------------------
   const addressPose = jswSafePoseFromKF(kf.address);
   const topPose     = jswSafePoseFromKF(kf.top);
@@ -907,26 +909,29 @@ function computeSwingScorePremium(swing) {
   const finishPose  = jswSafePoseFromKF(kf.finish);
 
   // -------------------------------------
-  // Vue choisie par l’utilisateur
+  // Vue caméra (driver par l’UI)
   // -------------------------------------
-  const rawView = (window.jswViewType || "faceOn").toLowerCase().trim();
+  const rawView =
+    (window.jswViewType || window.jswViewOverride || "faceOn")
+      .toLowerCase();
+
   let viewType;
-  if (rawView === "dtl" || rawView === "down-the-line") {
-    viewType = "dtl";
-  } else if (rawView === "mobilefaceon" || rawView === "mobile-face-on" || rawView === "mobilefo") {
+  if (rawView.includes("mobile")) {
     viewType = "mobileFaceOn";
+  } else if (rawView.includes("dtl") || rawView.includes("line")) {
+    viewType = "dtl";
   } else {
     viewType = "faceOn";
   }
 
   const metrics = {
-    posture:     {},
-    rotation:    {},
-    triangle:    {},
+    posture:   {},
+    rotation:  {},
+    triangle:  {},
     weightShift: {},
-    extension:   {},
-    tempo:       {},
-    balance:     {},
+    extension: {},
+    tempo:     {},
+    balance:   {},
     viewType
   };
 
@@ -946,21 +951,17 @@ function computeSwingScorePremium(swing) {
     const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y:(LH.y + RH.y)/2 } : null;
     const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
 
-    let flexionDeg = 30; // fallback safe
+    let flexionDeg = 30; // fallback "athlétique"
 
     if (hipsMid && shMid) {
-      // vecteur épaules -> hanches (Y positif vers le bas)
-      let vx = hipsMid.x - shMid.x;
-      let vy = hipsMid.y - shMid.y;
-
-      // sécurité : si on a un bug (épaules sous les hanches), on corrige le sens
-      if (vy < 0) vy = Math.abs(vy);
-
-      const norm   = Math.hypot(vx, vy) || 1;
+      const vx = hipsMid.x - shMid.x;
+      const vy = hipsMid.y - shMid.y;
+      const norm = Math.hypot(vx, vy) || 1;
       const vyNorm = vy / norm;
-      const theta  = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
 
-      // 0° = vertical, ~30-45° = flexion athlétique
+      // vyNorm ≈ 1 → colonne verticale, vyNorm < 1 → penchée
+      const theta = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
+      // 0° = vertical, 30-45° = flexion correcte
       flexionDeg = theta;
     }
 
@@ -989,7 +990,9 @@ function computeSwingScorePremium(swing) {
   }
 
   // =====================================================
-  // 2) ROTATION (Address → Top)  ⭐ Vue-dépendant
+  // 2) ROTATION (Address → Top)
+  //     - faceOn / mobileFaceOn : compression largeur
+  //     - dtl : angle de ligne épaules/hanches
   // =====================================================
   if (addressPose && topPose) {
     const LS0 = addressPose[11];
@@ -1006,18 +1009,18 @@ function computeSwingScorePremium(swing) {
     let hipRot      = 0;
     let xFactor     = 0;
 
-    const view = viewType; // "faceOn", "mobileFaceOn", "dtl"
+    const view = viewType; // "faceOn" | "mobileFaceOn" | "dtl"
 
     if (view === "faceOn" || view === "mobileFaceOn") {
-      // 🔵 FACE-ON & MOBILE FACE-ON : on utilise la compression de largeur
-      const shW0  = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
-      const shW1  = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
+      // 🔵 FACE-ON / MOBILE FACE-ON : compression largeur
+      const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
+      const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
       const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
       const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
 
       if (shW0 && shW1) {
         const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
-        shoulderRot = Math.acos(ratioS) * 180 / Math.PI; // 0 → face caméra, 90 → profil
+        shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
       }
 
       if (hipW0 && hipW1) {
@@ -1025,9 +1028,43 @@ function computeSwingScorePremium(swing) {
         hipRot = Math.acos(ratioH) * 180 / Math.PI;
       }
 
-      xFactor = shoulderRot - hipRot;
+      xFactor = Math.abs(shoulderRot - hipRot);
+
+      // 🎯 Cibles différentes pour le mobile
+      let targetShoulder, targetHip, targetX, shRange, hipRange, xRange;
+
+      if (view === "mobileFaceOn") {
+        // 👉 Calibré sur tes JSON mobile : on observe ~7–12° / 4–15°
+        targetShoulder = 12; // "bon" = 8–16°
+        targetHip      = 8;
+        targetX        = 6;
+        shRange        = 8;  // tolérance ±8°
+        hipRange       = 6;
+        xRange         = 4;
+      } else {
+        // Face-On classique (caméra plus haut)
+        targetShoulder = 90;
+        targetHip      = 45;
+        targetX        = 35;
+        shRange        = 45;
+        hipRange       = 25;
+        xRange         = 30;
+      }
+
+      const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/shRange, 0, 1);
+      const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/hipRange,  0, 1);
+      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/xRange,      0, 1);
+
+      metrics.rotation.shoulderRot = shoulderRot;
+      metrics.rotation.hipRot      = hipRot;
+      metrics.rotation.xFactor     = xFactor;
+      metrics.rotation.score       = Math.round((sScore + hScore + xScore)/3 * 20);
+
+      console.log("🔄 ROTATION (FO/mobile) :",
+        { shoulderRot, hipRot, xFactor, view });
+
     } else {
-      // 🟠 DTL : variation de l’angle de la ligne épaules / hanches
+      // 🟠 DTL : variation d’angle de la ligne épaules / hanches
       const shAng0 = jswLineAngleDeg(LS0, RS0);
       const shAng1 = jswLineAngleDeg(LS1, RS1);
       const hipAng0 = jswLineAngleDeg(LH0, RH0);
@@ -1038,44 +1075,24 @@ function computeSwingScorePremium(swing) {
 
       shoulderRot = dSh;
       hipRot      = dHip;
-      xFactor     = shoulderRot - hipRot;
+      xFactor     = Math.abs(shoulderRot - hipRot);
+
+      const targetShoulder = 60;
+      const targetHip      = 35;
+      const targetX        = 20;
+
+      const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/40, 0, 1);
+      const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/25,      0, 1);
+      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/20,        0, 1);
+
+      metrics.rotation.shoulderRot = shoulderRot;
+      metrics.rotation.hipRot      = hipRot;
+      metrics.rotation.xFactor     = xFactor;
+      metrics.rotation.score       = Math.round((sScore + hScore + xScore)/3 * 20);
+
+      console.log("🔄 ROTATION (DTL) :", { shoulderRot, hipRot, xFactor });
     }
 
-    metrics.rotation.shoulderRot = shoulderRot;
-    metrics.rotation.hipRot      = hipRot;
-    metrics.rotation.xFactor     = xFactor;
-
-    // 🎯 Cibles & tolérances selon la vue
-    let targetShoulder, targetHip, targetX, denS, denH, denX;
-
-    if (view === "faceOn") {
-      targetShoulder = 90;
-      targetHip      = 45;
-      targetX        = 35;
-      denS = 45; denH = 25; denX = 30;
-    } else if (view === "mobileFaceOn") {
-      // 👉 Mobile Face-On : rotation "vue du bas" → compression plus faible
-      targetShoulder = 60;
-      targetHip      = 30;
-      targetX        = 20;
-      denS = 60;    // plus tolérant
-      denH = 35;
-      denX = 35;
-    } else {
-      // DTL : variation d’angle plus petite
-      targetShoulder = 50;
-      targetHip      = 25;
-      targetX        = 20;
-      denS = 50;
-      denH = 30;
-      denX = 30;
-    }
-
-    const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/denS, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/denH,      0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/denX,        0, 1);
-
-    metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
   } else {
     metrics.rotation.score = 10;
   }
@@ -1172,12 +1189,12 @@ function computeSwingScorePremium(swing) {
   }
 
   // =====================================================
-  // 6) TEMPO (backswing / downswing)
+  // 6) TEMPO
   // =====================================================
   if (kf.address && kf.top && kf.impact && swing.timestamps) {
-    const addrIdx   = (typeof kf.address.index === "number") ? kf.address.index : kf.address;
-    const topIdx    = (typeof kf.top.index     === "number") ? kf.top.index     : kf.top;
-    const impactIdx = (typeof kf.impact.index  === "number") ? kf.impact.index  : kf.impact;
+    const addrIdx   = typeof kf.address.index === "number" ? kf.address.index : kf.address;
+    const topIdx    = typeof kf.top.index     === "number" ? kf.top.index     : kf.top;
+    const impactIdx = typeof kf.impact.index  === "number" ? kf.impact.index  : kf.impact;
 
     const T = swing.timestamps;
     if (T[addrIdx] != null && T[topIdx] != null && T[impactIdx] != null) {
@@ -1186,7 +1203,7 @@ function computeSwingScorePremium(swing) {
 
       const backswingT = tb > 0 ? tb : 0;
       const downswingT = td > 0 ? td : 0;
-      const ratio      = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
+      const ratio = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
 
       metrics.tempo.backswingT = backswingT;
       metrics.tempo.downswingT = downswingT;
@@ -1218,7 +1235,7 @@ function computeSwingScorePremium(swing) {
     const headFin = finishPose[0];
 
     let headOverHips = true;
-    let finishMove   = 0;
+    let finishMove = 0;
 
     if (hipsFin && headFin) {
       const dx = Math.abs(headFin.x - hipsFin.x);
@@ -1243,13 +1260,13 @@ function computeSwingScorePremium(swing) {
   // =====================================================
   // 8) TOTAL
   // =====================================================
-  const postureScore   = metrics.posture.score      ?? 0;
-  const rotationScore  = metrics.rotation.score     ?? 0;
-  const triangleScore  = metrics.triangle.score     ?? 0;
-  const weightScore    = metrics.weightShift.score  ?? 0;
-  const extensionScore = metrics.extension.score    ?? 0;
-  const tempoScore     = metrics.tempo.score        ?? 0;
-  const balanceScore   = metrics.balance.score      ?? 0;
+  const postureScore   = metrics.posture.score     ?? 0;
+  const rotationScore  = metrics.rotation.score    ?? 0;
+  const triangleScore  = metrics.triangle.score    ?? 0;
+  const weightScore    = metrics.weightShift.score ?? 0;
+  const extensionScore = metrics.extension.score   ?? 0;
+  const tempoScore     = metrics.tempo.score       ?? 0;
+  const balanceScore   = metrics.balance.score     ?? 0;
 
   const total =
     postureScore   +
@@ -1273,14 +1290,14 @@ function computeSwingScorePremium(swing) {
   };
 }
 
-
-// Patch : rendre dist() disponible dans le breakdown premium
+// Patch : rendre dist() dispo dans le breakdown premium
 function dist(a, b) {
   if (!a || !b) return null;
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.hypot(dx, dy);
 }
+
 
   function jswDumpLandmarksJSON(swing) {
   const frames = swing.frames || [];
