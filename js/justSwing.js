@@ -127,6 +127,19 @@ let captureArmed = false;
     console.log("✅ JustSwing initialisé");
   }
 
+  window.REF = null;
+
+fetch("/data/parfect_reference.json")
+  .then(r => r.json())
+  .then(json => {
+    window.REF = json;
+    console.log("📌 Parfect Reference loaded", json);
+  })
+  .catch(err => {
+    console.warn("⚠️ Parfect reference not loaded", err);
+  });
+
+
   function resizeOverlay() {
     if (!overlayEl || !videoEl) return;
     overlayEl.width = videoEl.clientWidth || window.innerWidth;
@@ -853,16 +866,27 @@ function scoreTempoRobust(timestamps, kf) {
 }
 
 
+  
+
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
 //   Gère les vues : faceOn / mobileFaceOn / dtl
 // ---------------------------------------------------------
-function computeSwingScorePremium(swing) {
+
+  
+  function computeSwingScorePremium(swing) {
   const PARFECT_REF = window.parfectReference?.rotation;
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
   const kf     = swing.keyFrames || {};
 
+const REF = window.REF;
+
+if (!REF) {
+  console.warn("⚠️ No Parfect reference available → fallback scoring");
+}
+
+    
   // -------------------------------------
   // Helpers locaux
   // -------------------------------------
