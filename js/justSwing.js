@@ -1028,124 +1028,108 @@ function scoreVsReference(value, target, tol) {
     metrics.posture.score = 10;
   }
 
-    // =====================================================
-  // 2) ROTATION (Address → Top)  — calibré mobile face-on
-  // =====================================================
-  if (addressPose && topPose) {
-    const LS0 = addressPose[11];
-    const RS0 = addressPose[12];
-    const LH0 = addressPose[23];
-    const RH0 = addressPose[24];
+// =====================================================
+// 2) ROTATION (Address → Top)
+// =====================================================
+if (addressPose && topPose) {
+  const LS0 = addressPose[11];
+  const RS0 = addressPose[12];
+  const LH0 = addressPose[23];
+  const RH0 = addressPose[24];
 
-    const LS1 = topPose[11];
-    const RS1 = topPose[12];
-    const LH1 = topPose[23];
-    const RH1 = topPose[24];
+  const LS1 = topPose[11];
+  const RS1 = topPose[12];
+  const LH1 = topPose[23];
+  const RH1 = topPose[24];
 
-    let shoulderRot = 0;
-    let hipRot      = 0;
-    let xFactor     = 0;
+  let shoulderRot = 0;
+  let hipRot = 0;
+  let xFactor = 0;
 
-    // vue choisie par l'utilisateur : faceOn / dtl / mobileFaceOn
-    const view =
-      (window.jswViewType || metrics.viewType || "faceOn")
-        .toLowerCase();
+  const view =
+    (window.jswViewType || metrics.viewType || "faceOn").toLowerCase();
 
-    // 🔗 Référence Parfect (sécurisée)
-const REF = window.REF || {};
+  // ============================
+  // 🔵 MOBILE / FACE-ON
+  // ============================
+  if (view === "faceon" || view === "mobilefaceon") {
 
-const refShoulderTarget = getRef(REF, "rotation.shoulder.target");
-const refShoulderTol    = getRef(REF, "rotation.shoulder.tol");
+    // --- MESURE caméra (projection) ---
+    const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
+    const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
+    const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
+    const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
 
-const refHipTarget = getRef(REF, "rotation.hip.target");
-const refHipTol    = getRef(REF, "rotation.hip.tol");
-
-const refXTarget = getRef(REF, "rotation.xFactor.target");
-const refXTol    = getRef(REF, "rotation.xFactor.tol");
-
-
-    if (view === "faceon" || view === "mobilefaceon") {
-      // 🔵 MOBILE FACE-ON : on garde la "compression" de largeur
-      const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
-      const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
-      const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
-      const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
-
-      if (shW0 && shW1) {
-        let ratioS = shW1 / shW0;
-        ratioS = jswClamp(ratioS, 0.1, 1); // jamais >1
-        shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
-      }
-
-      if (hipW0 && hipW1) {
-        let ratioH = hipW1 / hipW0;
-        ratioH = jswClamp(ratioH, 0.1, 1);
-        hipRot = Math.acos(ratioH) * 180 / Math.PI;
-      }
-
-      xFactor = shoulderRot - hipRot;
-
-      // 🎚 CALIBRATION "MOBILE" :
-     
- const sScore = scoreVsReference(
-  shoulderRot,
-  refShoulderTarget,
-  refShoulderTol
-);
-
-const hScore = scoreVsReference(
-  hipRot,
-  refHipTarget,
-  refHipTol
-);
-
-const xScore = scoreVsReference(
-  xFactor,
-  refXTarget,
-  refXTol
-);
-
-metrics.rotation.score = Math.round(
-  (sScore * 0.6 + hScore * 0.2 + xScore * 0.2) * 20
-);
-
-
-
-    } else {
-      // 🟠 DTL : on reste sur la variation d'angle classique
-      const shAng0 = jswLineAngleDeg(LS0, RS0);
-      const shAng1 = jswLineAngleDeg(LS1, RS1);
-      const hipAng0 = jswLineAngleDeg(LH0, RH0);
-      const hipAng1 = jswLineAngleDeg(LH1, RH1);
-
-      const dSh  = jswDegDiff(shAng0, shAng1) ?? 0;
-      const dHip = jswDegDiff(hipAng0, hipAng1) ?? 0;
-
-      shoulderRot = dSh;
-      hipRot      = dHip;
-      xFactor     = shoulderRot - hipRot;
-
-      // Cibles un peu plus "classiques" en DTL
-      const targetShoulder = 80;
-      const targetHip      = 40;
-      const targetX        = 35;
-
-      const sScore = jswClamp(1 - Math.abs(shoulderRot - targetShoulder)/40, 0, 1);
-      const hScore = jswClamp(1 - Math.abs(hipRot      - targetHip)/25,      0, 1);
-      const xScore = jswClamp(1 - Math.abs(xFactor     - targetX)/25,        0, 1);
-
-      metrics.rotation.score = Math.round((sScore + hScore + xScore)/3 * 20);
+    if (shW0 && shW1) {
+      const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
+      shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
     }
 
-    // On stocke les valeurs brutes pour la scorecard
-    metrics.rotation.shoulderRot = shoulderRot;
-    metrics.rotation.hipRot      = hipRot;
-    metrics.rotation.xFactor     = xFactor;
-    
+    if (hipW0 && hipW1) {
+      const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
+      hipRot = Math.acos(ratioH) * 180 / Math.PI;
+    }
 
+    xFactor = shoulderRot - hipRot;
+
+    // --- SCORING PAR RÉFÉRENCE ---
+    const REF = window.ParfectReference?.rotation;
+
+    if (REF) {
+      const sScore = jswClamp(
+        1 - Math.abs(shoulderRot - REF.shoulder.target) / REF.shoulder.tol,
+        0, 1
+      );
+
+      const hScore = jswClamp(
+        1 - Math.abs(hipRot - REF.hip.target) / REF.hip.tol,
+        0, 1
+      );
+
+      const xScore = jswClamp(
+        1 - Math.abs(xFactor - REF.xFactor.target) / REF.xFactor.tol,
+        0, 1
+      );
+
+      const rotNorm =
+        sScore * 0.5 +
+        hScore * 0.3 +
+        xScore * 0.2;
+
+      metrics.rotation.score = Math.round(rotNorm * 20);
+    } else {
+      metrics.rotation.score = 10;
+    }
+
+  // ============================
+  // 🟠 DTL
+  // ============================
   } else {
-    metrics.rotation.score = 10;
+    const shAng0 = jswLineAngleDeg(LS0, RS0);
+    const shAng1 = jswLineAngleDeg(LS1, RS1);
+    const hipAng0 = jswLineAngleDeg(LH0, RH0);
+    const hipAng1 = jswLineAngleDeg(LH1, RH1);
+
+    shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
+    hipRot = jswDegDiff(hipAng0, hipAng1) ?? 0;
+    xFactor = shoulderRot - hipRot;
+
+    const sScore = jswClamp(1 - Math.abs(shoulderRot - 80) / 40, 0, 1);
+    const hScore = jswClamp(1 - Math.abs(hipRot - 40) / 25, 0, 1);
+    const xScore = jswClamp(1 - Math.abs(xFactor - 35) / 25, 0, 1);
+
+    metrics.rotation.score = Math.round((sScore + hScore + xScore) / 3 * 20);
   }
+
+  // --- Valeurs brutes pour UI ---
+  metrics.rotation.shoulderRot = shoulderRot;
+  metrics.rotation.hipRot = hipRot;
+  metrics.rotation.xFactor = xFactor;
+
+} else {
+  metrics.rotation.score = 10;
+}
+
 
 
   // =====================================================
