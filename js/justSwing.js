@@ -1072,34 +1072,47 @@ if (addressPose && topPose) {
 
     xFactor = shoulderRot - hipRot;
 
-    // --- SCORING PAR RÉFÉRENCE ---
-    const REF = window.ParfectReference?.rotation;
+    // --- RAW VALUES (pour affichage)
+const rawShoulderRot = shoulderRot;
+const rawHipRot      = hipRot;
+const rawXFactor     = xFactor;
 
-    if (REF) {
-      const sScore = jswClamp(
-        1 - Math.abs(shoulderRot - REF.shoulder.target) / REF.shoulder.tol,
-        0, 1
-      );
+// --- SCORING VS RÉFÉRENCE
+const REF = window.ParfectReference?.rotation;
 
-      const hScore = jswClamp(
-        1 - Math.abs(hipRot - REF.hip.target) / REF.hip.tol,
-        0, 1
-      );
+if (REF) {
+  const sRef = REF.shoulder.target;
+  const sTol = REF.shoulder.tol;
 
-      const xScore = jswClamp(
-        1 - Math.abs(xFactor - REF.xFactor.target) / REF.xFactor.tol,
-        0, 1
-      );
+  const hRef = REF.hip.target;
+  const hTol = REF.hip.tol;
 
-      const rotNorm =
-        sScore * 0.5 +
-        hScore * 0.3 +
-        xScore * 0.2;
+  const xRef = REF.xFactor.target;
+  const xTol = REF.xFactor.tol;
 
-      metrics.rotation.score = Math.round(rotNorm * 20);
-    } else {
-      metrics.rotation.score = 10;
-    }
+  const sScore = jswClamp(1 - Math.abs(rawShoulderRot - sRef) / sTol, 0, 1);
+  const hScore = jswClamp(1 - Math.abs(rawHipRot      - hRef) / hTol, 0, 1);
+  const xScore = jswClamp(1 - Math.abs(rawXFactor     - xRef) / xTol, 0, 1);
+
+  const rotNorm =
+    sScore * 0.5 +
+    hScore * 0.3 +
+    xScore * 0.2;
+
+  metrics.rotation.score = Math.round(rotNorm * 20);
+} else {
+  metrics.rotation.score = 10;
+}
+
+// --- STOCKAGE STRUCTURÉ
+metrics.rotation.raw = {
+  shoulder: rawShoulderRot,
+  hip: rawHipRot,
+  xFactor: rawXFactor
+};
+
+metrics.rotation.ref = REF || null;
+
 
   // ============================
   // 🟠 DTL
