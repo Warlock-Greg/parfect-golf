@@ -1,0 +1,42 @@
+{
+  "meta": {
+    "club": "fer7",
+    "view": "faceOnMobile",
+    "camera": {
+      "device": "mobile",
+      "placement": "sol",
+      "tilt": "leger_arriere",
+      "distance_m": 1.8
+    },
+    "note": "Référence Parfect issue d’un swing validé"
+  },
+
+  "rotation": {
+    "shoulder": { "target": 19.1, "tol": 6.0 },
+    "hip":      { "target": 7.8,  "tol": 4.0 },
+    "xFactor":  { "target": 11.3, "tol": 5.0 }
+  },
+
+  "triangle": {
+    "varTopPct":    { "target": 3.2, "tol": 5.0 },
+    "varImpactPct": { "target": 4.8, "tol": 7.0 }
+  },
+
+  "tempo": {
+    "ratio": { "target": 3.05, "tol": 0.8 }
+  },
+
+  "weightShift": {
+    "back": { "target": 0.046, "tol": 0.02 },
+    "fwd":  { "target": 0.054, "tol": 0.02 }
+  },
+
+  "extension": {
+    "impact": { "target": 0.285, "tol": 0.06 },
+    "finish": { "target": 0.295, "tol": 0.06 }
+  },
+
+  "balance": {
+    "headMove": { "target": 0.025, "tol": 0.06 }
+  }
+}
