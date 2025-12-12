@@ -1181,35 +1181,67 @@ if (addressPose && topPose && impactPose) {
 
 
   // =====================================================
-  // 4) WEIGHT SHIFT (hips & pieds)
-  // =====================================================
-  if (addressPose && topPose && impactPose) {
-    const LH0 = addressPose[23], RH0 = addressPose[24];
-    const LH1 = topPose[23],     RH1 = topPose[24];
-    const LH2 = impactPose[23],  RH2 = impactPose[24];
+// 4) WEIGHT SHIFT — transfert latéral hanches (mobile)
+// =====================================================
+if (addressPose && topPose && impactPose) {
+  const LH0 = addressPose[23], RH0 = addressPose[24];
+  const LH1 = topPose[23],     RH1 = topPose[24];
+  const LH2 = impactPose[23],  RH2 = impactPose[24];
 
-    const hips0 = (LH0 && RH0) ? { x:(LH0.x+RH0.x)/2, y:(LH0.y+RH0.y)/2 } : null;
-    const hips1 = (LH1 && RH1) ? { x:(LH1.x+RH1.x)/2, y:(LH1.y+RH1.y)/2 } : null;
-    const hips2 = (LH2 && RH2) ? { x:(LH2.x+RH2.x)/2, y:(LH2.y+RH2.y)/2 } : null;
+  const LS0 = addressPose[11], RS0 = addressPose[12];
 
-    let shiftBack = 0, shiftFwd = 0;
-    if (hips0 && hips1) {
-      shiftBack = hips1.x - hips0.x;
+  if (LH0 && RH0 && LH1 && RH1 && LH2 && RH2 && LS0 && RS0) {
+
+    const hips0 = { x:(LH0.x + RH0.x)/2, y:(LH0.y + RH0.y)/2 };
+    const hips1 = { x:(LH1.x + RH1.x)/2, y:(LH1.y + RH1.y)/2 };
+    const hips2 = { x:(LH2.x + RH2.x)/2, y:(LH2.y + RH2.y)/2 };
+
+    const shoulderWidth = jswDist(LS0, RS0);
+
+    if (shoulderWidth && shoulderWidth > 0) {
+      // 🔄 Normalisation par la largeur d’épaules
+      const shiftBack = (hips1.x - hips0.x) / shoulderWidth;
+      const shiftFwd  = (hips2.x - hips0.x) / shoulderWidth;
+
+      metrics.weightShift.shiftBack = shiftBack;
+      metrics.weightShift.shiftFwd  = shiftFwd;
+
+      // 🎯 Référence Parfect si dispo
+      const REF = window.ParfectReference?.weightShift;
+
+      let backScore = 0.5;
+      let fwdScore  = 0.5;
+
+      if (REF) {
+        backScore = jswClamp(
+          1 - Math.abs(Math.abs(shiftBack) - REF.back.target) / REF.back.tol,
+          0, 1
+        );
+
+        fwdScore = jswClamp(
+          1 - Math.abs(Math.abs(shiftFwd) - REF.fwd.target) / REF.fwd.tol,
+          0, 1
+        );
+      } else {
+        // fallback générique
+        backScore = jswClamp((Math.abs(shiftBack) - 0.03) / 0.12, 0, 1);
+        fwdScore  = jswClamp((Math.abs(shiftFwd)  - 0.03) / 0.12, 0, 1);
+      }
+
+      // 🎚 Impact > Top
+      metrics.weightShift.score = Math.round(
+        (backScore * 0.4 + fwdScore * 0.6) * 20
+      );
+
+    } else {
+      metrics.weightShift.score = 10;
     }
-    if (hips0 && hips2) {
-      shiftFwd = hips0.x - hips2.x;
-    }
-
-    metrics.weightShift.shiftBack = shiftBack;
-    metrics.weightShift.shiftFwd  = shiftFwd;
-
-    const backScore = jswClamp((Math.abs(shiftBack) - 0.01)/0.12, 0, 1);
-    const fwdScore  = jswClamp((Math.abs(shiftFwd) - 0.01)/0.12, 0, 1);
-
-    metrics.weightShift.score = Math.round((backScore + fwdScore)/2 * 15);
   } else {
     metrics.weightShift.score = 10;
   }
+} else {
+  metrics.weightShift.score = 10;
+}
 
   // =====================================================
   // 5) EXTENSION & FINISH
