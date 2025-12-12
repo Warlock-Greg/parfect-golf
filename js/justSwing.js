@@ -1072,11 +1072,6 @@ if (addressPose && topPose) {
 
     xFactor = shoulderRot - hipRot;
 
-    // --- RAW VALUES (pour affichage)
-const rawShoulderRot = shoulderRot;
-const rawHipRot      = hipRot;
-const rawXFactor     = xFactor;
-
 // --- SCORING VS RÉFÉRENCE
 const REF = window.ParfectReference?.rotation;
 
@@ -1135,9 +1130,9 @@ metrics.rotation.ref = REF || null;
   }
 
   // --- Valeurs brutes pour UI ---
- metrics.rotation.shoulderRot = rawShoulderRot;
-metrics.rotation.hipRot      = rawHipRot;
-metrics.rotation.xFactor     = rawXFactor;
+ metrics.rotation.shoulderRot = shoulderRot;
+metrics.rotation.hipRot      = hipRot;
+metrics.rotation.xFactor     = xFactor;
 
 
 } else {
