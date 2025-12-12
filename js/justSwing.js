@@ -1244,33 +1244,74 @@ if (addressPose && topPose && impactPose) {
 }
 
   // =====================================================
-  // 5) EXTENSION & FINISH
-  // =====================================================
-  if (impactPose && finishPose) {
-    const LS_imp  = impactPose[11];
-    const LH_imp  = impactPose[15];
-    const LS_fin  = finishPose[11];
-    const LH_fin  = finishPose[15];
-    const headImp = impactPose[0];
-    const headFin = finishPose[0];
+// 5) FINISH — équilibre + extension (mobile face-on)
+// =====================================================
+if (impactPose && finishPose && addressPose) {
+  const headImp = impactPose[0];
+  const headFin = finishPose[0];
 
-    const extImpact = jswDist(LS_imp, LH_imp);
-    const extFinish = jswDist(LS_fin, LH_fin);
+  const LHf = finishPose[23], RHf = finishPose[24];
+  const LSf = finishPose[11], RSf = finishPose[12];
+  const LWf = finishPose[15]; // poignet lead
 
-    metrics.extension.extImpact = extImpact;
-    metrics.extension.extFinish = extFinish;
+  if (headImp && headFin && LHf && RHf && LSf && RSf && LWf) {
 
-    const extScore = extImpact ? jswClamp((extImpact - 0.18)/0.15, 0, 1) : 0.6;
+    const hipsFin = { x:(LHf.x + RHf.x)/2, y:(LHf.y + RHf.y)/2 };
+    const shouldersFin = { x:(LSf.x + RSf.x)/2, y:(LSf.y + RSf.y)/2 };
 
-    const headMove = (headImp && headFin) ? jswDist(headImp, headFin) : 0.02;
+    const shoulderWidth = jswDist(LSf, RSf) || 0.25;
+
+    // 1️⃣ Déplacement de la tête (impact → finish)
+    const headMove = jswDist(headImp, headFin) / shoulderWidth;
+
+    // 2️⃣ Tête au-dessus des hanches (équilibre)
+    const headOverHips = Math.abs(headFin.x - hipsFin.x) / shoulderWidth;
+
+    // 3️⃣ Extension bras (épaule → poignet)
+    const armExtension = jswDist(LSf, LWf);
+
     metrics.extension.headMove = headMove;
+    metrics.extension.headOverHips = headOverHips;
+    metrics.extension.armExtension = armExtension;
 
-    const finishScore = jswClamp(1 - headMove/0.12, 0, 1);
+    // 🎯 Référence Parfect
+    const REF = window.ParfectReference?.extension;
 
-    metrics.extension.score = Math.round((extScore*0.6 + finishScore*0.4) * 10);
+    let moveScore = 0.6;
+    let alignScore = 0.6;
+    let extScore = 0.6;
+
+    if (REF) {
+      moveScore = jswClamp(
+        1 - Math.abs(headMove - REF.balance.target) / REF.balance.tol,
+        0, 1
+      );
+
+      alignScore = jswClamp(
+        1 - headOverHips / 0.25,
+        0, 1
+      );
+
+      extScore = jswClamp(
+        1 - Math.abs(armExtension - REF.finish.target) / REF.finish.tol,
+        0, 1
+      );
+    }
+
+    // 🎚 Pondération : équilibre > extension
+    const finishNorm =
+      moveScore * 0.4 +
+      alignScore * 0.4 +
+      extScore * 0.2;
+
+    metrics.extension.score = Math.round(finishNorm * 20);
+
   } else {
-    metrics.extension.score = 7;
+    metrics.extension.score = 10;
   }
+} else {
+  metrics.extension.score = 10;
+}
 
  // =====================================================
 // 6) TEMPO — robuste, caméra-indépendant
