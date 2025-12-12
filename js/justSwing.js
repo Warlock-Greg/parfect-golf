@@ -1090,9 +1090,9 @@ if (REF) {
   const xRef = REF.xFactor.target;
   const xTol = REF.xFactor.tol;
 
-  const sScore = jswClamp(1 - Math.abs(rawShoulderRot - sRef) / sTol, 0, 1);
-  const hScore = jswClamp(1 - Math.abs(rawHipRot      - hRef) / hTol, 0, 1);
-  const xScore = jswClamp(1 - Math.abs(rawXFactor     - xRef) / xTol, 0, 1);
+  const sScore = jswClamp(1 - Math.abs(ShoulderRot - sRef) / sTol, 0, 1);
+  const hScore = jswClamp(1 - Math.abs(HipRot      - hRef) / hTol, 0, 1);
+  const xScore = jswClamp(1 - Math.abs(XFactor     - xRef) / xTol, 0, 1);
 
   const rotNorm =
     sScore * 0.5 +
@@ -1106,9 +1106,9 @@ if (REF) {
 
 // --- STOCKAGE STRUCTURÉ
 metrics.rotation.raw = {
-  shoulder: rawShoulderRot,
-  hip: rawHipRot,
-  xFactor: rawXFactor
+  shoulder: ShoulderRot,
+  hip: HipRot,
+  xFactor: XFactor
 };
 
 metrics.rotation.ref = REF || null;
