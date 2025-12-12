@@ -1224,35 +1224,65 @@ metrics.rotation.xFactor     = rawXFactor;
     metrics.extension.score = 7;
   }
 
-  // =====================================================
-  // 6) TEMPO
-  // =====================================================
-  if (kf.address && kf.top && kf.impact && swing.timestamps) {
-    const addrIdx   = typeof kf.address.index === "number" ? kf.address.index : kf.address;
-    const topIdx    = typeof kf.top.index     === "number" ? kf.top.index     : kf.top;
-    const impactIdx = typeof kf.impact.index  === "number" ? kf.impact.index  : kf.impact;
+ // =====================================================
+// 6) TEMPO — robuste, caméra-indépendant
+// =====================================================
+if (
+  kf.address?.index != null &&
+  kf.top?.index != null &&
+  kf.impact?.index != null &&
+  T.length
+) {
+  const iAddr   = kf.address.index;
+  const iTop    = kf.top.index;
+  const iImpact = kf.impact.index;
 
-    const T = swing.timestamps;
-    if (T[addrIdx] != null && T[topIdx] != null && T[impactIdx] != null) {
-      const tb = (T[topIdx]    - T[addrIdx]) / 1000;
-      const td = (T[impactIdx] - T[topIdx])  / 1000;
+  const tAddr   = T[iAddr];
+  const tTop    = T[iTop];
+  const tImpact = T[iImpact];
 
-      const backswingT = tb > 0 ? tb : 0;
-      const downswingT = td > 0 ? td : 0;
-      const ratio = (backswingT > 0 && downswingT > 0) ? backswingT / downswingT : 3.0;
+  if (
+    typeof tAddr === "number" &&
+    typeof tTop === "number" &&
+    typeof tImpact === "number" &&
+    tTop > tAddr &&
+    tImpact > tTop
+  ) {
+    const backswingT = (tTop - tAddr) / 1000;   // ms → s
+    const downswingT = (tImpact - tTop) / 1000;
 
-      metrics.tempo.backswingT = backswingT;
-      metrics.tempo.downswingT = downswingT;
-      metrics.tempo.ratio      = ratio;
+    const ratio =
+      downswingT > 0 ? backswingT / downswingT : null;
 
-      const tempoScore = jswClamp(1 - Math.abs(ratio - 3)/1.2, 0, 1);
-      metrics.tempo.score = Math.round(tempoScore * 10);
+    metrics.tempo.backswingT = backswingT;
+    metrics.tempo.downswingT = downswingT;
+    metrics.tempo.ratio = ratio;
+
+    // 🔗 Référence Parfect
+    const REF = window.ParfectReference?.tempo;
+
+    if (REF && ratio != null) {
+      const rTarget = REF.ratio.target;
+      const rTol    = REF.ratio.tol;
+
+      const tempoNorm = jswClamp(
+        1 - Math.abs(ratio - rTarget) / rTol,
+        0,
+        1
+      );
+
+      metrics.tempo.score = Math.round(tempoNorm * 20);
     } else {
-      metrics.tempo.score = 7;
+      metrics.tempo.score = 10; // fallback propre
     }
+
   } else {
-    metrics.tempo.score = 7;
+    metrics.tempo.score = 10;
   }
+} else {
+  metrics.tempo.score = 10;
+}
+
 
   // =====================================================
   // 7) BALANCE
