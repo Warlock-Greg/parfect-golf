@@ -858,6 +858,7 @@ function scoreTempoRobust(timestamps, kf) {
 //   Gère les vues : faceOn / mobileFaceOn / dtl
 // ---------------------------------------------------------
 function computeSwingScorePremium(swing) {
+  const PARFECT_REF = window.parfectReference?.rotation;
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
   const kf     = swing.keyFrames || {};
@@ -900,6 +901,13 @@ function computeSwingScorePremium(swing) {
     return frames[idx];
   }
 
+function scoreVsReference(value, target, tol) {
+  if (value == null || target == null || tol == null) return 0;
+  const diff = Math.abs(value - target);
+  return jswClamp(1 - diff / tol, 0, 1);
+}
+
+  
   // -------------------------------------
   // Récup des poses clés
   // -------------------------------------
@@ -1034,19 +1042,33 @@ function computeSwingScorePremium(swing) {
       xFactor = shoulderRot - hipRot;
 
       // 🎚 CALIBRATION "MOBILE" :
-      //  - ~20–25° de rotation caméra = rotation très bonne
-      //  - tout ce qui est au-dessus sature le score
-      const shoulderIndex = jswClamp(shoulderRot / 22, 0, 1); // 22° ≈ top
-      const hipIndex      = jswClamp(hipRot / 12, 0, 1);      // 12° ≈ top
-      const xIndex        = jswClamp(xFactor / 10, 0, 1);     // 10° ≈ bon X-Factor caméra
+     
+     const sScore = scoreVsReference(
+  shoulderRot,
+  REF.shoulder.target,
+  REF.shoulder.tol
+);
 
-      // On donne plus de poids aux épaules
-      const rotNorm =
-        shoulderIndex * 0.6 +
-        hipIndex      * 0.2 +
-        xIndex        * 0.2;
+const hScore = scoreVsReference(
+  hipRot,
+  REF.hip.target,
+  REF.hip.tol
+);
 
-      metrics.rotation.score = Math.round(rotNorm * 20);
+const xScore = scoreVsReference(
+  xFactor,
+  REF.xFactor.target,
+  REF.xFactor.tol
+);
+
+// Pondération : épaules dominantes
+const rotNorm =
+  sScore * 0.6 +
+  hScore * 0.2 +
+  xScore * 0.2;
+
+metrics.rotation.score = Math.round(rotNorm * 20);
+
 
     } else {
       // 🟠 DTL : on reste sur la variation d'angle classique
@@ -1078,6 +1100,7 @@ function computeSwingScorePremium(swing) {
     metrics.rotation.shoulderRot = shoulderRot;
     metrics.rotation.hipRot      = hipRot;
     metrics.rotation.xFactor     = xFactor;
+    
 
   } else {
     metrics.rotation.score = 10;
