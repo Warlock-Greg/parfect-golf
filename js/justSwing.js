@@ -886,6 +886,9 @@ function scoreTempoRobust(timestamps, kf) {
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
   const kf     = swing.keyFrames || {};
+  const T = swing.timestamps || [];
+
+  
 
 const REF = window.REF;
 
