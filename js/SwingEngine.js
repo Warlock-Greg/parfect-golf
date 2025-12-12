@@ -23,7 +23,7 @@ const SwingEngine = (() => {
   const IMPACT_SPIKE = 0.25;          // brusque changement pour impact
   const FINISH_HOLD_MS = 250;         // stabilité finale
   const MAX_IDLE_MS = 1800;           // reset auto
-  const FINISH_TIMEOUT_MS = 600; // 0.6 seconde après le release
+  const FINISH_TIMEOUT_MS = 400; // 0.6 seconde après le release
 
 
   function dist(a, b) {
