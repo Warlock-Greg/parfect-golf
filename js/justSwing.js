@@ -1122,9 +1122,10 @@ if (addressPose && topPose) {
   }
 
   // --- Valeurs brutes pour UI ---
-  metrics.rotation.shoulderRot = shoulderRot;
-  metrics.rotation.hipRot = hipRot;
-  metrics.rotation.xFactor = xFactor;
+ metrics.rotation.shoulderRot = rawShoulderRot;
+metrics.rotation.hipRot      = rawHipRot;
+metrics.rotation.xFactor     = rawXFactor;
+
 
 } else {
   metrics.rotation.score = 10;
