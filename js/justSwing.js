@@ -1624,12 +1624,21 @@ function buildPremiumBreakdown(swing, scores) {
         rotationScore,
         "Épaules · Hanches · X-Factor",
         `
-          Rotation épaules: ${metrics.rotation.shoulderRot?.toFixed(1)}°  
-          <span style="opacity:.7;">(cible 80–100°)</span><br>
-  Rotation hanches: ${metrics.rotation.hipRot?.toFixed(1)}°  
-  <span style="opacity:.7;">(cible 35–55°)</span><br>
-  X-Factor: ${metrics.rotation.xFactor?.toFixed(1)}°  
-  <span style="opacity:.7;">(cible 30–50°)</span>
+          Rotation épaules: ${metrics.rotation.raw?.shoulder?.toFixed(1)}°
+<span style="opacity:.7;">
+  (cible ${metrics.rotation.ref?.shoulder?.target ?? "—"}°)
+</span><br>
+
+Rotation hanches: ${metrics.rotation.raw?.hip?.toFixed(1)}°
+<span style="opacity:.7;">
+  (cible ${metrics.rotation.ref?.hip?.target ?? "—"}°)
+</span><br>
+
+X-Factor: ${metrics.rotation.raw?.xFactor?.toFixed(1)}°
+<span style="opacity:.7;">
+  (cible ${metrics.rotation.ref?.xFactor?.target ?? "—"}°)
+</span>
+
         `
       )}
 
