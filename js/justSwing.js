@@ -713,6 +713,13 @@ function jswSafePoseFromKF(kf) {
   if (Array.isArray(kf)) return kf;
   return null;
 }
+
+function getRef(ref, path, fallback = null) {
+  return path.split(".").reduce((o, k) => (o && o[k] != null ? o[k] : null), ref) ?? fallback;
+}
+
+
+  
 // ---------------------------------------------------------
 //   DÉTECTION VUE CAMERA : FACE-ON vs DOWN-THE-LINE
 // ---------------------------------------------------------
@@ -1044,6 +1051,19 @@ function scoreVsReference(value, target, tol) {
       (window.jswViewType || metrics.viewType || "faceOn")
         .toLowerCase();
 
+    // 🔗 Référence Parfect (sécurisée)
+const REF = window.REF || {};
+
+const refShoulderTarget = getRef(REF, "rotation.shoulder.target");
+const refShoulderTol    = getRef(REF, "rotation.shoulder.tol");
+
+const refHipTarget = getRef(REF, "rotation.hip.target");
+const refHipTol    = getRef(REF, "rotation.hip.tol");
+
+const refXTarget = getRef(REF, "rotation.xFactor.target");
+const refXTol    = getRef(REF, "rotation.xFactor.tol");
+
+
     if (view === "faceon" || view === "mobilefaceon") {
       // 🔵 MOBILE FACE-ON : on garde la "compression" de largeur
       const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
@@ -1067,31 +1087,28 @@ function scoreVsReference(value, target, tol) {
 
       // 🎚 CALIBRATION "MOBILE" :
      
-     const sScore = scoreVsReference(
+ const sScore = scoreVsReference(
   shoulderRot,
-  REF.shoulder.target,
-  REF.shoulder.tol
+  refShoulderTarget,
+  refShoulderTol
 );
 
 const hScore = scoreVsReference(
   hipRot,
-  REF.hip.target,
-  REF.hip.tol
+  refHipTarget,
+  refHipTol
 );
 
 const xScore = scoreVsReference(
   xFactor,
-  REF.xFactor.target,
-  REF.xFactor.tol
+  refXTarget,
+  refXTol
 );
 
-// Pondération : épaules dominantes
-const rotNorm =
-  sScore * 0.6 +
-  hScore * 0.2 +
-  xScore * 0.2;
+metrics.rotation.score = Math.round(
+  (sScore * 0.6 + hScore * 0.2 + xScore * 0.2) * 20
+);
 
-metrics.rotation.score = Math.round(rotNorm * 20);
 
 
     } else {
