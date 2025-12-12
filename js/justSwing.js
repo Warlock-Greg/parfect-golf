@@ -1133,36 +1133,52 @@ metrics.rotation.xFactor     = rawXFactor;
 
 
 
-  // =====================================================
-  // 3) TRIANGLE (address / top / impact)
-  // =====================================================
-  if (addressPose && topPose && impactPose) {
-    const LS0 = addressPose[11];
-    const LH0 = addressPose[15]; // poignet lead (gauche droitier)
-    const LS1 = topPose[11];
-    const LH1 = topPose[15];
-    const LS2 = impactPose[11];
-    const LH2 = impactPose[15];
+ // =====================================================
+// 3) TRIANGLE — stabilité bras / buste (robuste mobile)
+// =====================================================
+if (addressPose && topPose && impactPose) {
+  const LS0 = addressPose[11];
+  const RS0 = addressPose[12];
+  const LW0 = addressPose[15]; // poignet lead
 
-    const d0 = jswDist(LS0, LH0);
-    const d1 = jswDist(LS1, LH1);
-    const d2 = jswDist(LS2, LH2);
+  const LS1 = topPose[11];
+  const RS1 = topPose[12];
+  const LW1 = topPose[15];
 
-    const varTop = (d0 && d1) ? Math.abs(d1 - d0)/d0 * 100 : 0;
-    const varImp = (d0 && d2) ? Math.abs(d2 - d0)/d0 * 100 : 0;
+  const LS2 = impactPose[11];
+  const RS2 = impactPose[12];
+  const LW2 = impactPose[15];
 
-    metrics.triangle.dAddress     = d0;
-    metrics.triangle.dTop         = d1;
-    metrics.triangle.dImpact      = d2;
-    metrics.triangle.varTopPct    = varTop;
-    metrics.triangle.varImpactPct = varImp;
+  const shoulderW0 = jswDist(LS0, RS0);
 
-    const scoreTop = jswClamp(1 - varTop/15, 0, 1);
-    const scoreImp = jswClamp(1 - varImp/10, 0, 1);
-    metrics.triangle.score = Math.round((scoreTop + scoreImp)/2 * 15);
+  if (shoulderW0 && shoulderW0 > 0) {
+    const ref = jswDist(LS0, LW0) / shoulderW0;
+    const topVal = jswDist(LS1, LW1) / shoulderW0;
+    const impVal = jswDist(LS2, LW2) / shoulderW0;
+
+    const varTop = Math.abs(topVal - ref) / ref * 100;
+    const varImp = Math.abs(impVal - ref) / ref * 100;
+
+    metrics.triangle.refRatio      = ref;
+    metrics.triangle.topRatio      = topVal;
+    metrics.triangle.impactRatio   = impVal;
+    metrics.triangle.varTopPct     = varTop;
+    metrics.triangle.varImpactPct  = varImp;
+
+    // 🎯 Calibration mobile face-on réaliste
+    const scoreTop = jswClamp(1 - varTop / 18, 0, 1);
+    const scoreImp = jswClamp(1 - varImp / 12, 0, 1);
+
+    metrics.triangle.score = Math.round(
+      (scoreTop * 0.5 + scoreImp * 0.5) * 20
+    );
   } else {
     metrics.triangle.score = 10;
   }
+} else {
+  metrics.triangle.score = 10;
+}
+
 
   // =====================================================
   // 4) WEIGHT SHIFT (hips & pieds)
