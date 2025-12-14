@@ -25,6 +25,11 @@ const SwingEngine = (() => {
   const MAX_IDLE_MS = 1800;           // reset auto
   const FINISH_TIMEOUT_MS = 400; // 0.6 seconde après le release
 
+let fallbackActiveFrames = 0;
+const FALLBACK_MIN_FRAMES = 20; // ≈ 0.7s à 30fps
+const FALLBACK_MIN_ENERGY = 0.03;
+
+  
 
   function dist(a, b) {
     if (!a || !b) return 0;
@@ -144,13 +149,29 @@ console.log(
       }
 
       // IDLE → Address
-      if (state === "IDLE") {
-        if (speedWrist < 0.005) {
-          state = "ADDRESS";
-          markKeyFrame("address", 0, pose);
-        }
-        return;
-      }
+     if (state === "IDLE") {
+
+  // 🔹 Déclencheur normal (inchangé)
+  if (speedWrist > WRIST_START && speedHip > HIP_START) {
+    startSwing("auto");
+    fallbackActiveFrames = 0;
+    return;
+  }
+
+  // 🔸 Fallback fluide
+  if (motionEnergy > FALLBACK_MIN_ENERGY) {
+    fallbackActiveFrames++;
+  } else {
+    fallbackActiveFrames = 0;
+  }
+
+  if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
+    console.log("🟡 FALLBACK SWING START (motion-based)");
+    startSwing("fallback_motion");
+    fallbackActiveFrames = 0;
+  }
+}
+
 
     // ADDRESS → backswing start
 if (state === "ADDRESS") {
