@@ -130,7 +130,6 @@ let captureArmed = false;
   }
 
   window.REF = null;
-  window.ParfectReference = null;
 
 fetch("/data/parfect_reference.json")
   .then(r => r.json())
