@@ -16,7 +16,7 @@ const JSW_STATE = {
   REVIEW: "REVIEW",               // affichage score
 };
 
-window.ParfectReference = parfectReferenceJson; 
+
 
 
 const JSW_MODE = {
@@ -130,11 +130,12 @@ let captureArmed = false;
   }
 
   window.REF = null;
+  window.ParfectReference = null;
 
 fetch("/data/parfect_reference.json")
   .then(r => r.json())
   .then(json => {
-    window.REF = json;
+    window.ParfectReference = json;
     console.log("📌 Parfect Reference loaded", json);
   })
   .catch(err => {
