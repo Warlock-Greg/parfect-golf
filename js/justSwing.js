@@ -16,6 +16,8 @@ const JSW_STATE = {
   REVIEW: "REVIEW",               // affichage score
 };
 
+window.ParfectReference = parfectReferenceJson; 
+
 
 const JSW_MODE = {
   SWING: "swing",
@@ -719,6 +721,29 @@ function getRef(ref, path, fallback = null) {
 }
 
 
+  function getActiveReference({ club, view }) {
+  const systemRef = window.ParfectReference;
+  const playerRef = window.PlayerReference || null;
+
+  const key = `${club}_${view}`;
+
+  // 1️⃣ Référence joueur spécifique
+  if (playerRef?.[key]) return playerRef[key];
+
+  // 2️⃣ Référence joueur générique
+  if (playerRef?.default) return playerRef.default;
+
+  // 3️⃣ Référence Parfect spécifique
+  if (systemRef?.[key]) return systemRef[key];
+
+  // 4️⃣ Référence Parfect générique
+  if (systemRef?.default) return systemRef.default;
+
+  // 5️⃣ Sécurité absolue
+  console.warn("⚠️ No reference found, using empty reference");
+  return {};
+}
+
   
 // ---------------------------------------------------------
 //   DÉTECTION VUE CAMERA : FACE-ON vs DOWN-THE-LINE
@@ -1076,7 +1101,13 @@ if (addressPose && topPose) {
     xFactor = shoulderRot - hipRot;
 
 // --- SCORING VS RÉFÉRENCE
-const REF = window.ParfectReference?.rotation;
+const ActiveRef = getActiveReference({
+  club: metrics.club,
+  view: metrics.viewType
+});
+
+const REF = ActiveRef.rotation;
+
 
 if (REF) {
   const sRef = REF.shoulder.target;
