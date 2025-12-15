@@ -17,6 +17,14 @@ const SwingEngine = (() => {
     RIGHT_SHOULDER: 12
   };
 
+  const SWING_THRESHOLDS = {
+    WRIST_START: 0.04,
+    WRIST_STOP: 0.015,
+    HIP_START: 0.03,
+    HIP_STOP: 0.012
+  };
+
+  
   // --- paramètres
   const MIN_SWING_MS = 350;           // durée mini
   const START_SPEED = 0.015;          // vitesse poignet = démarrage
@@ -24,6 +32,8 @@ const SwingEngine = (() => {
   const FINISH_HOLD_MS = 250;         // stabilité finale
   const MAX_IDLE_MS = 1800;           // reset auto
   const FINISH_TIMEOUT_MS = 400; // 0.6 seconde après le release
+
+  
 
 let fallbackActiveFrames = 0;
 const FALLBACK_MIN_FRAMES = 20; // ≈ 0.7s à 30fps
@@ -152,7 +162,7 @@ console.log(
      if (state === "IDLE") {
 
   // 🔹 Déclencheur normal (inchangé)
-  if (speedWrist > WRIST_START && speedHip > HIP_START) {
+  if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
     startSwing("auto");
     fallbackActiveFrames = 0;
     return;
