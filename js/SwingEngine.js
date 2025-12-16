@@ -53,7 +53,7 @@ const FALLBACK_MIN_ENERGY = 0.03;
   }
 
   // --- Création moteur
-  function create({ fps = 30, onKeyFrame, onSwingComplete }) {
+  function create({ fps = 30, onKeyFrame, onSwingComplete, onSwingStart}) {
 
     let state = "IDLE";
     let lastPose = null;
@@ -163,7 +163,9 @@ console.log(
 
   // 🔹 Déclencheur normal (inchangé)
   if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
-    startSwing("auto");
+    if (typeof onSwingStart === "function") {
+        onSwingStart("auto");
+        }
     fallbackActiveFrames = 0;
     return;
   }
@@ -177,7 +179,9 @@ console.log(
 
   if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
     console.log("🟡 FALLBACK SWING START (motion-based)");
-    startSwing("fallback_motion");
+     if (typeof onSwingStart === "function") {
+        onSwingStart("fallback_motion");
+        }
     fallbackActiveFrames = 0;
   }
 }
