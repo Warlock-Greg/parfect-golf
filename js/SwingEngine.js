@@ -161,6 +161,8 @@ console.log(
       // IDLE → Address
      if (state === "IDLE") {
 
+      const motionEnergy = speedWrist + speedHip;
+
   // 🔹 Déclencheur normal (inchangé)
   if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
     if (typeof onSwingStart === "function") {
