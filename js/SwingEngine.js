@@ -159,15 +159,17 @@ console.log(
       }
 
       // IDLE → Address
-     if (state === "IDLE") {
+   if (state === "IDLE") {
 
-      const motionEnergy = speedWrist + speedHip;
+  const motionEnergy = speedWrist + speedHip;
 
-  // 🔹 Déclencheur normal (inchangé)
-  if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
-    if (typeof onSwingStart === "function") {
-        onSwingStart("auto");
-        }
+  // 🔹 Déclencheur principal du swing
+  if (
+    speedWrist > SWING_THRESHOLDS.WRIST_START &&
+    speedHip > SWING_THRESHOLDS.HIP_START
+  ) {
+    state = "ADDRESS";
+    swingStartTime = timeMs;
     fallbackActiveFrames = 0;
     return;
   }
@@ -180,13 +182,14 @@ console.log(
   }
 
   if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
-    console.log("🟡 FALLBACK SWING START (motion-based)");
-     if (typeof onSwingStart === "function") {
-        onSwingStart("fallback_motion");
-        }
+    console.log("🟡 FALLBACK SWING START");
+    state = "ADDRESS";
+    swingStartTime = timeMs;
     fallbackActiveFrames = 0;
+    return;
   }
 }
+
 
 
     // ADDRESS → backswing start
