@@ -912,7 +912,7 @@ function scoreTempoRobust(timestamps, kf) {
 
   
   function computeSwingScorePremium(swing) {
-  const PARFECT_REF = window.parfectReference?.rotation;
+  //const PARFECT_REF = window.parfectReference?.rotation;
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
   const kf     = swing.keyFrames || {};
@@ -1757,10 +1757,20 @@ function activateRecording() {
 function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
+
   captureArmed = false;
   isRecordingActive = false;
   state = JSW_STATE.REVIEW;
   updateUI();
+
+   // 🔑 Sélection de la référence active pour CE swing
+  window.REF = getActiveReference({
+  club: swing.club || currentClubType,
+  view: window.jswViewType || "faceOn"
+  });
+
+console.log("🎯 Active Parfect Reference :", window.REF);
+
 
   const scores = computeSwingScorePremium(swing);
 
