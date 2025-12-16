@@ -466,6 +466,11 @@ if (window.SwingEngine && SwingEngine.create) {
       const swing = evt.data || evt;
       handleSwingComplete(swing);
     },
+
+    onSwingStart: (source) => {
+      startSwing(source); // ← TA fonction existante, inchangée
+    }
+    
   });
 
   console.log("🔧 SwingEngine READY", engine);
