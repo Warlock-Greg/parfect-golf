@@ -1019,7 +1019,9 @@ function scoreVsReference(value, target, tol) {
     const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y:(LH.y + RH.y)/2 } : null;
     const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
 
-    let flexionDeg = 30; // fallback "athlétique"
+    let flexionDeg = 30; // fallback "athlétique
+    let postureScore = 0;   // valeur neutre, informative
+
 
     if (hipsMid && shMid) {
       const vx = hipsMid.x - shMid.x;
