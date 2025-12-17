@@ -909,6 +909,8 @@ function scoreTempoRobust(timestamps, kf) {
   
   function computeSwingScorePremium(swing) {
   //const PARFECT_REF = window.parfectReference?.rotation;
+  let postureScore = 0;   // valeur neutre, informative
+    
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
   const kf     = swing.keyFrames || {};
@@ -1020,7 +1022,7 @@ function scoreVsReference(value, target, tol) {
     const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
 
     let flexionDeg = 30; // fallback "athlétique
-    let postureScore = 0;   // valeur neutre, informative
+    
 
 
     if (hipsMid && shMid) {
@@ -1058,6 +1060,8 @@ function scoreVsReference(value, target, tol) {
   } else {
     metrics.posture.score = 10;
   }
+postureScore = metrics.posture.score;
+
 
 const rotBasePose = addressPose || topPose; // ✅ fallback
 
@@ -1484,7 +1488,7 @@ if (
   return {
     total: Math.round(total),
     totalDynamic: Math.round(total),
-    postureScore,
+    //postureScore,
     rotationScore,
     triangleScore,
     weightShiftScore: weightScore,
