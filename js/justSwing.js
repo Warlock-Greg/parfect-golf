@@ -932,6 +932,11 @@ if (!REF) {
     return Math.max(min, Math.min(max, v));
   }
 
+  function safePose(pose) {
+  return Array.isArray(pose) ? pose : null;
+}
+
+
   function jswDist(a, b) {
     if (!a || !b) return null;
     const dx = a.x - b.x;
@@ -973,10 +978,11 @@ function scoreVsReference(value, target, tol) {
   // -------------------------------------
   // Récup des poses clés
   // -------------------------------------
-  const addressPose = jswSafePoseFromKF(kf.address);
-  const topPose     = jswSafePoseFromKF(kf.top);
-  const impactPose  = jswSafePoseFromKF(kf.impact);
-  const finishPose  = jswSafePoseFromKF(kf.finish);
+const addressPose = safePose(jswSafePoseFromKF(kf.address));
+const topPose     = safePose(jswSafePoseFromKF(kf.top));
+const impactPose  = safePose(jswSafePoseFromKF(kf.impact));
+const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
+
 
   // -------------------------------------
   // Vue caméra (driver par l’UI)
@@ -1229,7 +1235,7 @@ if (topPose && impactPose) {
     metrics.triangle.score = 10;
   }
 } else {
-  metrics.triangle.score = 11;
+  metrics.triangle.score = 10;
 }
 
 
