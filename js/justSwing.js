@@ -466,10 +466,6 @@ if (window.SwingEngine && SwingEngine.create) {
       const swing = evt.data || evt;
       handleSwingComplete(swing);
     },
-
-    onSwingStart: (source) => {
-      startSwing(source); // ← TA fonction existante, inchangée
-    }
     
   });
 
@@ -1061,14 +1057,17 @@ function scoreVsReference(value, target, tol) {
     metrics.posture.score = 10;
   }
 
+const rotBasePose = addressPose || topPose; // ✅ fallback
+
+    
 // =====================================================
 // 2) ROTATION (Address → Top)
 // =====================================================
 if (addressPose && topPose) {
-  const LS0 = addressPose[11];
-  const RS0 = addressPose[12];
-  const LH0 = addressPose[23];
-  const RH0 = addressPose[24];
+  const LS0 = rotBasePose[11];
+  const RS0 = rotBasePose[12];
+  const LH0 = rotBasePose[23];
+  const RH0 = rotBasePose[24];
 
   const LS1 = topPose[11];
   const RS1 = topPose[12];
@@ -1112,6 +1111,7 @@ const ActiveRef = getActiveReference({
 });
 
 const REF = ActiveRef.rotation;
+
 
 
 if (REF) {
@@ -1462,7 +1462,7 @@ if (
   // =====================================================
   // 8) TOTAL
   // =====================================================
-  const postureScore   = metrics.posture.score     ?? 0;
+  //const postureScore   = metrics.posture.score     ?? 0;
   const rotationScore  = metrics.rotation.score    ?? 0;
   const triangleScore  = metrics.triangle.score    ?? 0;
   const weightScore    = metrics.weightShift.score ?? 0;
@@ -1471,7 +1471,7 @@ if (
   const balanceScore   = metrics.balance.score     ?? 0;
 
   const total =
-    postureScore   +
+    //postureScore   +
     rotationScore  +
     triangleScore  +
     weightScore    +
@@ -1481,6 +1481,7 @@ if (
 
   return {
     total: Math.round(total),
+    totalDynamic: Math.round(total),
     postureScore,
     rotationScore,
     triangleScore,
