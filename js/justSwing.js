@@ -1069,7 +1069,7 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 // =====================================================
 // 2) ROTATION (Address → Top)
 // =====================================================
-if (addressPose && topPose) {
+if (topPose && impactPose) {
   const LS0 = rotBasePose[11];
   const RS0 = rotBasePose[12];
   const LH0 = rotBasePose[23];
@@ -1189,7 +1189,7 @@ metrics.rotation.xFactor     = xFactor;
  // =====================================================
 // 3) TRIANGLE — stabilité bras / buste (robuste mobile)
 // =====================================================
-if (addressPose && topPose && impactPose) {
+if (topPose && impactPose) {
   const LS0 = addressPose[11];
   const RS0 = addressPose[12];
   const LW0 = addressPose[15]; // poignet lead
@@ -1229,14 +1229,14 @@ if (addressPose && topPose && impactPose) {
     metrics.triangle.score = 10;
   }
 } else {
-  metrics.triangle.score = 10;
+  metrics.triangle.score = 11;
 }
 
 
   // =====================================================
 // 4) WEIGHT SHIFT — transfert latéral hanches (mobile)
 // =====================================================
-if (addressPose && topPose && impactPose) {
+if (topPose && impactPose) {
   const LH0 = addressPose[23], RH0 = addressPose[24];
   const LH1 = topPose[23],     RH1 = topPose[24];
   const LH2 = impactPose[23],  RH2 = impactPose[24];
@@ -1299,7 +1299,7 @@ if (addressPose && topPose && impactPose) {
   // =====================================================
 // 5) FINISH — équilibre + extension (mobile face-on)
 // =====================================================
-if (impactPose && finishPose && addressPose) {
+if (impactPose && finishPose) {
   const headImp = impactPose[0];
   const headFin = finishPose[0];
 
