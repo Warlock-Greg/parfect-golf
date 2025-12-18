@@ -1643,6 +1643,53 @@ function buildPremiumBreakdown(swing, scores) {
     return "#f87171";              // rouge
   }
 
+  // ---------------- ROTATION DETAILS (SAFE) ----------------
+const r = metrics.rotation || {};
+const stage = r.stages?.baseToTop || {};
+const A = stage.actual || {};
+const T = stage.target || {};
+const L = stage.tol || {};
+
+const fmt = (v) =>
+  typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
+
+const rotationDetails = `
+  <div style="opacity:.85;margin-bottom:10px;">
+    <b>Référence :</b> ${r.refKey || "—"}<br>
+    <b>Vue :</b> ${r.view || "—"}
+  </div>
+
+  <div style="
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+    text-align:center;
+  ">
+    <div>
+      <b>Épaules</b><br>
+      🎯 ${fmt(T.shoulder)}° ±${fmt(L.shoulder)}°<br>
+      ✅ ${fmt(A.shoulder)}°
+    </div>
+
+    <div>
+      <b>Hanches</b><br>
+      🎯 ${fmt(T.hip)}° ±${fmt(L.hip)}°<br>
+      ✅ ${fmt(A.hip)}°
+    </div>
+
+    <div>
+      <b>X-Factor</b><br>
+      🎯 ${fmt(T.xFactor)}° ±${fmt(L.xFactor)}°<br>
+      ✅ ${fmt(A.xFactor)}°
+    </div>
+  </div>
+
+  <div style="margin-top:10px;opacity:.7;">
+    Étape analysée : <b>Base → Top</b>
+  </div>
+`;
+
+
   // --- 3) Build the full premium card ---
   el.innerHTML = `
     <div style="padding:1.5rem;">
@@ -1671,57 +1718,13 @@ function buildPremiumBreakdown(swing, scores) {
       `
       )}
 
-     ${(() => {
-  const r = metrics.rotation || {};
-  const stage = r.stages?.baseToTop || {};
-  const A = stage.actual || {};
-  const T = stage.target || {};
-  const L = stage.tol || {};
+     ${block(
+  "Rotation",
+  rotationScore,
+  "Épaules · Hanches · X-Factor (Base → Top)",
+  rotationDetails
+)}
 
-  const fmt = (v) =>
-    typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
-
-  return block(
-    "Rotation",
-    rotationScore,
-    "Épaules · Hanches · X-Factor (Base → Top)",
-    `
-      <div style="opacity:.85;margin-bottom:10px;">
-        <b>Référence :</b> ${r.refKey || "—"}<br>
-        <b>Vue :</b> ${r.view || "—"}
-      </div>
-
-      <div style="
-        display:grid;
-        grid-template-columns:1fr 1fr 1fr;
-        gap:10px;
-        text-align:center;
-      ">
-        <div>
-          <b>Épaules</b><br>
-          🎯 ${fmt(T.shoulder)}° ±${fmt(L.shoulder)}°<br>
-          ✅ ${fmt(A.shoulder)}°
-        </div>
-
-        <div>
-          <b>Hanches</b><br>
-          🎯 ${fmt(T.hip)}° ±${fmt(L.hip)}°<br>
-          ✅ ${fmt(A.hip)}°
-        </div>
-
-        <div>
-          <b>X-Factor</b><br>
-          🎯 ${fmt(T.xFactor)}° ±${fmt(L.xFactor)}°<br>
-          ✅ ${fmt(A.xFactor)}°
-        </div>
-      </div>
-
-      <div style="margin-top:10px;opacity:.7;">
-        Étape analysée : <b>Base → Top</b>
-      </div>
-    `
-  );
-})()}
 
 
       ${block(
