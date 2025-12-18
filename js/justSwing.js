@@ -1165,36 +1165,6 @@ if (basePose && topPose && !isDTL) {
 metrics.rotation.score = rotationScore;
 
 
-  // ============================
-  // 🟠 DTL
-  // ============================
-  } else {
-    const shAng0 = jswLineAngleDeg(LS0, RS0);
-    const shAng1 = jswLineAngleDeg(LS1, RS1);
-    const hipAng0 = jswLineAngleDeg(LH0, RH0);
-    const hipAng1 = jswLineAngleDeg(LH1, RH1);
-
-    shoulderRot = jswDegDiff(shAng0, shAng1) ?? 0;
-    hipRot = jswDegDiff(hipAng0, hipAng1) ?? 0;
-    xFactor = shoulderRot - hipRot;
-
-    const sScore = jswClamp(1 - Math.abs(shoulderRot - 80) / 40, 0, 1);
-    const hScore = jswClamp(1 - Math.abs(hipRot - 40) / 25, 0, 1);
-    const xScore = jswClamp(1 - Math.abs(xFactor - 35) / 25, 0, 1);
-
-    metrics.rotation.score = Math.round((sScore + hScore + xScore) / 3 * 20);
-  }
-
-  // --- Valeurs brutes pour UI ---
- metrics.rotation.shoulderRot = shoulderRot;
-metrics.rotation.hipRot      = hipRot;
-metrics.rotation.xFactor     = xFactor;
-
-
-} else {
-  metrics.rotation.score = 10;
-}
-
 
 
  // =====================================================
