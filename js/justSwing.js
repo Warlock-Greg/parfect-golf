@@ -898,8 +898,45 @@ function scoreTempoRobust(timestamps, kf) {
   return { bs, ds, ratio };
 }
 
+function computeRotationFaceOn(basePose, topPose) {
+  // Mesure par réduction de largeur (projection) => OK FaceOn / MobileFaceOn
+  const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12);
+  const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
+
+  const LS1 = LM(topPose, 11),  RS1 = LM(topPose, 12);
+  const LH1 = LM(topPose, 23),  RH1 = LM(topPose, 24);
+
+  if (!LS0 || !RS0 || !LS1 || !RS1 || !LH0 || !RH0 || !LH1 || !RH1) return null;
+
+  const shW0 = Math.hypot(LS0.x - RS0.x, LS0.y - RS0.y);
+  const shW1 = Math.hypot(LS1.x - RS1.x, LS1.y - RS1.y);
+  const hipW0 = Math.hypot(LH0.x - RH0.x, LH0.y - RH0.y);
+  const hipW1 = Math.hypot(LH1.x - RH1.x, LH1.y - RH1.y);
+
+  if (shW0 <= 0 || hipW0 <= 0) return null;
+
+  const ratioS = Math.max(0.1, Math.min(1, shW1 / shW0));
+  const ratioH = Math.max(0.1, Math.min(1, hipW1 / hipW0));
+
+  const shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
+  const hipRot      = Math.acos(ratioH) * 180 / Math.PI;
+  const xFactor     = shoulderRot - hipRot;
+
+  return { shoulderRot, hipRot, xFactor };
+}
+
+function scoreOne(value, target, tol) {
+  if (value == null || target == null || tol == null || tol <= 0) return 0;
+  return Math.max(0, Math.min(1, 1 - Math.abs(value - target) / tol));
+}
 
   
+
+  function LM(pose, idx) {
+  if (!pose || !Array.isArray(pose)) return null;
+  return pose[idx] ?? null;
+}
+
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
@@ -1073,91 +1110,59 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 
     
 // =====================================================
-// 2) ROTATION (Address → Top)
+// ROTATION — carte premium (Base→Top) + targets
 // =====================================================
-if (topPose && impactPose) {
-  const LS0 = rotBasePose[11];
-  const RS0 = rotBasePose[12];
-  const LH0 = rotBasePose[23];
-  const RH0 = rotBasePose[24];
+let rotationScore = 10;
 
-  const LS1 = topPose[11];
-  const RS1 = topPose[12];
-  const LH1 = topPose[23];
-  const RH1 = topPose[24];
+const view = (window.REF_META?.view || metrics.viewType || "faceOn").toLowerCase();
+const isDTL = view.includes("dtl"); // si un jour tu fais une branche DTL dédiée
+const basePose = addressPose || topPose; // fallback si pas d’address
 
-  let shoulderRot = 0;
-  let hipRot = 0;
-  let xFactor = 0;
-
-  const view =
-    (window.jswViewType || metrics.viewType || "faceOn").toLowerCase();
-
-  // ============================
-  // 🔵 MOBILE / FACE-ON
-  // ============================
-  if (view === "faceon" || view === "mobilefaceon") {
-
-    // --- MESURE caméra (projection) ---
-    const shW0 = (LS0 && RS0) ? jswDist(LS0, RS0) : null;
-    const shW1 = (LS1 && RS1) ? jswDist(LS1, RS1) : null;
-    const hipW0 = (LH0 && RH0) ? jswDist(LH0, RH0) : null;
-    const hipW1 = (LH1 && RH1) ? jswDist(LH1, RH1) : null;
-
-    if (shW0 && shW1) {
-      const ratioS = jswClamp(shW1 / shW0, 0.1, 1);
-      shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
-    }
-
-    if (hipW0 && hipW1) {
-      const ratioH = jswClamp(hipW1 / hipW0, 0.1, 1);
-      hipRot = Math.acos(ratioH) * 180 / Math.PI;
-    }
-
-    xFactor = shoulderRot - hipRot;
-
-// --- SCORING VS RÉFÉRENCE
-const ActiveRef = getActiveReference({
-  club: metrics.club,
-  view: metrics.viewType
-});
-
-const REF = ActiveRef.rotation;
-
-
-
-if (REF) {
-  const sRef = REF.shoulder.target;
-  const sTol = REF.shoulder.tol;
-
-  const hRef = REF.hip.target;
-  const hTol = REF.hip.tol;
-
-  const xRef = REF.xFactor.target;
-  const xTol = REF.xFactor.tol;
-
-  const sScore = jswClamp(1 - Math.abs(shoulderRot - sRef) / sTol, 0, 1);
-  const hScore = jswClamp(1 - Math.abs(hipRot      - hRef) / hTol, 0, 1);
-  const xScore = jswClamp(1 - Math.abs(xFactor     - xRef) / xTol, 0, 1);
-
-  const rotNorm =
-    sScore * 0.5 +
-    hScore * 0.3 +
-    xScore * 0.2;
-
-  metrics.rotation.score = Math.round(rotNorm * 20);
-} else {
-  metrics.rotation.score = 10;
-}
-
-// --- STOCKAGE STRUCTURÉ
-metrics.rotation.raw = {
-  shoulder: shoulderRot,
-  hip: hipRot,
-  xFactor: xFactor
+metrics.rotation = {
+  view,
+  refKey: window.REF_META?.key || null,
+  stages: {}
 };
 
-metrics.rotation.ref = REF || null;
+if (basePose && topPose && !isDTL) {
+
+  const m = computeRotationFaceOn(basePose, topPose);
+  const REF = window.REF?.rotation; // référence active club+vue
+
+  if (m) {
+    // On stocke la perf mesurée
+    metrics.rotation.stages.baseToTop = {
+      actual: {
+        shoulder: m.shoulderRot,
+        hip: m.hipRot,
+        xFactor: m.xFactor
+      },
+      target: REF ? {
+        shoulder: REF.shoulder?.target ?? null,
+        hip: REF.hip?.target ?? null,
+        xFactor: REF.xFactor?.target ?? null
+      } : null,
+      tol: REF ? {
+        shoulder: REF.shoulder?.tol ?? null,
+        hip: REF.hip?.tol ?? null,
+        xFactor: REF.xFactor?.tol ?? null
+      } : null
+    };
+
+    if (REF) {
+      const s = scoreOne(m.shoulderRot, REF.shoulder.target, REF.shoulder.tol);
+      const h = scoreOne(m.hipRot,      REF.hip.target,      REF.hip.tol);
+      const x = scoreOne(m.xFactor,     REF.xFactor.target,  REF.xFactor.tol);
+
+      const rotNorm = s * 0.5 + h * 0.3 + x * 0.2;
+      rotationScore = Math.round(rotNorm * 20);
+
+      metrics.rotation.stages.baseToTop.scores = { s, h, x, rotNorm };
+    }
+  }
+}
+
+metrics.rotation.score = rotationScore;
 
 
   // ============================
@@ -1666,28 +1671,58 @@ function buildPremiumBreakdown(swing, scores) {
       `
       )}
 
-      ${block(
-        "Rotation",
-        rotationScore,
-        "Épaules · Hanches · X-Factor",
-        `
-          Rotation épaules: ${metrics.rotation.raw?.shoulder?.toFixed(1)}°
-<span style="opacity:.7;">
-  (cible ${metrics.rotation.ref?.shoulder?.target ?? "—"}°)
-</span><br>
+     ${(() => {
+  const r = metrics.rotation || {};
+  const stage = r.stages?.baseToTop || {};
+  const A = stage.actual || {};
+  const T = stage.target || {};
+  const L = stage.tol || {};
 
-Rotation hanches: ${metrics.rotation.raw?.hip?.toFixed(1)}°
-<span style="opacity:.7;">
-  (cible ${metrics.rotation.ref?.hip?.target ?? "—"}°)
-</span><br>
+  const fmt = (v) =>
+    typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
 
-X-Factor: ${metrics.rotation.raw?.xFactor?.toFixed(1)}°
-<span style="opacity:.7;">
-  (cible ${metrics.rotation.ref?.xFactor?.target ?? "—"}°)
-</span>
+  return block(
+    "Rotation",
+    rotationScore,
+    "Épaules · Hanches · X-Factor (Base → Top)",
+    `
+      <div style="opacity:.85;margin-bottom:10px;">
+        <b>Référence :</b> ${r.refKey || "—"}<br>
+        <b>Vue :</b> ${r.view || "—"}
+      </div>
 
-        `
-      )}
+      <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr 1fr;
+        gap:10px;
+        text-align:center;
+      ">
+        <div>
+          <b>Épaules</b><br>
+          🎯 ${fmt(T.shoulder)}° ±${fmt(L.shoulder)}°<br>
+          ✅ ${fmt(A.shoulder)}°
+        </div>
+
+        <div>
+          <b>Hanches</b><br>
+          🎯 ${fmt(T.hip)}° ±${fmt(L.hip)}°<br>
+          ✅ ${fmt(A.hip)}°
+        </div>
+
+        <div>
+          <b>X-Factor</b><br>
+          🎯 ${fmt(T.xFactor)}° ±${fmt(L.xFactor)}°<br>
+          ✅ ${fmt(A.xFactor)}°
+        </div>
+      </div>
+
+      <div style="margin-top:10px;opacity:.7;">
+        Étape analysée : <b>Base → Top</b>
+      </div>
+    `
+  );
+})()}
+
 
       ${block(
         "Triangle bras/épaules",
@@ -1781,6 +1816,13 @@ function handleSwingComplete(swing) {
   club: swing.club || currentClubType,
   view: window.jswViewType || "faceOn"
   });
+
+  window.REF_META = {
+  club: swing.club || currentClubType,
+  view: window.jswViewType || "faceOn",
+  key: `${swing.club || currentClubType}_${window.jswViewType || "faceOn"}`
+};
+
 
 console.log("🎯 Active Parfect Reference :", window.REF);
 
