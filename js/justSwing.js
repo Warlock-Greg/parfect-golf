@@ -1168,65 +1168,83 @@ metrics.rotation.score = rotationScore;
 
 
 
- // =====================================================
+// =====================================================
 // 3) TRIANGLE — stabilité bras / buste (robuste mobile)
 // =====================================================
 if (topPose && impactPose) {
-  const LS0 = addressPose[11];
-  const RS0 = addressPose[12];
-  const LW0 = addressPose[15]; // poignet lead
 
-  const LS1 = topPose[11];
-  const RS1 = topPose[12];
-  const LW1 = topPose[15];
+  // 👉 base fiable : address → backswing → top
+  const basePose = addressPose || backswingPose || topPose;
 
-  const LS2 = impactPose[11];
-  const RS2 = impactPose[12];
-  const LW2 = impactPose[15];
-
-  const shoulderW0 = jswDist(LS0, RS0);
-
-  if (shoulderW0 && shoulderW0 > 0) {
-    const ref = jswDist(LS0, LW0) / shoulderW0;
-    const topVal = jswDist(LS1, LW1) / shoulderW0;
-    const impVal = jswDist(LS2, LW2) / shoulderW0;
-
-    const varTop = Math.abs(topVal - ref) / ref * 100;
-    const varImp = Math.abs(impVal - ref) / ref * 100;
-
-    metrics.triangle.refRatio      = ref;
-    metrics.triangle.topRatio      = topVal;
-    metrics.triangle.impactRatio   = impVal;
-    metrics.triangle.varTopPct     = varTop;
-    metrics.triangle.varImpactPct  = varImp;
-
-    // 🎯 Calibration mobile face-on réaliste
-    const scoreTop = jswClamp(1 - varTop / 18, 0, 1);
-    const scoreImp = jswClamp(1 - varImp / 12, 0, 1);
-
-    metrics.triangle.score = Math.round(
-      (scoreTop * 0.5 + scoreImp * 0.5) * 20
-    );
+  if (!basePose) {
+    triangleScore = 10;
   } else {
-    metrics.triangle.score = 10;
+    const LS0 = LM(basePose, 11);
+    const RS0 = LM(basePose, 12);
+    const LW0 = LM(basePose, 15); // poignet lead
+
+    const LS1 = LM(topPose, 11);
+    const RS1 = LM(topPose, 12);
+    const LW1 = LM(topPose, 15);
+
+    const LS2 = LM(impactPose, 11);
+    const RS2 = LM(impactPose, 12);
+    const LW2 = LM(impactPose, 15);
+
+    if (!LS0 || !RS0 || !LW0 || !LS1 || !RS1 || !LW1 || !LS2 || !RS2 || !LW2) {
+      triangleScore = 10;
+    } else {
+      const shoulderW0 = jswDist(LS0, RS0);
+
+      if (!shoulderW0 || shoulderW0 <= 0) {
+        triangleScore = 10;
+      } else {
+        const ref   = jswDist(LS0, LW0) / shoulderW0;
+        const topV  = jswDist(LS1, LW1) / shoulderW0;
+        const impV  = jswDist(LS2, LW2) / shoulderW0;
+
+        const varTop = Math.abs(topV - ref) / ref * 100;
+        const varImp = Math.abs(impV - ref) / ref * 100;
+
+        const scoreTop = jswClamp(1 - varTop / 18, 0, 1);
+        const scoreImp = jswClamp(1 - varImp / 12, 0, 1);
+
+        triangleScore = Math.round((scoreTop * 0.5 + scoreImp * 0.5) * 20);
+
+        metrics.triangle = {
+          refRatio: ref,
+          topRatio: topV,
+          impactRatio: impV,
+          varTopPct: varTop,
+          varImpactPct: varImp,
+          score: triangleScore
+        };
+      }
+    }
   }
 } else {
-  metrics.triangle.score = 10;
+  triangleScore = 10;
 }
 
+metrics.triangle.score = triangleScore;
 
-  // =====================================================
-// 4) WEIGHT SHIFT — transfert latéral hanches (mobile)
+
 // =====================================================
-if (topPose && impactPose) {
-  const LH0 = addressPose[23], RH0 = addressPose[24];
-  const LH1 = topPose[23],     RH1 = topPose[24];
-  const LH2 = impactPose[23],  RH2 = impactPose[24];
+// 4) WEIGHT SHIFT — transfert latéral hanches (robuste)
+// =====================================================
+let weightScore = 10;
 
-  const LS0 = addressPose[11], RS0 = addressPose[12];
+if (topPose && impactPose) {
+  // base fiable: address → backswing → top
+  const basePose = addressPose || backswingPose || topPose;
+
+  const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
+  const LH1 = LM(topPose, 23),  RH1 = LM(topPose, 24);
+  const LH2 = LM(impactPose, 23),RH2 = LM(impactPose, 24);
+
+  const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12);
 
   if (LH0 && RH0 && LH1 && RH1 && LH2 && RH2 && LS0 && RS0) {
-
     const hips0 = { x:(LH0.x + RH0.x)/2, y:(LH0.y + RH0.y)/2 };
     const hips1 = { x:(LH1.x + RH1.x)/2, y:(LH1.y + RH1.y)/2 };
     const hips2 = { x:(LH2.x + RH2.x)/2, y:(LH2.y + RH2.y)/2 };
@@ -1234,133 +1252,117 @@ if (topPose && impactPose) {
     const shoulderWidth = jswDist(LS0, RS0);
 
     if (shoulderWidth && shoulderWidth > 0) {
-      // 🔄 Normalisation par la largeur d’épaules
       const shiftBack = (hips1.x - hips0.x) / shoulderWidth;
       const shiftFwd  = (hips2.x - hips0.x) / shoulderWidth;
 
       metrics.weightShift.shiftBack = shiftBack;
       metrics.weightShift.shiftFwd  = shiftFwd;
 
-      // 🎯 Référence Parfect si dispo
-      const REF = window.ParfectReference?.weightShift;
+      // ✅ référence active (club+vue) si tu l’as dans window.REF
+      const REF = window.REF?.weightShift || window.ParfectReference?.weightShift || null;
 
       let backScore = 0.5;
       let fwdScore  = 0.5;
 
-      if (REF) {
+      if (REF?.back && REF?.fwd) {
         backScore = jswClamp(
           1 - Math.abs(Math.abs(shiftBack) - REF.back.target) / REF.back.tol,
           0, 1
         );
-
         fwdScore = jswClamp(
           1 - Math.abs(Math.abs(shiftFwd) - REF.fwd.target) / REF.fwd.tol,
           0, 1
         );
       } else {
-        // fallback générique
         backScore = jswClamp((Math.abs(shiftBack) - 0.03) / 0.12, 0, 1);
         fwdScore  = jswClamp((Math.abs(shiftFwd)  - 0.03) / 0.12, 0, 1);
       }
 
-      // 🎚 Impact > Top
-      metrics.weightShift.score = Math.round(
-        (backScore * 0.4 + fwdScore * 0.6) * 20
-      );
-
-    } else {
-      metrics.weightShift.score = 10;
+      weightScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 20);
     }
-  } else {
-    metrics.weightShift.score = 10;
   }
-} else {
-  metrics.weightShift.score = 10;
 }
 
-  // =====================================================
-// 5) FINISH — équilibre + extension (mobile face-on)
-// =====================================================
-if (impactPose && finishPose) {
-  const headImp = impactPose[0];
-  const headFin = finishPose[0];
+metrics.weightShift.score = weightScore;
 
-  const LHf = finishPose[23], RHf = finishPose[24];
-  const LSf = finishPose[11], RSf = finishPose[12];
-  const LWf = finishPose[15]; // poignet lead
+
+// =====================================================
+// 5) FINISH — équilibre + extension (robuste)
+// =====================================================
+let extensionScore = 10;
+
+if (impactPose && finishPose) {
+  const headImp = LM(impactPose, 0);
+  const headFin = LM(finishPose, 0);
+
+  const LHf = LM(finishPose, 23), RHf = LM(finishPose, 24);
+  const LSf = LM(finishPose, 11), RSf = LM(finishPose, 12);
+  const LWf = LM(finishPose, 15);
 
   if (headImp && headFin && LHf && RHf && LSf && RSf && LWf) {
-
     const hipsFin = { x:(LHf.x + RHf.x)/2, y:(LHf.y + RHf.y)/2 };
-    const shouldersFin = { x:(LSf.x + RSf.x)/2, y:(LSf.y + RSf.y)/2 };
 
     const shoulderWidth = jswDist(LSf, RSf) || 0.25;
 
-    // 1️⃣ Déplacement de la tête (impact → finish)
-    const headMove = jswDist(headImp, headFin) / shoulderWidth;
-
-    // 2️⃣ Tête au-dessus des hanches (équilibre)
+    const headMove    = jswDist(headImp, headFin) / shoulderWidth;
     const headOverHips = Math.abs(headFin.x - hipsFin.x) / shoulderWidth;
-
-    // 3️⃣ Extension bras (épaule → poignet)
     const armExtension = jswDist(LSf, LWf);
 
     metrics.extension.headMove = headMove;
     metrics.extension.headOverHips = headOverHips;
     metrics.extension.armExtension = armExtension;
 
-    // 🎯 Référence Parfect
-    const REF = window.ParfectReference?.extension;
+    const REF = window.REF?.extension || window.ParfectReference?.extension || null;
 
     let moveScore = 0.6;
     let alignScore = 0.6;
     let extScore = 0.6;
 
-    if (REF) {
+    if (REF?.balance && REF?.finish) {
       moveScore = jswClamp(
         1 - Math.abs(headMove - REF.balance.target) / REF.balance.tol,
         0, 1
       );
-
-      alignScore = jswClamp(
-        1 - headOverHips / 0.25,
-        0, 1
-      );
-
+      alignScore = jswClamp(1 - headOverHips / 0.25, 0, 1);
       extScore = jswClamp(
         1 - Math.abs(armExtension - REF.finish.target) / REF.finish.tol,
         0, 1
       );
+    } else {
+      // fallback raisonnable
+      moveScore  = jswClamp(1 - headMove / 0.25, 0, 1);
+      alignScore = jswClamp(1 - headOverHips / 0.30, 0, 1);
+      extScore   = jswClamp(armExtension / 0.35, 0, 1);
     }
 
-    // 🎚 Pondération : équilibre > extension
-    const finishNorm =
-      moveScore * 0.4 +
-      alignScore * 0.4 +
-      extScore * 0.2;
-
-    metrics.extension.score = Math.round(finishNorm * 20);
-
-  } else {
-    metrics.extension.score = 10;
+    const finishNorm = moveScore * 0.4 + alignScore * 0.4 + extScore * 0.2;
+    extensionScore = Math.round(finishNorm * 20);
   }
-} else {
-  metrics.extension.score = 10;
 }
 
- // =====================================================
-// 6) TEMPO — robuste, caméra-indépendant
-// =====================================================
-if (
-  kf.address?.index != null &&
-  kf.top?.index != null &&
-  kf.impact?.index != null &&
-  T.length
-) {
-  const iAddr   = kf.address.index;
-  const iTop    = kf.top.index;
-  const iImpact = kf.impact.index;
+metrics.extension.score = extensionScore;
 
+
+// =====================================================
+// 6) TEMPO — robuste + fallback si address manque
+// =====================================================
+let tempoScore = 10;
+
+const iTop    = kf.top?.index;
+const iImpact = kf.impact?.index;
+
+// fallback address : address → backswing → 0
+const iAddr =
+  (kf.address?.index != null ? kf.address.index :
+   kf.backswing?.index != null ? kf.backswing.index :
+   0);
+
+if (
+  typeof iAddr === "number" &&
+  typeof iTop === "number" &&
+  typeof iImpact === "number" &&
+  T.length > Math.max(iAddr, iTop, iImpact)
+) {
   const tAddr   = T[iAddr];
   const tTop    = T[iTop];
   const tImpact = T[iImpact];
@@ -1372,69 +1374,47 @@ if (
     tTop > tAddr &&
     tImpact > tTop
   ) {
-    const backswingT = (tTop - tAddr) / 1000;   // ms → s
+    const backswingT = (tTop - tAddr) / 1000;
     const downswingT = (tImpact - tTop) / 1000;
-
-    const ratio =
-      downswingT > 0 ? backswingT / downswingT : null;
+    const ratio = downswingT > 0 ? backswingT / downswingT : null;
 
     metrics.tempo.backswingT = backswingT;
     metrics.tempo.downswingT = downswingT;
     metrics.tempo.ratio = ratio;
 
-    // 🔗 Référence Parfect
-    const REF = window.ParfectReference?.tempo;
+    const REF = window.REF?.tempo || window.ParfectReference?.tempo || null;
 
-    if (REF && ratio != null) {
-      const rTarget = REF.ratio.target;
-      const rTol    = REF.ratio.tol;
-
-      const tempoNorm = jswClamp(
-        1 - Math.abs(ratio - rTarget) / rTol,
-        0,
-        1
+    if (REF?.ratio && ratio != null) {
+      tempoScore = Math.round(
+        jswClamp(1 - Math.abs(ratio - REF.ratio.target) / REF.ratio.tol, 0, 1) * 20
       );
-
-      metrics.tempo.score = Math.round(tempoNorm * 20);
     } else {
-      metrics.tempo.score = 10; // fallback propre
+      tempoScore = Math.round(jswClamp(1 - Math.abs((ratio ?? 3) - 3) / 2, 0, 1) * 20);
     }
-
-  } else {
-    metrics.tempo.score = 10;
   }
-} else {
-  metrics.tempo.score = 10;
 }
 
+metrics.tempo.score = tempoScore;
 
-  // =====================================================
-  // 7) BALANCE
-  // =====================================================
-  if (finishPose && addressPose) {
-    const hipsAddr = (() => {
-      const LH = addressPose[23], RH = addressPose[24];
-      return (LH && RH) ? { x:(LH.x+RH.x)/2, y:(LH.y+RH.y)/2 } : null;
-    })();
 
-    const hipsFin = (() => {
-      const LH = finishPose[23], RH = finishPose[24];
-      return (LH && RH) ? { x:(LH.x+RH.x)/2, y:(LH.y+RH.y)/2 } : null;
-    })();
+// =====================================================
+// 7) BALANCE — finish + base (address/backswing/top)
+// =====================================================
+let balanceScore = 7;
 
-    const headFin = finishPose[0];
+if (finishPose) {
+  const basePose = addressPose || backswingPose || topPose;
 
-    let headOverHips = true;
-    let finishMove = 0;
+  const LHb = LM(basePose, 23), RHb = LM(basePose, 24);
+  const LHf2 = LM(finishPose, 23), RHf2 = LM(finishPose, 24);
+  const headFin = LM(finishPose, 0);
 
-    if (hipsFin && headFin) {
-      const dx = Math.abs(headFin.x - hipsFin.x);
-      headOverHips = dx < 0.08;
-    }
+  if (LHb && RHb && LHf2 && RHf2 && headFin) {
+    const hipsBase = { x:(LHb.x + RHb.x)/2, y:(LHb.y + RHb.y)/2 };
+    const hipsFin  = { x:(LHf2.x + RHf2.x)/2, y:(LHf2.y + RHf2.y)/2 };
 
-    if (hipsAddr && hipsFin) {
-      finishMove = jswDist(hipsAddr, hipsFin) || 0;
-    }
+    const headOverHips = Math.abs(headFin.x - hipsFin.x) < 0.08;
+    const finishMove = jswDist(hipsBase, hipsFin) || 0;
 
     metrics.balance.headOverHips = headOverHips;
     metrics.balance.finishMove   = finishMove;
@@ -1442,38 +1422,36 @@ if (
     const headScore = headOverHips ? 1 : 0.4;
     const moveScore = jswClamp(1 - finishMove/0.25, 0, 1);
 
-    metrics.balance.score = Math.round((headScore*0.5 + moveScore*0.5) * 10);
-  } else {
-    metrics.balance.score = 7;
+    balanceScore = Math.round((headScore*0.5 + moveScore*0.5) * 10);
   }
-
-  // =====================================================
-  // 8) TOTAL
-  // =====================================================
- 
-
-  const total =
-    //postureScore   
-    rotationScore  +
-    triangleScore  +
-    weightScore    +
-    extensionScore +
-    tempoScore     +
-    balanceScore;
-
-  return {
-    total: Math.round(total),
-    totalDynamic: Math.round(total),
-    //postureScore,
-    rotationScore,
-    triangleScore,
-    weightShiftScore: weightScore,
-    extensionScore,
-    tempoScore,
-    balanceScore,
-    metrics
-  };
 }
+
+metrics.balance.score = balanceScore;
+
+
+// =====================================================
+// 8) TOTAL
+// =====================================================
+const total =
+  rotationScore +
+  triangleScore +
+  weightScore +
+  extensionScore +
+  tempoScore +
+  balanceScore;
+
+return {
+  total: Math.round(total),
+  totalDynamic: Math.round(total),
+  rotationScore,
+  triangleScore,
+  weightShiftScore: weightScore,
+  extensionScore,
+  tempoScore,
+  balanceScore,
+  metrics
+};
+
 
 // Patch : rendre dist() dispo dans le breakdown premium
 function dist(a, b) {
