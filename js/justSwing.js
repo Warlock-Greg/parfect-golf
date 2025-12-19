@@ -1112,7 +1112,8 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 // =====================================================
 // ROTATION — carte premium (Base→Top) + targets
 // =====================================================
-//let rotationScore = 10;
+    
+    let rotationScore = 10;
 
 const view = (window.REF_META?.view || metrics.viewType || "faceOn").toLowerCase();
 const isDTL = view.includes("dtl"); // si un jour tu fais une branche DTL dédiée
