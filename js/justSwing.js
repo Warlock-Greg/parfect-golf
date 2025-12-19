@@ -1450,16 +1450,10 @@ if (
   // =====================================================
   // 8) TOTAL
   // =====================================================
-  //const postureScore   = metrics.posture.score     ?? 0;
-  rotationScore  = metrics.rotation.score    ?? 0;
-  const triangleScore  = metrics.triangle.score    ?? 0;
-  const weightScore    = metrics.weightShift.score ?? 0;
-  const extensionScore = metrics.extension.score   ?? 0;
-  const tempoScore     = metrics.tempo.score       ?? 0;
-  const balanceScore   = metrics.balance.score     ?? 0;
+ 
 
   const total =
-    //postureScore   +
+    //postureScore   
     rotationScore  +
     triangleScore  +
     weightScore    +
