@@ -50,6 +50,14 @@ const DEFAULT_ROUTINES = {
   ],
 };
 
+// --- ADDRESS DETECTION ---
+let addressBuffer = [];
+let addressLocked = false;
+
+const ADDRESS_FRAMES_REQUIRED = 5;
+const ADDRESS_EPSILON = 0.004; // tolérance stabilité
+
+
 let routineConfig = {
   swing: { default: DEFAULT_ROUTINES.swing, user: null },
   putt: { default: DEFAULT_ROUTINES.putt, user: null },
@@ -377,6 +385,9 @@ function jswGetViewMessage() {
           console.log("🔄 RESET ENGINE (clean start)");
           engine.reset();
         }
+        addressBuffer = [];
+        addressLocked = false;
+
 
         // 2️⃣ Passage DIRECT en capture
         state = JSW_STATE.SWING_CAPTURE;
@@ -619,7 +630,7 @@ if (window.SwingEngine && SwingEngine.create) {
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
   // ---------------------------------------------------------
- function onPoseFrame(landmarks) {
+function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
@@ -634,6 +645,51 @@ if (window.SwingEngine && SwingEngine.create) {
 
   if (!engine || !landmarks) return;
 
+  // =================================================
+  // 📍 ADDRESS AUTO-DETECTION (APRÈS ROUTINE)
+  // =================================================
+  if (!addressLocked && !engine.hasStartedSwing) {
+
+    addressBuffer.push({
+      pose: landmarks,
+      index: frameIndex
+    });
+
+    if (addressBuffer.length > ADDRESS_FRAMES_REQUIRED) {
+      addressBuffer.shift();
+    }
+
+    if (addressBuffer.length === ADDRESS_FRAMES_REQUIRED) {
+      let stable = true;
+
+      for (let i = 1; i < addressBuffer.length; i++) {
+        const d = jswPoseDistance(
+          addressBuffer[i - 1].pose,
+          addressBuffer[i].pose
+        );
+
+        if (d > ADDRESS_EPSILON) {
+          stable = false;
+          break;
+        }
+      }
+
+      if (stable) {
+        addressLocked = true;
+
+        engine.keyFrames.address = {
+          index: addressBuffer[0].index,
+          pose: addressBuffer[0].pose
+        };
+
+        console.log("📍 ADDRESS LOCKED @ frame", engine.keyFrames.address.index);
+      }
+    }
+  }
+
+  // =================================================
+  // ▶️ TRAITEMENT NORMAL DU SWING
+  // =================================================
   const now = performance.now();
   const evt = engine.processPose(landmarks, now, currentClubType);
   frameIndex++;
@@ -647,6 +703,7 @@ if (window.SwingEngine && SwingEngine.create) {
     handleSwingComplete(evt.data);
   }
 }
+
 
 
   // ---------------------------------------------------------
@@ -1331,13 +1388,22 @@ if (impactPose && finishPose) {
 
     const shoulderWidth = jswDist(LSf, RSf) || 0.25;
 
-    const headMove    = jswDist(headImp, headFin) / shoulderWidth;
+    const rawHeadMove = jswDist(headImp, headFin);
+  const headMove =
+  rawHeadMove != null
+    ? rawHeadMove / shoulderWidth
+    : 0;
+
     const headOverHips = Math.abs(headFin.x - hipsFin.x) / shoulderWidth;
     const armExtension = jswDist(LSf, LWf);
+    
 
     metrics.extension.headMove = headMove;
     metrics.extension.headOverHips = headOverHips;
     metrics.extension.armExtension = armExtension;
+    metrics.extension.extImpact = armExtension;
+    metrics.extension.extFinish = armExtension;
+
 
     const REF = window.REF?.extension || window.ParfectReference?.extension || null;
 
