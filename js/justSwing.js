@@ -771,6 +771,22 @@ function jswDetectViewType(pose) {
   return "unknown";
 }
 
+
+  function safePoseFromKF(frames, kfEntry) {
+  if (!kfEntry) return null;
+  const idx = (typeof kfEntry === "number") ? kfEntry :
+              (typeof kfEntry.index === "number") ? kfEntry.index : null;
+  if (idx == null) return null;
+  const pose = frames[idx];
+  return Array.isArray(pose) ? pose : null;
+}
+
+function scoreOne(value, target, tol) {
+  if (value == null || target == null || tol == null || tol <= 0) return 0;
+  return Math.max(0, Math.min(1, 1 - Math.abs(value - target) / tol));
+}
+
+  
 function computeTriangleStable(pose) {
   if (!pose) return null;
   const Ls = pose[11], Rs = pose[12];
@@ -946,14 +962,7 @@ function scoreRotationFromReference(measure, ref) {
   };
 }
 
-  
 
-function scoreOne(value, target, tol) {
-  if (value == null || target == null || tol == null || tol <= 0) return 0;
-  return Math.max(0, Math.min(1, 1 - Math.abs(value - target) / tol));
-}
-
-  
 
   function LM(pose, idx) {
   if (!pose || !Array.isArray(pose)) return null;
@@ -1134,27 +1143,67 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 
     
 // =====================================================
-// ROTATION — carte premium (Base→Top) + targets
+// ROTATION — carte premium (Base → Top) COMPARÉE À RÉFÉRENCE
 // =====================================================
 
 let rotationScore = 10;
+    console.log("ROTATION DEBUG", {
+  hasBackswing: !!kf.backswing,
+  basePose,
+  topPoseSafe,
+  rotationMeasure,
+  refRotation
+});
 
-const basePose = addressPose || topPose;
-if (basePose && topPose) {
-  const rotationMeasure = computeRotationSignature(basePose, topPose);
+
+const backswingPose = jswSafePoseFromKF(kf.backswing);
+const topPoseSafe   = jswSafePoseFromKF(kf.top);
+const basePose      = backswingPose || jswSafePoseFromKF(kf.address);
+
+metrics.rotation = {
+  refKey: window.REF_META?.key || null,
+  view: window.jswViewType || "unknown",
+  stages: {}
+};
+
+if (basePose && topPoseSafe) {
+
+  // 1️⃣ mesure utilisateur (proxy calibré)
+  const rotationMeasure = computeRotationSignature(basePose, topPoseSafe);
+
+  // 2️⃣ référence active (Parfect ou user)
   const refRotation = window.REF?.rotation;
 
   if (rotationMeasure && refRotation) {
+
+    // 3️⃣ scoring
     const scored = scoreRotationFromReference(rotationMeasure, refRotation);
     rotationScore = scored.score;
 
-    metrics.rotation = {
-      measure: rotationMeasure,
-      ref: refRotation,
+    // 4️⃣ exposition UI PROPRE
+    metrics.rotation.stages.baseToTop = {
+      actual: {
+        shoulder: rotationMeasure.shoulder,
+        hip: rotationMeasure.hip,
+        xFactor: rotationMeasure.xFactor
+      },
+      target: {
+        shoulder: refRotation.shoulder.target,
+        hip: refRotation.hip.target,
+        xFactor: refRotation.xFactor.target
+      },
+      tol: {
+        shoulder: refRotation.shoulder.tol,
+        hip: refRotation.hip.tol,
+        xFactor: refRotation.xFactor.tol
+      },
       score: rotationScore
     };
   }
 }
+
+metrics.rotation.score = rotationScore;
+
 
 
 
