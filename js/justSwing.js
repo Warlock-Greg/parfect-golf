@@ -1146,9 +1146,9 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 // ROTATION — carte premium (Base → Top) COMPARÉE À RÉFÉRENCE
 // =====================================================
 
-const backswingPose = jswSafePoseFromKF(kf.backswing);
-const topPoseSafe   = jswSafePoseFromKF(kf.top);
-const basePose      = backswingPose || jswSafePoseFromKF(kf.address);
+let rotationScore = 10;
+let rotationMeasure = null;
+let refRotation = window.REF?.rotation || null;
 
 metrics.rotation = {
   refKey: window.REF_META?.key || null,
@@ -1156,23 +1156,22 @@ metrics.rotation = {
   stages: {}
 };
 
-    let rotationScore = 10;
-    
+const basePose =
+  jswSafePoseFromKF(kf.backswing) ||
+  jswSafePoseFromKF(kf.address) ||
+  null;
+
+const topPoseSafe = jswSafePoseFromKF(kf.top);
+
 if (basePose && topPoseSafe) {
 
-  // 1️⃣ mesure utilisateur (proxy calibré)
-  const rotationMeasure = computeRotationSignature(basePose, topPoseSafe);
-
-  // 2️⃣ référence active (Parfect ou user)
-  const refRotation = window.REF?.rotation;
+  rotationMeasure = computeRotationSignature(basePose, topPoseSafe);
 
   if (rotationMeasure && refRotation) {
 
-    // 3️⃣ scoring
     const scored = scoreRotationFromReference(rotationMeasure, refRotation);
     rotationScore = scored.score;
 
-    // 4️⃣ exposition UI PROPRE
     metrics.rotation.stages.baseToTop = {
       actual: {
         shoulder: rotationMeasure.shoulder,
@@ -1193,10 +1192,6 @@ if (basePose && topPoseSafe) {
     };
   }
 }
-metrics.rotation.score = rotationScore;
-
-
-
 
 
 
