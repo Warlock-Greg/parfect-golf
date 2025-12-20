@@ -77,6 +77,9 @@ const FALLBACK_MIN_ENERGY = 0.03;
     let releaseStartTime = null;
     let prevSpeedWrist = 0;
     let maxBackswingSpeed = 0;
+    let extensionDetected = false;
+    let extensionStartTime = null;
+
 
 
 
@@ -283,32 +286,39 @@ if (state === "BACKSWING") {
         return;
       }
 
-      // IMPACT → release
-      if (state === "IMPACT") {
-        frames.push(pose);
-        timestamps.push(timeMs);
-
-        if (speedWrist < 0.02) {
-          state = "RELEASE";
-          markKeyFrame("release", frames.length - 1, pose);
-          return;
-        }
-        return;
-      }
-
-      // RELEASE → finish
-     if (state === "RELEASE") {
+     // IMPACT → EXTENSION
+if (state === "IMPACT") {
   frames.push(pose);
   timestamps.push(timeMs);
 
-  if (releaseStartTime === null) {
-    releaseStartTime = timeMs;
+  const wristLead = pose[LM.LEFT_WRIST]; // ou RIGHT selon latéralité
+  const hipsMid = mid(pose[LM.LEFT_HIP], pose[LM.RIGHT_HIP]);
+
+  if (
+    wristLead &&
+    hipsMid &&
+    wristLead.x > hipsMid.x + 0.02 // 👉 MAINS DEVANT HANCHES
+  ) {
+    state = "EXTENSION";
+    extensionDetected = true;
+    extensionStartTime = timeMs;
+
+    markKeyFrame("extension", frames.length - 1, pose);
+    return;
   }
 
-  const timeInRelease = timeMs - releaseStartTime;
-  const stable = (speedWrist < 0.02 && speedHip < 0.015);
+  return;
+}
 
-  if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
+// EXTENSION → FINISH
+if (state === "EXTENSION") {
+  frames.push(pose);
+  timestamps.push(timeMs);
+
+  const timeInExtension = timeMs - extensionStartTime;
+  const stable = speedWrist < 0.02 && speedHip < 0.015;
+
+  if (stable || timeInExtension > FINISH_TIMEOUT_MS) {
     state = "FINISH";
     markKeyFrame("finish", frames.length - 1, pose);
 
@@ -327,11 +337,12 @@ if (state === "BACKSWING") {
     }
 
     reset();
-    releaseStartTime = null;
   }
-        return;  // ← MANQUAIT ICI !
-      }
-    }
+
+  return;
+}
+
+  
 
     return { processPose, reset };  // ← MANQUAIT ICI !
   }
