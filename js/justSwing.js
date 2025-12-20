@@ -753,6 +753,27 @@ function jswDist(a, b) {
   return Math.hypot(dx, dy);
 }
 
+  function jswPoseDistance(poseA, poseB) {
+  if (!poseA || !poseB) return Infinity;
+
+  let sum = 0;
+  let count = 0;
+
+  for (let i = 0; i < poseA.length; i++) {
+    const a = poseA[i];
+    const b = poseB[i];
+    if (!a || !b) continue;
+
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+    sum += dx * dx + dy * dy;
+    count++;
+  }
+
+  return count > 0 ? Math.sqrt(sum / count) : Infinity;
+}
+
+
 function jswLineAngleDeg(a, b) {
   if (!a || !b) return null;
   const ang = Math.atan2(b.y - a.y, b.x - a.x);
