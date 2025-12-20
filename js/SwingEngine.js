@@ -288,43 +288,47 @@ if (state === "BACKSWING") {
         return;
       }
 
-     // IMPACT → EXTENSION
+// IMPACT → RELEASE
 if (state === "IMPACT") {
   frames.push(pose);
   timestamps.push(timeMs);
 
-  const wristLead = pose[LM.LEFT_WRIST]; // ou RIGHT selon latéralité
+  const wristLead = pose[LM.LEFT_WRIST]; // à adapter si gaucher
   const hipsMid = mid(pose[LM.LEFT_HIP], pose[LM.RIGHT_HIP]);
 
+  // 🔑 Détection EXTENSION (mains devant hanches)
   if (
+    !extensionDetected &&
     wristLead &&
     hipsMid &&
-    wristLead.x > hipsMid.x + 0.02 // 👉 MAINS DEVANT HANCHES
+    wristLead.x > hipsMid.x + 0.02
   ) {
-    state = "EXTENSION";
     extensionDetected = true;
     extensionStartTime = timeMs;
+  }
 
-    markKeyFrame("extension", frames.length - 1, pose);
+  // Passage en RELEASE quand la vitesse chute
+  if (speedWrist < 0.02) {
+    state = "RELEASE";
+    releaseStartTime = timeMs;
+    markKeyFrame("release", frames.length - 1, pose);
     return;
   }
 
   return;
 }
 
-// EXTENSION → FINISH
-if (state === "EXTENSION") {
+// RELEASE → FINISH
+if (state === "RELEASE") {
   frames.push(pose);
   timestamps.push(timeMs);
 
-  const timeInExtension = timeMs - extensionStartTime;
+  const timeInRelease = timeMs - releaseStartTime;
   const stable = speedWrist < 0.02 && speedHip < 0.015;
 
-  if (stable || timeInExtension > FINISH_TIMEOUT_MS) {
+  if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
     state = "FINISH";
     markKeyFrame("finish", frames.length - 1, pose);
-
-    const duration = timeMs - swingStartTime;
 
     const data = {
       frames: [...frames],
@@ -332,6 +336,8 @@ if (state === "EXTENSION") {
       keyFrames: { ...keyFrames },
       club: clubType,
       fps,
+      extensionDetected,
+      extensionStartTime
     };
 
     if (typeof onSwingComplete === "function") {
@@ -339,17 +345,19 @@ if (state === "EXTENSION") {
     }
 
     reset();
+    return;
   }
 
   return;
 }
 
+
   
 
-    return { processPose, reset };  // ← MANQUAIT ICI !
+    return { processPose, reset }; 
   }
 
-  return { create };  // ← C'était au mauvais endroit !
+  return { create }; 
 
 })();
 // -------------------------------------------------------------
