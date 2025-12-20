@@ -639,7 +639,7 @@ function onPoseFrame(landmarks) {
   if (!engine || !landmarks) return;
 
   // ----------------------------
-  // ADDRESS DETECTION (LOCAL)
+  // ADDRESS DETECTION (NON BLOQUANTE)
   // ----------------------------
   if (!addressLocked) {
     if (addressBuffer.length === 0) {
@@ -660,7 +660,6 @@ function onPoseFrame(landmarks) {
     if (addressBuffer.length >= ADDRESS_FRAMES_REQUIRED) {
       addressLocked = true;
 
-      // ⚠️ IMPORTANT : on vérifie que keyFrames existe
       if (engine.keyFrames) {
         engine.keyFrames.address = {
           index: engine.frames.length,
@@ -669,17 +668,18 @@ function onPoseFrame(landmarks) {
         console.log("🔒 ADDRESS LOCKED");
       }
     }
-
-    return; // ⛔ tant que l’adresse n’est pas lockée, on ne traite PAS le swing
   }
 
   // ----------------------------
-  // NORMAL SWING PROCESSING
+  // TOUJOURS envoyer les frames au moteur
   // ----------------------------
   const now = performance.now();
   const evt = engine.processPose(landmarks, now, currentClubType);
 
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
+
+  // ⛔ On ignore le swing tant que l’adresse n’est pas lockée
+  if (!addressLocked) return;
 
   if (evt && evt.type === "swingComplete") {
     isRecordingActive = false;
@@ -687,7 +687,6 @@ function onPoseFrame(landmarks) {
     handleSwingComplete(evt.data);
   }
 }
-jswPoseDistance
 
 
   // ---------------------------------------------------------
