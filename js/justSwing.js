@@ -1160,13 +1160,6 @@ metrics.rotation = {
 };
 
     let rotationScore = 10;
-    console.log("ROTATION DEBUG", {
-  hasBackswing: !!kf.backswing,
-  basePose,
-  topPoseSafe,
-  rotationMeasure,
-  refRotation
-});
     
 if (basePose && topPoseSafe) {
 
@@ -1203,7 +1196,13 @@ if (basePose && topPoseSafe) {
     };
   }
 }
-
+  console.log("ROTATION DEBUG", {
+  hasBackswing: !!kf.backswing,
+  basePose,
+  topPoseSafe,
+  rotationMeasure,
+  refRotation
+});
 metrics.rotation.score = rotationScore;
 
 
