@@ -1192,7 +1192,7 @@ if (basePose && topPoseSafe) {
       score: rotationScore
     };
   }
-});
+}
 metrics.rotation.score = rotationScore;
 
 
