@@ -1516,6 +1516,8 @@ return {
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.metrics)
 // ---------------------------------------------------------
 function buildPremiumBreakdown(swing, scores) {
+  const fmt = (v) =>
+    typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
   const el = document.getElementById("swing-score-breakdown");
   if (!el) return console.warn("No breakdown element found.");
 
