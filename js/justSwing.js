@@ -898,15 +898,18 @@ function scoreTempoRobust(timestamps, kf) {
   return { bs, ds, ratio };
 }
 
-function computeRotationFaceOn(basePose, topPose) {
-  // Mesure par réduction de largeur (projection) => OK FaceOn / MobileFaceOn
-  const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12);
-  const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
+function computeRotationSignature(basePose, topPose) {
+  if (!basePose || !topPose) return null;
 
-  const LS1 = LM(topPose, 11),  RS1 = LM(topPose, 12);
-  const LH1 = LM(topPose, 23),  RH1 = LM(topPose, 24);
+  const LS0 = basePose[11], RS0 = basePose[12];
+  const LH0 = basePose[23], RH0 = basePose[24];
 
-  if (!LS0 || !RS0 || !LS1 || !RS1 || !LH0 || !RH0 || !LH1 || !RH1) return null;
+  const LS1 = topPose[11],  RS1 = topPose[12];
+  const LH1 = topPose[23],  RH1 = topPose[24];
+
+  if (!LS0 || !RS0 || !LS1 || !RS1 || !LH0 || !RH0 || !LH1 || !RH1) {
+    return null;
+  }
 
   const shW0 = Math.hypot(LS0.x - RS0.x, LS0.y - RS0.y);
   const shW1 = Math.hypot(LS1.x - RS1.x, LS1.y - RS1.y);
@@ -915,15 +918,35 @@ function computeRotationFaceOn(basePose, topPose) {
 
   if (shW0 <= 0 || hipW0 <= 0) return null;
 
-  const ratioS = Math.max(0.1, Math.min(1, shW1 / shW0));
-  const ratioH = Math.max(0.1, Math.min(1, hipW1 / hipW0));
+  const shoulder = Math.acos(
+    Math.max(0.1, Math.min(1, shW1 / shW0))
+  ) * 180 / Math.PI;
 
-  const shoulderRot = Math.acos(ratioS) * 180 / Math.PI;
-  const hipRot      = Math.acos(ratioH) * 180 / Math.PI;
-  const xFactor     = shoulderRot - hipRot;
+  const hip = Math.acos(
+    Math.max(0.1, Math.min(1, hipW1 / hipW0))
+  ) * 180 / Math.PI;
 
-  return { shoulderRot, hipRot, xFactor };
+  const xFactor = shoulder - hip;
+
+  return { shoulder, hip, xFactor };
 }
+
+function scoreRotationFromReference(measure, ref) {
+  if (!measure || !ref) return { score: 0 };
+
+  const s = scoreOne(measure.shoulder, ref.shoulder.target, ref.shoulder.tol);
+  const h = scoreOne(measure.hip,      ref.hip.target,      ref.hip.tol);
+  const x = scoreOne(measure.xFactor,  ref.xFactor.target,  ref.xFactor.tol);
+
+  const norm = s * 0.5 + h * 0.3 + x * 0.2;
+
+  return {
+    score: Math.round(norm * 20),
+    details: { s, h, x }
+  };
+}
+
+  
 
 function scoreOne(value, target, tol) {
   if (value == null || target == null || tol == null || tol <= 0) return 0;
@@ -1113,58 +1136,26 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 // =====================================================
 // ROTATION — carte premium (Base→Top) + targets
 // =====================================================
-    
-    let rotationScore = 10;
 
-const view = (window.REF_META?.view || metrics.viewType || "faceOn").toLowerCase();
-const isDTL = view.includes("dtl"); // si un jour tu fais une branche DTL dédiée
-const basePose = addressPose || topPose; // fallback si pas d’address
+let rotationScore = 10;
 
-metrics.rotation = {
-  view,
-  refKey: window.REF_META?.key || null,
-  stages: {}
-};
+const basePose = addressPose || topPose;
+if (basePose && topPose) {
+  const rotationMeasure = computeRotationSignature(basePose, topPose);
+  const refRotation = window.REF?.rotation;
 
-if (basePose && topPose && !isDTL) {
+  if (rotationMeasure && refRotation) {
+    const scored = scoreRotationFromReference(rotationMeasure, refRotation);
+    rotationScore = scored.score;
 
-  const m = computeRotationFaceOn(basePose, topPose);
-  const REF = window.REF?.rotation; // référence active club+vue
-
-  if (m) {
-    // On stocke la perf mesurée
-    metrics.rotation.stages.baseToTop = {
-      actual: {
-        shoulder: m.shoulderRot,
-        hip: m.hipRot,
-        xFactor: m.xFactor
-      },
-      target: REF ? {
-        shoulder: REF.shoulder?.target ?? null,
-        hip: REF.hip?.target ?? null,
-        xFactor: REF.xFactor?.target ?? null
-      } : null,
-      tol: REF ? {
-        shoulder: REF.shoulder?.tol ?? null,
-        hip: REF.hip?.tol ?? null,
-        xFactor: REF.xFactor?.tol ?? null
-      } : null
+    metrics.rotation = {
+      measure: rotationMeasure,
+      ref: refRotation,
+      score: rotationScore
     };
-
-    if (REF) {
-      const s = scoreOne(m.shoulderRot, REF.shoulder.target, REF.shoulder.tol);
-      const h = scoreOne(m.hipRot,      REF.hip.target,      REF.hip.tol);
-      const x = scoreOne(m.xFactor,     REF.xFactor.target,  REF.xFactor.tol);
-
-      const rotNorm = s * 0.5 + h * 0.3 + x * 0.2;
-      rotationScore = Math.round(rotNorm * 20);
-
-      metrics.rotation.stages.baseToTop.scores = { s, h, x, rotNorm };
-    }
   }
 }
 
-metrics.rotation.score = rotationScore;
 
 
 
@@ -1583,49 +1574,47 @@ function buildPremiumBreakdown(swing, scores) {
 
   // ---------------- ROTATION DETAILS (SAFE) ----------------
 const r = metrics.rotation || {};
-const stage = r.stages?.baseToTop || {};
-const A = stage.actual || {};
-const T = stage.target || {};
-const L = stage.tol || {};
-
-const fmt = (v) =>
-  typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
+const m = r.measure || {};
+const ref = r.ref || {};
 
 const rotationDetails = `
-  <div style="opacity:.85;margin-bottom:10px;">
-    <b>Référence :</b> ${r.refKey || "—"}<br>
-    <b>Vue :</b> ${r.view || "—"}
+  <div style="opacity:.85; margin-bottom:12px;">
+    <b>Référence :</b> ${window.REF_META?.club || "—"}
+    · ${window.REF_META?.view || "—"}
   </div>
 
   <div style="
     display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:10px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:12px;
     text-align:center;
   ">
     <div>
       <b>Épaules</b><br>
-      🎯 ${fmt(T.shoulder)}° ±${fmt(L.shoulder)}°<br>
-      ✅ ${fmt(A.shoulder)}°
+      🎯 ${fmt(ref.shoulder?.target)}° ±${fmt(ref.shoulder?.tol)}°<br>
+      ✅ ${fmt(m.shoulder)}°
     </div>
 
     <div>
       <b>Hanches</b><br>
-      🎯 ${fmt(T.hip)}° ±${fmt(L.hip)}°<br>
-      ✅ ${fmt(A.hip)}°
+      🎯 ${fmt(ref.hip?.target)}° ±${fmt(ref.hip?.tol)}°<br>
+      ✅ ${fmt(m.hip)}°
     </div>
 
     <div>
       <b>X-Factor</b><br>
-      🎯 ${fmt(T.xFactor)}° ±${fmt(L.xFactor)}°<br>
-      ✅ ${fmt(A.xFactor)}°
+      🎯 ${fmt(ref.xFactor?.target)}° ±${fmt(ref.xFactor?.tol)}°<br>
+      ✅ ${fmt(m.xFactor)}°
     </div>
   </div>
 
-  <div style="margin-top:10px;opacity:.7;">
-    Étape analysée : <b>Base → Top</b>
+  <div style="margin-top:12px; opacity:.7; font-size:0.85rem;">
+    Étape analysée : <b>Base → Top</b><br>
+    Le score mesure ta capacité à reproduire
+    la rotation du swing de référence.
   </div>
 `;
+
 
 
   // --- 3) Build the full premium card ---
