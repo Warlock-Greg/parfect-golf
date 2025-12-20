@@ -634,76 +634,60 @@ function onPoseFrame(landmarks) {
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
-  // ⚠️ Tant qu’on n’est PAS en phase swing → on NE donne rien au moteur
   if (state !== JSW_STATE.SWING_CAPTURE) return;
-
-  // ⚠️ Si capture pas armée → on ignore
-  if (!captureArmed) return;
-
-  // ⚠️ Si pas en enregistrement → on ignore
-  if (!isRecordingActive) return;
-
+  if (!captureArmed || !isRecordingActive) return;
   if (!engine || !landmarks) return;
 
-  // =================================================
-  // 📍 ADDRESS AUTO-DETECTION (APRÈS ROUTINE)
-  // =================================================
-  if (!addressLocked && !engine.hasStartedSwing) {
+  // ----------------------------
+  // ADDRESS DETECTION (LOCAL)
+  // ----------------------------
+  if (!addressLocked) {
+    if (addressBuffer.length === 0) {
+      addressBuffer.push(landmarks);
+    } else {
+      const dist = jswPoseDistance(
+        addressBuffer[addressBuffer.length - 1],
+        landmarks
+      );
 
-    addressBuffer.push({
-      pose: landmarks,
-      index: frameIndex
-    });
-
-    if (addressBuffer.length > ADDRESS_FRAMES_REQUIRED) {
-      addressBuffer.shift();
+      if (dist < ADDRESS_EPSILON) {
+        addressBuffer.push(landmarks);
+      } else {
+        addressBuffer = [landmarks];
+      }
     }
 
-    if (addressBuffer.length === ADDRESS_FRAMES_REQUIRED) {
-      let stable = true;
+    if (addressBuffer.length >= ADDRESS_FRAMES_REQUIRED) {
+      addressLocked = true;
 
-      for (let i = 1; i < addressBuffer.length; i++) {
-        const d = jswPoseDistance(
-          addressBuffer[i - 1].pose,
-          addressBuffer[i].pose
-        );
-
-        if (d > ADDRESS_EPSILON) {
-          stable = false;
-          break;
-        }
-      }
-
-      if (stable) {
-        addressLocked = true;
-
+      // ⚠️ IMPORTANT : on vérifie que keyFrames existe
+      if (engine.keyFrames) {
         engine.keyFrames.address = {
-          index: addressBuffer[0].index,
-          pose: addressBuffer[0].pose
+          index: engine.frames.length,
+          pose: landmarks
         };
-
-        console.log("📍 ADDRESS LOCKED @ frame", engine.keyFrames.address.index);
+        console.log("🔒 ADDRESS LOCKED");
       }
     }
+
+    return; // ⛔ tant que l’adresse n’est pas lockée, on ne traite PAS le swing
   }
 
-  // =================================================
-  // ▶️ TRAITEMENT NORMAL DU SWING
-  // =================================================
+  // ----------------------------
+  // NORMAL SWING PROCESSING
+  // ----------------------------
   const now = performance.now();
   const evt = engine.processPose(landmarks, now, currentClubType);
-  frameIndex++;
 
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
 
   if (evt && evt.type === "swingComplete") {
-    console.log("🏁 swingComplete détecté !");
     isRecordingActive = false;
     captureArmed = false;
     handleSwingComplete(evt.data);
   }
 }
-
+jswPoseDistance
 
 
   // ---------------------------------------------------------
@@ -753,24 +737,14 @@ function jswDist(a, b) {
   return Math.hypot(dx, dy);
 }
 
-  function jswPoseDistance(poseA, poseB) {
-  if (!poseA || !poseB) return Infinity;
-
-  let sum = 0;
-  let count = 0;
-
-  for (let i = 0; i < poseA.length; i++) {
-    const a = poseA[i];
-    const b = poseB[i];
-    if (!a || !b) continue;
-
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    sum += dx * dx + dy * dy;
-    count++;
+function jswPoseDistance(a, b) {
+  if (!a || !b) return Infinity;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) {
+    if (!a[i] || !b[i]) continue;
+    d += Math.abs(a[i].x - b[i].x) + Math.abs(a[i].y - b[i].y);
   }
-
-  return count > 0 ? Math.sqrt(sum / count) : Infinity;
+  return d;
 }
 
 
