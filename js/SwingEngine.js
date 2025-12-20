@@ -97,6 +97,8 @@ const FALLBACK_MIN_ENERGY = 0.03;
       };
       state = "IDLE";
       impactDetected = false;
+      extensionDetected = false;
+      extensionStartTime = null;
       lastPose = null;
       lastTime = null;
       releaseStartTime = null;
