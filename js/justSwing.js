@@ -1146,9 +1146,6 @@ const rotBasePose = addressPose || topPose; // ✅ fallback
 // ROTATION — carte premium (Base → Top) COMPARÉE À RÉFÉRENCE
 // =====================================================
 
-
-
-
 const backswingPose = jswSafePoseFromKF(kf.backswing);
 const topPoseSafe   = jswSafePoseFromKF(kf.top);
 const basePose      = backswingPose || jswSafePoseFromKF(kf.address);
@@ -1195,13 +1192,6 @@ if (basePose && topPoseSafe) {
       score: rotationScore
     };
   }
-}
-  console.log("ROTATION DEBUG", {
-  hasBackswing: !!kf.backswing,
-  basePose,
-  topPoseSafe,
-  rotationMeasure,
-  refRotation
 });
 metrics.rotation.score = rotationScore;
 
