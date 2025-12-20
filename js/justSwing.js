@@ -1048,7 +1048,7 @@ function scoreVsReference(value, target, tol) {
   // Récup des poses clés
   // -------------------------------------
 const addressPose = safePose(jswSafePoseFromKF(kf.address));
-const backswingPose = safePose(jswSafePoseFromKF(kf.backswing)); 
+// backswingPose = safePose(jswSafePoseFromKF(kf.backswing)); 
 const topPose     = safePose(jswSafePoseFromKF(kf.top));
 const impactPose  = safePose(jswSafePoseFromKF(kf.impact));
 const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
