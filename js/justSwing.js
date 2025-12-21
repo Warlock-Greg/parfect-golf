@@ -852,7 +852,7 @@ function jswDetectViewType(pose) {
   return Array.isArray(pose) ? pose : null;
 }
 
-function scoreOneSoft(value, target, tol) {
+function scoreOne(value, target, tol) {
   if (value == null || target == null || tol == null || tol <= 0) return 0;
 
   const diff = Math.abs(value - target);
