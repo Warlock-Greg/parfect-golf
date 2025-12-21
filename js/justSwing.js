@@ -449,6 +449,39 @@ function showGoButtonAfterRoutine() {
   };
 }
 
+function initEngineOrRetry() {
+  const SE = window.SwingEngine;
+
+  if (!SE || typeof SE.create !== "function") {
+    console.warn("⏳ SwingEngine pas encore prêt → retry 100ms");
+    setTimeout(initEngineOrRetry, 100);
+    return;
+  }
+
+  // ✅ Si déjà initialisé, on ne recrée pas (évite les doubles)
+  if (engine && typeof engine.processPose === "function") {
+    console.log("ℹ️ SwingEngine déjà initialisé");
+    return;
+  }
+
+  engine = SE.create({
+    fps: 30,
+
+    onKeyFrame: (evt) => {
+      console.log("🎯 KEYFRAME", evt);
+    },
+
+    onSwingComplete: (evt) => {
+      console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
+      const swing = evt?.data || evt;
+      handleSwingComplete(swing);
+    }
+  });
+
+  console.log("🔧 SwingEngine READY", engine);
+}
+
+  
   // ---------------------------------------------------------
   //   SESSION START / STOP
   // ---------------------------------------------------------
@@ -463,28 +496,7 @@ function showGoButtonAfterRoutine() {
     lastFullBodyOk = false;
 
     // Init moteur SwingEngine
-if (window.SwingEngine && SwingEngine.create) {
-  engine = SwingEngine.create({
-    fps: 30,
-
-    onKeyFrame: (evt) => {
-      // Debug uniquement
-      console.log("🎯 KEYFRAME", evt);
-    },
-
-    onSwingComplete: (evt) => {
-      console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
-      const swing = evt.data || evt;
-      handleSwingComplete(swing);
-    },
-    
-  });
-
-  console.log("🔧 SwingEngine READY", engine);
-
-} else {
-  console.warn("⚠️ SwingEngine non disponible");
-}
+    initEngineOrRetry();
 
 
     // Affichage écran plein JustSwing
