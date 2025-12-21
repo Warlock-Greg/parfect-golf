@@ -1281,7 +1281,6 @@ if (basePose && topPoseSafe) {
     }
     
   }
-}
 
 
 
