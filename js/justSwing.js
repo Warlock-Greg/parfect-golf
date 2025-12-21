@@ -384,7 +384,7 @@ function jswGetViewMessage() {
         // 1️⃣ Reset complet du moteur
         if (engine && engine.reset) {
           console.log("🔄 RESET ENGINE (clean start)");
-          engine.reset();
+        //  engine.reset();
         }
         addressBuffer = [];
         addressLocked = false;
