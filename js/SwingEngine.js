@@ -363,4 +363,9 @@ const SwingEngine = (() => {
   return { create };
 })();
 
-export default SwingEngine;
+})(); // fin IIFE
+
+if (typeof window !== "undefined") {
+  window.SwingEngine = SwingEngine;
+}
+
