@@ -985,8 +985,6 @@ function scoreTempoRobust(timestamps, kf) {
   return { bs, ds, ratio };
 }
 
-  const basePose = backswingPose || topPose;
-if (!basePose || !topPose) return neutralRotation();
 
 function segmentAngle(A, B) {
   return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
