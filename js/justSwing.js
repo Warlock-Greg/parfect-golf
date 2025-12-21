@@ -1577,7 +1577,7 @@ return {
   balanceScore,
   metrics
 };
-  }
+
 
 
 
