@@ -1,4 +1,4 @@
-  // =========================================================
+// =========================================================
 //   JUST SWING — Orchestrateur PRO (Parfect 2025)
 //   Flow : START → COUNTDOWN → ROUTINE → SWING → SCORE
 //   Dépend : window.SwingEngine, window.JustSwing.onPoseFrame()
@@ -990,36 +990,66 @@ function segmentAngle(A, B) {
   return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
 }
 
-function computeRotationSignature(basePose, topPose) {
+function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
+  if (!basePose || !topPose) return null;
+
   const LS0 = basePose[11], RS0 = basePose[12];
   const LH0 = basePose[23], RH0 = basePose[24];
 
   const LS1 = topPose[11],  RS1 = topPose[12];
   const LH1 = topPose[23],  RH1 = topPose[24];
 
-  if (!LS0 || !RS0 || !LS1 || !RS1 || !LH0 || !RH0 || !LH1 || !RH1) {
+  if (
+    !LS0 || !RS0 || !LH0 || !RH0 ||
+    !LS1 || !RS1 || !LH1 || !RH1
+  ) {
     return null;
   }
 
-  // Orientation des segments (Face On)
-  const sh0 = jswLineAngleDeg(LS0, RS0);
-  const sh1 = jswLineAngleDeg(LS1, RS1);
+  // --------------------------------------------------
+  // 🎥 DTL → rotation angulaire réelle
+  // --------------------------------------------------
+  if (viewType === "dtl") {
+    const sh0 = jswLineAngleDeg(LS0, RS0);
+    const sh1 = jswLineAngleDeg(LS1, RS1);
+    const hip0 = jswLineAngleDeg(LH0, RH0);
+    const hip1 = jswLineAngleDeg(LH1, RH1);
 
-  const hip0 = jswLineAngleDeg(LH0, RH0);
-  const hip1 = jswLineAngleDeg(LH1, RH1);
+    if (
+      sh0 == null || sh1 == null ||
+      hip0 == null || hip1 == null
+    ) return null;
+
+    const shoulder = jswDegDiff(sh1, sh0);
+    const hip      = jswDegDiff(hip1, hip0);
+    const xFactor  = shoulder - hip;
+
+    return { shoulder, hip, xFactor };
+  }
+
+  // --------------------------------------------------
+  // 📸 FACE-ON / MOBILE FACE-ON → rotation projetée
+  // --------------------------------------------------
+
+  const shW0 = jswDist(LS0, RS0);
+  const shW1 = jswDist(LS1, RS1);
+  const hipW0 = jswDist(LH0, RH0);
+  const hipW1 = jswDist(LH1, RH1);
 
   if (
-    sh0 == null || sh1 == null ||
-    hip0 == null || hip1 == null
+    !shW0 || !shW1 || !hipW0 || !hipW1 ||
+    shW0 <= 0 || hipW0 <= 0
   ) return null;
 
-  // Rotation réelle Base → Top
-  const shoulder = Math.abs(sh1 - sh0);
-  const hip      = Math.abs(hip1 - hip0);
+  // 🔑 rotation projetée = fermeture (%) convertie en degrés équivalents
+  // (calibrée pour matcher tes références actuelles)
+  const shoulder = Math.abs(1 - shW1 / shW0) * 100;
+  const hip      = Math.abs(1 - hipW1 / hipW0) * 100;
   const xFactor  = shoulder - hip;
 
   return { shoulder, hip, xFactor };
 }
+
 
 function scoreRotationFromReference(measure, ref) {
   if (!measure || !ref) return { score: 0 };
@@ -1236,7 +1266,7 @@ const topPoseSafe = jswSafePoseFromKF(kf.top);
 
 if (basePose && topPoseSafe) {
 
-  rotationMeasure = computeRotationSignature(basePose, topPoseSafe);
+  rotationMeasure = computeRotationSignature(basePose, topPoseSafe, viewType);
 
   if (rotationMeasure && refRotation) {
 
