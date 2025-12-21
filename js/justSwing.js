@@ -985,9 +985,14 @@ function scoreTempoRobust(timestamps, kf) {
   return { bs, ds, ratio };
 }
 
-function computeRotationSignature(basePose, topPose) {
-  if (!basePose || !topPose) return null;
+  const basePose = backswingPose || topPose;
+if (!basePose || !topPose) return neutralRotation();
 
+function segmentAngle(A, B) {
+  return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
+}
+
+function computeRotationSignature(basePose, topPose) {
   const LS0 = basePose[11], RS0 = basePose[12];
   const LH0 = basePose[23], RH0 = basePose[24];
 
@@ -998,22 +1003,14 @@ function computeRotationSignature(basePose, topPose) {
     return null;
   }
 
-  const shW0 = Math.hypot(LS0.x - RS0.x, LS0.y - RS0.y);
-  const shW1 = Math.hypot(LS1.x - RS1.x, LS1.y - RS1.y);
-  const hipW0 = Math.hypot(LH0.x - RH0.x, LH0.y - RH0.y);
-  const hipW1 = Math.hypot(LH1.x - RH1.x, LH1.y - RH1.y);
+  const sh0 = segmentAngle(LS0, RS0);
+  const sh1 = segmentAngle(LS1, RS1);
+  const hip0 = segmentAngle(LH0, RH0);
+  const hip1 = segmentAngle(LH1, RH1);
 
-  if (shW0 <= 0 || hipW0 <= 0) return null;
-
-  const shoulder = Math.acos(
-    Math.max(0.1, Math.min(1, shW1 / shW0))
-  ) * 180 / Math.PI;
-
-  const hip = Math.acos(
-    Math.max(0.1, Math.min(1, hipW1 / hipW0))
-  ) * 180 / Math.PI;
-
-  const xFactor = shoulder - hip;
+  const shoulder = Math.abs(sh1 - sh0);
+  const hip      = Math.abs(hip1 - hip0);
+  const xFactor  = Math.max(0, shoulder - hip);
 
   return { shoulder, hip, xFactor };
 }
@@ -1207,7 +1204,7 @@ function scoreVsReference(value, target, tol) {
 postureScore = metrics.posture.score;
 
 
-const rotBasePose = addressPose || topPose; // ✅ fallback
+const rotBasePose = backswingPose || topPose; // ✅ fallback
 
     
 // =====================================================
