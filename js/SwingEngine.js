@@ -150,8 +150,16 @@ const SwingEngine = (() => {
       const midHip = mid(Rh, Lh);
       const midWrist = mid(Rw, Lw);
 
-      const prevPose = lastPose;
-      lastPose = pose;
+     // 🔑 Amorçage mémoire (1ère frame)
+      if (!lastPose) {
+          lastPose = pose;
+          lastTime = timeMs;
+          return null;
+      }
+
+const prevPose = lastPose;
+lastPose = pose;
+
 
       if (!prevPose) return null;
 
