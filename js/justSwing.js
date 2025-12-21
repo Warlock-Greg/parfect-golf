@@ -1063,7 +1063,14 @@ const REF = window.REF;
 if (!REF) {
   console.warn("⚠️ No Parfect reference available → fallback scoring");
 }
-
+ // -------------------------------------
+  // Récup des poses clés
+  // -------------------------------------
+const addressPose = safePose(jswSafePoseFromKF(kf.address));
+const backswingPose = safePose(jswSafePoseFromKF(kf.backswing)); 
+const topPose     = safePose(jswSafePoseFromKF(kf.top));
+const impactPose  = safePose(jswSafePoseFromKF(kf.impact));
+const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
     
   // -------------------------------------
   // Helpers locaux
@@ -1113,16 +1120,6 @@ function scoreVsReference(value, target, tol) {
   const diff = Math.abs(value - target);
   return jswClamp(1 - diff / tol, 0, 1);
 }
-
-  
-  // -------------------------------------
-  // Récup des poses clés
-  // -------------------------------------
-const addressPose = safePose(jswSafePoseFromKF(kf.address));
-// backswingPose = safePose(jswSafePoseFromKF(kf.backswing)); 
-const topPose     = safePose(jswSafePoseFromKF(kf.top));
-const impactPose  = safePose(jswSafePoseFromKF(kf.impact));
-const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
 
 
   // -------------------------------------
