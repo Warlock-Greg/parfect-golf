@@ -1261,6 +1261,25 @@ if (basePose && topPoseSafe) {
       },
       score: rotationScore
     };
+
+  // =================================================
+  // ✅ AJOUT OBLIGATOIRE POUR L’UI (SIMPLE / PLAT)
+  // =================================================
+  metrics.rotation.measure = {
+    shoulder: rotationMeasure.shoulder,
+    hip: rotationMeasure.hip,
+    xFactor: rotationMeasure.xFactor
+  };
+
+  metrics.rotation.ref = {
+    shoulder: refRotation.shoulder,
+    hip: refRotation.hip,
+    xFactor: refRotation.xFactor
+  };
+
+  metrics.rotation.score = rotationScore;
+    }
+    
   }
 }
 
