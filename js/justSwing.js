@@ -449,15 +449,27 @@ function showGoButtonAfterRoutine() {
   };
 }
 
+  let engineRetryCount = 0;
+const MAX_ENGINE_RETRY = 50;
+
+  
 function initEngineOrRetry() {
   const SE = window.SwingEngine;
 
   if (!SE || typeof SE.create !== "function") {
+    engineRetryCount++;
+    if (engineRetryCount > MAX_ENGINE_RETRY) {
+      console.error("❌ SwingEngine introuvable après retries");
+      return;
+    }
+    
     console.warn("⏳ SwingEngine pas encore prêt → retry 100ms");
     setTimeout(initEngineOrRetry, 100);
     return;
   }
 
+  engineRetryCount = 0;
+  
   // ✅ Si déjà initialisé, on ne recrée pas (évite les doubles)
   if (engine && typeof engine.processPose === "function") {
     console.log("ℹ️ SwingEngine déjà initialisé");
