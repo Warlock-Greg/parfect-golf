@@ -389,12 +389,16 @@ function jswGetViewMessage() {
         addressBuffer = [];
         addressLocked = false;
 
-
+        engine.armForSwing();
+      
         // 2️⃣ Passage DIRECT en capture
-        state = JSW_STATE.SWING_CAPTURE;
+        
         captureArmed = true;
         isRecordingActive = true;
+        state = JSW_STATE.SWING_CAPTURE;
         frameIndex = 0;
+        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
+
 
         // 3️⃣ Message joueur
         if (bigMsgEl) {
