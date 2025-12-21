@@ -639,12 +639,20 @@ function initEngine() {
   //   MEDIAPIPE CALLBACK
   // ---------------------------------------------------------
 function onPoseFrame(landmarks) {
+
+  console.log("🎥 onPoseFrame", {
+  state,
+  captureArmed,
+  isRecordingActive,
+  engine: !!engine,
+  landmarks: !!landmarks
+});
+  
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
-  if (state !== JSW_STATE.SWING_CAPTURE) return;
-  if (!captureArmed || !isRecordingActive) return;
   if (!engine || !landmarks) return;
+  if (state !== JSW_STATE.SWING_CAPTURE) return;
 
   // ----------------------------
   // ADDRESS DETECTION (NON BLOQUANTE)
