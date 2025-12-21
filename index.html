@@ -1016,10 +1016,10 @@ body.jsw-fullscreen #coach-ia {
 <!-- ========================================================= -->
 <!--  SWING REVIEW PRO - COMPLET (SCORE + VIDEO + HISTORIQUE) -->
 <!-- ========================================================= -->
-<section id="swing-review" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25000; padding: 1.5rem; background: rgba(0,0,0,0.95); border-radius: 16px; border: 2px solid #4ade80; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto; width: 500px;">
+<!--section id="swing-review" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25000; padding: 1.5rem; background: rgba(0,0,0,0.95); border-radius: 16px; border: 2px solid #4ade80; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto; width: 500px;">
   
   <!-- 1) Video Player -->
-  <div class="swing-review-video" style="margin-bottom: 1rem;">
+  <!--div class="swing-review-video" style="margin-bottom: 1rem;">
     <video id="swing-video" playsinline style="width: 100%; border-radius: 8px; background: #000; max-height: 300px;"></video>
 
     <div class="swing-player-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
@@ -1040,30 +1040,30 @@ body.jsw-fullscreen #coach-ia {
   </div>
 
   <!-- 2) Score + Commentaire -->
-  <div id="swing-score-breakdown" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+  <!--div id="swing-score-breakdown" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
   <!-- Rempli automatiquement -->
-</div>
+<!--/div>
   <div class="swing-review-info" style="margin: 1rem 0; padding: 1rem; background: rgba(74, 222, 128, 0.1); border-radius: 8px;">
     <h2 id="swing-review-score" style="font-size: 2rem; margin: 0 0 0.5rem 0; color: #4ade80; text-align: center;">Score : --</h2>
     <p id="swing-review-comment" style="font-size: 1rem; margin: 0; color: rgba(255,255,255,0.9); text-align: center;">Analyse technique…</p>
   </div>
 
   <!-- 3) Boutons actions -->
-  <div class="swing-review-actions" style="display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap;">
+  <!--div class="swing-review-actions" style="display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap;">
     <button id="swing-save-reference" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #00ff99; border-radius: 8px; cursor: pointer;">⭐ Définir comme référence</button>
     <button id="swing-review-next" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: #00ff99; color: #111; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">⏭️ Swing suivant</button>
   </div>
 
   <!-- 4) Historique des swings -->
-  <div style="margin-top: 1rem;">
+  <!--div style="margin-top: 1rem;">
     <h3 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">Historique</h3>
     <div id="swing-history" class="swing-history-list" style="max-height: 150px; overflow-y: auto;">
       <!-- rempli automatiquement -->
-    </div>
+    <!--/div>
   </div>
 
   <!-- Bouton fermer -->
-  <button onclick="document.getElementById('swing-review').style.display='none'" style="width: 100%; margin-top: 1rem; padding: 10px; background: rgba(255,0,0,0.2); color: #fff; border: 1px solid #f00; border-radius: 8px; cursor: pointer; font-weight: bold;">
+  <!--button onclick="document.getElementById('swing-review').style.display='none'" style="width: 100%; margin-top: 1rem; padding: 10px; background: rgba(255,0,0,0.2); color: #fff; border: 1px solid #f00; border-radius: 8px; cursor: pointer; font-weight: bold;">
     ❌ Fermer
   </button>
 
