@@ -1,12 +1,11 @@
-//
+// SwingEngine.js
 //  SWINGENGINE PRO — SCORE READY (Parfect 2025)
 //  Détection : Top / Impact / Finish
-//  Phases : Address → Backswing → Top → Downswing → Impact → Release → Finish
+//  Phases : IDLE → ADDRESS → BACKSWING → TOP → DOWNSWING → IMPACT → RELEASE → FINISH
 //  Événements : onKeyFrame, onSwingComplete
 //
 
 const SwingEngine = (() => {
-
   console.log("🟢 SwingEngine.js EXECUTED");
 
   const LM = {
@@ -16,32 +15,27 @@ const SwingEngine = (() => {
     LEFT_HIP: 23,
     RIGHT_HIP: 24,
     LEFT_SHOULDER: 11,
-    RIGHT_SHOULDER: 12
+    RIGHT_SHOULDER: 12,
   };
 
   const SWING_THRESHOLDS = {
     WRIST_START: 0.04,
     WRIST_STOP: 0.015,
     HIP_START: 0.03,
-    HIP_STOP: 0.012
+    HIP_STOP: 0.012,
   };
 
-  
   // --- paramètres
-  const MIN_SWING_MS = 350;           // durée mini
-  const START_SPEED = 0.015;          // vitesse poignet = démarrage
-  const IMPACT_SPIKE = 0.25;          // brusque changement pour impact
-  const FINISH_HOLD_MS = 250;         // stabilité finale
-  const MAX_IDLE_MS = 1800;           // reset auto
-  const FINISH_TIMEOUT_MS = 400; // 0.6 seconde après le release
+  const MIN_SWING_MS = 350;          // durée mini (pas encore utilisé, gardé pour évolution)
+  const START_SPEED = 0.015;         // vitesse poignet = démarrage backswing
+  const IMPACT_SPIKE = 0.25;         // spike vitesse = impact
+  const FINISH_HOLD_MS = 250;        // (pas utilisé pour l'instant)
+  const MAX_IDLE_MS = 1800;          // reset auto si inactif
+  const FINISH_TIMEOUT_MS = 400;     // timeout release → finish
 
-  
-
-let fallbackActiveFrames = 0;
-const FALLBACK_MIN_FRAMES = 20; // ≈ 0.7s à 30fps
-const FALLBACK_MIN_ENERGY = 0.03;
-
-  
+  // fallback start (si thresholds stricts)
+  const FALLBACK_MIN_FRAMES = 20;    // ≈ 0.7s à 30fps
+  const FALLBACK_MIN_ENERGY = 0.03;
 
   function dist(a, b) {
     if (!a || !b) return 0;
@@ -51,18 +45,19 @@ const FALLBACK_MIN_ENERGY = 0.03;
   }
 
   function mid(a, b) {
-    return { x: (a.x + b.x)/2, y: (a.y + b.y)/2 };
+    if (!a || !b) return null;
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
 
   // --- Création moteur
-  function create({ fps = 30, onKeyFrame, onSwingComplete, onSwingStart}) {
-
+  function create({ fps = 30, onKeyFrame, onSwingComplete, onSwingStart, debug = false } = {}) {
     let state = "IDLE";
     let lastPose = null;
     let lastTime = null;
 
     let frames = [];
     let timestamps = [];
+
     let keyFrames = {
       address: null,
       backswing: null,
@@ -70,20 +65,23 @@ const FALLBACK_MIN_ENERGY = 0.03;
       downswing: null,
       impact: null,
       release: null,
-      finish: null
+      finish: null,
     };
 
     let swingStartTime = null;
     let lastMotionTime = performance.now();
+
     let impactDetected = false;
     let releaseStartTime = null;
-    let prevSpeedWrist = 0;
+
     let maxBackswingSpeed = 0;
+
+    // extension (info scoring)
     let extensionDetected = false;
     let extensionStartTime = null;
 
-
-
+    // fallback start
+    let fallbackActiveFrames = 0;
 
     function reset() {
       frames = [];
@@ -95,36 +93,51 @@ const FALLBACK_MIN_ENERGY = 0.03;
         downswing: null,
         impact: null,
         release: null,
-        finish: null
+        finish: null,
       };
+
       state = "IDLE";
       impactDetected = false;
+      releaseStartTime = null;
+
+      maxBackswingSpeed = 0;
+
       extensionDetected = false;
       extensionStartTime = null;
+
+      fallbackActiveFrames = 0;
+
       lastPose = null;
       lastTime = null;
-      releaseStartTime = null;
+    }
+
+    function clonePose(pose) {
+      // MediaPipe landmarks = array of 33 objects (x,y,z,visibility)
+      // structuredClone ok si dispo, sinon JSON stringify
+      try {
+        // eslint-disable-next-line no-undef
+        if (typeof structuredClone === "function") return structuredClone(pose);
+      } catch (_) {}
+      return pose ? JSON.parse(JSON.stringify(pose)) : null;
     }
 
     function markKeyFrame(type, index, pose) {
-  keyFrames[type] = {
-    index,
-    pose: pose ? JSON.parse(JSON.stringify(pose)) : null
-  };
+      keyFrames[type] = {
+        index,
+        pose: clonePose(pose),
+      };
 
-  if (typeof onKeyFrame === "function") {
-    onKeyFrame({
-      type,
-      index,
-      pose: pose ? JSON.parse(JSON.stringify(pose)) : null
-    });
-  }
-}
+      if (typeof onKeyFrame === "function") {
+        onKeyFrame({
+          type,
+          index,
+          pose: clonePose(pose),
+        });
+      }
+    }
 
-    // --- moteur principal
     function processPose(pose, timeMs, clubType) {
-  
-      if (!pose) return;
+      if (!pose) return null;
 
       const dt = lastTime != null ? (timeMs - lastTime) / 1000 : 1 / fps;
       lastTime = timeMs;
@@ -140,233 +153,214 @@ const FALLBACK_MIN_ENERGY = 0.03;
       const prevPose = lastPose;
       lastPose = pose;
 
-      if (!prevPose) return;
+      if (!prevPose) return null;
 
       const prevMidWrist = mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]);
-      const prevMidHip   = mid(prevPose[LM.RIGHT_HIP], prevPose[LM.LEFT_HIP]);
+      const prevMidHip = mid(prevPose[LM.RIGHT_HIP], prevPose[LM.LEFT_HIP]);
+
+      if (!midWrist || !midHip || !prevMidWrist || !prevMidHip) return null;
 
       const speedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
-      const speedHip   = dist(midHip, prevMidHip)     / (dt || 0.033);
+      const speedHip = dist(midHip, prevMidHip) / (dt || 0.033);
 
-console.log(
-  "⚡ speedWrist =", speedWrist.toFixed(4),
-  "| speedHip =", speedHip.toFixed(4),
-  "| state =", state
-);
+      if (debug) {
+        console.log(
+          "⚡ speedWrist =", speedWrist.toFixed(4),
+          "| speedHip =", speedHip.toFixed(4),
+          "| state =", state
+        );
+      }
 
-      
       const now = timeMs;
 
       // RESET auto si plus de mouvement
       if (now - lastMotionTime > MAX_IDLE_MS) {
         reset();
+        return null;
       }
       if (speedWrist > 0.005 || speedHip > 0.005) {
         lastMotionTime = now;
       }
 
-      // IDLE → Address
-   if (state === "IDLE") {
+      // =====================================================
+      // IDLE → ADDRESS
+      // =====================================================
+      if (state === "IDLE") {
+        const motionEnergy = speedWrist + speedHip;
 
-  const motionEnergy = speedWrist + speedHip;
+        // 🔹 Déclencheur principal du swing
+        if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
+          state = "ADDRESS";
+          swingStartTime = timeMs;
+          fallbackActiveFrames = 0;
 
-  // 🔹 Déclencheur principal du swing
-  if (
-    speedWrist > SWING_THRESHOLDS.WRIST_START &&
-    speedHip > SWING_THRESHOLDS.HIP_START
-  ) {
-    state = "ADDRESS";
-    swingStartTime = timeMs;
-    fallbackActiveFrames = 0;
-    return;
-  }
+          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
+          return null;
+        }
 
-  // 🔸 Fallback fluide
-  if (motionEnergy > FALLBACK_MIN_ENERGY) {
-    fallbackActiveFrames++;
-  } else {
-    fallbackActiveFrames = 0;
-  }
+        // 🔸 Fallback fluide
+        if (motionEnergy > FALLBACK_MIN_ENERGY) {
+          fallbackActiveFrames++;
+        } else {
+          fallbackActiveFrames = 0;
+        }
 
-  if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
-    console.log("🟡 FALLBACK SWING START");
-    state = "ADDRESS";
-    swingStartTime = timeMs;
-    fallbackActiveFrames = 0;
-    return;
-  }
-}
+        if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
+          if (debug) console.log("🟡 FALLBACK SWING START");
+          state = "ADDRESS";
+          swingStartTime = timeMs;
+          fallbackActiveFrames = 0;
 
+          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
+          return null;
+        }
 
+        return null;
+      }
 
-    // ADDRESS → backswing start
-if (state === "ADDRESS") {
+      // =====================================================
+      // ADDRESS → BACKSWING
+      // =====================================================
+      if (state === "ADDRESS") {
+        frames.push(pose);
+        timestamps.push(timeMs);
 
-  // Toujours enregistrer la frame
-  frames.push(pose);
-  timestamps.push(timeMs);
+        if (frames.length < 3) return null;
 
-  // On attend d’avoir un minimum de frames pour détecter le start
-  if (frames.length < 3) return;
+        if (speedWrist > START_SPEED) {
+          state = "BACKSWING";
+          // swingStartTime déjà set, mais on garde ton intention
+          swingStartTime = swingStartTime ?? timeMs;
+          markKeyFrame("backswing", frames.length - 1, pose);
+        }
+        return null;
+      }
 
-  // Détection démarrage du swing
-  if (speedWrist > START_SPEED) {
-    state = "BACKSWING";
-    swingStartTime = timeMs;
+      // =====================================================
+      // BACKSWING → TOP
+      // =====================================================
+      if (state === "BACKSWING") {
+        frames.push(pose);
+        timestamps.push(timeMs);
 
-    // On met le keyframe un peu plus tard (index frames.length - 1)
-    markKeyFrame("backswing", frames.length - 1, pose);
-    return;
-  }
+        maxBackswingSpeed = Math.max(maxBackswingSpeed, speedWrist);
 
-  return;
-}
+        // speed drop (backswing réel puis décélération)
+        const speedDrop = maxBackswingSpeed > 0.10 && speedWrist < maxBackswingSpeed * 0.7;
 
-     // BACKSWING
-// Variables globales à ajouter en haut du moteur :
-// let prevSpeedWrist = 0;
-// let maxBackswingSpeed = 0;
+        // direction change (inversion)
+        const dx = midWrist.x - prevMidWrist.x;
+        const dy = midWrist.y - prevMidWrist.y;
 
-if (state === "BACKSWING") {
-  frames.push(pose);
-  timestamps.push(timeMs);
+        // approx simple : signe produit scalaire avec mouvement précédent
+        const prevDx = prevMidWrist.x - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).x;
+        const prevDy = prevMidWrist.y - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).y;
 
-  // --- enregistrer le pic de vitesse du backswing ---
-  maxBackswingSpeed = Math.max(maxBackswingSpeed, speedWrist);
+        const directionChange = dx * prevDx + dy * prevDy < 0;
 
-  // --- Condition TOP robuste ---
-  // 1) la vitesse a déjà été suffisamment élevée (backswing réel)
-  // 2) puis baisse d'au moins 30 %
-  const speedDrop = (maxBackswingSpeed > 0.10) && (speedWrist < maxBackswingSpeed * 0.7);
+        if (speedDrop || directionChange) {
+          state = "TOP";
+          markKeyFrame("top", frames.length - 1, pose);
+        }
+        return null;
+      }
 
-  // --- changement de direction ---
-  const dx = midWrist.x - prevMidWrist.x;
-  const dy = midWrist.y - prevMidWrist.y;
-
-  const prevDx = prevMidWrist.x - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).x;
-  const prevDy = prevMidWrist.y - mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]).y;
-
-  const directionChange = (dx * prevDx + dy * prevDy) < 0;  
-  // produit scalaire négatif → inversion du mouvement → vrai TOP
-
-  // --- Détection finale du TOP ---
-  if (speedDrop || directionChange) {
-    state = "TOP";
-    markKeyFrame("top", frames.length - 1, pose);
-    return;
-  }
-
-  prevSpeedWrist = speedWrist;
-  return;
-}
-
-
-      // TOP
+      // =====================================================
+      // TOP → DOWNSWING
+      // =====================================================
       if (state === "TOP") {
         frames.push(pose);
         timestamps.push(timeMs);
 
-        // descente = augmentation vitesse
         if (speedWrist > 0.10) {
           state = "DOWNSWING";
           markKeyFrame("downswing", frames.length - 1, pose);
-          return;
         }
-        return;
+        return null;
       }
 
-      // DOWNSWING
+      // =====================================================
+      // DOWNSWING → IMPACT
+      // =====================================================
       if (state === "DOWNSWING") {
         frames.push(pose);
         timestamps.push(timeMs);
 
-        // impact = spike vitesse
         if (!impactDetected && speedWrist > IMPACT_SPIKE) {
           impactDetected = true;
           state = "IMPACT";
           markKeyFrame("impact", frames.length - 1, pose);
-          return;
         }
-        return;
+        return null;
       }
 
-// IMPACT → RELEASE
-if (state === "IMPACT") {
-  frames.push(pose);
-  timestamps.push(timeMs);
+      // =====================================================
+      // IMPACT → RELEASE (avec extensionDetected)
+      // =====================================================
+      if (state === "IMPACT") {
+        frames.push(pose);
+        timestamps.push(timeMs);
 
-  const wristLead = pose[LM.LEFT_WRIST]; // à adapter si gaucher
-  const hipsMid = mid(pose[LM.LEFT_HIP], pose[LM.RIGHT_HIP]);
+        const wristLead = pose[LM.LEFT_WRIST]; // à adapter si gaucher
+        const hipsMid = mid(pose[LM.LEFT_HIP], pose[LM.RIGHT_HIP]);
 
-  // 🔑 Détection EXTENSION (mains devant hanches)
-  if (
-    !extensionDetected &&
-    wristLead &&
-    hipsMid &&
-    wristLead.x > hipsMid.x + 0.02
-  ) {
-    extensionDetected = true;
-    extensionStartTime = timeMs;
-  }
+        // 🔑 Détection EXTENSION (mains devant hanches) — stockée pour scoring
+        if (!extensionDetected && wristLead && hipsMid && wristLead.x > hipsMid.x + 0.02) {
+          extensionDetected = true;
+          extensionStartTime = timeMs;
+        }
 
-  // Passage en RELEASE quand la vitesse chute
-  if (speedWrist < 0.02) {
-    state = "RELEASE";
-    releaseStartTime = timeMs;
-    markKeyFrame("release", frames.length - 1, pose);
-    return;
-  }
+        // Passage en RELEASE quand la vitesse chute
+        if (speedWrist < 0.02) {
+          state = "RELEASE";
+          releaseStartTime = timeMs;
+          markKeyFrame("release", frames.length - 1, pose);
+        }
+        return null;
+      }
 
-  return;
-}
+      // =====================================================
+      // RELEASE → FINISH → swingComplete
+      // =====================================================
+      if (state === "RELEASE") {
+        frames.push(pose);
+        timestamps.push(timeMs);
 
-// RELEASE → FINISH
-if (state === "RELEASE") {
-  frames.push(pose);
-  timestamps.push(timeMs);
+        const timeInRelease = timeMs - (releaseStartTime ?? timeMs);
+        const stable = speedWrist < 0.02 && speedHip < 0.015;
 
-  const timeInRelease = timeMs - releaseStartTime;
-  const stable = speedWrist < 0.02 && speedHip < 0.015;
+        if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
+          state = "FINISH";
+          markKeyFrame("finish", frames.length - 1, pose);
 
-  if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
-    state = "FINISH";
-    markKeyFrame("finish", frames.length - 1, pose);
+          const data = {
+            frames: [...frames],
+            timestamps: [...timestamps],
+            keyFrames: { ...keyFrames },
+            club: clubType,
+            fps,
 
-    const data = {
-      frames: [...frames],
-      timestamps: [...timestamps],
-      keyFrames: { ...keyFrames },
-      club: clubType,
-      fps,
-      extensionDetected,
-      extensionStartTime
-    };
+            // ✅ pour scoring premium
+            extensionDetected,
+            extensionStartTime,
+          };
 
-    if (typeof onSwingComplete === "function") {
-      onSwingComplete({ type: "swingComplete", data });
+          if (typeof onSwingComplete === "function") {
+            onSwingComplete({ type: "swingComplete", data });
+          }
+
+          reset();
+        }
+        return null;
+      }
+
+      return null;
     }
 
-    reset();
-    return;
+    return { processPose, reset };
   }
 
-  return;
-}
-
-
-  
-
-    return { processPose, reset }; 
-  }
-
-  return { create }; 
-}
-    
-
+  return { create };
 })();
-// -------------------------------------------------------------
-//  EXPORT GLOBAL POUR JUSTSWING (Ajout obligatoire)
-// -------------------------------------------------------------
-if (typeof window !== "undefined") {
-  window.SwingEngine = SwingEngine;
-}
+
+export default SwingEngine;
