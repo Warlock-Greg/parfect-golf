@@ -157,11 +157,16 @@ const SwingEngine = (() => {
           return null;
       }
 
-const prevPose = lastPose;
-lastPose = pose;
+      const prevPose = lastPose;
+      lastPose = pose;
 
 
-      if (!prevPose) return null;
+        if (!prevPose) {
+            lastPose = pose;
+            lastTime = timeMs;
+            return null;
+                      }
+
 
       const prevMidWrist = mid(prevPose[LM.RIGHT_WRIST], prevPose[LM.LEFT_WRIST]);
       const prevMidHip = mid(prevPose[LM.RIGHT_HIP], prevPose[LM.LEFT_HIP]);
