@@ -6,7 +6,6 @@
 
 const $$ = (id) => document.getElementById(id);
 
-import SwingEngine from "./SwingEngine.js";
 
 const JSW_STATE = {
   IDLE: "IDLE",
@@ -456,11 +455,13 @@ const MAX_ENGINE_RETRY = 50;
 
   
 function initEngine() {
-  if (engine) return; // sécurité
+  if (!window.SwingEngine || !window.SwingEngine.create) {
+    console.error("❌ SwingEngine introuvable");
+    return;
+  }
 
-  engine = SwingEngine.create({
+  engine = window.SwingEngine.create({
     fps: 30,
-    debug: true, // mets false plus tard
 
     onKeyFrame: (evt) => {
       console.log("🎯 KEYFRAME", evt);
@@ -468,13 +469,13 @@ function initEngine() {
 
     onSwingComplete: (evt) => {
       console.log("🏁 SWING COMPLETE", evt);
-      const swing = evt.data || evt;
-      handleSwingComplete(swing);
+      handleSwingComplete(evt.data || evt);
     }
   });
 
   console.log("🔧 SwingEngine READY", engine);
 }
+
 
   
   // ---------------------------------------------------------
