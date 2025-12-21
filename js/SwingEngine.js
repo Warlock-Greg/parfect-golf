@@ -75,6 +75,7 @@ const SwingEngine = (() => {
     let releaseStartTime = null;
 
     let maxBackswingSpeed = 0;
+    let armed = false;
 
     // extension (info scoring)
     let extensionDetected = false;
@@ -110,6 +111,16 @@ const SwingEngine = (() => {
       lastPose = null;
       lastTime = null;
     }
+
+    function armForSwing(timeMs = performance.now()) {
+  reset();
+  armed = true;
+  swingStartTime = timeMs;
+  lastMotionTime = timeMs;
+
+  if (debug) console.log("🎯 SwingEngine ARMÉ");
+}
+
 
     function clonePose(pose) {
       // MediaPipe landmarks = array of 33 objects (x,y,z,visibility)
@@ -199,11 +210,16 @@ const SwingEngine = (() => {
       // IDLE → ADDRESS
       // =====================================================
       if (state === "IDLE") {
+
+        // ⛔ Tant que JustSwing n’a pas armé le swing
+        if (!armed) return null;
+      
         const motionEnergy = speedWrist + speedHip;
 
         // 🔹 Déclencheur principal du swing
         if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
           state = "ADDRESS";
+           armed = false; // 🔓 consommé
           swingStartTime = timeMs;
           fallbackActiveFrames = 0;
 
@@ -370,7 +386,7 @@ const SwingEngine = (() => {
       return null;
     }
 
-    return { processPose, reset };
+    return { processPose, reset, armForSwing };
   }
 
   return { create };
