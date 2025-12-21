@@ -2270,7 +2270,7 @@ if (nextBtn) {
     startSession,
     stopSession,
     onPoseFrame,
-    _debug: debug,
+    _debug: debug
   };
 })();
 
