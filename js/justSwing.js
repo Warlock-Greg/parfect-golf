@@ -6,6 +6,8 @@
 
 const $$ = (id) => document.getElementById(id);
 
+import SwingEngine from "./SwingEngine.js";
+
 const JSW_STATE = {
   IDLE: "IDLE",
   WAITING_START: "WAITING_START", // bouton start affiché
@@ -453,39 +455,20 @@ function showGoButtonAfterRoutine() {
 const MAX_ENGINE_RETRY = 50;
 
   
-function initEngineOrRetry() {
-  const SE = window.SwingEngine;
+function initEngine() {
+  if (engine) return; // sécurité
 
-  if (!SE || typeof SE.create !== "function") {
-    engineRetryCount++;
-    if (engineRetryCount > MAX_ENGINE_RETRY) {
-      console.error("❌ SwingEngine introuvable après retries");
-      return;
-    }
-    
-    console.warn("⏳ SwingEngine pas encore prêt → retry 100ms");
-    setTimeout(initEngineOrRetry, 100);
-    return;
-  }
-
-  engineRetryCount = 0;
-  
-  // ✅ Si déjà initialisé, on ne recrée pas (évite les doubles)
-  if (engine && typeof engine.processPose === "function") {
-    console.log("ℹ️ SwingEngine déjà initialisé");
-    return;
-  }
-
-  engine = SE.create({
+  engine = SwingEngine.create({
     fps: 30,
+    debug: true, // mets false plus tard
 
     onKeyFrame: (evt) => {
       console.log("🎯 KEYFRAME", evt);
     },
 
     onSwingComplete: (evt) => {
-      console.log("🏁 SWING COMPLETE (via KEYFRAME callback)", evt);
-      const swing = evt?.data || evt;
+      console.log("🏁 SWING COMPLETE", evt);
+      const swing = evt.data || evt;
       handleSwingComplete(swing);
     }
   });
@@ -508,7 +491,7 @@ function initEngineOrRetry() {
     lastFullBodyOk = false;
 
     // Init moteur SwingEngine
-    initEngineOrRetry();
+    initEngine();
 
 
     // Affichage écran plein JustSwing
