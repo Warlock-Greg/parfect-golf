@@ -1001,30 +1001,20 @@ function computeRotationSignature(basePose, topPose) {
     return null;
   }
 
- // 🔹 Angle segment épaules
-  const shoulder0 = Math.atan2(
-    LS0.y - RS0.y,
-    LS0.x - RS0.x
-  ) * 180 / Math.PI;
+  // Orientation des segments (Face On)
+  const sh0 = jswLineAngleDeg(LS0, RS0);
+  const sh1 = jswLineAngleDeg(LS1, RS1);
 
-  const shoulder1 = Math.atan2(
-    LS1.y - RS1.y,
-    LS1.x - RS1.x
-  ) * 180 / Math.PI;
+  const hip0 = jswLineAngleDeg(LH0, RH0);
+  const hip1 = jswLineAngleDeg(LH1, RH1);
 
-  // 🔹 Angle segment hanches
-  const hip0 = Math.atan2(
-    LH0.y - RH0.y,
-    LH0.x - RH0.x
-  ) * 180 / Math.PI;
+  if (
+    sh0 == null || sh1 == null ||
+    hip0 == null || hip1 == null
+  ) return null;
 
-  const hip1 = Math.atan2(
-    LH1.y - RH1.y,
-    LH1.x - RH1.x
-  ) * 180 / Math.PI;
-
-  // 🔹 Rotation relative Base → Top
-  const shoulder = Math.abs(shoulder1 - shoulder0);
+  // Rotation réelle Base → Top
+  const shoulder = Math.abs(sh1 - sh0);
   const hip      = Math.abs(hip1 - hip0);
   const xFactor  = shoulder - hip;
 
