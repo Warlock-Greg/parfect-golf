@@ -64,8 +64,8 @@ document.addEventListener("DOMContentLoaded", () => {
           console.warn("⚠️ mpPose.send erreur", err);
         }
       },
-      width: 720,
-      height: 1080
+      width: 1280,
+      height: 720
     });
 
     camera.start();
