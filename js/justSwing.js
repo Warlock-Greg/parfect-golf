@@ -852,10 +852,23 @@ function jswDetectViewType(pose) {
   return Array.isArray(pose) ? pose : null;
 }
 
-function scoreOne(value, target, tol) {
+function scoreOneSoft(value, target, tol) {
   if (value == null || target == null || tol == null || tol <= 0) return 0;
-  return Math.max(0, Math.min(1, 1 - Math.abs(value - target) / tol));
+
+  const diff = Math.abs(value - target);
+
+  // 0 uniquement si le mouvement est quasi inexistant
+  if (diff < 1.0) return 0;
+
+  const x = diff / tol;
+
+  const k = 0.55; // 🎯 calibré pour que 6° → 6/20 dans ton cas
+
+  const s = Math.exp(-k * x);
+
+  return Math.max(0, Math.min(1, s));
 }
+
 
   
 function computeTriangleStable(pose) {
@@ -1058,7 +1071,7 @@ function scoreRotationFromReference(measure, ref) {
   const h = scoreOne(measure.hip,      ref.hip.target,      ref.hip.tol);
   const x = scoreOne(measure.xFactor,  ref.xFactor.target,  ref.xFactor.tol);
 
-  const norm = s * 0.5 + h * 0.3 + x * 0.2;
+  const norm = s * 0.4 + h * 0.4 + x * 0.2;
 
   return {
     score: Math.round(norm * 20),
