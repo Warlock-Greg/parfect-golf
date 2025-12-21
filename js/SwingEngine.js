@@ -7,6 +7,8 @@
 
 const SwingEngine = (() => {
 
+  console.log("🟢 SwingEngine.js EXECUTED");
+
   const LM = {
     NOSE: 0,
     LEFT_WRIST: 15,
