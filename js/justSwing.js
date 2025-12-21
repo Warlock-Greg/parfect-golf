@@ -644,14 +644,7 @@ function initEngine() {
   // ---------------------------------------------------------
 function onPoseFrame(landmarks) {
 
-  console.log("🎥 onPoseFrame", {
-  state,
-  captureArmed,
-  isRecordingActive,
-  engine: !!engine,
-  landmarks: !!landmarks
-});
-  
+ 
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
