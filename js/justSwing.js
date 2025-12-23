@@ -1041,27 +1041,43 @@ function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
     return { shoulder, hip, xFactor };
   }
 
-  // --------------------------------------------------
-  // 📸 FACE-ON / MOBILE FACE-ON → rotation projetée
-  // --------------------------------------------------
+  // =====================================================
+  // 📱 Face-On / Mobile — rotation par PROJECTION
+  // -----------------------------------------------------
+  // Quand le joueur tourne :
+  //  → la largeur apparente épaules / hanches diminue
+  //  → on transforme cette perte en degrés équivalents
+  // =====================================================
 
-  const shW0 = jswDist(LS0, RS0);
-  const shW1 = jswDist(LS1, RS1);
-  const hipW0 = jswDist(LH0, RH0);
-  const hipW1 = jswDist(LH1, RH1);
+  const shoulderW0 = Math.abs(LS0.x - RS0.x);
+  const shoulderW1 = Math.abs(LS1.x - RS1.x);
+  const hipW0 = Math.abs(LH0.x - RH0.x);
+  const hipW1 = Math.abs(LH1.x - RH1.x);
 
+  // Sécurité anti-bruit / hors cadre
   if (
-    !shW0 || !shW1 || !hipW0 || !hipW1 ||
-    shW0 <= 0 || hipW0 <= 0
+    shoulderW0 < 0.05 ||
+    hipW0 < 0.05
   ) return null;
 
-  // 🔑 rotation projetée = fermeture (%) convertie en degrés équivalents
-  // (calibrée pour matcher tes références actuelles)
-  const shoulder = Math.abs(1 - shW1 / shW0) * 100;
-  const hip      = Math.abs(1 - hipW1 / hipW0) * 100;
-  const xFactor  = shoulder - hip;
+  // 🔑 Coefficients calibrés Parfect
+  // (cohérents avec tes références actuelles)
+  const SHOULDER_SCALE = 30; // ≈ rotation max épaules visible Face-On
+  const HIP_SCALE      = 20; // ≈ rotation max hanches visible Face-On
 
-  return { shoulder, hip, xFactor };
+  const shoulder =
+    (1 - shoulderW1 / shoulderW0) * SHOULDER_SCALE;
+
+  const hip =
+    (1 - hipW1 / hipW0) * HIP_SCALE;
+
+  const xFactor = shoulder - hip;
+
+  return {
+    shoulder: Math.max(0, shoulder),
+    hip: Math.max(0, hip),
+    xFactor
+  };
 }
 
 
