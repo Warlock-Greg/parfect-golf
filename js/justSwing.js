@@ -882,16 +882,17 @@ function scoreTriangleStable(addr, top, imp) {
   const vTop = computeTriangleStable(top);
   const vImp = computeTriangleStable(imp);
 
-  if (!base || !vTop || !vImp) return 0;
+  if (!base || !vTop || !vImp) return 0.4; // socle
 
   const dTop = Math.abs(vTop - base) / base;
   const dImp = Math.abs(vImp - base) / base;
 
-  const sTop = jswClamp(1 - dTop / 0.15, 0, 1);
-  const sImp = jswClamp(1 - dImp / 0.10, 0, 1);
+  const sTop = Math.max(0.3, 1 - dTop / 0.30);
+  const sImp = Math.max(0.3, 1 - dImp / 0.25);
 
-  return (sTop + sImp) / 2;
+  return (sTop + sImp) / 2; // 0.3 → 1
 }
+
 
 function computeWeightShift(addr, top, imp) {
   if (!addr || !top || !imp) return { back: 0, forward: 0 };
@@ -917,13 +918,19 @@ function computeWeightShift(addr, top, imp) {
 
 function scoreWeightShift(addr, top, imp) {
   const w = computeWeightShift(addr, top, imp);
-  const sBack = jswClamp((w.back - 0.05) / 0.30, 0, 1);
-  const sFwd  = jswClamp((w.forward - 0.05) / 0.30, 0, 1);
-  return (sBack + sFwd) / 2;
+
+  const back = Math.abs(w.back);
+  const fwd  = Math.abs(w.forward);
+
+  const sBack = Math.max(0.3, back / 0.25);
+  const sFwd  = Math.max(0.3, fwd  / 0.30);
+
+  return (sBack * 0.4 + sFwd * 0.6);
 }
 
+
 function scoreTempoRobust(timestamps, kf) {
-  if (!timestamps || !kf.address || !kf.top || !kf.impact) return 0;
+  if (!timestamps || !kf.address || !kf.top || !kf.impact) return 0.4;
 
   const a = kf.address.index;
   const t = kf.top.index;
@@ -933,18 +940,19 @@ function scoreTempoRobust(timestamps, kf) {
   const tT = timestamps[t];
   const tI = timestamps[i];
 
-  if (!tA || !tT || !tI) return 0;
+  if (!tA || !tT || !tI) return 0.4;
 
-  const backswing = (tT - tA) / 1000;  // en secondes
+  const backswing = (tT - tA) / 1000;
   const downswing = (tI - tT) / 1000;
 
-  if (backswing <= 0 || downswing <= 0) return 0;
+  if (backswing <= 0 || downswing <= 0) return 0.4;
 
   const ratio = backswing / downswing;
+  const diff = Math.abs(ratio - 3);
 
-  // On normalise autour de 3:1 → score de 0 à 1
-  return Math.max(0, 1 - Math.abs(ratio - 3) / 2);
+  return Math.max(0.3, 1 - diff / 3);
 }
+
 
   function jswComputeTempoFromSpeed(frames, timestamps, kf) {
   if (!frames || frames.length < 10) return { bs: null, ds: null, ratio: null };
