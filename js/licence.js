@@ -1,162 +1,202 @@
-// === licence.js (MVP propre & robuste) ===
+// =====================================================
+//  licence.js — Parfect.golfr (MVP email-first)
+//  - Email obligatoire
+//  - Licence via Google Sheets
+//  - Trial 30 jours fallback
+// =====================================================
+
 (() => {
-  const LS_KEYS = {
-    LICENCE: "licence",               // "free" | "freemium" | "pro"
-    LICENCE_START: "licence_start",   // timestamp (ms)
-    LICENCE_EXPIRY: "licence_expiry"  // ISO string (optionnel si tu veux stocker la date)
+
+  // ---------------- CONFIG ----------------
+  const LS = {
+    EMAIL: "parfect_email",
+    NAME: "parfect_name",
+    LICENCE: "parfect_licence",       // code licence
+    MODE: "parfect_mode",             // "licence" | "trial"
+    START: "parfect_start"             // timestamp
   };
 
-  // === Utils
-  const $id = (x) => document.getElementById(x);
-  const now = () => Date.now();
-  const daysToMs = (d) => d * 24 * 60 * 60 * 1000;
-
-  // Durée d’essai (modifiable)
   const TRIAL_DAYS = 30;
+  const API_URL = "https://script.google.com/macros/s/1RbLLf1TKwbmbWzRRH_sRWhDyrmicQOvKFPF7Ij9EidGAwkY-TWiWh7ms/exec";
 
-  // === Badge IA (visuel en haut à droite)
-  function showLicenceBadge(active = false, mode = "local") {
-    const existing = document.getElementById("ia-badge");
-    if (existing) existing.remove();
+  const now = () => Date.now();
+  const daysToMs = d => d * 86400000;
+  const $id = id => document.getElementById(id);
 
-    const badge = document.createElement("div");
-    badge.id = "ia-badge";
-    badge.textContent = active
-      ? (mode === "worker" ? "💡 IA via Worker" : "💡 IA activée")
-      : "🤖 Mode local";
-    badge.style.position = "fixed";
-    badge.style.top = "8px";
-    badge.style.right = "10px";
-    badge.style.background = active ? "#00ff99" : "#555";
-    badge.style.color = "#111";
-    badge.style.fontSize = "0.8rem";
-    badge.style.padding = "4px 10px";
-    badge.style.borderRadius = "8px";
-    badge.style.fontWeight = "bold";
-    badge.style.boxShadow = "0 0 8px rgba(0,0,0,.4)";
-    badge.style.zIndex = 15000;
-    document.body.appendChild(badge);
-  }
+  // ---------------- STATE ----------------
+  window.ParfectLicence = {
+    active: false,
+    mode: "locked" // locked | trial | licence
+  };
 
-  // === Détection automatique du mode IA
-  // Configure ceci si tu utilises un Worker ou une clé locale
-  window.parfectWorkerURL = window.parfectWorkerURL || ""; // ex: "https://ton-worker.cloudflareworkers.net/coach"
-  window.envOpenAIKey     = window.envOpenAIKey || "";     // si tu l’injectes côté front (MVP)
-
-  function detectIAMode() {
-    if (window.parfectWorkerURL && window.parfectWorkerURL.startsWith("https")) {
-      console.log("🌐 Mode IA via Worker activé :", window.parfectWorkerURL);
-      window.iaMode = "worker";
-      showLicenceBadge(true, "worker");
-    } else if (window.envOpenAIKey && window.envOpenAIKey.length > 10) {
-      console.log("🔑 Licence OpenAI locale détectée.");
-      window.iaMode = "openai";
-      showLicenceBadge(true, "local");
-    } else {
-      console.log("⚙️ Aucun accès IA : mode local standard.");
-      window.iaMode = "local";
-      showLicenceBadge(false);
-    }
-  }
-
-  // === Vérification simple côté Google Apps Script (promo)
-  async function verifyPromo(code) {
-    try {
-      // ⚠️ Remplace par ton vrai Apps Script ID
-      const url = "https://script.google.com/macros/s/YOUR_APPS_SCRIPT_ID/exec?code=" + encodeURIComponent(code);
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.valid === true;
-    } catch (e) {
-      console.warn("Promo check failed:", e);
-      return false;
-    }
-  }
-
-  // === Vérifie si essai actif / expiré
+  // ---------------- HELPERS ----------------
   function isTrialActive() {
-    const type = localStorage.getItem(LS_KEYS.LICENCE);
-    const start = parseInt(localStorage.getItem(LS_KEYS.LICENCE_START) || "0", 10);
-    if (!type || !start) return false; // pas encore activé
-    if (type !== "free") return true;  // freemium/pro : actif
-    // free = essai 30 jours
+    const start = parseInt(localStorage.getItem(LS.START) || "0", 10);
+    if (!start) return false;
     return (now() - start) < daysToMs(TRIAL_DAYS);
   }
 
-  function daysLeftTrial() {
-    const start = parseInt(localStorage.getItem(LS_KEYS.LICENCE_START) || "0", 10);
+  function daysLeft() {
+    const start = parseInt(localStorage.getItem(LS.START) || "0", 10);
     if (!start) return 0;
-    const leftMs = daysToMs(TRIAL_DAYS) - (now() - start);
-    return Math.max(0, Math.ceil(leftMs / (24*60*60*1000)));
+    const left = daysToMs(TRIAL_DAYS) - (now() - start);
+    return Math.max(0, Math.ceil(left / daysToMs(1)));
   }
 
-  // === Affiche la modale d’activation (free 30j ou code promo)
+  function setTrial(email, name = "") {
+    localStorage.setItem(LS.EMAIL, email);
+    if (name) localStorage.setItem(LS.NAME, name);
+    localStorage.setItem(LS.MODE, "trial");
+    localStorage.setItem(LS.START, String(now()));
+
+    window.ParfectLicence.active = true;
+    window.ParfectLicence.mode = "trial";
+  }
+
+  function setLicence(email, name, code) {
+    localStorage.setItem(LS.EMAIL, email);
+    localStorage.setItem(LS.NAME, name || "");
+    localStorage.setItem(LS.LICENCE, code);
+    localStorage.setItem(LS.MODE, "licence");
+    localStorage.setItem(LS.START, String(now()));
+
+    window.ParfectLicence.active = true;
+    window.ParfectLicence.mode = "licence";
+  }
+
+  // ---------------- BACKEND CHECK ----------------
+  async function verifyLicence({ email, code }) {
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "verify",
+          email,
+          licence: code
+        })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn("Licence check failed:", e);
+      return { valid: false };
+    }
+  }
+
+  async function saveEmailOnly({ email, name }) {
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "register",
+          email,
+          name
+        })
+      });
+    } catch (e) {
+      console.warn("Email save failed:", e);
+    }
+  }
+
+  // ---------------- MODAL ----------------
   function showLicenceModal() {
     const modal = document.createElement("div");
-    modal.className = "modal-backdrop";
-    modal.style.zIndex = "20000"; // passe devant tout
+    modal.style.cssText = `
+      position:fixed;inset:0;
+      background:rgba(0,0,0,.85);
+      display:flex;align-items:center;justify-content:center;
+      z-index:99999;
+    `;
+
     modal.innerHTML = `
-      <div class="modal-card" style="width:320px;max-width:90%;">
-        <h3 style="color:#00ff99;margin-top:0;">🎟️ Licence Parfect.golfr</h3>
-        <p style="margin:8px 0;">Tu commences avec <b>${TRIAL_DAYS} jours</b> d’accès gratuit.<br>Active un code promo si tu en as un.</p>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
-          <input id="licence-promo" placeholder="Code promo" 
-                 style="flex:1;padding:8px;border-radius:6px;border:1px solid #333;background:#000;color:#fff;">
-          <button id="licence-activate" class="btn">Activer</button>
-        </div>
-        <hr style="border:none;border-top:1px solid #222;margin:14px 0;">
-        <button id="licence-start-free" class="btn" 
-                style="background:#00ff99;color:#111;width:100%;">💚 Démarrer l’essai ${TRIAL_DAYS}j</button>
-      </div>`;
+      <div style="
+        background:#111;
+        padding:24px;
+        border-radius:16px;
+        width:320px;
+        color:#fff;
+        text-align:center;
+      ">
+        <h3 style="color:#00ff99;margin-top:0;">🎟️ Accès Parfect.golfr</h3>
+
+        <input id="pf-name" placeholder="Prénom"
+          style="width:100%;padding:10px;margin-bottom:8px;
+          border-radius:8px;border:1px solid #333;background:#000;color:#fff;">
+
+        <input id="pf-email" placeholder="Email"
+          style="width:100%;padding:10px;margin-bottom:8px;
+          border-radius:8px;border:1px solid #333;background:#000;color:#fff;">
+
+        <input id="pf-code" placeholder="Code licence (optionnel)"
+          style="width:100%;padding:10px;margin-bottom:14px;
+          border-radius:8px;border:1px solid #333;background:#000;color:#fff;">
+
+        <button id="pf-start"
+          style="width:100%;padding:12px;border:none;
+          border-radius:999px;background:#00ff99;color:#111;
+          font-weight:700;cursor:pointer;">
+          Démarrer
+        </button>
+
+        <p style="opacity:.6;font-size:.8rem;margin-top:10px;">
+          Essai gratuit ${TRIAL_DAYS} jours sans CB
+        </p>
+      </div>
+    `;
+
     document.body.appendChild(modal);
 
-    $id("licence-activate").addEventListener("click", async () => {
-      const code = ($id("licence-promo").value || "").trim();
-      if (!code) {
-        alert("Entre un code promo, ou démarre l’essai gratuit.");
-        return;
-      }
-      const ok = await verifyPromo(code);
-      if (!ok) {
-        alert("❌ Code invalide.");
-        return;
-      }
-      localStorage.setItem(LS_KEYS.LICENCE, "freemium");
-      localStorage.setItem(LS_KEYS.LICENCE_START, String(now())); // point de départ info
-      alert("✅ Licence Freemium activée !");
-      modal.remove();
-      detectIAMode();
-    });
+    $id("pf-start").onclick = async () => {
+      const email = ($id("pf-email").value || "").trim();
+      const name  = ($id("pf-name").value || "").trim();
+      const code  = ($id("pf-code").value || "").trim();
 
-    $id("licence-start-free").addEventListener("click", () => {
-      localStorage.setItem(LS_KEYS.LICENCE, "free");
-      localStorage.setItem(LS_KEYS.LICENCE_START, String(now()));
-      alert(`💚 Licence Free ${TRIAL_DAYS} jours activée !`);
+      if (!email || !email.includes("@")) {
+        alert("Merci d’entrer un email valide");
+        return;
+      }
+
+      // 👉 Toujours enregistrer l’email
+      saveEmailOnly({ email, name });
+
+      // 👉 Si code licence → on vérifie
+      if (code) {
+        const res = await verifyLicence({ email, code });
+        if (res.valid) {
+          setLicence(email, res.name || name, code);
+          modal.remove();
+          return;
+        }
+        alert("Code invalide → essai gratuit activé");
+      }
+
+      // 👉 Fallback trial
+      setTrial(email, name);
       modal.remove();
-      detectIAMode();
-    });
+    };
   }
 
-  // === API publique
-  window.initLicence = function initLicence() {
-    // 1) Si essai actif / licence déjà là → OK
-    if (isTrialActive()) {
-      detectIAMode();
+  // ---------------- INIT ----------------
+  window.initLicence = function () {
+    const mode = localStorage.getItem(LS.MODE);
+
+    if (mode === "licence") {
+      window.ParfectLicence.active = true;
+      window.ParfectLicence.mode = "licence";
       return;
     }
 
-    // 2) Si essai expiré → on nettoie et on redemande
-    const type = localStorage.getItem(LS_KEYS.LICENCE);
-    if (type === "free" && !isTrialActive()) {
-      localStorage.removeItem(LS_KEYS.LICENCE);
-      localStorage.removeItem(LS_KEYS.LICENCE_START);
-      localStorage.removeItem(LS_KEYS.LICENCE_EXPIRY);
+    if (mode === "trial" && isTrialActive()) {
+      window.ParfectLicence.active = true;
+      window.ParfectLicence.mode = "trial";
+      console.log(`⏳ Trial actif — ${daysLeft()} jours restants`);
+      return;
     }
 
-    // 3) Affiche la modale d’activation
+    // expired / first launch
+    localStorage.removeItem(LS.MODE);
+    localStorage.removeItem(LS.START);
+
     showLicenceModal();
   };
 
-  // Expose le badge si tu veux le rafraîchir depuis ailleurs
-  window.updateLicenceBadge = detectIAMode;
 })();
