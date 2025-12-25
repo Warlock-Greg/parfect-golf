@@ -486,6 +486,13 @@ function initEngine() {
   //   SESSION START / STOP
   // ---------------------------------------------------------
   function startSession(selectedMode = JSW_MODE.SWING) {
+// 🔒 Garde licence — POINT D’ENTRÉE UNIQUE
+  if (!window.PARFECT_LICENCE_OK) {
+    console.warn("⛔ JustSwing bloqué : licence requise");
+    showCoachToast("Connexion requise pour JustSwing", "#ff5555");
+    return;
+  }
+    
     if (!screenEl) initJustSwing();
 
     mode = selectedMode;
