@@ -1,56 +1,112 @@
-// === SOCIAL.JS — version Friends + Training History ===
+// === SOCIAL.JS — Account / Social Hub (MVP) ===
 console.log("👥 Parfect.golfr Social.js chargé");
 
-// Helper DOM (utilise le global s'il existe)
 if (typeof window.$$ !== "function") {
   window.$$ = (id) => document.getElementById(id);
 }
 
-// --- Conteneur principal ---
-function injectSocialUI() {
-  console.log("👥 Chargement de l'interface sociale...");
+function getUser() {
+  return JSON.parse(localStorage.getItem("parfect_user") || "{}");
+}
 
+function getSwingUsage() {
+  return JSON.parse(localStorage.getItem("swing_usage") || "{}");
+}
+
+// --- UI principale ---
+function injectSocialUI() {
   const parent = $$("friends-area");
-  if (!parent) {
-    console.warn("⚠️ Zone friends-area introuvable dans index.html");
-    return;
-  }
+  if (!parent) return;
 
   let container = $$("social-container");
   if (!container) {
     container = document.createElement("div");
     container.id = "social-container";
-    container.style.padding = "16px";
-    container.style.textAlign = "center";
-    container.style.background = "#111";
-    container.style.border = "1px solid #222";
-    container.style.borderRadius = "12px";
-    container.style.margin = "16px auto";
-    container.style.maxWidth = "520px";
+    container.style.cssText = `
+      padding:16px;
+      background:#111;
+      border:1px solid #222;
+      border-radius:12px;
+      max-width:520px;
+      margin:16px auto;
+      color:#fff;
+    `;
     parent.appendChild(container);
   }
 
+  const user = getUser();
+if (!user || !user.email) {
   container.innerHTML = `
-    <h2 style="color:#00ff99;margin-top:0;">👥 Communauté Parfect</h2>
-    <p style="color:#ccc;">Partage tes scores, tes trainings et ton mindset.</p>
+    <h2 style="color:#00ff99;">👤 Mon compte</h2>
+    <p style="color:#ccc;">
+      Tu n’as pas encore de compte Parfect.
+    </p>
+    <button id="create-account-btn" class="btn">
+      Créer mon compte
+    </button>
+  `;
 
-    <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+  document
+    .getElementById("create-account-btn")
+    ?.addEventListener("click", () => {
+      if (window.showEmailModal) {
+        window.showEmailModal();
+      }
+    });
+
+  return;
+}
+
+
+  
+  const usage = getSwingUsage();
+  const isPro = user.licence === "pro";
+
+  container.innerHTML = `
+    <h2 style="color:#00ff99;margin-top:0;">👤 Mon compte</h2>
+
+    <p style="color:#ccc;font-size:0.9rem;">
+      Email : <strong>${user.email || "Invité"}</strong><br>
+      Licence : <strong>${isPro ? "PRO" : "FREE"}</strong>
+    </p>
+
+    ${
+      !isPro
+        ? `
+      <div style="background:#000;border:1px solid #333;border-radius:8px;padding:10px;margin:10px 0;">
+        <p style="font-size:0.85rem;color:#ccc;margin:0;">
+          Swings aujourd’hui : <strong>${usage.count || 0}/10</strong>
+        </p>
+        <button id="upgrade-btn" class="btn" style="margin-top:8px;">
+          🚀 Passer Pro
+        </button>
+      </div>
+    `
+        : `
+      <p style="color:#00ff99;font-size:0.9rem;">
+        🎉 Accès illimité activé
+      </p>
+    `
+    }
+
+    <hr style="border-color:#222;margin:16px 0;">
+
+    <h3 style="color:#00ff99;">👥 Communauté</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button id="invite-friend-btn" class="btn">Inviter un ami</button>
-      <button id="show-leaderboard-btn" class="btn">Leaderboard</button>
       <button id="show-training-history-btn" class="btn">Historique training</button>
     </div>
 
-    <div id="social-content" style="margin-top:20px;text-align:left;"></div>
+    <div id="social-content" style="margin-top:16px;"></div>
   `;
 
-  const inviteBtn = $$("invite-friend-btn");
-  const leaderboardBtn = $$("show-leaderboard-btn");
-  const trainingHistoryBtn = $$("show-training-history-btn");
-
-  inviteBtn?.addEventListener("click", handleInviteFriend);
-  leaderboardBtn?.addEventListener("click", showLeaderboard);
-  trainingHistoryBtn?.addEventListener("click", showTrainingHistory);
+  $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
+  $$("show-training-history-btn")?.addEventListener("click", showTrainingHistory);
+  $$("upgrade-btn")?.addEventListener("click", () => {
+    showCoachToast("Paiement bientôt disponible 💚", "#00ff99");
+  });
 }
+
 
 // --- Gestion de l'invitation ---
 function handleInviteFriend() {
