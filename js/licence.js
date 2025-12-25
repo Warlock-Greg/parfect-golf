@@ -145,6 +145,11 @@
       // 3️⃣ Reload licence + autorisation
       await initLicence();
 
+      if (window.injectSocialUI) {
+  window.injectSocialUI();
+}
+
+
       modal.remove();
       showCoachToast(
         "Compte créé 💚 Licence Free activée",
