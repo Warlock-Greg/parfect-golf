@@ -94,14 +94,15 @@ if (!user || !user.email) {
     <h3 style="color:#00ff99;">👥 Communauté</h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button id="invite-friend-btn" class="btn">Inviter un ami</button>
-      <button id="show-training-history-btn" class="btn">Historique training</button>
+      <button id="show-history-btn" class="btn">📚 Historique</button>
+
     </div>
 
     <div id="social-content" style="margin-top:16px;"></div>
   `;
 
   $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
-  $$("show-training-history-btn")?.addEventListener("click", showTrainingHistory);
+  $$("show-history-btn")?.addEventListener("click", showHistoryTabs);
   $$("upgrade-btn")?.addEventListener("click", () => {
     showCoachToast("Paiement bientôt disponible 💚", "#00ff99");
   });
@@ -148,9 +149,10 @@ function showLeaderboard() {
   if (!content) return;
 
   const mockLeaderboard = [
-    { name: "Greg", index: 10 },
-    { name: "Camille", index: 12 },
-    { name: "Alex", index: 14 }
+    { name: "Gauthier", index: 10 },
+    { name: "Laurent", index: 12 },
+    { name: "Dorothée", index: 12 },
+    { name: "Greg", index: 14 }
   ];
 
   const rows = mockLeaderboard
@@ -172,6 +174,71 @@ function showLeaderboard() {
     </table>
   `;
 }
+
+
+function showHistoryTabs() {
+  const content = document.getElementById("social-content");
+  if (!content) return;
+
+  content.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn" data-tab="swing">🎥 Swings</button>
+      <button class="btn" data-tab="training">🧠 Training</button>
+      <button class="btn" data-tab="round">🏌️ Parties</button>
+    </div>
+    <div id="history-panel"></div>
+  `;
+
+  content.querySelectorAll("button[data-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      loadHistoryTab(btn.dataset.tab);
+    });
+  });
+
+  loadHistoryTab("swing");
+}
+
+async function loadHistoryTab(type) {
+  const panel = document.getElementById("history-panel");
+  if (!panel) return;
+
+  const records = await window.HistoryHub.getByType(type);
+  if (!records.length) {
+    panel.innerHTML = `<p style="color:#777;">Aucun historique disponible.</p>`;
+    return;
+  }
+
+  panel.innerHTML = records.map(r => {
+    if (r.type === "swing") {
+      return `
+        <div class="card">
+          🎥 <strong>${r.club || "?"}</strong> — Score ${r.score}<br>
+          <small>${new Date(r.date).toLocaleString()}</small>
+        </div>
+      `;
+    }
+
+    if (r.type === "training") {
+      return `
+        <div class="card">
+          🧠 <strong>${r.name}</strong> — ${r.quality}<br>
+          Mental ${r.mentalScore}/5 · Coach ${r.coach}
+        </div>
+      `;
+    }
+
+    if (r.type === "round") {
+      return `
+        <div class="card">
+          🏌️ <strong>${r.golf}</strong><br>
+          Score ${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar} · 💚 ${r.parfects} Parfects
+        </div>
+      `;
+    }
+  }).join("");
+}
+
+
 
 // --- Historique d'entraînement ---
 function showTrainingHistory() {
