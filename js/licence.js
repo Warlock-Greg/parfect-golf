@@ -17,7 +17,7 @@
   };
 
   const TRIAL_DAYS = 30;
-  const API_URL = "https://script.google.com/macros/s/1RbLLf1TKwbmbWzRRH_sRWhDyrmicQOvKFPF7Ij9EidGAwkY-TWiWh7ms/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbz_gv9PQysFMs6plUWeweVtWvhSeCAHZ5lV6GQqSdx9kdR3hcDYYvoBjAlT393_14yQ/exec";
 
   const now = () => Date.now();
   const daysToMs = d => d * 86400000;
