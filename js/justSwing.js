@@ -217,11 +217,35 @@ function showStartButton() {
     ">
       🎬 Démarrer le swing
     </button>
+    <button id="jsw-back-btn" style="
+    background:#333;
+    color:#ccc;
+    border:none;
+    border-radius:12px;
+    padding:10px 24px;
+    font-size:1rem;
+    cursor:pointer;
+  ">
+    ← Retour
+  </button>
   `;
   bigMsgEl.style.opacity = 1;
 
   const btn = document.getElementById("jsw-start-btn");
   if (!btn) return;
+
+  const backBtn = document.getElementById("jsw-back-btn");
+if (backBtn) {
+  backBtn.onclick = () => {
+    // Retour accueil propre
+    window.JustSwing?.stopSession?.();
+    document.body.classList.remove("jsw-fullscreen");
+
+    // Simule clic Home
+    document.getElementById("home-btn")?.click();
+  };
+}
+
 
   btn.onclick = () => {
     // 👉 Étape 1 — Choix de la vue caméra
