@@ -4,11 +4,11 @@
 
 (() => {
 
-
   const NC_URL   = window.NC_URL;
-const NC_TOKEN = window.NC_TOKEN;
+  const NC_TOKEN = window.NC_TOKEN;
 
-const LS_KEYS  = window.LS_KEYS;
+  // ✅ Clé locale explicite (source unique de vérité)
+  const LS_KEY = "PARFECT_LICENCE_USER";
 
   function getUser() {
     try {
@@ -63,22 +63,30 @@ const LS_KEYS  = window.LS_KEYS;
 
   async function registerEmail(email) {
     try {
-      await fetch(window.NC_URL, {
+      const res = await fetch(NC_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "xc-token": window.NC_TOKEN
+          "xc-token": NC_TOKEN
         },
         body: JSON.stringify({
-          email,
-          licence: "free",
-          source: "parfectgolfr.com"
+          fields: {
+            email: email,
+            licence: "free",
+            source: "parfectgolfr.com"
+          }
         })
       });
+
+      if (!res.ok) {
+        console.warn("⚠️ NocoDB rejected payload", await res.text());
+      }
+
     } catch (e) {
-      console.warn("NocoDB unreachable, fallback local only");
+      console.warn("⚠️ NocoDB unreachable, fallback local only");
     }
 
+    // ✅ Toujours sauvegarde locale (MVP offline-first)
     saveUser({
       email,
       licence: "free",
@@ -102,4 +110,5 @@ const LS_KEYS  = window.LS_KEYS;
 
     allowAccess();
   };
+
 })();
