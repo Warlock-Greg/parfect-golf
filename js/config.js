@@ -8,6 +8,18 @@ export const REPO = "parfect-golf";
 export const BRANCH = "main";
 export const GH_RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/data`;
 
+
+// === config.js ===
+
+// ⚠️ URL NocoDB (API REST)
+window.NC_URL = "https://app.nocodb.com/api/v2/tables/mfbnbl5kk5zmu73/records";
+
+// ⚠️ Token API NocoDB (lecture/écriture)
+window.NC_TOKEN = "pnOjTp-F7ZbPvGp5NEhceH3zQmDrXQAzFG3AXJz9";
+
+// Nom du projet / table si besoin plus tard
+window.NC_PROJECT = "parfect";
+
 export const GOLFS_JSON_URL = `${GH_RAW_BASE}/golfs.json`;
 export const EXERCISE_JSON_URL = `${GH_RAW_BASE}/exercises.json`;
 
