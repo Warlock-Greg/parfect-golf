@@ -7,6 +7,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("🚀 Router chargé");
 
+  // 🔐 Boot licence / compte (UNE FOIS)
+  if (window.initLicence) {
+    await window.initLicence();
+  }
+  
   const $ = (id) => document.getElementById(id);
 
   // Zones
