@@ -3,8 +3,9 @@
 // =====================================================
 
 (() => {
-  const NC_URL = "https://app.nocodb.com/api/v2/tables/mfbnbl5kk5zmu73/records?offset=0&limit=25&where=&viewId=vwubv9x3klk4k3q6";
-  const NC_TOKEN = "pnOjTp-F7ZbPvGp5NEhceH3zQmDrXQAzFG3AXJz9";
+  const NC_URL = "https://TON_NOCO_URL/api/v2/tables/users/records";
+  const NC_TOKEN = "TA_API_KEY";
+
 
   const LS_KEY = "parfect_user";
 
