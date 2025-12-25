@@ -101,15 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     coachReact?.("💪 Mode Entraînement activé !");
   });
 
-  swingBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(swingBtn);
-    showOnly("swing");
-    document.body.classList.add("mode-swing");
-    window.initSwingAnalyzerV2?.();
-    coachReact?.("🎥 Mode Analyse Swing !");
-  });
-
+  
   justSwingBtn.addEventListener("click", async () => {
     leaveSwingMode();
     setActive(justSwingBtn);
