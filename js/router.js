@@ -11,6 +11,37 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.initLicence) {
    window.initLicence();
   }
+
+  // ==========================================================
+// 🔑 Licence activée à chaud → reprise du flow JustSwing
+// ==========================================================
+window.addEventListener("parfect:licence:activated", async () => {
+  console.log("🔓 Licence activée → reprise JustSwing");
+
+  // On vérifie qu’on est bien sur JustSwing
+  setActive(justSwingBtn);
+  showOnly("justswing");
+
+  document.body.classList.add("mode-swing");
+
+  // Laisse le DOM respirer
+  await new Promise(r => requestAnimationFrame(r));
+
+  // Init JustSwing si pas déjà fait
+  if (!window._justSwingInitDone) {
+    if (window.JustSwing?.initJustSwing) {
+      JustSwing.initJustSwing();
+      window._justSwingInitDone = true;
+    }
+  }
+
+  // Caméra + session
+  await window.startJustSwingCamera?.();
+  JustSwing.startSession("swing");
+
+  coachReact?.("🟢 Licence activée — Just Swing prêt !");
+});
+
   
   const $ = (id) => document.getElementById(id);
 
