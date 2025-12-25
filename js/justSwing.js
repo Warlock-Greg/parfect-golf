@@ -489,9 +489,15 @@ function initEngine() {
 // 🔒 Garde licence — POINT D’ENTRÉE UNIQUE
   if (!window.PARFECT_LICENCE_OK) {
     console.warn("⛔ JustSwing bloqué : licence requise");
-    showCoachToast("Connexion requise pour JustSwing", "#ff5555");
-    return;
+   // 👉 OUVRIR LA MODAL DE CRÉATION DE COMPTE
+  if (window.showEmailModal) {
+    window.showEmailModal();
+  } else {
+    alert("Crée ton compte pour accéder à JustSwing");
   }
+
+  return;
+}
     
     if (!screenEl) initJustSwing();
 
