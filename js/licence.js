@@ -71,8 +71,8 @@
         },
         body: JSON.stringify({
           fields: {
-            email: email,
-            licence: "free",
+            cf6385mi1wk7jim: email,
+            crkm9s61zfuyjqg: "free",
             source: "parfectgolfr.com"
           }
         })
