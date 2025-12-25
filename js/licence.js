@@ -70,11 +70,9 @@
           "xc-token": NC_TOKEN
         },
         body: JSON.stringify({
-          fields: {
             cf6385mi1wk7jim: email,
             crkm9s61zfuyjqg: "free",
             source: "parfectgolfr.com"
-          }
         })
       });
 
