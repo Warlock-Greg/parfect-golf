@@ -1,7 +1,4 @@
-export const SHEET_JSON_URL = "https://opensheet.elk.sh/1bv_ABhNRuJAfsAgzlobHLkvTsEyYWOTLeRynhhouGGI/Feuille1";
-export const EMAILJS_SERVICE_ID = "service_03in3vd";
-export const EMAILJS_TEMPLATE_ID = "template_fxjeymy";
-export const EMAILJS_PUBLIC_KEY = "fKAFOoAJpLiNTwDHe";
+
 
 export const OWNER = "Warlock-Greg";
 export const REPO = "parfect-golf";
