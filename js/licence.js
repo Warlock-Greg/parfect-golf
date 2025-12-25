@@ -90,7 +90,8 @@
     saveUser({
       email,
       licence: "free",
-      created_at: Date.now()
+      created_at: Date.now(),
+       synced: true
     });
   }
 
@@ -103,6 +104,10 @@
   window.initLicence = function () {
     const user = getUser();
 
+     if (user && user.email && !user.synced) {
+    registerEmail(user.email);
+  }
+    
     if (!user || !user.email) {
       showEmailModal();
       return;
