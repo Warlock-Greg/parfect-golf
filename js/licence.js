@@ -3,11 +3,12 @@
 // =====================================================
 
 (() => {
-  const NC_URL = "https://TON_NOCO_URL/api/v2/tables/users/records";
-  const NC_TOKEN = "TA_API_KEY";
 
 
-  const LS_KEY = "parfect_user";
+  const NC_URL   = window.NC_URL;
+const NC_TOKEN = window.NC_TOKEN;
+
+const LS_KEYS  = window.LS_KEYS;
 
   function getUser() {
     try {
@@ -62,11 +63,11 @@
 
   async function registerEmail(email) {
     try {
-      await fetch(NC_URL, {
+      await fetch(window.NC_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "xc-token": NC_TOKEN
+          "xc-token": window.NC_TOKEN
         },
         body: JSON.stringify({
           email,
