@@ -145,9 +145,12 @@
       // 3️⃣ Reload licence + autorisation
       await initLicence();
 
+      // 🔑 ÉTAPE A — notifier l’app que la licence est OK
+      window.dispatchEvent(new Event("parfect:licence:activated"));
+
       if (window.injectSocialUI) {
-  window.injectSocialUI();
-}
+          window.injectSocialUI();
+      }
 
 
       modal.remove();
