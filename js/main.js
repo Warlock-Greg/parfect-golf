@@ -3,6 +3,15 @@
 document.addEventListener("DOMContentLoaded", () => {
   console.log("✅ Boot Parfect.golfr SplitScreen + Coach Manager");
 
+  window.addEventListener("DOMContentLoaded", () => {
+  if (typeof initLicence === "function") {
+    initLicence();
+  } else {
+    console.warn("⚠️ initLicence non disponible");
+  }
+});
+
+
   // === DOM elements ===
   const playBtn = document.getElementById("play-btn");
   const trainingBtn = document.getElementById("training-btn");
