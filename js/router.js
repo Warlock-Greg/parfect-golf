@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 🔐 Boot licence / compte (UNE FOIS)
   if (window.initLicence) {
-    await window.initLicence();
+   window.initLicence();
   }
   
   const $ = (id) => document.getElementById(id);
