@@ -188,38 +188,59 @@ async function startTrainingSession(exoId) {
   const exo = exercises.find((e) => e.id === exoId);
   if (!exo) {
     log.innerHTML = `<p style="color:#f55;">❌ Exercice introuvable.</p>`;
-    return;
+    return; 
   }
 
-  log.innerHTML = `
-    <h3 style="color:#00ff99;">🏋️ ${exo.name}</h3>
-    <video src="${exo.media}" controls style="width:100%;border-radius:8px;margin-top:8px;"></video>
-    <p style="margin-top:8px;">🎯 Objectif : ${exo.goal}</p>
-    <p style="margin-top:4px;font-size:0.9rem;color:#aaa;">Cible : <strong>${exo.objectif}</strong> répétitions / essais.</p>
+  const hasVideo = exo.media && exo.media.trim() !== "";
 
-    <div style="margin-top:14px;text-align:left;">
-      <p style="margin-bottom:6px;">📝 Comment tu évalues ta séance ?</p>
-      <div id="training-quality" style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn quality-btn" data-quality="success">✅ Réussi</button>
-        <button class="btn quality-btn" data-quality="medium">😌 Moyen</button>
-        <button class="btn quality-btn" data-quality="hard">😵 Difficile</button>
-      </div>
+log.innerHTML = `
+  <h3 style="color:#00ff99;">🏋️ ${exo.name}</h3>
 
-      <div style="margin-top:14px;">
-        <label for="mental-feeling" style="font-size:0.9rem;">🧠 Ressenti mental :</label><br>
-        <input id="mental-feeling" type="range" min="1" max="5" value="3" style="width:100%;margin-top:6px;">
-        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#aaa;">
-          <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+  <div class="training-layout ${hasVideo ? "has-video" : "no-video"}">
+
+    <div class="training-video">
+      ${
+        hasVideo
+          ? `<video src="${exo.media}" controls playsinline></video>`
+          : ``
+      }
+    </div>
+
+    <div class="training-content">
+      <p style="margin-top:8px;">🎯 Objectif : ${exo.goal}</p>
+      <p style="margin-top:4px;font-size:0.9rem;color:#aaa;">
+        Cible : <strong>${exo.objectif}</strong> répétitions / essais.
+      </p>
+
+      <div style="margin-top:14px;text-align:left;">
+        <p style="margin-bottom:6px;">📝 Comment tu évalues ta séance ?</p>
+
+        <div id="training-quality" style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn quality-btn" data-quality="success">✅ Réussi</button>
+          <button class="btn quality-btn" data-quality="medium">😌 Moyen</button>
+          <button class="btn quality-btn" data-quality="hard">😵 Difficile</button>
         </div>
-        <p id="mental-label" style="margin-top:4px;font-size:0.9rem;color:#ccc;">Niveau : 3/5</p>
-      </div>
 
-      <div style="margin-top:16px;display:flex;justify-content:space-between;gap:10px;">
-        <button id="back-to-exercises" class="btn" style="flex:1;">↩️ Retour</button>
-        <button id="validate-training" class="btn" style="flex:1;background:#00ff99;color:#111;">✅ Valider la séance</button>
+        <div style="margin-top:14px;">
+          <label for="mental-feeling" style="font-size:0.9rem;">🧠 Ressenti mental :</label><br>
+          <input id="mental-feeling" type="range" min="1" max="5" value="3" style="width:100%;margin-top:6px;">
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#aaa;">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          </div>
+          <p id="mental-label" style="margin-top:4px;font-size:0.9rem;color:#ccc;">Niveau : 3/5</p>
+        </div>
+
+        <div style="margin-top:16px;display:flex;justify-content:space-between;gap:10px;">
+          <button id="back-to-exercises" class="btn" style="flex:1;">↩️ Retour</button>
+          <button id="validate-training" class="btn" style="flex:1;background:#00ff99;color:#111;">
+            ✅ Valider la séance
+          </button>
+        </div>
       </div>
     </div>
-  `;
+  </div>
+`;
+
 
   let selectedQuality = null;
 
