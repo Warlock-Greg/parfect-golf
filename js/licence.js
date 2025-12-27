@@ -178,6 +178,106 @@
     }
   }
 
+
+// =====================================================
+// Add to Home Screen — Parfect.golfr (MVP)
+// =====================================================
+
+(function () {
+  const LS_KEY = "parfect_add_to_home_shown";
+
+  function isMobile() {
+    return /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+  }
+
+  function isInStandaloneMode() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function showAddToHomeModal() {
+    if (document.getElementById("parfect-a2hs-modal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "parfect-a2hs-modal";
+    modal.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.85);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:18000;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background:#111;
+        padding:22px;
+        border-radius:16px;
+        width:320px;
+        text-align:center;
+        box-shadow:0 0 0 1px #222;
+      ">
+        <h3 style="color:#00ff99;margin-top:0;">
+          📲 Ajouter à l’écran d’accueil
+        </h3>
+
+        ${
+          isIOS()
+            ? `
+          <p style="color:#ccc;font-size:.9rem;">
+            Pour installer <strong>Parfect.golfr</strong> :
+          </p>
+          <ol style="color:#aaa;font-size:.85rem;text-align:left;padding-left:18px;">
+            <li>Appuie sur <strong>Partager</strong> ⬆️</li>
+            <li>Sélectionne <strong>Sur l’écran d’accueil</strong></li>
+          </ol>
+          `
+            : `
+          <p style="color:#ccc;font-size:.9rem;">
+            Ajoute <strong>Parfect.golfr</strong> à ton écran d’accueil
+            pour un accès rapide.
+          </p>
+          `
+        }
+
+        <button id="a2hs-close" class="btn"
+          style="margin-top:14px;width:100%;">
+          Plus tard
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("a2hs-close").onclick = () => {
+      localStorage.setItem(LS_KEY, "1");
+      modal.remove();
+    };
+  }
+
+  function maybeShowAddToHome() {
+    if (!isMobile()) return;
+    if (isInStandaloneMode()) return;
+    if (localStorage.getItem(LS_KEY)) return;
+
+    // Petit délai pour ne pas agresser l’utilisateur
+    setTimeout(showAddToHomeModal, 2000);
+  }
+
+  // Auto au chargement
+  document.addEventListener("DOMContentLoaded", maybeShowAddToHome);
+
+})();
+
+  
   // ------------------------------
   // Public init (BOOT)
   // ------------------------------
