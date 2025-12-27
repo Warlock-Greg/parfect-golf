@@ -367,9 +367,8 @@ function jswGetViewMessage() {
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
-    "Fais un swing d’essai 🌀",
-    "Respire parfectement… 😮‍💨",
+    "Vérifie <br>✋grip  <br>posture 🧍‍♂️ <br>alignement 🎯",
+    "🌀 Fais un swing d’essai",
   ];
 
   function startRoutineSequence() {
@@ -426,7 +425,7 @@ function jswGetViewMessage() {
 
         // 3️⃣ Message joueur
         if (bigMsgEl) {
-          bigMsgEl.innerHTML = "Swing ! 🏌️";
+          bigMsgEl.innerHTML = "Adresse stable ! <br>🏌️";
           bigMsgEl.style.opacity = 1;
 
           // le message disparaît après 1s
