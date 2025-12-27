@@ -32,6 +32,9 @@ const SwingEngine = (() => {
   const FINISH_HOLD_MS = 250;        // (pas utilisé pour l'instant)
   const MAX_IDLE_MS = 1800;          // reset auto si inactif
   const FINISH_TIMEOUT_MS = 400;     // timeout release → finish
+  // --- paramètres stabilité / intention
+const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
+
   
 
   // fallback start (si thresholds stricts)
@@ -78,6 +81,9 @@ const SwingEngine = (() => {
 
     let impactDetected = false;
     let releaseStartTime = null;
+    let stableStartTime = null;
+    let isStable = false;
+
 
     let maxBackswingSpeed = 0;
     let armed = false;
@@ -214,59 +220,46 @@ const SwingEngine = (() => {
       // =====================================================
       // IDLE → ADDRESS
       // =====================================================
-    // ⛔ Tant que JustSwing n’a pas armé le swing
-if (!armed) return null;
+if (state === "IDLE") {
 
-// -----------------------------
-// 1️⃣ Phase de stabilité préalable
-// -----------------------------
-const motionEnergy = speedWrist + speedHip;
+  if (!armed) return null;
 
-if (!armStableStart) {
-  if (motionEnergy < 0.02) {
-    armStableStart = now;
+  const motionEnergy = speedWrist + speedHip;
+  const now = timeMs;
+
+  // 🔒 Détection stabilité
+  if (motionEnergy < 0.01) {
+    if (!stableStartTime) stableStartTime = now;
+
+    if (now - stableStartTime >= ARM_STABLE_TIME) {
+      isStable = true;
+    }
+  } else {
+    stableStartTime = null;
+    isStable = false;
+    return null; // ⛔ tant que pas stable, on ignore tout
   }
+
+  if (!isStable) return null;
+
+  // ✅ SEULEMENT MAINTENANT on autorise le swing
+  if (
+    speedWrist > SWING_THRESHOLDS.WRIST_START &&
+    speedHip   > SWING_THRESHOLDS.HIP_START
+  ) {
+    state = "ADDRESS";
+    armed = false;
+    swingStartTime = timeMs;
+    stableStartTime = null;
+    isStable = false;
+
+    if (typeof onSwingStart === "function") {
+      onSwingStart({ t: timeMs, club: clubType });
+    }
+  }
+
   return null;
 }
-
-if (now - armStableStart < ARM_STABLE_TIME) {
-  return null; // on attend une vraie immobilité
-}
-
-// -----------------------------
-// 2️⃣ Détection d’intention claire
-// -----------------------------
-if (
-  speedWrist > START_SPEED_THRESHOLD &&
-  speedWrist > lastSpeedWrist
-) {
-  startConfirmCount++;
-} else {
-  startConfirmCount = 0;
-}
-
-lastSpeedWrist = speedWrist;
-
-// -----------------------------
-// 3️⃣ Validation définitive
-// -----------------------------
-if (startConfirmCount >= START_CONFIRM_FRAMES) {
-  state = "ADDRESS";
-  armed = false;
-  swingStartTime = now;
-  fallbackActiveFrames = 0;
-
-  armStableStart = null;
-  startConfirmCount = 0;
-
-  if (typeof onSwingStart === "function") {
-    onSwingStart({ t: now, club: clubType });
-  }
-
-  if (debug) console.log("▶️ Swing volontaire confirmé");
-}
-
-return null;
 
 
       // =====================================================
