@@ -105,6 +105,29 @@ let captureArmed = false;
   let replayCanvas = null;
   let replayCtx = null;
 
+  let swingArmedDot = null;
+
+function showSwingArmedDot() {
+  if (swingArmedDot) return;
+
+  swingArmedDot = document.createElement("div");
+  swingArmedDot.id = "swing-armed-dot";
+  swingArmedDot.style.cssText = `
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ff3333;
+    box-shadow: 0 0 8px rgba(255,0,0,0.8);
+    z-index: 9999;
+    animation: pulseRed 1.2s infinite;
+  `;
+
+  document.body.appendChild(swingArmedDot);
+}
+
 
   // ---------------------------------------------------------
   //   INIT DOM
@@ -413,6 +436,7 @@ function jswGetViewMessage() {
         addressLocked = false;
 
         engine.armForSwing();
+
       
         // 2️⃣ Passage DIRECT en capture
         
@@ -425,7 +449,7 @@ function jswGetViewMessage() {
 
         // 3️⃣ Message joueur
         if (bigMsgEl) {
-          bigMsgEl.innerHTML = "Adresse stable ! <br>🏌️";
+          bigMsgEl.innerHTML = "Adresse stable ! 🏌️";
           bigMsgEl.style.opacity = 1;
 
           // le message disparaît après 1s
@@ -436,6 +460,7 @@ function jswGetViewMessage() {
         }
 
         updateUI();
+        showSwingArmedDot();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
       }, 1500);
