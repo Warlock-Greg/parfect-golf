@@ -10,7 +10,7 @@
 
   // Champs NocoDB (API names EXACTS)
   const NC_FIELDS = {
-    EMAIL: "cfc0gyzcv7y9h2j",
+    EMAIL: "cf6385mi1wk7jim",
     LICENCE: "crkm9s61zfuyjqg",
     SOURCE: "source"
   };
