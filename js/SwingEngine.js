@@ -242,21 +242,29 @@ if (state === "IDLE") {
 
   if (!isStable) return null;
 
-  // ✅ SEULEMENT MAINTENANT on autorise le swing
-  if (
-    speedWrist > SWING_THRESHOLDS.WRIST_START &&
-    speedHip   > SWING_THRESHOLDS.HIP_START
-  ) {
-    state = "ADDRESS";
-    armed = false;
-    swingStartTime = timeMs;
-    stableStartTime = null;
-    isStable = false;
+ // ✅ Swing autorisé si :
+const strongIntent =
+  speedWrist > INTENT_SPEED &&
+  speedHip   > SWING_THRESHOLDS.HIP_START;
 
-    if (typeof onSwingStart === "function") {
-      onSwingStart({ t: timeMs, club: clubType });
-    }
+// ✅ Swing autorisé si stabilité atteinte
+const stableIntent = isStable &&
+  speedWrist > SWING_THRESHOLDS.WRIST_START &&
+  speedHip   > SWING_THRESHOLDS.HIP_START;
+
+// 👉 Déclenchement final
+if (stableIntent || strongIntent) {
+  state = "ADDRESS";
+  armed = false;
+  swingStartTime = timeMs;
+  stableStartTime = null;
+  isStable = false;
+
+  if (typeof onSwingStart === "function") {
+    onSwingStart({ t: timeMs, club: clubType });
   }
+}
+
 
   return null;
 }
