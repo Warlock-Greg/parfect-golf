@@ -514,6 +514,8 @@ function initEngine() {
 
   engine = window.SwingEngine.create({
     fps: 30,
+    debug: true, // 👈 IMPORTANT
+
 
     onKeyFrame: (evt) => {
       console.log("🎯 KEYFRAME", evt);
