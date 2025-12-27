@@ -32,6 +32,7 @@ const SwingEngine = (() => {
   const FINISH_HOLD_MS = 250;        // (pas utilisé pour l'instant)
   const MAX_IDLE_MS = 1800;          // reset auto si inactif
   const FINISH_TIMEOUT_MS = 400;     // timeout release → finish
+  
 
   // fallback start (si thresholds stricts)
   const FALLBACK_MIN_FRAMES = 20;    // ≈ 0.7s à 30fps
@@ -57,6 +58,10 @@ const SwingEngine = (() => {
 
     let frames = [];
     let timestamps = [];
+    let armStableStart = null;
+    let startConfirmCount = 0;
+    let lastSpeedWrist = 0;
+
 
     let keyFrames = {
       address: null,
@@ -209,43 +214,60 @@ const SwingEngine = (() => {
       // =====================================================
       // IDLE → ADDRESS
       // =====================================================
-      if (state === "IDLE") {
+    // ⛔ Tant que JustSwing n’a pas armé le swing
+if (!armed) return null;
 
-        // ⛔ Tant que JustSwing n’a pas armé le swing
-        if (!armed) return null;
-      
-        const motionEnergy = speedWrist + speedHip;
+// -----------------------------
+// 1️⃣ Phase de stabilité préalable
+// -----------------------------
+const motionEnergy = speedWrist + speedHip;
 
-        // 🔹 Déclencheur principal du swing
-        if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
-          state = "ADDRESS";
-           armed = false; // 🔓 consommé
-          swingStartTime = timeMs;
-          fallbackActiveFrames = 0;
+if (!armStableStart) {
+  if (motionEnergy < 0.02) {
+    armStableStart = now;
+  }
+  return null;
+}
 
-          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
-          return null;
-        }
+if (now - armStableStart < ARM_STABLE_TIME) {
+  return null; // on attend une vraie immobilité
+}
 
-        // 🔸 Fallback fluide
-        if (motionEnergy > FALLBACK_MIN_ENERGY) {
-          fallbackActiveFrames++;
-        } else {
-          fallbackActiveFrames = 0;
-        }
+// -----------------------------
+// 2️⃣ Détection d’intention claire
+// -----------------------------
+if (
+  speedWrist > START_SPEED_THRESHOLD &&
+  speedWrist > lastSpeedWrist
+) {
+  startConfirmCount++;
+} else {
+  startConfirmCount = 0;
+}
 
-        if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
-          if (debug) console.log("🟡 FALLBACK SWING START");
-          state = "ADDRESS";
-          swingStartTime = timeMs;
-          fallbackActiveFrames = 0;
+lastSpeedWrist = speedWrist;
 
-          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
-          return null;
-        }
+// -----------------------------
+// 3️⃣ Validation définitive
+// -----------------------------
+if (startConfirmCount >= START_CONFIRM_FRAMES) {
+  state = "ADDRESS";
+  armed = false;
+  swingStartTime = now;
+  fallbackActiveFrames = 0;
 
-        return null;
-      }
+  armStableStart = null;
+  startConfirmCount = 0;
+
+  if (typeof onSwingStart === "function") {
+    onSwingStart({ t: now, club: clubType });
+  }
+
+  if (debug) console.log("▶️ Swing volontaire confirmé");
+}
+
+return null;
+
 
       // =====================================================
       // ADDRESS → BACKSWING
