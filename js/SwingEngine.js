@@ -19,11 +19,11 @@ const SwingEngine = (() => {
   };
 
   const SWING_THRESHOLDS = {
-  WRIST_START: 0.08,  // ≈ vrai backswing mobile normalisé
-  HIP_START:   0.05,
-  WRIST_STOP:  0.03,
-  HIP_STOP:    0.02,
-};
+    WRIST_START: 0.04,
+    WRIST_STOP: 0.015,
+    HIP_START: 0.03,
+    HIP_STOP: 0.012,
+  };
 
   // --- paramètres
   const MIN_SWING_MS = 350;          // durée mini (pas encore utilisé, gardé pour évolution)
@@ -32,10 +32,6 @@ const SwingEngine = (() => {
   const FINISH_HOLD_MS = 250;        // (pas utilisé pour l'instant)
   const MAX_IDLE_MS = 1800;          // reset auto si inactif
   const FINISH_TIMEOUT_MS = 400;     // timeout release → finish
-  // --- paramètres stabilité / intention
-const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
-
-  
 
   // fallback start (si thresholds stricts)
   const FALLBACK_MIN_FRAMES = 20;    // ≈ 0.7s à 30fps
@@ -61,15 +57,6 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
 
     let frames = [];
     let timestamps = [];
-    let armStableStart = null;
-    let startConfirmCount = 0;
-    let lastSpeedWrist = 0;
-    let viewType = "unknown";
-    let speedScale = 1;
-    let stableStartTime = null;
-    let isStable = false;
-
-
 
     let keyFrames = {
       address: null,
@@ -86,7 +73,6 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
 
     let impactDetected = false;
     let releaseStartTime = null;
-
 
     let maxBackswingSpeed = 0;
     let armed = false;
@@ -114,8 +100,6 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
       state = "IDLE";
       impactDetected = false;
       releaseStartTime = null;
-      stableStartTime = null;
-      isStable = false;
 
       maxBackswingSpeed = 0;
 
@@ -166,20 +150,6 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
     function processPose(pose, timeMs, clubType) {
       if (!pose) return null;
 
-      // ----------------------------------
-      // 📐 Normalisation par type de vue
-      // ----------------------------------
-    if (window.jswViewType) {
-      viewType = window.jswViewType;
-
-      if (viewType === "mobileFaceOn") {
-        speedScale = 50; // ← calibré sur TES logs (0.002 × 50 ≈ 0.10)
-        } else {
-        speedScale = 1;
-        }
-      }
-  
-      
       const dt = lastTime != null ? (timeMs - lastTime) / 1000 : 1 / fps;
       lastTime = timeMs;
 
@@ -214,12 +184,8 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
 
       if (!midWrist || !midHip || !prevMidWrist || !prevMidHip) return null;
 
-      const rawSpeedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
-      const rawSpeedHip   = dist(midHip, prevMidHip) / (dt || 0.033);
-
-      const speedWrist = rawSpeedWrist * speedScale;
-      const speedHip   = rawSpeedHip   * speedScale;
-
+      const speedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
+      const speedHip = dist(midHip, prevMidHip) / (dt || 0.033);
 
       if (debug) {
         console.log(
@@ -240,92 +206,46 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
         lastMotionTime = now;
       }
 
-    // =====================================================
-// IDLE → ADDRESS (PATCH ROBUSTE MOBILE)
-// =====================================================
-if (state === "IDLE") {
+      // =====================================================
+      // IDLE → ADDRESS
+      // =====================================================
+      if (state === "IDLE") {
 
-  if (!armed) return null;
+        // ⛔ Tant que JustSwing n’a pas armé le swing
+        if (!armed) return null;
+      
+        const motionEnergy = speedWrist + speedHip;
 
-  const now = timeMs;
+        // 🔹 Déclencheur principal du swing
+        if (speedWrist > SWING_THRESHOLDS.WRIST_START && speedHip > SWING_THRESHOLDS.HIP_START) {
+          state = "ADDRESS";
+           armed = false; // 🔓 consommé
+          swingStartTime = timeMs;
+          fallbackActiveFrames = 0;
 
-  // -------------------------------------------------
-  // 1) NORMALISATION FACE-ON MOBILE
-  // -------------------------------------------------
-  const FACEON_REF_WRIST = 2.0;
-  const FACEON_REF_HIP   = 2.7;
+          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
+          return null;
+        }
 
-  const speedWristNorm = Math.min(speedWrist / FACEON_REF_WRIST, 3);
-  const speedHipNorm   = Math.min(speedHip   / FACEON_REF_HIP,   3);
+        // 🔸 Fallback fluide
+        if (motionEnergy > FALLBACK_MIN_ENERGY) {
+          fallbackActiveFrames++;
+        } else {
+          fallbackActiveFrames = 0;
+        }
 
-  const motionEnergyNorm = speedWristNorm + speedHipNorm;
+        if (fallbackActiveFrames >= FALLBACK_MIN_FRAMES) {
+          if (debug) console.log("🟡 FALLBACK SWING START");
+          state = "ADDRESS";
+          swingStartTime = timeMs;
+          fallbackActiveFrames = 0;
 
-  // -------------------------------------------------
-  // 2) STABILITÉ (INFO UX UNIQUEMENT)
-  // -------------------------------------------------
-  if (motionEnergyNorm < 0.2) {
-    if (!stableStartTime) stableStartTime = now;
+          if (typeof onSwingStart === "function") onSwingStart({ t: timeMs, club: clubType });
+          return null;
+        }
 
-    if (now - stableStartTime >= ARM_STABLE_TIME) {
-      isStable = true;
-    }
-  } else {
-    stableStartTime = null;
-    isStable = false;
-  }
-
-  // 👉 ici : isStable sert à l’UI (point vert), PAS au moteur
-
-  // -------------------------------------------------
-  // 3) DÉCLENCHEMENT SWING PRINCIPAL
-  // -------------------------------------------------
-  const strongIntent =
-    speedWristNorm > 0.9 ||
-    speedHipNorm   > 0.9;
-
-  const stableIntent =
-    isStable &&
-    speedWristNorm > 0.6 &&
-    speedHipNorm   > 0.4;
-
-  if (strongIntent || stableIntent) {
-    state = "ADDRESS";
-    armed = false;
-    swingStartTime = timeMs;
-    stableStartTime = null;
-    isStable = false;
-
-    console.log("🚀 SWING START (INTENT)");
-
-    if (typeof onSwingStart === "function") {
-      onSwingStart({ t: timeMs, club: clubType });
-    }
-
-    return null;
-  }
-
-  // -------------------------------------------------
-  // 4) FALLBACK — mouvement évident
-  // -------------------------------------------------
-  const grossMotion =
-    speedWristNorm > 1.4 ||
-    speedHipNorm   > 1.2;
-
-  if (grossMotion) {
-    state = "ADDRESS";
-    armed = false;
-    swingStartTime = timeMs;
-
-    console.warn("🔴 FALLBACK GROSS SWING");
-
-    if (typeof onSwingStart === "function") {
-      onSwingStart({ t: timeMs, club: clubType, fallback: true });
-    }
-  }
-
-  return null;
-}
-
+        return null;
+      }
 
       // =====================================================
       // ADDRESS → BACKSWING
@@ -476,4 +396,3 @@ if (state === "IDLE") {
 if (typeof window !== "undefined") {
   window.SwingEngine = SwingEngine;
 }
-
