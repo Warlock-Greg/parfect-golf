@@ -86,8 +86,6 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
 
     let impactDetected = false;
     let releaseStartTime = null;
-    let stableStartTime = null;
-    let isStable = false;
 
 
     let maxBackswingSpeed = 0;
