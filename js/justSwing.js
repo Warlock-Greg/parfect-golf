@@ -362,6 +362,24 @@ function jswGetViewMessage() {
   `;
 }
 
+
+function isValidSwing(swingData) {
+  const kf = swingData.keyFrames || {};
+
+  const hasImpact = !!kf.impact;
+  const hasTop = !!kf.top;
+  const hasDownswing = !!kf.downswing;
+
+  // fallback énergie globale
+  const motionEnergy = swingData.meta?.motionEnergy || 0;
+
+  if (hasImpact) return true;
+  if (hasTop && hasDownswing) return true;
+  if (motionEnergy > 0.15) return true; // seuil safe
+
+  return false;
+}
+
   
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
@@ -369,14 +387,14 @@ function jswGetViewMessage() {
   const routineStepsAuto = [
     "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
     "Fais un swing d’essai 🌀",
-    "Respire parfectement… 😮‍💨",
+    "Mode Adresse… 😮‍💨",
   ];
 
 
   function showSwingMessage() {
   if (!bigMsgEl) return;
 
-  bigMsgEl.innerHTML = "SWING ! 🏌️";
+  bigMsgEl.innerHTML = "*SWING ! \n🏌️";
   bigMsgEl.style.opacity = 1;
   bigMsgEl.classList.add("swing-active");
 }
@@ -453,6 +471,21 @@ swingTimeout = setTimeout(() => {
     );
   }
 }, SWING_TIMEOUT_MS);
+
+        const CAPTURE_MAX_MS = 7000;
+
+captureTimeout = setTimeout(() => {
+  if (!swingCompleted) {
+    stopRecording();
+
+    showBigMessage("😕 Oups… swing non détecté.\nRecommence.");
+
+    console.warn("⏱️ Swing incomplet — timeout");
+  }
+}, CAPTURE_MAX_MS);
+
+
+        
       }, 1500);
     }
 
@@ -1994,6 +2027,18 @@ function activateRecording() {
 function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
+  if (!isValidSwing(swingData)) {
+    console.warn("❌ Faux swing détecté — aucun mouvement réel");
+
+    stopRecording();
+
+    showBigMessage("😕 Oups… aucun swing détecté.\nRecommence calmement.");
+
+    return; // ⛔ PAS DE SCORE
+  }
+
+  // ✅ swing valide → scoring normal
+  continueWithScoring(swingData);
 
   captureArmed = false;
   isRecordingActive = false;
