@@ -363,21 +363,16 @@ function jswGetViewMessage() {
 }
 
 
-function isValidSwing(swingData) {
-  const kf = swingData.keyFrames || {};
+function isValidSwing(swing) {
+const kf = swing.keyFrames || {};
 
-  const hasImpact = !!kf.impact;
-  const hasTop = !!kf.top;
-  const hasDownswing = !!kf.downswing;
+  // clés indispensables
+  if (!kf.top || !kf.impact) return false;
 
-  // fallback énergie globale
-  const motionEnergy = swingData.meta?.motionEnergy || 0;
+  // durée minimale
+  if (!swing.frames || swing.frames.length < 25) return false;
 
-  if (hasImpact) return true;
-  if (hasTop && hasDownswing) return true;
-  if (motionEnergy > 0.15) return true; // seuil safe
-
-  return false;
+  return true;
 }
 
   
