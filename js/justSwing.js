@@ -549,7 +549,13 @@ function initEngine() {
     },
 
     onSwingComplete: (evt) => {
+    
       console.log("🏁 SWING COMPLETE", evt);
+
+      if (swingTimeout) {
+          clearTimeout(swingTimeout);
+          swingTimeout = null;
+        }
       handleSwingComplete(evt.data || evt);
       if (bigMsgEl) {
         bigMsgEl.style.opacity = 0;
@@ -557,10 +563,7 @@ function initEngine() {
         bigMsgEl.classList.remove("swing-active");
         }
 
-        if (swingTimeout) {
-          clearTimeout(swingTimeout);
-          swingTimeout = null;
-        }
+        
 
     }
   });
