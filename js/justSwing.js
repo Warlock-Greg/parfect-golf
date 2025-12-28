@@ -54,6 +54,8 @@ const DEFAULT_ROUTINES = {
 // --- ADDRESS DETECTION ---
 let addressBuffer = [];
 let addressLocked = false;
+let captureTimeout = null;
+let swingCompleted = false;
 
 const ADDRESS_FRAMES_REQUIRED = 5;
 const ADDRESS_EPSILON = 0.004; // tolérance stabilité
@@ -385,6 +387,34 @@ function jswGetViewMessage() {
   `;
 }
 
+  function startSwingCapture() {
+  console.log("🏌️ Capture ACTIVE");
+
+  swingCompleted = false;
+  captureArmed = true;
+  isRecordingActive = true;
+  state = JSW_STATE.SWING_CAPTURE;
+  frameIndex = 0;
+
+  engine.armForSwing();
+
+  showBigMessage("SWING !");
+  showSwingArmedDot();
+
+  clearTimeout(captureTimeout);
+  captureTimeout = setTimeout(() => {
+    if (!swingCompleted) {
+      console.warn("⏱️ Swing incomplet — timeout");
+
+      stopRecording();
+      showBigMessage("😕 Swing incomplet — recommence");
+      state = JSW_STATE.WAITING_START;
+      updateUI();
+      showStartButton();
+    }
+  }, 5000);
+}
+
   
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
@@ -435,34 +465,33 @@ function jswGetViewMessage() {
         addressBuffer = [];
         addressLocked = false;
 
-        engine.armForSwing();
+       startSwingCapture();
 
-      
-        // 2️⃣ Passage DIRECT en capture
+        function startCapture() {
+  rec = true;
+  state = "SWING_CAPTURE";
+  swingCompleted = false;
+
+  console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
+
+  // 🟢 MESSAGE CLAIR
+  showBigMessage("SWING !");
+
+  // 🔴 CAPTURE BORNÉE
+  const CAPTURE_MAX_MS = 5000;
+
+  clearTimeout(captureTimeout);
+  captureTimeout = setTimeout(() => {
+    if (!swingCompleted) {
+      console.warn("⏱️ Timeout capture — swing incomplet");
+
+      stopCapture(); // ⛔ on force l’arrêt propre
+      showBigMessage("😕 Swing incomplet — recommence");
+    }
+  }, CAPTURE_MAX_MS);
+}
+
         
-        captureArmed = true;
-        isRecordingActive = true;
-        state = JSW_STATE.SWING_CAPTURE;
-        frameIndex = 0;
-        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
-
-
-        // 3️⃣ Message joueur
-        if (bigMsgEl) {
-          bigMsgEl.innerHTML = "Adresse stable ! 🏌️";
-          bigMsgEl.style.opacity = 1;
-
-          // le message disparaît après 1s
-          setTimeout(() => {
-            bigMsgEl.style.opacity = 0;
-            bigMsgEl.innerHTML = "";
-          }, 1000);
-        }
-
-        updateUI();
-        showSwingArmedDot();
-        console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
-
       }, 1500);
     }
 
@@ -483,8 +512,9 @@ function showGoButtonAfterRoutine() {
 
   document.getElementById("jsw-go-btn").onclick = () => {
     console.log("🟢 GO pressed — starting capture");
-    bigMsgEl.style.opacity = 0;
-    bigMsgEl.innerHTML = "";
+    bigMsgEl.style.opacity = 1;
+    bigMsgEl.textContent = "SWING !";
+
 
   // ⭐ ESSENTIEL : l'état doit passer en ADDRESS_READY
   state = JSW_STATE.ADDRESS_READY;
@@ -521,10 +551,16 @@ function initEngine() {
       console.log("🎯 KEYFRAME", evt);
     },
 
-    onSwingComplete: (evt) => {
-      console.log("🏁 SWING COMPLETE", evt);
-      handleSwingComplete(evt.data || evt);
-    }
+   onSwingComplete: (evt) => {
+  console.log("🏁 SWING COMPLETE");
+
+  swingCompleted = true;
+  clearTimeout(captureTimeout);
+
+  stopRecording();
+  handleSwingComplete(evt.data || evt);
+}
+
   });
 
   console.log("🔧 SwingEngine READY", engine);
@@ -2093,6 +2129,7 @@ function stopRecording() {
   captureArmed = false;
   frameIndex = 0;
 
+  clearTimeout(captureTimeout);
   if (engine) engine.reset();
 }
 
