@@ -19,11 +19,11 @@ const SwingEngine = (() => {
   };
 
   const SWING_THRESHOLDS = {
-    WRIST_START: 0.04,
-    WRIST_STOP: 0.015,
-    HIP_START: 0.03,
-    HIP_STOP: 0.012,
-  };
+  WRIST_START: 0.08,  // ≈ vrai backswing mobile normalisé
+  HIP_START:   0.05,
+  WRIST_STOP:  0.03,
+  HIP_STOP:    0.02,
+};
 
   // --- paramètres
   const MIN_SWING_MS = 350;          // durée mini (pas encore utilisé, gardé pour évolution)
@@ -64,6 +64,9 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
     let armStableStart = null;
     let startConfirmCount = 0;
     let lastSpeedWrist = 0;
+    let viewType = "unknown";
+    let speedScale = 1;
+
 
 
     let keyFrames = {
@@ -161,6 +164,20 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
     function processPose(pose, timeMs, clubType) {
       if (!pose) return null;
 
+      // ----------------------------------
+      // 📐 Normalisation par type de vue
+      // ----------------------------------
+    if (window.jswViewType) {
+      viewType = window.jswViewType;
+
+      if (viewType === "mobileFaceOn") {
+        speedScale = 50; // ← calibré sur TES logs (0.002 × 50 ≈ 0.10)
+        } else {
+        speedScale = 1;
+        }
+      }
+  
+      
       const dt = lastTime != null ? (timeMs - lastTime) / 1000 : 1 / fps;
       lastTime = timeMs;
 
@@ -195,8 +212,12 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
 
       if (!midWrist || !midHip || !prevMidWrist || !prevMidHip) return null;
 
-      const speedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
-      const speedHip = dist(midHip, prevMidHip) / (dt || 0.033);
+      const rawSpeedWrist = dist(midWrist, prevMidWrist) / (dt || 0.033);
+      const rawSpeedHip   = dist(midHip, prevMidHip) / (dt || 0.033);
+
+      const speedWrist = rawSpeedWrist * speedScale;
+      const speedHip   = rawSpeedHip   * speedScale;
+
 
       if (debug) {
         console.log(
@@ -262,6 +283,22 @@ if (stableIntent || strongIntent) {
 
   if (typeof onSwingStart === "function") {
     onSwingStart({ t: timeMs, club: clubType });
+  }
+}
+
+  // 🔴 FALLBACK TOTAL — mouvement clair mais pas structuré
+const grossMotion =
+  speedWrist > 0.12 ||
+  speedHip > 0.10;
+
+if (grossMotion) {
+  state = "ADDRESS";
+  swingStartTime = timeMs;
+
+  if (debug) console.log("🔴 FALLBACK GROSS SWING START");
+
+  if (typeof onSwingStart === "function") {
+    onSwingStart({ t: timeMs, club: clubType, fallback: true });
   }
 }
 
