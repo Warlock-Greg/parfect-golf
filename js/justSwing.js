@@ -372,6 +372,15 @@ function jswGetViewMessage() {
     "Respire parfectement… 😮‍💨",
   ];
 
+
+  function showSwingMessage() {
+  if (!bigMsgEl) return;
+
+  bigMsgEl.innerHTML = "SWING ! 🏌️";
+  bigMsgEl.style.opacity = 1;
+  bigMsgEl.classList.add("swing-active");
+}
+
   function startRoutineSequence() {
   if (!bigMsgEl) return;
 
@@ -423,22 +432,27 @@ function jswGetViewMessage() {
         frameIndex = 0;
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
 
-
-        // 3️⃣ Message joueur
-        if (bigMsgEl) {
-          bigMsgEl.innerHTML = "Swing ! 🏌️";
-          bigMsgEl.style.opacity = 1;
-
-          // le message disparaît après 1s
-          setTimeout(() => {
-            bigMsgEl.style.opacity = 0;
-            bigMsgEl.innerHTML = "";
-          }, 1000);
-        }
-
+        showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
+        // ⏱️ TIMEOUT SWING (sécurité UX)
+const SWING_TIMEOUT_MS = 6000;
+
+swingTimeout = setTimeout(() => {
+  const hasTop = !!keyFrames.top;
+  const hasImpact = !!keyFrames.impact;
+
+  if (!hasTop || !hasImpact) {
+    console.warn("⏱️ Swing incomplet — timeout");
+
+    stopRecording(); // ✅ tu l’as déjà
+
+    showBigMessage(
+      "😕 Oups… on n’a pas bien capté ton swing<br>Reviens à l’adresse et recommence"
+    );
+  }
+}, SWING_TIMEOUT_MS);
       }, 1500);
     }
 
@@ -498,6 +512,17 @@ function initEngine() {
     onSwingComplete: (evt) => {
       console.log("🏁 SWING COMPLETE", evt);
       handleSwingComplete(evt.data || evt);
+      if (bigMsgEl) {
+        bigMsgEl.style.opacity = 0;
+        bigMsgEl.innerHTML = "Swing Complete";
+        bigMsgEl.classList.remove("swing-active");
+        }
+
+        if (swingTimeout) {
+          clearTimeout(swingTimeout);
+          swingTimeout = null;
+        }
+
     }
   });
 
