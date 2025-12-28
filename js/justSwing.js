@@ -444,19 +444,30 @@ const kf = swing.keyFrames || {};
         state = JSW_STATE.SWING_CAPTURE;
         frameIndex = 0;
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
+        let hasTopDetected = false;
+        let hasImpactDetected = false;
+        let swingTimeout = null;
+
 
         showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
+        function onKeyFrame(evt) {
+        const { type } = evt;
+
+        if (type === "top") hasTopDetected = true;
+        if (type === "impact") hasImpactDetected = true;
+
+        console.log("🎯 KEYFRAME", evt);
+        }
+
+        
         // ⏱️ TIMEOUT SWING (sécurité UX)
-const SWING_TIMEOUT_MS = 6000;
+      const SWING_TIMEOUT_MS = 6000;
 
 swingTimeout = setTimeout(() => {
-  const hasTop = !!keyFrames.top;
-  const hasImpact = !!keyFrames.impact;
-
-  if (!hasTop || !hasImpact) {
+if (!hasTopDetected || !hasImpactDetected) {
     console.warn("⏱️ Swing incomplet — timeout");
 
     stopRecording(); // ✅ tu l’as déjà
@@ -2033,8 +2044,7 @@ function handleSwingComplete(swing) {
   }
 
   // ✅ swing valide → scoring normal
-  continueWithScoring(swing);
-
+ 
   captureArmed = false;
   isRecordingActive = false;
   state = JSW_STATE.REVIEW;
