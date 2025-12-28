@@ -2022,7 +2022,7 @@ function activateRecording() {
 function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
-  if (!isValidSwing(swingData)) {
+  if (!isValidSwing(swing)) {
     console.warn("❌ Faux swing détecté — aucun mouvement réel");
 
     stopRecording();
@@ -2033,7 +2033,7 @@ function handleSwingComplete(swing) {
   }
 
   // ✅ swing valide → scoring normal
-  continueWithScoring(swingData);
+  continueWithScoring(swing);
 
   captureArmed = false;
   isRecordingActive = false;
