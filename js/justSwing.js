@@ -94,6 +94,11 @@ let captureArmed = false;
   let routineInterval = null;  // ← nécessaire pour la routine guidée
 
   let swingIndex = 0;
+    // --- Swing capture guards ---
+  let swingTimeout = null;
+  let hasTopDetected = false;
+  let hasImpactDetected = false;
+  let swingCompleted = false;
 
   let engine = null;
 
@@ -444,15 +449,17 @@ const kf = swing.keyFrames || {};
         state = JSW_STATE.SWING_CAPTURE;
         frameIndex = 0;
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
-        let hasTopDetected = false;
-        let hasImpactDetected = false;
-        let swingTimeout = null;
-
+       
 
         showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
+        // reset guards
+hasTopDetected = false;
+hasImpactDetected = false;
+swingCompleted = false;
+        
         function onKeyFrame(evt) {
         const { type } = evt;
 
