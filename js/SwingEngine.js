@@ -66,6 +66,8 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
     let lastSpeedWrist = 0;
     let viewType = "unknown";
     let speedScale = 1;
+    let stableStartTime = null;
+    let isStable = false;
 
 
 
@@ -114,6 +116,8 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
       state = "IDLE";
       impactDetected = false;
       releaseStartTime = null;
+      stableStartTime = null;
+      isStable = false;
 
       maxBackswingSpeed = 0;
 
@@ -238,18 +242,30 @@ const ARM_STABLE_TIME = 800; // ms immobile requis avant autorisation swing
         lastMotionTime = now;
       }
 
-      // =====================================================
-      // IDLE → ADDRESS
-      // =====================================================
+    // =====================================================
+// IDLE → ADDRESS (PATCH ROBUSTE MOBILE)
+// =====================================================
 if (state === "IDLE") {
 
   if (!armed) return null;
 
-  const motionEnergy = speedWrist + speedHip;
   const now = timeMs;
 
-  // 🔒 Détection stabilité
-  if (motionEnergy < 0.01) {
+  // -------------------------------------------------
+  // 1) NORMALISATION FACE-ON MOBILE
+  // -------------------------------------------------
+  const FACEON_REF_WRIST = 2.0;
+  const FACEON_REF_HIP   = 2.7;
+
+  const speedWristNorm = Math.min(speedWrist / FACEON_REF_WRIST, 3);
+  const speedHipNorm   = Math.min(speedHip   / FACEON_REF_HIP,   3);
+
+  const motionEnergyNorm = speedWristNorm + speedHipNorm;
+
+  // -------------------------------------------------
+  // 2) STABILITÉ (INFO UX UNIQUEMENT)
+  // -------------------------------------------------
+  if (motionEnergyNorm < 0.2) {
     if (!stableStartTime) stableStartTime = now;
 
     if (now - stableStartTime >= ARM_STABLE_TIME) {
@@ -258,50 +274,56 @@ if (state === "IDLE") {
   } else {
     stableStartTime = null;
     isStable = false;
-    return null; // ⛔ tant que pas stable, on ignore tout
   }
 
-  if (!isStable) return null;
+  // 👉 ici : isStable sert à l’UI (point vert), PAS au moteur
 
- // ✅ Swing autorisé si :
-const strongIntent =
-  speedWrist > INTENT_SPEED &&
-  speedHip   > SWING_THRESHOLDS.HIP_START;
+  // -------------------------------------------------
+  // 3) DÉCLENCHEMENT SWING PRINCIPAL
+  // -------------------------------------------------
+  const strongIntent =
+    speedWristNorm > 0.9 ||
+    speedHipNorm   > 0.9;
 
-// ✅ Swing autorisé si stabilité atteinte
-const stableIntent = isStable &&
-  speedWrist > SWING_THRESHOLDS.WRIST_START &&
-  speedHip   > SWING_THRESHOLDS.HIP_START;
+  const stableIntent =
+    isStable &&
+    speedWristNorm > 0.6 &&
+    speedHipNorm   > 0.4;
 
-// 👉 Déclenchement final
-if (stableIntent || strongIntent) {
-  state = "ADDRESS";
-  armed = false;
-  swingStartTime = timeMs;
-  stableStartTime = null;
-  isStable = false;
+  if (strongIntent || stableIntent) {
+    state = "ADDRESS";
+    armed = false;
+    swingStartTime = timeMs;
+    stableStartTime = null;
+    isStable = false;
 
-  if (typeof onSwingStart === "function") {
-    onSwingStart({ t: timeMs, club: clubType });
+    console.log("🚀 SWING START (INTENT)");
+
+    if (typeof onSwingStart === "function") {
+      onSwingStart({ t: timeMs, club: clubType });
+    }
+
+    return null;
   }
-}
 
-  // 🔴 FALLBACK TOTAL — mouvement clair mais pas structuré
-const grossMotion =
-  speedWrist > 0.12 ||
-  speedHip > 0.10;
+  // -------------------------------------------------
+  // 4) FALLBACK — mouvement évident
+  // -------------------------------------------------
+  const grossMotion =
+    speedWristNorm > 1.4 ||
+    speedHipNorm   > 1.2;
 
-if (grossMotion) {
-  state = "ADDRESS";
-  swingStartTime = timeMs;
+  if (grossMotion) {
+    state = "ADDRESS";
+    armed = false;
+    swingStartTime = timeMs;
 
-  if (debug) console.log("🔴 FALLBACK GROSS SWING START");
+    console.warn("🔴 FALLBACK GROSS SWING");
 
-  if (typeof onSwingStart === "function") {
-    onSwingStart({ t: timeMs, club: clubType, fallback: true });
+    if (typeof onSwingStart === "function") {
+      onSwingStart({ t: timeMs, club: clubType, fallback: true });
+    }
   }
-}
-
 
   return null;
 }
