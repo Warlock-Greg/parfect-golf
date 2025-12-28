@@ -54,8 +54,6 @@ const DEFAULT_ROUTINES = {
 // --- ADDRESS DETECTION ---
 let addressBuffer = [];
 let addressLocked = false;
-let captureTimeout = null;
-let swingCompleted = false;
 
 const ADDRESS_FRAMES_REQUIRED = 5;
 const ADDRESS_EPSILON = 0.004; // tolérance stabilité
@@ -106,29 +104,6 @@ let captureArmed = false;
   let replayTimer = null;
   let replayCanvas = null;
   let replayCtx = null;
-
-  let swingArmedDot = null;
-
-function showSwingArmedDot() {
-  if (swingArmedDot) return;
-
-  swingArmedDot = document.createElement("div");
-  swingArmedDot.id = "swing-armed-dot";
-  swingArmedDot.style.cssText = `
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #ff3333;
-    box-shadow: 0 0 8px rgba(255,0,0,0.8);
-    z-index: 9999;
-    animation: pulseRed 1.2s infinite;
-  `;
-
-  document.body.appendChild(swingArmedDot);
-}
 
 
   // ---------------------------------------------------------
@@ -387,41 +362,14 @@ function jswGetViewMessage() {
   `;
 }
 
-  function startSwingCapture() {
-  console.log("🏌️ Capture ACTIVE");
-
-  swingCompleted = false;
-  captureArmed = true;
-  isRecordingActive = true;
-  state = JSW_STATE.SWING_CAPTURE;
-  frameIndex = 0;
-
-  engine.armForSwing();
-
-  showBigMessage("SWING !");
-  showSwingArmedDot();
-
-  clearTimeout(captureTimeout);
-  captureTimeout = setTimeout(() => {
-    if (!swingCompleted) {
-      console.warn("⏱️ Swing incomplet — timeout");
-
-      stopRecording();
-      showBigMessage("😕 Swing incomplet — recommence");
-      state = JSW_STATE.WAITING_START;
-      updateUI();
-      showStartButton();
-    }
-  }, 5000);
-}
-
   
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "Vérifie <br>✋grip  <br>posture 🧍‍♂️ <br>alignement 🎯",
-    "🌀 Fais un swing d’essai",
+    "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
+    "Fais un swing d’essai 🌀",
+    "Respire parfectement… 😮‍💨",
   ];
 
   function startRoutineSequence() {
@@ -465,33 +413,32 @@ function jswGetViewMessage() {
         addressBuffer = [];
         addressLocked = false;
 
-       startSwingCapture();
-
-        function startCapture() {
-  rec = true;
-  state = "SWING_CAPTURE";
-  swingCompleted = false;
-
-  console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
-
-  // 🟢 MESSAGE CLAIR
-  showBigMessage("SWING !");
-
-  // 🔴 CAPTURE BORNÉE
-  const CAPTURE_MAX_MS = 5000;
-
-  clearTimeout(captureTimeout);
-  captureTimeout = setTimeout(() => {
-    if (!swingCompleted) {
-      console.warn("⏱️ Timeout capture — swing incomplet");
-
-      stopCapture(); // ⛔ on force l’arrêt propre
-      showBigMessage("😕 Swing incomplet — recommence");
-    }
-  }, CAPTURE_MAX_MS);
-}
-
+        engine.armForSwing();
+      
+        // 2️⃣ Passage DIRECT en capture
         
+        captureArmed = true;
+        isRecordingActive = true;
+        state = JSW_STATE.SWING_CAPTURE;
+        frameIndex = 0;
+        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
+
+
+        // 3️⃣ Message joueur
+        if (bigMsgEl) {
+          bigMsgEl.innerHTML = "Swing ! 🏌️";
+          bigMsgEl.style.opacity = 1;
+
+          // le message disparaît après 1s
+          setTimeout(() => {
+            bigMsgEl.style.opacity = 0;
+            bigMsgEl.innerHTML = "";
+          }, 1000);
+        }
+
+        updateUI();
+        console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
+
       }, 1500);
     }
 
@@ -512,9 +459,8 @@ function showGoButtonAfterRoutine() {
 
   document.getElementById("jsw-go-btn").onclick = () => {
     console.log("🟢 GO pressed — starting capture");
-    bigMsgEl.style.opacity = 1;
-    bigMsgEl.textContent = "SWING !";
-
+    bigMsgEl.style.opacity = 0;
+    bigMsgEl.innerHTML = "";
 
   // ⭐ ESSENTIEL : l'état doit passer en ADDRESS_READY
   state = JSW_STATE.ADDRESS_READY;
@@ -544,23 +490,15 @@ function initEngine() {
 
   engine = window.SwingEngine.create({
     fps: 30,
-    debug: true, // 👈 IMPORTANT
-
 
     onKeyFrame: (evt) => {
       console.log("🎯 KEYFRAME", evt);
     },
 
-   onSwingComplete: (evt) => {
-  console.log("🏁 SWING COMPLETE");
-
-  swingCompleted = true;
-  clearTimeout(captureTimeout);
-
-  stopRecording();
-  handleSwingComplete(evt.data || evt);
-}
-
+    onSwingComplete: (evt) => {
+      console.log("🏁 SWING COMPLETE", evt);
+      handleSwingComplete(evt.data || evt);
+    }
   });
 
   console.log("🔧 SwingEngine READY", engine);
@@ -2129,7 +2067,6 @@ function stopRecording() {
   captureArmed = false;
   frameIndex = 0;
 
-  clearTimeout(captureTimeout);
   if (engine) engine.reset();
 }
 
