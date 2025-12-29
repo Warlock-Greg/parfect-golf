@@ -1651,6 +1651,29 @@ if (impactPose && finishPose) {
 
 metrics.extension.score = extensionScore;
 
+    function computeExtensionParfects(ext) {
+  let stars = 0;
+
+  // ⭐ 1 — extension réelle
+  if (
+    ext.extFinish > ext.extImpact &&
+    ext.extFinish >= 0.25
+  ) {
+    stars++;
+  }
+
+  // ⭐ 2 — finish tenu
+  if (
+    ext.headMove <= 0.08 &&
+    ext.headOverHips <= 0.15
+  ) {
+    stars++;
+  }
+
+  return stars; // 0, 1 ou 2
+}
+
+
 
 // =====================================================
 // 6) TEMPO — robuste + fallback si address manque
@@ -1749,6 +1772,9 @@ const total =
   tempoScore +
   balanceScore;
 
+const extensionParfects = computeExtensionParfects(metrics.extension);
+
+
 return {
   total: Math.round(total),
   totalDynamic: Math.round(total),
@@ -1758,6 +1784,7 @@ return {
   extensionScore,
   tempoScore,
   balanceScore,
+  extensionParfects,
   metrics
 };
 
