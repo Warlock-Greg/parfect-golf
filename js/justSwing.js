@@ -155,7 +155,25 @@ fetch("/data/parfect_reference.json")
     console.warn("⚠️ Parfect reference not loaded", err);
   });
 
-
+function exportSwingForTraining(swing, scores) {
+  const data = {
+    metadata: {
+      club: swing.club,
+      view: swing.viewType,
+      timestamp: Date.now(),
+      userId: window.userId
+    },
+    keyframes: swing.keyFrames,
+    scores: scores.metrics,
+    rawFrames: swing.frames // compressé
+  };
+  
+  // POST vers ton backend pour entraîner un modèle custom
+  fetch("/api/swings/training", {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
   function resizeOverlay() {
     if (!overlayEl || !videoEl) return;
     overlayEl.width = videoEl.clientWidth || window.innerWidth;
@@ -463,7 +481,19 @@ const kf = swing.keyFrames || {};
         frameIndex = 0;
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
        
-
+// Dans onPoseFrame (state = SWING_CAPTURE)
+if (addressLocked && engine.frames.length > 10) {
+  const currentRotation = computeRotationSignature(
+    engine.keyFrames.address.pose,
+    landmarks,
+    viewType
+  );
+  
+  // Afficher indicateur visuel si rotation insuffisante
+  if (currentRotation.shoulder < 15) {
+    showLiveHint("↻ Tourne plus les épaules");
+  }
+}
         showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
@@ -761,7 +791,20 @@ function initEngine() {
 
     ctx.restore();
   }
-
+function isStableAddress(pose) {
+  const LH = pose[23], RH = pose[24];
+  const LS = pose[11], RS = pose[12];
+  
+  // Visibilité minimale
+  if (!LH || !RH || !LS || !RS) return false;
+  if (LH.visibility < 0.6 || RH.visibility < 0.6) return false;
+  
+  // Hanches horizontales (±10°)
+  const hipAngle = Math.abs(jswLineAngleDeg(LH, RH));
+  if (hipAngle > 10) return false;
+  
+  return true;
+}
 
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
@@ -778,10 +821,8 @@ function onPoseFrame(landmarks) {
   // ----------------------------
   // ADDRESS DETECTION (NON BLOQUANTE)
   // ----------------------------
-  if (!addressLocked) {
-    if (addressBuffer.length === 0) {
+  if (!addressLocked && isStableAddress(landmarks)) {   
       addressBuffer.push(landmarks);
-    } else {
       const dist = jswPoseDistance(
         addressBuffer[addressBuffer.length - 1],
         landmarks
@@ -933,6 +974,19 @@ function getRef(ref, path, fallback = null) {
   return {};
 }
 
+
+function selectBestReference(swing, playerHistory) {
+  const { club, view } = swing;
+  
+  // 1️⃣ Référence personnelle (5+ swings similaires)
+  if (playerHistory[club]?.count >= 5) {
+    return computePersonalAverage(playerHistory[club].swings);
+  }
+  
+  // 2️⃣ Référence Parfect adaptée au niveau
+  const level = detectPlayerLevel(playerHistory); // "beginner" | "intermediate" | "advanced"
+  return window.ParfectReference[`${club}_${view}_${level}`];
+}
   
 // ---------------------------------------------------------
 //   DÉTECTION VUE CAMERA : FACE-ON vs DOWN-THE-LINE
