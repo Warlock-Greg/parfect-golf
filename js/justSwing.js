@@ -846,7 +846,7 @@ function onPoseFrame(landmarks) {
         console.log("🔒 ADDRESS LOCKED");
       }
     }
-  }
+  
 
   // ----------------------------
   // TOUJOURS envoyer les frames au moteur
