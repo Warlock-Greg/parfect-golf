@@ -367,6 +367,19 @@ function jswGetViewMessage() {
   `;
 }
 
+function hasRealMotion(swing) {
+   const frames = swing.frames || [];
+   let total = 0;
+
+   for (let i = 1; i < frames.length; i++) {
+     const p0 = frames[i - 1]?.[15]; // poignet lead
+     const p1 = frames[i]?.[15];
+     if (!p0 || !p1) continue;
+     total += Math.abs(p1.x - p0.x) + Math.abs(p1.y - p0.y);
+   }
+
+   return total > 0.08; // seuil mobile validé
+ }
 
 function isValidSwing(swing) {
 const kf = swing.keyFrames || {};
@@ -2043,7 +2056,7 @@ function activateRecording() {
 function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
-  if (!isValidSwing(swing)) {
+  if (!isValidSwing(swing) || !hasRealMotion(swing)) {
     console.warn("❌ Faux swing détecté — aucun mouvement réel");
 
     stopRecording();
@@ -2077,6 +2090,7 @@ console.log("🎯 Active Parfect Reference :", window.REF);
 
 
   const scores = computeSwingScorePremium(swing);
+  buildPremiumBreakdown(swing, scores);
 
   // -------------------------------------------
   // 1️⃣ — Sélection des éléments du Replay (index.html)
