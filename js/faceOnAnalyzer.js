@@ -168,3 +168,7 @@ function zoneStatus(delta, tol) {
   if (delta <= tol) return "EDGE";
   return "OUT";
 }
+
+
+window.computeFaceOnResult = computeFaceOnResult;
+
