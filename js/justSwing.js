@@ -1204,11 +1204,11 @@ function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
       hip0 == null || hip1 == null
     ) return null;
 
-    const shoulder = jswDegDiff(sh1, sh0);
-    const hip      = jswDegDiff(hip1, hip0);
-    const xFactor  = shoulder - hip;
-
-    return { shoulder, hip, xFactor };
+    return {
+      shoulder: jswDegDiff(sh1, sh0),
+      hip: jswDegDiff(hip1, hip0),
+      xFactor: jswDegDiff(sh1, sh0) - jswDegDiff(hip1, hip0)
+    };
   }
 
   // =====================================================
