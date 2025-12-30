@@ -4,7 +4,7 @@
 // Dépendances : swing, reference
 // ==========================================================
 
-export function computeFaceOnResult(swing, reference) {
+function computeFaceOnResult(swing, reference) {
 
   // -------------------------------------------------------
   // 0) Guards
