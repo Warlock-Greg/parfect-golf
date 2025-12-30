@@ -2320,7 +2320,7 @@ async function handleSwingComplete(swing) {
   } catch (e) {
     console.warn("⚠️ Swing non sauvegardé", e);
   }
-}
+
 
   // -------------------------------------------
   // 2️⃣ — Afficher le panneau Replay
