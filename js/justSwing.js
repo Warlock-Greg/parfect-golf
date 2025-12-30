@@ -2134,15 +2134,26 @@ function activateRecording() {
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
   // ---------------------------------------------------------
-function handleSwingComplete(swing) {
+async function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
-const PLAYER_EMAIL = "gregoiremm@gmail.com";
+// ======================================================
+  // 0️⃣ Guards bas niveau
+  // ======================================================
+  if (!swing) {
+    console.warn("❌ Swing vide");
+    return;
+  }
 
-const swingRecord = {
+  // ======================================================
+  // 1️⃣ Sauvegarde brute (même si swing invalide)
+  // ======================================================
+  const PLAYER_EMAIL = "gregoiremm@gmail.com";
+
+  const swingRecord = {
     player_email: PLAYER_EMAIL,
     created_at: new Date().toISOString(),
-    club: swing.club,
+    club: swing.club || currentClubType,
     view: swing.view || window.jswViewType || "faceOn",
     frames_count: swing.frames?.length || 0,
     keyframes: swing.keyFrames || {},
@@ -2154,43 +2165,72 @@ const swingRecord = {
 
   saveSwingToNocoDB(swingRecord);
 
-   // scoring local existant
-  
+  // ======================================================
+  // 2️⃣ Validation swing (UX first)
+  // ======================================================
   if (!isValidSwing(swing) || !hasRealMotion(swing)) {
-    console.warn("❌ Faux swing détecté — aucun mouvement réel");
+    console.warn("❌ Faux swing détecté");
 
     stopRecording();
-
     showBigMessage("😕 Oups… aucun swing détecté.\nRecommence calmement.");
 
-    return; // ⛔ PAS DE SCORE
+    return; // ⛔ STOP ICI
   }
 
-  // ✅ swing valide → scoring normal
- 
+  // ======================================================
+  // 3️⃣ Fin capture / passage en REVIEW
+  // ======================================================
   captureArmed = false;
   isRecordingActive = false;
   state = JSW_STATE.REVIEW;
   updateUI();
 
-   // 🔑 Sélection de la référence active pour CE swing
-  window.REF = getActiveReference({
-  club: swing.club || currentClubType,
-  view: window.jswViewType || "faceOn"
-  });
+  // ======================================================
+  // 4️⃣ Sélection de la référence ACTIVE (clé)
+  // ======================================================
+  const club = swing.club || currentClubType;
+  const view = window.jswViewType || "faceOn";
 
+  window.REF = getActiveReference({ club, view });
   window.REF_META = {
-  club: swing.club || currentClubType,
-  view: window.jswViewType || "faceOn",
-  key: `${swing.club || currentClubType}_${window.jswViewType || "faceOn"}`
-};
+    club,
+    view,
+    key: `${club}_${view}`
+  };
 
+  console.log("🎯 Active Reference:", window.REF_META, window.REF);
 
-console.log("🎯 Active Parfect Reference :", window.REF);
+  // ======================================================
+  // 5️⃣ FACE-ON RESULT (tolérances + zones) — NOUVEAU
+  // ======================================================
+  let faceOnResult = null;
 
+  if (view.includes("face")) {
+    try {
+      faceOnResult = computeFaceOnResult(swing, window.REF);
+      console.log("🟢 FaceOnResult:", faceOnResult);
+    } catch (e) {
+      console.warn("⚠️ FaceOnResult failed", e);
+    }
+  }
 
+  // ======================================================
+  // 6️⃣ SCORING PREMIUM (inchangé)
+  // ======================================================
   const scores = computeSwingScorePremium(swing);
   buildPremiumBreakdown(swing, scores);
+
+  // ======================================================
+  // 7️⃣ COACH (Face-On uniquement)
+  // ======================================================
+  if (faceOnResult) {
+    try {
+      onFaceOnScored(faceOnResult); // 👉 ton CoachService
+    } catch (e) {
+      console.warn("⚠️ Coach failed", e);
+    }
+  }
+
 
   // -------------------------------------------
   // 1️⃣ — Sélection des éléments du Replay (index.html)
