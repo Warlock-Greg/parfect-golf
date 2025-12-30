@@ -1482,9 +1482,10 @@ metrics.rotation = {
 };
 
 const basePose =
-  jswSafePoseFromKF(kf.backswing) ||
   jswSafePoseFromKF(kf.address) ||
+  jswSafePoseFromKF(kf.backswing) ||
   null;
+
 
 const topPoseSafe = jswSafePoseFromKF(kf.top);
 
@@ -1515,6 +1516,21 @@ if (basePose && topPoseSafe) {
       },
       score: rotationScore
     };
+
+    if (rotationMeasure) {
+  console.log("🌀 Rotation FO debug", {
+    base: {
+      LS: basePose?.[11]?.x,
+      RS: basePose?.[12]?.x
+    },
+    top: {
+      LS: topPoseSafe?.[11]?.x,
+      RS: topPoseSafe?.[12]?.x
+    },
+    rot: rotationMeasure
+  });
+}
+
 
   // =================================================
   // ✅ AJOUT OBLIGATOIRE POUR L’UI (SIMPLE / PLAT)
