@@ -856,8 +856,26 @@ function onPoseFrame(landmarks) {
 
   if (evt) console.log("🎯 ENGINE EVENT:", evt);
 
-  // ⛔ On ignore le swing tant que l’adresse n’est pas lockée
-  if (!addressLocked) return;
+  // --------------------------------------------------
+// 2️⃣ LOCK ADRESSE APRÈS push frame (CRUCIAL)
+// --------------------------------------------------
+if (!addressLocked && isStableAddress(landmarks)) {
+  addressBuffer.push(landmarks);
+
+  if (addressBuffer.length >= ADDRESS_FRAMES_REQUIRED) {
+    addressLocked = true;
+
+    engine.keyFrames.address = {
+      index: engine.frames.length - 1, // 🔑 FRAME VALIDE
+      pose: landmarks
+    };
+
+    console.log("🔒 ADDRESS LOCKED @ frame", engine.keyFrames.address.index);
+  }
+}
+
+// ⛔ Tant que l’adresse n’est pas lockée, on ne score pas
+if (!addressLocked) return;
 
   if (evt && evt.type === "swingComplete") {
     isRecordingActive = false;
@@ -1182,27 +1200,27 @@ function segmentAngle(A, B) {
   return Math.atan2(B.y - A.y, B.x - A.x) * 180 / Math.PI;
 }
 
+// =====================================================
+// ROTATION SIGNATURE — Face-On & DTL
+// Face-On = ratios projetés (comparés à la référence)
+// =====================================================
 function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
   if (!basePose || !topPose) return null;
 
-  const LS0 = basePose[11], RS0 = basePose[12];
-  const LH0 = basePose[23], RH0 = basePose[24];
-  const LS1 = topPose[11],  RS1 = topPose[12];
-  const LH1 = topPose[23],  RH1 = topPose[24];
-
-  // --------------------------------------------------
-  // 🎥 DTL → rotation angulaire réelle
-  // --------------------------------------------------
+  // -----------------------------
+  // DTL → angles réels (inchangé)
+  // -----------------------------
   if (viewType === "dtl") {
+    const LS0 = basePose[11], RS0 = basePose[12];
+    const LH0 = basePose[23], RH0 = basePose[24];
+    const LS1 = topPose[11],  RS1 = topPose[12];
+    const LH1 = topPose[23],  RH1 = topPose[24];
+    if (!LS0||!RS0||!LH0||!RH0||!LS1||!RS1||!LH1||!RH1) return null;
+
     const sh0 = jswLineAngleDeg(LS0, RS0);
     const sh1 = jswLineAngleDeg(LS1, RS1);
     const hip0 = jswLineAngleDeg(LH0, RH0);
     const hip1 = jswLineAngleDeg(LH1, RH1);
-
-    if (
-      sh0 == null || sh1 == null ||
-      hip0 == null || hip1 == null
-    ) return null;
 
     return {
       shoulder: jswDegDiff(sh1, sh0),
@@ -1211,84 +1229,57 @@ function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
     };
   }
 
-  // =====================================================
-// 📸 Face-On (caméra à hauteur) — rotation par asymétrie X
-// =====================================================
-if (viewType === "faceOn") {
-  return computeRotationFaceOn(basePose, topPose);
+  // -----------------------------
+  // FACE-ON → ratios projetés
+  // -----------------------------
+  return computeRotationFaceOnRatio(basePose, topPose);
 }
 
-  return null;
-}
 
-  // =====================================================
-// Rotation Face-On V1 — asymétrie de projection X
 // =====================================================
-function computeRotationFaceOn(basePose, topPose) {
-  if (!basePose || !topPose) return null;
-
+// Rotation Face-On — ratios largeur projetée
+// =====================================================
+function computeRotationFaceOnRatio(basePose, topPose) {
   const LS0 = basePose[11], RS0 = basePose[12];
   const LH0 = basePose[23], RH0 = basePose[24];
-
   const LS1 = topPose[11],  RS1 = topPose[12];
   const LH1 = topPose[23],  RH1 = topPose[24];
 
-  if (
-    !LS0 || !RS0 || !LH0 || !RH0 ||
-    !LS1 || !RS1 || !LH1 || !RH1
-  ) return null;
+  if (!LS0||!RS0||!LH0||!RH0||!LS1||!RS1||!LH1||!RH1) return null;
 
-  // -------------------------------
-  // ÉPAULES — asymétrie X
-  // -------------------------------
-  const dxShoulderLead  = LS1.x - LS0.x;
-  const dxShoulderTrail = RS0.x - RS1.x;
+  const shBase = Math.abs(LS0.x - RS0.x);
+  const shTop  = Math.abs(LS1.x - RS1.x);
+  const hipBase = Math.abs(LH0.x - RH0.x);
+  const hipTop  = Math.abs(LH1.x - RH1.x);
 
-  const shoulderProj =
-    (dxShoulderLead + dxShoulderTrail) * 0.5;
+  if (shBase < 0.12 || hipBase < 0.12) return null;
 
-  const SHOULDER_SCALE = 120; // calibré Face-On réel
-  const shoulderDeg = shoulderProj * SHOULDER_SCALE;
-
-  // -------------------------------
-  // HANCHES — asymétrie X
-  // -------------------------------
-  const dxHipLead  = LH1.x - LH0.x;
-  const dxHipTrail = RH0.x - RH1.x;
-
-  const hipProj =
-    (dxHipLead + dxHipTrail) * 0.5;
-
-  const HIP_SCALE = 80;
-  const hipDeg = hipProj * HIP_SCALE;
-
-  // -------------------------------
-  // X-FACTOR
-  // -------------------------------
-  const xFactor = shoulderDeg - hipDeg;
+  const shoulderRatio = shTop / shBase; // ↓ = tourne
+  const hipRatio      = hipTop / hipBase;
+  const xFactorRatio  = hipRatio - shoulderRatio;
 
   return {
-    shoulder: Math.max(0, shoulderDeg),
-    hip: Math.max(0, hipDeg),
-    xFactor
+    shoulder: shoulderRatio,
+    hip: hipRatio,
+    xFactor: xFactorRatio
   };
 }
+
 
 
 function scoreRotationFromReference(measure, ref) {
   if (!measure || !ref) return { score: 0 };
 
-  const s = scoreOne(measure.shoulder, ref.shoulder.target, ref.shoulder.tol);
-  const h = scoreOne(measure.hip,      ref.hip.target,      ref.hip.tol);
-  const x = scoreOne(measure.xFactor,  ref.xFactor.target,  ref.xFactor.tol);
-
-  const norm = s * 0.4 + h * 0.4 + x * 0.2;
+  const s = jswClamp(1 - Math.abs(measure.shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1);
+  const h = jswClamp(1 - Math.abs(measure.hip      - ref.hip.target)      / ref.hip.tol,      0, 1);
+  const x = jswClamp(1 - Math.abs(measure.xFactor  - ref.xFactor.target)  / ref.xFactor.tol,  0, 1);
 
   return {
-    score: Math.round(norm * 20),
+    score: Math.round((s * 0.4 + h * 0.4 + x * 0.2) * 20),
     details: { s, h, x }
   };
 }
+
 
 
 
@@ -1673,107 +1664,50 @@ metrics.weightShift.score = weightScore;
 
 
 // =====================================================
-// 5) EXTENSION & FINISH — Face-On V1 (unités cohérentes)
-// - Tout est normalisé par shoulderWidth (0..~2)
-// - HeadMove est clampé + filtré visibilité
+// EXTENSION & FINISH — Face-On (ratios propres)
 // =====================================================
 let extensionScore = 10;
 
 if (impactPose && finishPose) {
-  const headImp = LM(impactPose, 0);
-  const headFin = LM(finishPose, 0);
-
-  const LHf = LM(finishPose, 23), RHf = LM(finishPose, 24);
   const LSimp = LM(impactPose, 11), RSimp = LM(impactPose, 12);
-  const LSf = LM(finishPose, 11), RSf = LM(finishPose, 12);
-
-  // 👉 wrists (on prend le max des deux pour être robuste gaucher/droitier)
+  const LSf   = LM(finishPose, 11), RSf   = LM(finishPose, 12);
   const LWimp = LM(impactPose, 15), RWimp = LM(impactPose, 16);
   const LWf   = LM(finishPose, 15), RWf   = LM(finishPose, 16);
 
-  // Guard minimal
-  if (LHf && RHf && LSimp && RSimp && LSf && RSf && (LWimp || RWimp) && (LWf || RWf)) {
+  if (LSimp && RSimp && LSf && RSf && (LWimp||RWimp) && (LWf||RWf)) {
 
-    // 1) ShoulderWidth de référence (impact + finish) -> stable
-    const swImpact = jswDist(LSimp, RSimp);
-    const swFinish = jswDist(LSf, RSf);
-    let shoulderW = Math.max(swImpact || 0, swFinish || 0);
+    const sw = Math.max(jswDist(LSimp, RSimp), jswDist(LSf, RSf));
+    const shoulderW = sw && sw > 0.15 ? sw : 0.30;
 
-    // ⚠️ si la largeur est trop faible (bruit / hors cadre) : fallback
-    if (!Number.isFinite(shoulderW) || shoulderW < 0.12) shoulderW = 0.25;
+    const extImpRaw = Math.max(
+      LWimp ? jswDist(LSimp, LWimp) : 0,
+      RWimp ? jswDist(RSimp, RWimp) : 0
+    );
 
-    // 2) HeadMove normalisé + clamp
-    let rawHeadMove = (headImp && headFin) ? jswDist(headImp, headFin) : null;
+    const extFinRaw = Math.max(
+      LWf ? jswDist(LSf, LWf) : 0,
+      RWf ? jswDist(RSf, RWf) : 0
+    );
 
-    // Si head bouge “trop” c’est souvent un glitch de landmark
-    if (!Number.isFinite(rawHeadMove) || rawHeadMove == null) rawHeadMove = 0;
-    rawHeadMove = Math.min(rawHeadMove, 0.35);            // clamp brut
-    let headMove = rawHeadMove / shoulderW;
-    headMove = Math.min(Math.max(headMove, 0), 2.0);      // clamp normalisé
+    const extImpact = jswClamp(extImpRaw / shoulderW, 0, 1.8);
+    const extFinish = jswClamp(extFinRaw / shoulderW, 0, 1.8);
+    const progress  = extFinish - extImpact;
 
-    // 3) Head over hips (normalisé)
-    const hipsFin = { x:(LHf.x + RHf.x)/2, y:(LHf.y + RHf.y)/2 };
-    let headOverHips = 0;
-    if (headFin) headOverHips = Math.abs(headFin.x - hipsFin.x) / shoulderW;
-    headOverHips = Math.min(Math.max(headOverHips, 0), 2.0);
-
-    // 4) Extension bras normalisée (max des deux bras)
-    const extImpactRawL = (LWimp && LSimp) ? jswDist(LSimp, LWimp) : null;
-    const extImpactRawR = (RWimp && RSimp) ? jswDist(RSimp, RWimp) : null;
-    const extFinishRawL = (LWf && LSf) ? jswDist(LSf, LWf) : null;
-    const extFinishRawR = (RWf && RSf) ? jswDist(RSf, RWf) : null;
-
-    const extImpactRaw = Math.max(extImpactRawL || 0, extImpactRawR || 0);
-    const extFinishRaw = Math.max(extFinishRawL || 0, extFinishRawR || 0);
-
-    const extImpact = extImpactRaw / shoulderW;
-    const extFinish = extFinishRaw / shoulderW;
-
-    // Store metrics (cohérents)
-    metrics.extension.headMove = headMove;
-    metrics.extension.headOverHips = headOverHips;
     metrics.extension.extImpact = extImpact;
     metrics.extension.extFinish = extFinish;
+    metrics.extension.progress = progress;
 
-    // 5) Scoring (Face-On targets cohérents)
-    // Valeurs “humaines” en Face-On : ~0.70–1.20
-    const REF = window.REF?.extension || null;
+    // 🎯 cibles Face-On réalistes
+    const s1 = jswClamp(1 - Math.abs(extImpact - 1.05) / 0.30, 0, 1);
+    const s2 = jswClamp(1 - Math.abs(extFinish - 1.20) / 0.30, 0, 1);
+    const s3 = jswClamp((progress - 0.05) / 0.20, 0, 1); // bras qui se tendent APRES impact
 
-    // Si ta REF existante est en ancien format (0.28 / 0.30), on fallback sur targets V1 normalisées
-    const targetExtImp = (REF?.finish?.target && REF.finish.target > 1.5) ? 0.85 : (REF?.finish?.target ?? 0.85);
-    const tolExtImp    = (REF?.finish?.tol    && REF.finish.tol    > 1.0) ? 0.20 : (REF?.finish?.tol    ?? 0.20);
-
-    // Finish un peu plus “long”
-    const targetExtFin = 0.95;
-    const tolExtFin    = 0.22;
-
-    // Head stable : tolérance réaliste Face-On
-    const targetHeadMove = (REF?.balance?.target != null && REF.balance.target < 1.0) ? REF.balance.target : 0.18;
-    const tolHeadMove    = (REF?.balance?.tol    != null && REF.balance.tol    < 1.0) ? REF.balance.tol    : 0.18;
-
-    // Scores unitaires [0..1]
-    const extImpScore = jswClamp(1 - Math.abs(extImpact - targetExtImp) / tolExtImp, 0, 1);
-    const extFinScore = jswClamp(1 - Math.abs(extFinish - targetExtFin) / tolExtFin, 0, 1);
-
-    // headMove : plus petit = meilleur
-    const headMoveScore = jswClamp(1 - Math.abs(headMove - targetHeadMove) / tolHeadMove, 0, 1);
-
-    // head over hips : petit = meilleur
-    const headAlignScore = jswClamp(1 - headOverHips / 0.35, 0, 1);
-
-    // Pondération (tu peux ajuster après test)
-    const finishNorm =
-      extImpScore * 0.25 +
-      extFinScore * 0.30 +
-      headMoveScore * 0.25 +
-      headAlignScore * 0.20;
-
-    extensionScore = Math.round(finishNorm * 20);
-    
+    extensionScore = Math.round((s1 * 0.3 + s2 * 0.4 + s3 * 0.3) * 20);
   }
 }
 
 metrics.extension.score = extensionScore;
+
 
 
     function computeExtensionParfects(ext) {
