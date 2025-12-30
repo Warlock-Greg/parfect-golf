@@ -1185,7 +1185,10 @@ function segmentAngle(A, B) {
 function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
   if (!basePose || !topPose) return null;
 
- 
+  const LS0 = basePose[11], RS0 = basePose[12];
+  const LH0 = basePose[23], RH0 = basePose[24];
+  const LS1 = topPose[11],  RS1 = topPose[12];
+  const LH1 = topPose[23],  RH1 = topPose[24];
 
   // --------------------------------------------------
   // 🎥 DTL → rotation angulaire réelle
@@ -2311,6 +2314,7 @@ async function handleSwingComplete(swing) {
   } catch (e) {
     console.warn("⚠️ Swing non sauvegardé", e);
   }
+} 
 
 
   // -------------------------------------------
