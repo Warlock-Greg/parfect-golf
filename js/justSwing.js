@@ -2137,6 +2137,25 @@ function activateRecording() {
 function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
+const PLAYER_EMAIL = "gregoiremm@gmail.com";
+
+const swingRecord = {
+    player_email: PLAYER_EMAIL,
+    created_at: new Date().toISOString(),
+    club: swing.club,
+    view: swing.view || window.jswViewType || "faceOn",
+    frames_count: swing.frames?.length || 0,
+    keyframes: swing.keyFrames || {},
+    metrics: swing.scores?.metrics || {},
+    scores: swing.scores || {},
+    is_valid: isValidSwing(swing),
+    quality: swing.quality || {}
+  };
+
+  saveSwingToNocoDB(swingRecord);
+
+   // scoring local existant
+  
   if (!isValidSwing(swing) || !hasRealMotion(swing)) {
     console.warn("❌ Faux swing détecté — aucun mouvement réel");
 
@@ -2185,6 +2204,22 @@ console.log("🎯 Active Parfect Reference :", window.REF);
     console.error("❌ swing-review panel not found in DOM !");
     return;
   }
+
+
+  async function saveSwingToNocoDB(record) {
+  try {
+    await fetch("https://TON_NOCODB_URL/api/v1/db/data/v1/PROJECT/swings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": "TON_TOKEN"
+      },
+      body: JSON.stringify(record)
+    });
+  } catch (e) {
+    console.warn("⚠️ Swing non sauvegardé", e);
+  }
+}
 
   // -------------------------------------------
   // 2️⃣ — Afficher le panneau Replay
