@@ -1185,18 +1185,7 @@ function segmentAngle(A, B) {
 function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
   if (!basePose || !topPose) return null;
 
-  const LS0 = basePose[11], RS0 = basePose[12];
-  const LH0 = basePose[23], RH0 = basePose[24];
-
-  const LS1 = topPose[11],  RS1 = topPose[12];
-  const LH1 = topPose[23],  RH1 = topPose[24];
-
-  if (
-    !LS0 || !RS0 || !LH0 || !RH0 ||
-    !LS1 || !RS1 || !LH1 || !RH1
-  ) {
-    return null;
-  }
+ 
 
   // --------------------------------------------------
   // 🎥 DTL → rotation angulaire réelle
@@ -1226,6 +1215,8 @@ if (viewType === "faceOn") {
   return computeRotationFaceOn(basePose, topPose);
 }
 
+  return null;
+}
 
   // =====================================================
 // Rotation Face-On V1 — asymétrie de projection X
