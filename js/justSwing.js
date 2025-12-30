@@ -1759,13 +1759,7 @@ if (impactPose && finishPose) {
       headAlignScore * 0.20;
 
     extensionScore = Math.round(finishNorm * 20);
-    console.log("🧩 EXT DEBUG", {
-  shoulderW,
-  headMove: metrics.extension.headMove,
-  extImpact: metrics.extension.extImpact,
-  extFinish: metrics.extension.extFinish
-});
-
+    
   }
 }
 
