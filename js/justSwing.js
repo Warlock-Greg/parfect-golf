@@ -807,7 +807,6 @@ if (
   console.log("🔒 ADDRESS AUTO-LOCKED", engine.keyFrames.address.index);
 }
 
-}
 
 
   if (evt && evt.type === "swingComplete") {
