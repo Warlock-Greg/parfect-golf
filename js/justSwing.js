@@ -409,6 +409,42 @@ const kf = swing.keyFrames || {};
   return true;
 }
 
+  function showSwingRetryButton(messageHtml) {
+  if (!bigMsgEl) return;
+
+  bigMsgEl.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:1.1rem; margin-bottom:14px;">
+        ${messageHtml}
+      </div>
+
+      <button id="jsw-retry-btn" style="
+        background:#00ff99;
+        color:#111;
+        border:none;
+        border-radius:14px;
+        padding:14px 28px;
+        font-size:1.2rem;
+        font-weight:700;
+        cursor:pointer;
+      ">
+        🔁 Recommencer le swing
+      </button>
+    </div>
+  `;
+
+  bigMsgEl.style.opacity = 1;
+
+  const btn = document.getElementById("jsw-retry-btn");
+  if (btn) {
+    btn.onclick = () => {
+      bigMsgEl.style.opacity = 0;
+      bigMsgEl.innerHTML = "";
+      startRoutineSequence(); // 🔥 relance directe
+    };
+  }
+}
+
   
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
@@ -476,17 +512,15 @@ function startRoutineSequence() {
         const SWING_TIMEOUT_MS = 6000;
 
       swingTimeout = setTimeout(() => {
-      const kf = engine?.keyFrames;
-
+      
       // ⛔ Pas de swing valide = pas d’impact
-      if (!kf || !kf.impact) {
+      if (!engine.keyFrames?.impact) {
       console.warn("⏱️ Swing incomplet — aucun impact détecté");
 
       stopRecording();
 
-      showBigMessage(
-      "😕 Oups… on n’a pas bien capté ton swing<br>recharge la page"
-    );
+      showSwingRetryButton("😕 Je n’ai pas vu l’impact.<br>Reviens à l’adresse et recommence.");
+
   }
 }, SWING_TIMEOUT_MS);
 
