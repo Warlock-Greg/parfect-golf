@@ -96,8 +96,6 @@ let captureArmed = false;
   let swingIndex = 0;
     // --- Swing capture guards ---
   let swingTimeout = null;
-  let hasTopDetected = false;
-  let hasImpactDetected = false;
   let swingCompleted = false;
 
   let engine = null;
@@ -475,13 +473,23 @@ function startRoutineSequence() {
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
         // ⏱️ Timeout GLOBAL de sécurité (sans logique swing)
-        swingTimeout = setTimeout(() => {
-          console.warn("⏱️ Timeout sécurité swing");
-          stopRecording();
-          showBigMessage(
-            "😕 Oups… aucun swing détecté.<br>Reviens à l’adresse et recommence."
-          );
-        }, 7000);
+        const SWING_TIMEOUT_MS = 6000;
+
+      swingTimeout = setTimeout(() => {
+      const kf = engine?.keyFrames;
+
+      // ⛔ Pas de swing valide = pas d’impact
+      if (!kf || !kf.impact) {
+      console.warn("⏱️ Swing incomplet — aucun impact détecté");
+
+      stopRecording();
+
+      showBigMessage(
+      "😕 Oups… on n’a pas bien capté ton swing<br>recharge la page"
+    );
+  }
+}, SWING_TIMEOUT_MS);
+
 
       }, 1500);
     }
