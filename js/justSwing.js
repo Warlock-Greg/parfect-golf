@@ -416,9 +416,9 @@ const kf = swing.keyFrames || {};
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
-    "Fais un swing d’essai 🌀",
-    "Mode Adresse… 😮‍💨",
+    //"Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
+    //"Fais un swing d’essai 🌀",
+    "Pose Adresse… 😮‍💨",
   ];
 
 
@@ -463,13 +463,6 @@ const kf = swing.keyFrames || {};
       setTimeout(() => {
         console.log("⏳ Routine terminée → passage en capture directe");
 
-        // 1️⃣ Reset complet du moteur
-       // if (engine && engine.reset) {
-        //  console.log("🔄 RESET ENGINE (clean start)");
-        //  engine.reset();
-        //}
-        addressBuffer = [];
-        addressLocked = false;
 
         engine.armForSwing();
       
@@ -481,27 +474,15 @@ const kf = swing.keyFrames || {};
         frameIndex = 0;
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
        
-// Dans onPoseFrame (state = SWING_CAPTURE)
-if (addressLocked && engine.frames.length > 10) {
-  const currentRotation = computeRotationSignature(
-    engine.keyFrames.address.pose,
-    landmarks,
-    viewType
-  );
-  
-  // Afficher indicateur visuel si rotation insuffisante
-  if (currentRotation.shoulder < 15) {
-    showLiveHint("↻ Tourne plus les épaules");
-  }
-}
+
         showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
         // reset guards
-hasTopDetected = false;
-hasImpactDetected = false;
-swingCompleted = false;
+        hasTopDetected = false;
+        hasImpactDetected = false;
+        swingCompleted = false;
         
         function onKeyFrame(evt) {
         const { type } = evt;
@@ -791,20 +772,7 @@ function initEngine() {
 
     ctx.restore();
   }
-function isStableAddress(pose) {
-  const LH = pose[23], RH = pose[24];
-  const LS = pose[11], RS = pose[12];
-  
-  // Visibilité minimale
-  if (!LH || !RH || !LS || !RS) return false;
-  if (LH.visibility < 0.6 || RH.visibility < 0.6) return false;
-  
-  // Hanches horizontales (±10°)
-  const hipAngle = Math.abs(jswLineAngleDeg(LH, RH));
-  if (hipAngle > 10) return false;
-  
-  return true;
-}
+
 
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
@@ -818,64 +786,29 @@ function onPoseFrame(landmarks) {
   if (!engine || !landmarks) return;
   if (state !== JSW_STATE.SWING_CAPTURE) return;
 
-  // ----------------------------
-  // ADDRESS DETECTION (NON BLOQUANTE)
-  // ----------------------------
-  if (!addressLocked && isStableAddress(landmarks)) {   
-      addressBuffer.push(landmarks);
-      const dist = jswPoseDistance(
-        addressBuffer[addressBuffer.length - 1],
-        landmarks
-      );
-
-      if (dist < ADDRESS_EPSILON) {
-        addressBuffer.push(landmarks);
-      } else {
-        addressBuffer = [landmarks];
-      }
-    }
-
-    if (addressBuffer.length >= ADDRESS_FRAMES_REQUIRED) {
-      addressLocked = true;
-
-      if (engine.keyFrames) {
-        engine.keyFrames.address = {
-          index: engine.frames.length,
-          pose: landmarks
-        };
-        console.log("🔒 ADDRESS LOCKED");
-      }
-    }
-  
+ 
 
   // ----------------------------
   // TOUJOURS envoyer les frames au moteur
   // ----------------------------
   const now = performance.now();
-  const evt = engine.processPose(landmarks, now, currentClubType);
+engine.processPose(landmarks, now, currentClubType);
 
-  if (evt) console.log("🎯 ENGINE EVENT:", evt);
-
-  // --------------------------------------------------
-// 2️⃣ LOCK ADRESSE APRÈS push frame (CRUCIAL)
-// --------------------------------------------------
-if (!addressLocked && isStableAddress(landmarks)) {
-  addressBuffer.push(landmarks);
-
-  if (addressBuffer.length >= ADDRESS_FRAMES_REQUIRED) {
-    addressLocked = true;
-
-    engine.keyFrames.address = {
-      index: engine.frames.length - 1, // 🔑 FRAME VALIDE
-      pose: landmarks
-    };
-
-    console.log("🔒 ADDRESS LOCKED @ frame", engine.keyFrames.address.index);
-  }
+// 🔒 LOCK ADDRESS = frame juste AVANT backswing
+if (
+  !engine.keyFrames.address &&
+  engine.keyFrames.backswing &&
+  engine.frames.length >= 2
+) {
+  engine.keyFrames.address = {
+    index: engine.keyFrames.backswing.index - 1,
+    pose: engine.frames[engine.keyFrames.backswing.index - 1]
+  };
+  console.log("🔒 ADDRESS AUTO-LOCKED", engine.keyFrames.address.index);
 }
 
-// ⛔ Tant que l’adresse n’est pas lockée, on ne score pas
-if (!addressLocked) return;
+}
+
 
   if (evt && evt.type === "swingComplete") {
     isRecordingActive = false;
@@ -1006,30 +939,6 @@ function selectBestReference(swing, playerHistory) {
   return window.ParfectReference[`${club}_${view}_${level}`];
 }
   
-// ---------------------------------------------------------
-//   DÉTECTION VUE CAMERA : FACE-ON vs DOWN-THE-LINE
-// ---------------------------------------------------------
-function jswDetectViewType(pose) {
-  if (!pose) return "unknown";
-  const LS = pose[11];
-  const RS = pose[12];
-  const LH = pose[23];
-  const RH = pose[24];
-  if (!LS || !RS || !LH || !RH) return "unknown";
-
-  const shoulderWidth = jswDist(LS, RS); // distance normalisée 0..1
-  const hipWidth      = jswDist(LH, RH);
-
-  const avgWidth = (shoulderWidth + hipWidth) / 2;
-
-  // Heuristique simple :
-  //  - Face-on : on voit toute la largeur → > 0.18
-  //  - DTL : largeur projetée faible      → < 0.12
-  if (avgWidth > 0.18) return "faceOn";
-  if (avgWidth < 0.12) return "downTheLine";
-
-  return "unknown";
-}
 
 
   function safePoseFromKF(frames, kfEntry) {
@@ -1041,25 +950,7 @@ function jswDetectViewType(pose) {
   return Array.isArray(pose) ? pose : null;
 }
 
-function scoreOne(value, target, tol) {
-  if (value == null || target == null || tol == null || tol <= 0) return 0;
 
-  const diff = Math.abs(value - target);
-
-  // 0 uniquement si le mouvement est quasi inexistant
-  if (diff < 1.0) return 0;
-
-  const x = diff / tol;
-
-  const k = 0.55; // 🎯 calibré pour que 6° → 6/20 dans ton cas
-
-  const s = Math.exp(-k * x);
-
-  return Math.max(0, Math.min(1, s));
-}
-
-
-  
 function computeTriangleStable(pose) {
   if (!pose) return null;
   const Ls = pose[11], Rs = pose[12];
@@ -1662,75 +1553,70 @@ if (topPose && impactPose) {
 
 metrics.weightShift.score = weightScore;
 
-
 // =====================================================
-// EXTENSION & FINISH — Face-On (ratios propres)
+// EXTENSION — Face-On V2 (comparatif référence)
+// Mesure : progression bras IMPACT → FINISH
 // =====================================================
 let extensionScore = 10;
 
-if (impactPose && finishPose) {
-  const LSimp = LM(impactPose, 11), RSimp = LM(impactPose, 12);
-  const LSf   = LM(finishPose, 11), RSf   = LM(finishPose, 12);
-  const LWimp = LM(impactPose, 15), RWimp = LM(impactPose, 16);
-  const LWf   = LM(finishPose, 15), RWf   = LM(finishPose, 16);
+if (impactPose && finishPose && window.REF?.extension) {
 
-  if (LSimp && RSimp && LSf && RSf && (LWimp||RWimp) && (LWf||RWf)) {
+  const LSimp = LM(impactPose, 11);
+  const RSimp = LM(impactPose, 12);
+  const LSf   = LM(finishPose, 11);
+  const RSf   = LM(finishPose, 12);
 
-    const sw = Math.max(jswDist(LSimp, RSimp), jswDist(LSf, RSf));
-    const shoulderW = sw && sw > 0.15 ? sw : 0.30;
+  const LWimp = LM(impactPose, 15);
+  const RWimp = LM(impactPose, 16);
+  const LWf   = LM(finishPose, 15);
+  const RWf   = LM(finishPose, 16);
 
-    const extImpRaw = Math.max(
+  if (
+    LSimp && RSimp && LSf && RSf &&
+    (LWimp || RWimp) &&
+    (LWf || RWf)
+  ) {
+
+    // 🔹 largeur épaules (normalisation)
+    const sw = Math.max(
+      jswDist(LSimp, RSimp),
+      jswDist(LSf, RSf),
+      0.25
+    );
+
+    // 🔹 longueur bras max (gauche/droit)
+    const armImpact = Math.max(
       LWimp ? jswDist(LSimp, LWimp) : 0,
       RWimp ? jswDist(RSimp, RWimp) : 0
-    );
+    ) / sw;
 
-    const extFinRaw = Math.max(
+    const armFinish = Math.max(
       LWf ? jswDist(LSf, LWf) : 0,
       RWf ? jswDist(RSf, RWf) : 0
+    ) / sw;
+
+    const extensionProgress = armFinish - armImpact;
+
+    metrics.extension = {
+      armImpact,
+      armFinish,
+      progress: extensionProgress
+    };
+
+    // 🔸 COMPARAISON À LA RÉFÉRENCE
+    const ref = window.REF.extension;
+
+    const scoreProgress = jswClamp(
+      1 - Math.abs(extensionProgress - ref.progress.target) / ref.progress.tol,
+      0,
+      1
     );
 
-    const extImpact = jswClamp(extImpRaw / shoulderW, 0, 1.8);
-    const extFinish = jswClamp(extFinRaw / shoulderW, 0, 1.8);
-    const progress  = extFinish - extImpact;
-
-    metrics.extension.extImpact = extImpact;
-    metrics.extension.extFinish = extFinish;
-    metrics.extension.progress = progress;
-
-    // 🎯 cibles Face-On réalistes
-    const s1 = jswClamp(1 - Math.abs(extImpact - 1.05) / 0.30, 0, 1);
-    const s2 = jswClamp(1 - Math.abs(extFinish - 1.20) / 0.30, 0, 1);
-    const s3 = jswClamp((progress - 0.05) / 0.20, 0, 1); // bras qui se tendent APRES impact
-
-    extensionScore = Math.round((s1 * 0.3 + s2 * 0.4 + s3 * 0.3) * 20);
+    extensionScore = Math.round(scoreProgress * 20);
   }
 }
 
 metrics.extension.score = extensionScore;
-
-
-
-    function computeExtensionParfects(ext) {
-  let stars = 0;
-
-  // ⭐ 1 — extension réelle
-  if (
-    ext.extFinish > ext.extImpact &&
-    ext.extFinish >= 0.25
-  ) {
-    stars++;
-  }
-
-  // ⭐ 2 — finish tenu
-  if (
-    ext.headMove <= 0.08 &&
-    ext.headOverHips <= 0.15
-  ) {
-    stars++;
-  }
-
-  return stars; // 0, 1 ou 2
-}
 
 
 
@@ -1983,6 +1869,8 @@ function buildPremiumBreakdown(swing, scores) {
 const r = metrics.rotation || {};
 const m = r.measure || {};
 const ref = r.ref || {};
+const isFaceOn = metrics.viewType === "faceOn";
+const unit = isFaceOn ? "" : "°";
 
 const rotationDetails = `
   <div style="opacity:.85; margin-bottom:12px;">
@@ -1998,20 +1886,20 @@ const rotationDetails = `
   ">
     <div>
       <b>Épaules</b><br>
-      🎯 ${fmt(ref.shoulder?.target)}° ±${fmt(ref.shoulder?.tol)}°<br>
-      ✅ ${fmt(m.shoulder)}°
+      🎯 ${fmt(ref.shoulder?.target)}${unit} ±${fmt(ref.shoulder?.tol)}${unit}<br>
+      ✅ ${fmt(m.shoulder)}${unit}
     </div>
 
     <div>
       <b>Hanches</b><br>
-      🎯 ${fmt(ref.hip?.target)}° ±${fmt(ref.hip?.tol)}°<br>
-      ✅ ${fmt(m.hip)}°
+      🎯 ${fmt(ref.hip?.target)}${unit} ±${fmt(ref.hip?.tol)}${unit}<br>
+      ✅ ${fmt(m.hip)}${unit}
     </div>
 
     <div>
       <b>X-Factor</b><br>
-      🎯 ${fmt(ref.xFactor?.target)}° ±${fmt(ref.xFactor?.tol)}°<br>
-      ✅ ${fmt(m.xFactor)}°
+      🎯 ${fmt(ref.xFactor?.target)}${unit} ±${fmt(ref.xFactor?.tol)}${unit}<br>
+      ✅ ${fmt(m.xFactor)}${unit}
     </div>
   </div>
 
