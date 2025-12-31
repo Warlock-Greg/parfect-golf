@@ -1559,7 +1559,7 @@ metrics.weightShift.score = weightScore;
 // =====================================================
 let extensionScore = 10;
 
-if (impactPose && finishPose && window.REF?.extension) {
+if (impactPose && finishPose) {
 
   const LSimp = LM(impactPose, 11);
   const RSimp = LM(impactPose, 12);
@@ -1577,14 +1577,14 @@ if (impactPose && finishPose && window.REF?.extension) {
     (LWf || RWf)
   ) {
 
-    // 🔹 largeur épaules (normalisation)
+    // 🔹 largeur épaules (normalisation robuste)
     const sw = Math.max(
-      jswDist(LSimp, RSimp),
-      jswDist(LSf, RSf),
+      jswDist(LSimp, RSimp) || 0,
+      jswDist(LSf, RSf) || 0,
       0.25
     );
 
-    // 🔹 longueur bras max (gauche/droit)
+    // 🔹 extension bras normalisée
     const armImpact = Math.max(
       LWimp ? jswDist(LSimp, LWimp) : 0,
       RWimp ? jswDist(RSimp, RWimp) : 0
@@ -1597,22 +1597,33 @@ if (impactPose && finishPose && window.REF?.extension) {
 
     const extensionProgress = armFinish - armImpact;
 
+    // 🔹 metrics toujours renseignées (même sans ref)
     metrics.extension = {
       armImpact,
       armFinish,
       progress: extensionProgress
     };
 
-    // 🔸 COMPARAISON À LA RÉFÉRENCE
-    const ref = window.REF.extension;
+    // 🔒 RÉFÉRENCE SAFE
+    const ref = window.REF?.extension?.progress;
 
-    const scoreProgress = jswClamp(
-      1 - Math.abs(extensionProgress - ref.progress.target) / ref.progress.tol,
-      0,
-      1
-    );
+    const hasValidRef =
+      ref &&
+      typeof ref.target === "number" &&
+      typeof ref.tol === "number" &&
+      ref.tol > 0;
 
-    extensionScore = Math.round(scoreProgress * 20);
+    if (hasValidRef) {
+      const scoreProgress = jswClamp(
+        1 - Math.abs(extensionProgress - ref.target) / ref.tol,
+        0,
+        1
+      );
+      extensionScore = Math.round(scoreProgress * 20);
+    } else {
+      // 🎯 fallback neutre (pas de crash, pas de mensonge)
+      extensionScore = 10;
+    }
   }
 }
 
