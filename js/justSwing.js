@@ -1420,11 +1420,14 @@ if (basePose && topPoseSafe) {
     xFactor: rotationMeasure.xFactor
   };
 
-  metrics.rotation.ref = {
-    shoulder: refRotation.shoulder,
-    hip: refRotation.hip,
-    xFactor: refRotation.xFactor
-  };
+ metrics.rotation.ref = isRotationRefValid
+  ? {
+      shoulder: refRotation.shoulder,
+      hip: refRotation.hip,
+      xFactor: refRotation.xFactor
+    }
+  : null;
+
 
   metrics.rotation.score = rotationScore;
     }
@@ -1868,6 +1871,15 @@ const m = r.measure || {};
 const ref = r.ref || {};
 const isFaceOn = metrics.viewType === "faceOn";
 const unit = isFaceOn ? "" : "°";
+
+if (!ref.shoulder || !ref.hip || !ref.xFactor) {
+  return block(
+    "Rotation",
+    rotationScore,
+    "Référence indisponible",
+    "La rotation sera activée dès qu’une référence complète est définie."
+  );
+}
 
 const rotationDetails = `
   <div style="opacity:.85; margin-bottom:12px;">
