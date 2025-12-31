@@ -1164,6 +1164,13 @@ function scoreRotationFromReference(measure, ref) {
   const T = swing.timestamps || [];
 
   
+const REF_SAFE = {
+  rotation: window.REF?.rotation ?? null,
+  triangle: window.REF?.triangle ?? null,
+  weightShift: window.REF?.weightShift ?? null,
+  extension: window.REF?.extension ?? null,
+  tempo: window.REF?.tempo ?? null,
+};
 
 const REF = window.REF;
 
@@ -1323,7 +1330,21 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 
 let rotationScore = 10;
 let rotationMeasure = null;
-let refRotation = window.REF?.rotation || null;
+// 🔒 RÉFÉRENCE SAFE
+const refRotation = window.REF?.rotation ?? null;
+
+// 🛡️ Guard absolu : si la référence est incomplète → score neutre
+const isRotationRefValid =
+  refRotation &&
+  refRotation.shoulder &&
+  refRotation.hip &&
+  refRotation.xFactor &&
+  typeof refRotation.shoulder.target === "number" &&
+  typeof refRotation.shoulder.tol === "number" &&
+  typeof refRotation.hip.target === "number" &&
+  typeof refRotation.hip.tol === "number" &&
+  typeof refRotation.xFactor.target === "number" &&
+  typeof refRotation.xFactor.tol === "number";
 
 metrics.rotation = {
   refKey: window.REF_META?.key || null,
@@ -1343,7 +1364,7 @@ if (basePose && topPoseSafe) {
 
   rotationMeasure = computeRotationSignature(basePose, topPoseSafe, viewType);
 
-  if (rotationMeasure && refRotation) {
+  if (rotationMeasure && isRotationRefValid) {
 
     const scored = scoreRotationFromReference(rotationMeasure, refRotation);
     rotationScore = scored.score;
