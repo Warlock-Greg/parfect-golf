@@ -430,10 +430,10 @@ const kf = swing.keyFrames || {};
   bigMsgEl.classList.add("swing-active");
 }
 
-  function startRoutineSequence() {
+function startRoutineSequence() {
   if (!bigMsgEl) return;
 
-  // Reset des compteurs / flags
+  // Reset UX
   frameIndex = 0;
   captureArmed = false;
   isRecordingActive = false;
@@ -445,8 +445,7 @@ const kf = swing.keyFrames || {};
   showRoutineStepsText();
 
   routineIndex = 0;
- showBigMessage(routineStepsAuto[0]);
-
+  showBigMessage(routineStepsAuto[0]);
 
   if (routineInterval) clearInterval(routineInterval);
 
@@ -459,75 +458,36 @@ const kf = swing.keyFrames || {};
       clearInterval(routineInterval);
       routineInterval = null;
 
-      // 👉 Fin de routine : on prépare DIRECT le swing
+      // 👉 Fin de routine → armement swing
       setTimeout(() => {
         console.log("⏳ Routine terminée → passage en capture directe");
 
-
         engine.armForSwing();
-      
-        // 2️⃣ Passage DIRECT en capture
-        
+
         captureArmed = true;
         isRecordingActive = true;
         state = JSW_STATE.SWING_CAPTURE;
         frameIndex = 0;
-        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
-       
 
+        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
         showSwingMessage();
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
-        // reset guards
-        hasTopDetected = false;
-        hasImpactDetected = false;
-        swingCompleted = false;
-        
-        function onKeyFrame(evt) {
-        const { type } = evt;
+        // ⏱️ Timeout GLOBAL de sécurité (sans logique swing)
+        swingTimeout = setTimeout(() => {
+          console.warn("⏱️ Timeout sécurité swing");
+          stopRecording();
+          showBigMessage(
+            "😕 Oups… aucun swing détecté.<br>Reviens à l’adresse et recommence."
+          );
+        }, 7000);
 
-        if (type === "top") hasTopDetected = true;
-        if (type === "impact") hasImpactDetected = true;
-
-        console.log("🎯 KEYFRAME", evt);
-        }
-
-        
-        // ⏱️ TIMEOUT SWING (sécurité UX)
-      const SWING_TIMEOUT_MS = 6000;
-
-swingTimeout = setTimeout(() => {
-if (!hasTopDetected || !hasImpactDetected) {
-    console.warn("⏱️ Swing incomplet — timeout");
-
-    stopRecording(); // ✅ tu l’as déjà
-
-    showBigMessage(
-      "😕 Oups… on n’a pas bien capté ton swing<br>Reviens à l’adresse et recommence"
-    );
-  }
-}, SWING_TIMEOUT_MS);
-
-        const CAPTURE_MAX_MS = 7000;
-
-captureTimeout = setTimeout(() => {
-  if (!swingCompleted) {
-    stopRecording();
-
-    showBigMessage("😕 Oups… swing non détecté.\nRecommence.");
-
-    console.warn("⏱️ Swing incomplet — timeout");
-  }
-}, CAPTURE_MAX_MS);
-
-
-        
       }, 1500);
     }
-
   }, 3500);
 }
+
 
 
 
