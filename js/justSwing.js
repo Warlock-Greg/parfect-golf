@@ -1189,6 +1189,33 @@ function scoreRotationFromReference(measure, ref) {
   return pose[idx] ?? null;
 }
 
+  function computeExtensionParfects(ext) {
+  if (!ext) return 0;
+
+  let stars = 0;
+
+  // ⭐ 1 — extension réelle après impact
+  if (
+    typeof ext.extImpact === "number" &&
+    typeof ext.extFinish === "number" &&
+    ext.extFinish > ext.extImpact
+  ) {
+    stars++;
+  }
+
+  // ⭐ 2 — finish stable
+  if (
+    typeof ext.headMove === "number" &&
+    typeof ext.headOverHips === "number" &&
+    ext.headMove <= 0.15 &&
+    ext.headOverHips <= 0.20
+  ) {
+    stars++;
+  }
+
+  return stars; // 0, 1 ou 2
+}
+
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
