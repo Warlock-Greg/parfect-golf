@@ -739,42 +739,51 @@ function initEngine() {
   // ---------------------------------------------------------
 function onPoseFrame(landmarks) {
 
- 
   lastPose = landmarks || null;
   lastFullBodyOk = detectFullBody(landmarks);
 
   if (!engine || !landmarks) return;
   if (state !== JSW_STATE.SWING_CAPTURE) return;
 
- 
-
   // ----------------------------
-  // TOUJOURS envoyer les frames au moteur
+  // 1️⃣ Toujours pousser la frame au moteur
   // ----------------------------
   const now = performance.now();
-engine.processPose(landmarks, now, currentClubType);
+  const evt = engine.processPose(landmarks, now, currentClubType);
 
-// 🔒 LOCK ADDRESS = frame juste AVANT backswing
-if (
-  !engine.keyFrames.address &&
-  engine.keyFrames.backswing &&
-  engine.frames.length >= 2
-) {
-  engine.keyFrames.address = {
-    index: engine.keyFrames.backswing.index - 1,
-    pose: engine.frames[engine.keyFrames.backswing.index - 1]
-  };
-  console.log("🔒 ADDRESS AUTO-LOCKED", engine.keyFrames.address.index);
-}
+  if (!engine.keyFrames) return;
 
+  // ----------------------------
+  // 2️⃣ AUTO-LOCK ADDRESS
+  //    = frame juste AVANT le backswing
+  // ----------------------------
+  if (
+    !engine.keyFrames.address &&
+    engine.keyFrames.backswing &&
+    engine.keyFrames.backswing.index > 0 &&
+    engine.frames.length > engine.keyFrames.backswing.index - 1
+  ) {
+    const addrIndex = engine.keyFrames.backswing.index - 1;
 
+    engine.keyFrames.address = {
+      index: addrIndex,
+      pose: engine.frames[addrIndex]
+    };
 
+    console.log("🔒 ADDRESS AUTO-LOCKED @ frame", addrIndex);
+  }
+
+  // ----------------------------
+  // 3️⃣ FIN DE SWING
+  // ----------------------------
   if (evt && evt.type === "swingComplete") {
     isRecordingActive = false;
     captureArmed = false;
-    handleSwingComplete(evt.data);
+
+    handleSwingComplete(evt.data || evt);
   }
 }
+
 
 
   // ---------------------------------------------------------
