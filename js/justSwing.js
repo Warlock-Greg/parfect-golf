@@ -1959,59 +1959,58 @@ return {
 
 
 // ---------------------------------------------------------
-//   PREMIUM BREAKDOWN BUILDER (utilise scores.metrics)
+//   PREMIUM BREAKDOWN BUILDER (utilise scores.breakdown)
+//   ✅ plus de "metrics.xxx" en direct dans l'UI
+//   ✅ affiche un message si un module est non mesuré
 // ---------------------------------------------------------
 function buildPremiumBreakdown(swing, scores) {
-  const fmt = (v) =>
-    typeof v === "number" && !isNaN(v) ? v.toFixed(1) : "—";
+  const fmt = (v, digits = 1) =>
+    typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—";
+
   const el = document.getElementById("swing-score-breakdown");
   if (!el) return console.warn("No breakdown element found.");
 
-  const {
-    postureScore,
-    rotationScore,
-    triangleScore,
-    weightShiftScore,
-    extensionScore,
-    tempoScore,
-    balanceScore,
-    total,
-    metrics
-  } = scores;
+  // ⚠️ Source de vérité UI = breakdown
+  const b = scores?.breakdown || {};
 
-  el.style.display = "block";
+  // Safe getters
+  const scoreOf = (k) => (typeof b?.[k]?.score === "number" ? b[k].score : null);
+  const mOf = (k) => (b?.[k]?.metrics && typeof b[k].metrics === "object" ? b[k].metrics : null);
 
   // --- 1) Helper rendering ---
-  const block = (title, score, subtitle, detailsHtml = "") => `
-    <div style="
-      padding: 1rem;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.05);
-      margin-bottom: 1rem;
-      border-left: 4px solid ${scoreColor(score)};
-    ">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0; font-size:1.2rem; color:#fff;">${title}</h3>
-        <div style="font-size:1.4rem; color:${scoreColor(score)}; font-weight:700;">
-          ${score}/20
+  const block = (title, score, subtitle, detailsHtml = "") => {
+    const safeScore = typeof score === "number" ? score : "—";
+    return `
+      <div style="
+        padding: 1rem;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.05);
+        margin-bottom: 1rem;
+        border-left: 4px solid ${scoreColor(typeof score === "number" ? score : 8)};
+      ">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:1.2rem; color:#fff;">${title}</h3>
+          <div style="font-size:1.4rem; color:${scoreColor(typeof score === "number" ? score : 8)}; font-weight:700;">
+            ${safeScore}/20
+          </div>
+        </div>
+
+        <p style="margin:0.3rem 0; color:#aaa">${subtitle}</p>
+
+        <div style="
+          margin-top:0.5rem;
+          padding:0.6rem 0.8rem;
+          background:rgba(255,255,255,0.04);
+          border-radius:10px;
+          color:#ccc;
+          font-size:0.9rem;
+          line-height:1.35;
+        ">
+          ${detailsHtml}
         </div>
       </div>
-
-      <p style="margin:0.3rem 0; color:#aaa">${subtitle}</p>
-
-      <div style="
-        margin-top:0.5rem;
-        padding:0.6rem 0.8rem;
-        background:rgba(255,255,255,0.04);
-        border-radius:10px;
-        color:#ccc;
-        font-size:0.9rem;
-        line-height:1.35;
-      ">
-        ${detailsHtml}
-      </div>
-    </div>
-  `;
+    `;
+  };
 
   // --- 2) Color coding ---
   function scoreColor(s) {
@@ -2020,67 +2019,188 @@ function buildPremiumBreakdown(swing, scores) {
     return "#f87171";              // rouge
   }
 
-  // ---------------- ROTATION DETAILS (SAFE) ----------------
-const r = metrics.rotation || {};
-const m = r.measure || {};
-const ref = r.ref || {};
-const isFaceOn = metrics.viewType === "faceOn";
-const unit = isFaceOn ? "" : "°";
+  // ---------------------------------------------------------
+  // Rotation details (FaceOn ratio ou DTL degrés)
+  // ---------------------------------------------------------
+  const rotationScore = scoreOf("rotation");
+  const rotM = mOf("rotation");
+  const isFaceOn = (scores?.metrics?.viewType || window.jswViewType || "faceOn") === "faceOn";
+  const unit = isFaceOn ? "" : "°";
 
-if (!ref.shoulder || !ref.hip || !ref.xFactor) {
-  return block(
-    "Rotation",
-    rotationScore,
-    "Référence indisponible",
-    "La rotation sera activée dès qu’une référence complète est définie."
-  );
-}
+  // Réf rotation (si dispo) : tu la ranges dans breakdown.rotation.ref (si tu veux)
+  const rotRef = b?.rotation?.ref || window.REF?.rotation || null;
+  const rotRefOk =
+    rotRef &&
+    rotRef.shoulder && rotRef.hip && rotRef.xFactor &&
+    typeof rotRef.shoulder.target === "number" &&
+    typeof rotRef.shoulder.tol === "number" &&
+    typeof rotRef.hip.target === "number" &&
+    typeof rotRef.hip.tol === "number" &&
+    typeof rotRef.xFactor.target === "number" &&
+    typeof rotRef.xFactor.tol === "number";
 
-const rotationDetails = `
-  <div style="opacity:.85; margin-bottom:12px;">
-    <b>Référence :</b> ${window.REF_META?.club || "—"}
-    · ${window.REF_META?.view || "—"}
-  </div>
+  const rotationDetails = !rotM
+    ? `<em style="opacity:.7;">Rotation non évaluée (données insuffisantes).</em>`
+    : !rotRefOk
+      ? `<em style="opacity:.7;">Rotation non évaluée : référence incomplète.</em>`
+      : `
+        <div style="opacity:.85; margin-bottom:12px;">
+          <b>Référence :</b> ${window.REF_META?.club || "—"} · ${window.REF_META?.view || "—"}
+        </div>
 
-  <div style="
-    display:grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap:12px;
-    text-align:center;
-  ">
-    <div>
-      <b>Épaules</b><br>
-      🎯 ${fmt(ref.shoulder?.target)}${unit} ±${fmt(ref.shoulder?.tol)}${unit}<br>
-      ✅ ${fmt(m.shoulder)}${unit}
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; text-align:center;">
+          <div>
+            <b>Épaules</b><br>
+            🎯 ${fmt(rotRef.shoulder.target)}${unit} ±${fmt(rotRef.shoulder.tol)}${unit}<br>
+            ✅ ${fmt(rotM.shoulder)}${unit}
+          </div>
+          <div>
+            <b>Hanches</b><br>
+            🎯 ${fmt(rotRef.hip.target)}${unit} ±${fmt(rotRef.hip.tol)}${unit}<br>
+            ✅ ${fmt(rotM.hip)}${unit}
+          </div>
+          <div>
+            <b>X-Factor</b><br>
+            🎯 ${fmt(rotRef.xFactor.target)}${unit} ±${fmt(rotRef.xFactor.tol)}${unit}<br>
+            ✅ ${fmt(rotM.xFactor)}${unit}
+          </div>
+        </div>
+
+        <div style="margin-top:12px; opacity:.7; font-size:0.85rem;">
+          Étape analysée : <b>Base → Top</b><br>
+          Le score mesure ta capacité à reproduire la rotation du swing de référence.
+        </div>
+      `;
+
+  // ---------------------------------------------------------
+  // Posture
+  // ---------------------------------------------------------
+  const postureScore = scoreOf("address") ?? scoreOf("posture"); // selon ton naming
+  const postM = mOf("address") || mOf("posture");
+  const postureDetails = !postM
+    ? `<em style="opacity:.7;">Posture non évaluée (corps partiel / adresse non fiable).</em>`
+    : `
+      Flexion: ${fmt(postM.flexionDeg)}° <span style="opacity:.7;">(cible 30–45°)</span><br>
+      Ratio pieds/épaules: ${fmt(postM.feetShoulderRatio, 2)} <span style="opacity:.7;">(cible 1.1–1.3)</span><br>
+      Alignement épaules/hanches: ${fmt(postM.alignDiff)}° <span style="opacity:.7;">(cible ≤ 5°)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Triangle
+  // ---------------------------------------------------------
+  const triangleScore = scoreOf("triangle");
+  const triM = mOf("triangle");
+  const triangleDetails = !triM
+    ? `<em style="opacity:.7;">Triangle non évalué (poignets/épaules non détectés).</em>`
+    : `
+      Variation Top: ${fmt(triM.varTopPct)}% <span style="opacity:.7;">(cible ≤ 5%)</span><br>
+      Variation Impact: ${fmt(triM.varImpactPct)}% <span style="opacity:.7;">(cible ≤ 5%)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Weight shift
+  // ---------------------------------------------------------
+  const weightShiftScore = scoreOf("weightShift");
+  const wsM = mOf("weightShift");
+  const weightShiftDetails = !wsM
+    ? `<em style="opacity:.7;">Transfert non évalué (hanches/pieds non fiables).</em>`
+    : `
+      Shift Back: ${fmt(wsM.shiftBack, 3)} <span style="opacity:.7;">(cible ≥ 0.10)</span><br>
+      Shift Forward: ${fmt(wsM.shiftFwd, 3)} <span style="opacity:.7;">(cible ≥ 0.10)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Extension (ton choix: pas de défaut → message "mains non captées")
+  // ---------------------------------------------------------
+  const extensionScore = scoreOf("extension");
+  const extM = mOf("extension");
+  const extensionDetails = !extM
+    ? `
+      <em style="opacity:.7;">
+        Extension non évaluée : mains/poignets non captés de façon fiable (hors cadre / occlusion).
+      </em>
+    `
+    : `
+      Extension Impact: ${fmt(extM.armImpact ?? extM.extImpact, 3)}<br>
+      Extension Finish: ${fmt(extM.armFinish ?? extM.extFinish, 3)}<br>
+      Progression: ${fmt(extM.progress, 3)} <span style="opacity:.7;">(bras qui se tendent après impact)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Tempo
+  // ---------------------------------------------------------
+  const tempoScore = scoreOf("tempo");
+  const tempoM = mOf("tempo");
+  const tempoDetails = !tempoM
+    ? `<em style="opacity:.7;">Tempo non évalué (timestamps ou keyframes manquants).</em>`
+    : `
+      Backswing: ${fmt(tempoM.backswingT, 2)}s <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
+      Downswing: ${fmt(tempoM.downswingT, 2)}s <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
+      Ratio: ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Balance
+  // ---------------------------------------------------------
+  const balanceScore = scoreOf("balance");
+  const balM = mOf("balance");
+  const balanceDetails = !balM
+    ? `<em style="opacity:.7;">Balance non évaluée (finish non fiable).</em>`
+    : `
+      Tête sur hanches: ${balM.headOverHips ? "oui" : "non"} <span style="opacity:.7;">(cible = OUI)</span><br>
+      Déplacement hanches: ${fmt(balM.finishMove, 3)} <span style="opacity:.7;">(cible ≤ 0.12)</span>
+    `;
+
+  // ---------------------------------------------------------
+  // Total
+  // ---------------------------------------------------------
+  const total = typeof scores?.total === "number" ? scores.total : "—";
+
+  // ---------------------------------------------------------
+  // Mini Coach (sans ton service externe)
+  // ---------------------------------------------------------
+  function coachFromBreakdown() {
+    const pick = [];
+
+    const sRot = rotationScore ?? 999;
+    const sWs  = weightShiftScore ?? 999;
+    const sTmp = tempoScore ?? 999;
+    const sExt = extensionScore ?? 999;
+    const sTri = triangleScore ?? 999;
+
+    // Priorités simples : 2 axes max
+    if (sRot <= 7 && rotM) pick.push("Rotation faible : vérifie la vue Face-On (corps de profil) + tourne plus le buste au backswing.");
+    if (sWs <= 7 && wsM)  pick.push("Transfert faible : pense “hanches qui vont vers la cible” après le top.");
+    if (sTmp <= 7 && tempoM) pick.push("Tempo trop rapide : backswing plus long, descente plus douce (vise ~3:1).");
+    if (!extM) pick.push("Extension non mesurée : assure-toi que les poignets restent visibles (mains dans le cadre).");
+    if (sTri <= 10 && triM) pick.push("Triangle instable : garde les bras connectés au buste (moins de séparation au top/impact).");
+
+    if (!pick.length) return "✅ Analyse OK : continue, et cherche la répétabilité sur 3 swings.";
+    return pick.slice(0, 2).join("<br>");
+  }
+
+  const coachHtml = `
+    <div style="
+      margin-top:1.2rem;
+      padding:0.9rem 1rem;
+      border-radius:12px;
+      background:rgba(0,255,153,0.08);
+      border:1px solid rgba(0,255,153,0.25);
+      color:#cfe;
+      line-height:1.35;
+    ">
+      <b>Coach</b><br>
+      ${coachFromBreakdown()}
     </div>
+  `;
 
-    <div>
-      <b>Hanches</b><br>
-      🎯 ${fmt(ref.hip?.target)}${unit} ±${fmt(ref.hip?.tol)}${unit}<br>
-      ✅ ${fmt(m.hip)}${unit}
-    </div>
-
-    <div>
-      <b>X-Factor</b><br>
-      🎯 ${fmt(ref.xFactor?.target)}${unit} ±${fmt(ref.xFactor?.tol)}${unit}<br>
-      ✅ ${fmt(m.xFactor)}${unit}
-    </div>
-  </div>
-
-  <div style="margin-top:12px; opacity:.7; font-size:0.85rem;">
-    Étape analysée : <b>Base → Top</b><br>
-    Le score mesure ta capacité à reproduire
-    la rotation du swing de référence.
-  </div>
-`;
-
-
-
-  // --- 3) Build the full premium card ---
+  // ---------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------
+  el.style.display = "block";
   el.innerHTML = `
     <div style="padding:1.5rem;">
 
-      <!-- SCORE GLOBAL -->
       <div style="text-align:center; margin-bottom:2rem;">
         <h2 style="font-size:2.5rem; margin:0; color:#4ade80; font-weight:800;">
           ${total}/100
@@ -2094,88 +2214,52 @@ const rotationDetails = `
         "Posture à l’adresse",
         postureScore,
         "Alignement · Écart de pieds · Flexion",
-        `
-          Flexion: ${metrics.posture.flexionDeg?.toFixed(1)}°  
-  <span style="opacity:.7;">(cible 30–45°)</span><br>
-  Ratio pieds/épaules: ${metrics.posture.feetShoulderRatio?.toFixed(2)}  
-  <span style="opacity:.7;">(cible 1.1–1.3)</span><br>
-  Alignement épaules/hanches: ${metrics.posture.alignDiff?.toFixed(1)}°  
-  <span style="opacity:.7;">(cible ≤ 5°)</span>
-      `
+        postureDetails
       )}
 
-     ${block(
-  "Rotation",
-  rotationScore,
-  "Épaules · Hanches · X-Factor (Base → Top)",
-  rotationDetails
-)}
-
-
+      ${block(
+        "Rotation",
+        rotationScore,
+        "Épaules · Hanches · X-Factor (Base → Top)",
+        rotationDetails
+      )}
 
       ${block(
         "Triangle bras/épaules",
         triangleScore,
         "Stabilité au top et à l’impact",
-        `
-         Variation Top: ${metrics.triangle.varTopPct?.toFixed(1)}%  
-  <span style="opacity:.7;">(cible ≤ 5%)</span><br>
-  Variation Impact: ${metrics.triangle.varImpactPct?.toFixed(1)}%  
-  <span style="opacity:.7;">(cible ≤ 5%)</span>
-        `
+        triangleDetails
       )}
 
       ${block(
         "Transfert de poids",
         weightShiftScore,
         "Backswing → Impact",
-        `
-          Shift Back: ${metrics.weightShift.shiftBack?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≥ 0.10)</span><br>
-  Shift Forward: ${metrics.weightShift.shiftFwd?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≥ 0.10)</span>
-        `
+        weightShiftDetails
       )}
 
       ${block(
         "Extension & Finish",
         extensionScore,
         "Extension bras + stabilité du finish",
-        `
-          Extension Impact: ${metrics.extension.extImpact?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≥ 0.28)</span><br>
-  Extension Finish: ${metrics.extension.extFinish?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≥ 0.30)</span><br>
-  Déplacement tête: ${metrics.extension.headMove?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≤ 0.04)</span>
-        `
+        extensionDetails
       )}
 
       ${block(
         "Tempo",
         tempoScore,
         "Backswing / Downswing",
-        `
-          Backswing: ${metrics.tempo.backswingT?.toFixed(2)}s  
-  <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
-  Downswing: ${metrics.tempo.downswingT?.toFixed(2)}s  
-  <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
-  Ratio: ${metrics.tempo.ratio?.toFixed(2)}:1  
-  <span style="opacity:.7;">(cible 3:1)</span>
-        `
+        tempoDetails
       )}
 
       ${block(
         "Balance & Équilibre",
         balanceScore,
         "Stabilité tête + hanches au finish",
-        `
-         Tête sur hanches: ${metrics.balance.headOverHips ? "oui" : "non"}  
-  <span style="opacity:.7;">(cible = OUI)</span><br>
-  Déplacement hanches: ${metrics.balance.finishMove?.toFixed(3)}  
-  <span style="opacity:.7;">(cible ≤ 0.12)</span>
-        `
+        balanceDetails
       )}
+
+      ${coachHtml}
 
     </div>
   `;
