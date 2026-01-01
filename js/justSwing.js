@@ -79,7 +79,7 @@ let captureArmed = false;
   
   let frameIndex = 0;
 
-  let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingLabelEl;
+  let resultPanelEl, scoreGlobalEl, scoreDetailsEl, coachCommentEl, swingEl;
 
   let state = JSW_STATE.IDLE;
   let mode = JSW_MODE.SWING;
@@ -109,7 +109,6 @@ let captureArmed = false;
   let replayCanvas = null;
   let replayCtx = null;
 
-
   // ---------------------------------------------------------
   //   INIT DOM
   // ---------------------------------------------------------
@@ -127,7 +126,7 @@ let captureArmed = false;
     scoreGlobalEl = $$("jsw-score-global");
     scoreDetailsEl = $$("jsw-score-details");
     coachCommentEl = $$("jsw-coach-comment");
-    swingLabelEl = $$("jsw-swing-label");
+    swingEl = $$("jsw-swing-label");
 
     if (!screenEl || !videoEl || !overlayEl || !bigMsgEl) {
       console.warn("❌ JustSwing: DOM incomplet");
@@ -2328,6 +2327,44 @@ async function handleSwingComplete(swing) {
 
   saveSwingToNocoDB(swingRecord);
 
+// ===============================
+// RÉFÉRENCES (USER / PARFECT)
+// ===============================
+function saveUserReference(swing, scores) {
+  if (!swing || !scores?.metrics) {
+    console.warn("⚠️ Référence user non sauvegardée (données manquantes)");
+    return;
+  }
+
+  const refRecord = {
+    owner: swing.player_email || "unknown",
+    scope: "user",
+    club: swing.club || currentClubType,
+    view: window.jswViewType || "faceOn",
+    metrics: scores.metrics,
+    created_at: new Date().toISOString()
+  };
+
+  saveReferenceToDB(refRecord);
+
+  console.log("⭐ Référence USER sauvegardée", refRecord);
+}
+
+  function saveParfectReference(swing, scores) {
+  const ref = {
+    owner: "PARFECT",
+    scope: "global",
+    club: swing.club,
+    view: window.jswViewType,
+    metrics: scores.metrics,
+    created_at: new Date().toISOString(),
+    version: "v1"
+  };
+
+  saveReferenceToDB(ref);
+}
+
+  
   // ======================================================
   // 2️⃣ Validation swing (UX first)
   // ======================================================
@@ -2580,6 +2617,24 @@ function stopRecording() {
     }
   }
 
+  const btnUserRef = document.getElementById("swing-save-reference");
+
+if (btnUserRef) {
+  btnUserRef.onclick = () => {
+    saveUserReference(swing, scores);
+    showBigMessage("⭐ Swing enregistré comme référence personnelle");
+  };
+}
+
+  const isSuperAdmin =
+  window.userLicence?.role === "superadmin" ||
+  window.userLicence?.is_superadmin === true;
+
+const btnParfect = document.getElementById("swing-save-parfect");
+
+if (btnParfect && isSuperAdmin) {
+  btnParfect.style
+
    // ---------------------------------------------------------
   //   replay : init + rendu + play/pause
   // ---------------------------------------------------------
@@ -2671,7 +2726,7 @@ function stopRecording() {
       const fps = lastSwing.fps || 30;
       const t = (idx / fps).toFixed(2);
       const total = (lastSwing.frames.length / fps).toFixed(2);
-      timeLabel.textContent = `${t}s / ${total}s`;
+      time.textContent = `${t}s / ${total}s`;
     }
 
     function startReplay() {
