@@ -2389,9 +2389,12 @@ function saveUserReference(swing, scores) {
   }
 
   // --- SUPERADMIN PARFECT (optionnel, prêt pour après) ---
-  const isSuperAdmin =
-    window.userLicence?.role === "superadmin" ||
-    window.userLicence?.is_superadmin === true;
+ function isSuperAdmin() {
+  return (
+    window.userLicence?.is_superadmin === true ||
+    window.userLicence?.role === "superadmin"
+  );
+}
 
   const btnParfect = document.getElementById("swing-save-parfect");
 
