@@ -1446,7 +1446,7 @@ function scoreVsReference(value, target, tol) {
     const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2)/0.7, 0, 1);
     const alignScore = jswClamp(1 - alignDiff/20, 0, 1);
 
-    metrics.posture.score = Math.round((flexScore + ratioScore + alignScore)/3 * 20);
+    metrics.posture.score = Math.round((flexScore + ratioScore + alignScore)/3 * 10);
   } else {
     metrics.posture.score = 10;
   }
@@ -1670,7 +1670,7 @@ if (topPose && impactPose) {
         fwdScore  = jswClamp((Math.abs(shiftFwd)  - 0.03) / 0.12, 0, 1);
       }
 
-      weightShiftScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 20);
+      weightShiftScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 10);
     }
   }
 }
