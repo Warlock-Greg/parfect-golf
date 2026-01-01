@@ -1628,7 +1628,7 @@ metrics.triangle.score = triangleScore;
 // =====================================================
 // 4) WEIGHT SHIFT — transfert latéral hanches (robuste)
 // =====================================================
-let weightScore = 10;
+let weightShiftScore = 10;
 
 if (topPose && impactPose) {
   // base fiable: address → backswing → top
@@ -1674,12 +1674,12 @@ if (topPose && impactPose) {
         fwdScore  = jswClamp((Math.abs(shiftFwd)  - 0.03) / 0.12, 0, 1);
       }
 
-      weightScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 20);
+      weightShiftScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 20);
     }
   }
 }
 
-metrics.weightShift.score = weightScore;
+metrics.weightShift.score = weightShiftScore;
 
 // =====================================================
 // EXTENSION & FINISH — Face-On (STRICT)
