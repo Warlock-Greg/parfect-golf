@@ -472,6 +472,8 @@ function startRoutineSequence() {
   frameIndex = 0;
   captureArmed = false;
   isRecordingActive = false;
+  addressStabilityBuffer = [];
+
 
   state = JSW_STATE.ROUTINE;
   console.log("▶️ Routine démarrée");
@@ -780,6 +782,53 @@ function initEngine() {
     ctx.restore();
   }
 
+// =====================================================
+// ADRESSE STABLE — détection simple et robuste
+// =====================================================
+
+const ADDRESS_STABILITY_FRAMES = 6;
+const ADDRESS_EPSILON = 0.015;
+
+let addressStabilityBuffer = [];
+
+function isStableAddress(pose) {
+  if (!pose || !Array.isArray(pose)) return false;
+
+  addressStabilityBuffer.push(pose);
+
+  if (addressStabilityBuffer.length > ADDRESS_STABILITY_FRAMES) {
+    addressStabilityBuffer.shift();
+  }
+
+  if (addressStabilityBuffer.length < ADDRESS_STABILITY_FRAMES) {
+    return false;
+  }
+
+  // compare la première et la dernière frame
+  const first = addressStabilityBuffer[0];
+  const last  = addressStabilityBuffer[addressStabilityBuffer.length - 1];
+
+  let total = 0;
+  let count = 0;
+
+  for (let i = 0; i < first.length; i++) {
+    if (!first[i] || !last[i]) continue;
+
+    const dx = first[i].x - last[i].x;
+    const dy = first[i].y - last[i].y;
+
+    total += Math.hypot(dx, dy);
+    count++;
+  }
+
+  if (!count) return false;
+
+  const avgDist = total / count;
+
+  return avgDist < ADDRESS_EPSILON;
+}
+
+  
 
   // ---------------------------------------------------------
   //   MEDIAPIPE CALLBACK
