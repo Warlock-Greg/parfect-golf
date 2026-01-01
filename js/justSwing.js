@@ -1291,6 +1291,8 @@ function scoreRotationFromReference(measure, ref) {
   function computeSwingScorePremium(swing) {
   //const PARFECT_REF = window.parfectReference?.rotation;
   let postureScore = 0;   // valeur neutre, informative
+  let addressScore = null; // ⚠️ null = “non scoré”
+
     
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
@@ -1841,7 +1843,7 @@ metrics.balance.score = balanceScore;
 
 
 const components = [
-  addressScore,
+  postureScore,
   rotationScore,
   triangleScore,
   weightScore,
@@ -1872,16 +1874,16 @@ return {
   weightShiftScore,
   extensionScore,
   balanceScore,
-  addressScore,
+  postureScore,
 
   // ✅ LE breakdown que la scorecard peut afficher
   breakdown: {
-    address:   { score: addressScore,   metrics: metrics.address   || null },
+    posture:   { score: addressScore,   metrics: metrics.address   || null },
     rotation:  { score: rotationScore,  metrics: metrics.rotation  || null },
+    tempo:     { score: tempoScore,     metrics: metrics.tempo     || null },
     triangle:  { score: triangleScore,  metrics: metrics.triangle  || null },
     weightShift:{ score: weightShiftScore, metrics: metrics.weightShift || null },
     extension: { score: extensionScore, metrics: metrics.extension || null },
-    tempo:     { score: tempoScore,     metrics: metrics.tempo     || null },
     balance:   { score: balanceScore,   metrics: metrics.balance   || null }
   },
 
@@ -2084,7 +2086,21 @@ function buildPremiumBreakdown(swing, scores) {
       Ratio pieds/épaules: ${fmt(postM.feetShoulderRatio, 2)} <span style="opacity:.7;">(cible 1.1–1.3)</span><br>
       Alignement épaules/hanches: ${fmt(postM.alignDiff)}° <span style="opacity:.7;">(cible ≤ 5°)</span>
     `;
+  
+  // ---------------------------------------------------------
+  // Tempo
+  // ---------------------------------------------------------
+  const tempoScore = scoreOf("tempo");
+  const tempoM = mOf("tempo");
+  const tempoDetails = !tempoM
+    ? `<em style="opacity:.7;">Tempo non évalué (timestamps ou keyframes manquants).</em>`
+    : `
+      Backswing: ${fmt(tempoM.backswingT, 2)}s <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
+      Downswing: ${fmt(tempoM.downswingT, 2)}s <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
+      Ratio: ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
+    `;
 
+  
   // ---------------------------------------------------------
   // Triangle
   // ---------------------------------------------------------
@@ -2126,19 +2142,7 @@ function buildPremiumBreakdown(swing, scores) {
       Progression: ${fmt(extM.progress, 3)} <span style="opacity:.7;">(bras qui se tendent après impact)</span>
     `;
 
-  // ---------------------------------------------------------
-  // Tempo
-  // ---------------------------------------------------------
-  const tempoScore = scoreOf("tempo");
-  const tempoM = mOf("tempo");
-  const tempoDetails = !tempoM
-    ? `<em style="opacity:.7;">Tempo non évalué (timestamps ou keyframes manquants).</em>`
-    : `
-      Backswing: ${fmt(tempoM.backswingT, 2)}s <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
-      Downswing: ${fmt(tempoM.downswingT, 2)}s <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
-      Ratio: ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
-    `;
-
+  
   // ---------------------------------------------------------
   // Balance
   // ---------------------------------------------------------
@@ -2224,6 +2228,13 @@ function buildPremiumBreakdown(swing, scores) {
         rotationDetails
       )}
 
+       ${block(
+        "Tempo",
+        tempoScore,
+        "Backswing / Downswing",
+        tempoDetails
+      )}
+
       ${block(
         "Triangle bras/épaules",
         triangleScore,
@@ -2245,12 +2256,6 @@ function buildPremiumBreakdown(swing, scores) {
         extensionDetails
       )}
 
-      ${block(
-        "Tempo",
-        tempoScore,
-        "Backswing / Downswing",
-        tempoDetails
-      )}
 
       ${block(
         "Balance & Équilibre",
