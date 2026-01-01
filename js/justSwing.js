@@ -2510,7 +2510,7 @@ if (!addressLocked) {
 
   async function saveSwingToNocoDB(record) {
   try {
-    await fetch("https://TON_NOCODB_URL/api/v1/db/data/v1/PROJECT/swings", {
+    await fetch("https://app.nocodb.com/api/v1/db/data/v1/parfect", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
