@@ -2048,6 +2048,13 @@ function buildPremiumBreakdown(swing, scores) {
     `;
   };
 
+function safeRef(refObj) {
+  if (!refObj || typeof refObj !== "object") return null;
+  if (typeof refObj.target !== "number") return null;
+  return refObj;
+}
+
+  
   // --- 2) Color coding ---
   function scoreColor(s) {
     if (s >= 15) return "#4ade80"; // vert
@@ -2059,34 +2066,40 @@ function buildPremiumBreakdown(swing, scores) {
   // Rotation details (FaceOn ratio ou DTL degrés)
   // ---------------------------------------------------------
   const r = scores.breakdown.rotation || {};
-const m = r.metrics?.measure || {};
-const ref = r.metrics?.ref || {};
+const m = r.metrics?.measure || null;
+const ref = r.metrics?.ref || null;
+
+const shRef = safeRef(ref?.shoulder);
+const hipRef = safeRef(ref?.hip);
+const xfRef = safeRef(ref?.xFactor);
 
 const hasRotationDetails =
-  m &&
-  ref &&
-  ref.shoulder?.target != null &&
-  ref.hip?.target != null &&
-  ref.xFactor?.target != null;
-  
+  m && shRef && hipRef && xfRef;
+
 const rotationDetails = !hasRotationDetails
-  ? `<em style="opacity:.7;">Rotation non évaluée.</em>`
+  ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
   : `
     Épaules: ${fmt(m.shoulder, 2)}
     <span style="opacity:.7;">
-      (réf. ${fmt(ref.shoulder.target, 2)} ± ${fmt(ref.shoulder.tol, 2)})
+      (réf. ${fmt(shRef.target, 2)} ± ${fmt(shRef.tol, 2)})
     </span><br>
 
     Hanches: ${fmt(m.hip, 2)}
     <span style="opacity:.7;">
-      (réf. ${fmt(ref.hip.target, 2)} ± ${fmt(ref.hip.tol, 2)})
+      (réf. ${fmt(hipRef.target, 2)} ± ${fmt(hipRef.tol, 2)})
     </span><br>
 
     X-Factor: ${fmt(m.xFactor, 2)}
     <span style="opacity:.7;">
-      (réf. ${fmt(ref.xFactor.target, 2)} ± ${fmt(ref.xFactor.tol, 2)})
+      (réf. ${fmt(xfRef.target, 2)} ± ${fmt(xfRef.tol, 2)})
     </span>
+
+    <div style="margin-top:10px; opacity:.7; font-size:0.85rem;">
+      Étape analysée : <b>Base → Top</b><br>
+      Objectif : reproduire la rotation du swing de référence.
+    </div>
   `;
+
 
 
 
