@@ -2626,14 +2626,31 @@ if (btnUserRef) {
   };
 }
 
-  const isSuperAdmin =
+ // ======================================================
+// ⭐⭐ BOUTON RÉFÉRENCE PARFECT (SUPERADMIN)
+// ======================================================
+
+const isSuperAdmin =
   window.userLicence?.role === "superadmin" ||
   window.userLicence?.is_superadmin === true;
 
 const btnParfect = document.getElementById("swing-save-parfect");
 
-if (btnParfect && isSuperAdmin) {
-  btnParfect.style
+if (btnParfect) {
+  if (isSuperAdmin) {
+    btnParfect.style.display = "block";
+  } else {
+    btnParfect.style.display = "none";
+  }
+}
+
+  if (btnParfect && isSuperAdmin) {
+  btnParfect.onclick = () => {
+    saveParfectReference(swing, scores);
+    showBigMessage("⭐⭐ Référence PARFECT enregistrée");
+  };
+}
+
 
    // ---------------------------------------------------------
   //   replay : init + rendu + play/pause
