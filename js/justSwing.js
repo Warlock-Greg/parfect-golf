@@ -2449,16 +2449,7 @@ if (!addressLocked) {
   const scores = computeSwingScorePremium(swing);
   buildPremiumBreakdown(swing, scores);
 
-  // ======================================================
-  // 7️⃣ COACH (Face-On uniquement)
-  // ======================================================
-  if (faceOnResult) {
-    try {
-      onFaceOnScored(faceOnResult); // 👉 ton CoachService
-    } catch (e) {
-      console.warn("⚠️ Coach failed", e);
-    }
-  }
+  
 
 
   // -------------------------------------------
@@ -2729,22 +2720,28 @@ if (btnParfect) {
     replayCanvas = overlay;
     replayCtx = overlay.getContext("2d");
 
-    function renderFrame(index) {
-      if (!lastSwing || !replayCanvas || !replayCtx) return;
+   function renderFrame(index) {
+  if (!lastSwing || !replayCanvas || !replayCtx) return;
 
-      const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
-      replayFrameIndex = idx;
-      const pose = lastSwing.frames[idx];
+  const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
+  replayFrameIndex = idx;
 
-      drawPoseOnCanvas(pose, replayCanvas, replayCtx);
+  const pose = lastSwing.frames[idx];
+  drawPoseOnCanvas(pose, replayCanvas, replayCtx);
 
-      timeline.value = idx;
+  if (timeline) timeline.value = idx;
 
-      const fps = lastSwing.fps || 30;
-      const t = (idx / fps).toFixed(2);
-      const total = (lastSwing.frames.length / fps).toFixed(2);
-      time.textContent = `${t}s / ${total}s`;
-    }
+  const fps = lastSwing.fps || 30;
+  const t = (idx / fps).toFixed(2);
+  const total = (lastSwing.frames.length / fps).toFixed(2);
+
+  // ✅ FIX ICI
+  const timeEl = document.getElementById("replay-time");
+  if (timeEl) {
+    timeEl.textContent = `${t}s / ${total}s`;
+  }
+}
+
 
     function startReplay() {
       if (!lastSwing) return;
