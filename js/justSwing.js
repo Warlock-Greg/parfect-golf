@@ -1693,10 +1693,10 @@ if (!impactPose || !finishPose) {
   const LSf   = LM(finishPose, 11);
   const RSf   = LM(finishPose, 12);
 
-  const LWimp = LMv(impactPose, 15);
-  const RWimp = LMv(impactPose, 16);
-  const LWf   = LMv(finishPose, 15);
-  const RWf   = LMv(finishPose, 16);
+  const LWimp = LM(impactPose, 15);
+  const RWimp = LM(impactPose, 16);
+  const LWf   = LM(finishPose, 15);
+  const RWf   = LM(finishPose, 16);
 
   // ❌ mains non détectées correctement
   if ((!LWimp && !RWimp) || (!LWf && !RWf)) {
