@@ -2028,26 +2028,34 @@ function buildPremiumBreakdown(swing, scores) {
     return "#f87171";
   }
 
-  const block = (title, score, subtitle, details = "") => `
+  const block = (title, score, subtitle, details = "", maxScore = 20) => {
+  const safeScore = typeof score === "number" ? score : null;
+  const colorScore = typeof score === "number" ? score : 8;
+
+  return `
     <div style="
       padding:1rem;
       border-radius:12px;
       background:rgba(255,255,255,0.05);
       margin-bottom:1rem;
-      border-left:4px solid ${scoreColor(
-        typeof score === "number" ? score : 8
-      )};
+      border-left:4px solid ${scoreColor(colorScore)};
     ">
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;font-size:1.2rem;color:#fff;">${title}</h3>
-        <div style="font-size:1.4rem;font-weight:700;color:${scoreColor(
-          typeof score === "number" ? score : 8
-        )};">
-          ${typeof score === "number" ? score : "—"}/20
+        <h3 style="margin:0;font-size:1.2rem;color:#fff;">
+          ${title}
+        </h3>
+        <div style="
+          font-size:1.4rem;
+          font-weight:700;
+          color:${scoreColor(colorScore)};
+        ">
+          ${safeScore !== null ? safeScore : "—"}/${maxScore}
         </div>
       </div>
 
-      <p style="margin:0.3rem 0;color:#aaa;">${subtitle}</p>
+      <p style="margin:0.3rem 0;color:#aaa;">
+        ${subtitle}
+      </p>
 
       <div style="
         margin-top:.5rem;
@@ -2062,6 +2070,8 @@ function buildPremiumBreakdown(swing, scores) {
       </div>
     </div>
   `;
+};
+
 
   // ---------------------------------------------------------
   // POSTURE
@@ -2203,13 +2213,13 @@ function buildPremiumBreakdown(swing, scores) {
         <p style="color:#aaa;">Score Parfect Premium</p>
       </div>
 
-      ${block("Posture à l’adresse", postureScore, "Alignement · Stance · Flexion", postureDetails)}
-      ${block("Rotation", rotationScore, "Épaules · Hanches · X-Factor (Base → Top)", rotationDetails)}
-      ${block("Tempo", tempoScore, "Backswing / Downswing", tempoDetails)}
-      ${block("Triangle bras/épaules", triangleScore, "Stabilité au top et à l’impact", triangleDetails)}
-      ${block("Transfert de poids", weightShiftScore, "Backswing → Impact", weightShiftDetails)}
-      ${block("Extension & Finish", extensionScore, "Bras + finish", extensionDetails)}
-      ${block("Balance & Équilibre", balanceScore, "Finish stable", balanceDetails)}
+      ${block("Posture à l’adresse", postureScore, "Alignement · Stance · Flexion", postureDetails,10)}
+      ${block("Rotation", rotationScore, "Épaules · Hanches · X-Factor (Base → Top)", rotationDetails,20)}
+      ${block("Tempo", tempoScore, "Backswing / Downswing", tempoDetails,20)}
+      ${block("Triangle bras/épaules", triangleScore, "Stabilité au top et à l’impact", triangleDetails,20)}
+      ${block("Transfert de poids", weightShiftScore, "Backswing → Impact", weightShiftDetails,10)}
+      ${block("Extension & Finish", extensionScore, "Bras + finish", extensionDetails,10)}
+      ${block("Balance & Équilibre", balanceScore, "Finish stable", balanceDetails,10)}
 
       <div style="margin-top:1rem;padding:1rem;border-radius:12px;
         background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
