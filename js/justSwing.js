@@ -615,6 +615,8 @@ function initEngine() {
   // ---------------------------------------------------------
   function startSession(selectedMode = JSW_MODE.SWING) {
 // 🔒 Garde licence — POINT D’ENTRÉE UNIQUE
+    console.log("🔐 USER LICENCE RAW =", window.userLicence);
+
   if (!window.PARFECT_LICENCE_OK) {
     console.warn("⛔ JustSwing bloqué : licence requise");
    // 👉 OUVRIR LA MODAL DE CRÉATION DE COMPTE
@@ -2361,6 +2363,48 @@ function saveUserReference(swing, scores) {
   saveReferenceToDB(ref);
 }
 
+  function bindSwingReviewActions(swing, scores) {
+  // --- USER REFERENCE ---
+  const btnUserRef = document.getElementById("swing-save-reference");
+
+  if (!btnUserRef) {
+    console.warn("❌ USER REF BUTTON NOT FOUND");
+  } else {
+    console.log("✅ USER REF BUTTON READY");
+
+    btnUserRef.onclick = () => {
+      console.log("⭐ USER REF CLICKED");
+
+      if (!swing || !scores) {
+        console.warn("❌ Missing swing or scores");
+        return;
+      }
+
+      saveUserReference(swing, scores);
+
+      btnUserRef.textContent = "✅ Référence enregistrée";
+      btnUserRef.disabled = true;
+      btnUserRef.style.opacity = 0.6;
+    };
+  }
+
+  // --- SUPERADMIN PARFECT (optionnel, prêt pour après) ---
+  const isSuperAdmin =
+    window.userLicence?.role === "superadmin" ||
+    window.userLicence?.is_superadmin === true;
+
+  const btnParfect = document.getElementById("swing-save-parfect");
+
+  if (btnParfect && isSuperAdmin) {
+    btnParfect.style.display = "block";
+
+    btnParfect.onclick = () => {
+      console.log("👑 PARFECT REF CLICKED");
+      saveParfectReference(swing, scores);
+    };
+  }
+}
+
   
   // ======================================================
   // 2️⃣ Validation swing (UX first)
@@ -2446,7 +2490,8 @@ if (!addressLocked) {
   const scores = computeSwingScorePremium(swing);
   buildPremiumBreakdown(swing, scores);
 
-  
+  // 🔒 Brancher les actions APRÈS le render
+  bindSwingReviewActions(swing, scores);
 
 
   // -------------------------------------------
