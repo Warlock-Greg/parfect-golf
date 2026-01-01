@@ -2514,7 +2514,7 @@ if (!addressLocked) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xc-token": "TON_TOKEN"
+        "xc-token":  window.NC_TOKEN
       },
       body: JSON.stringify(record)
     });
