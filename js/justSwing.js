@@ -2058,55 +2058,36 @@ function buildPremiumBreakdown(swing, scores) {
   // ---------------------------------------------------------
   // Rotation details (FaceOn ratio ou DTL degrés)
   // ---------------------------------------------------------
-  const rotationScore = scoreOf("rotation");
-  const rotM = mOf("rotation");
-  const isFaceOn = (scores?.metrics?.viewType || window.jswViewType || "faceOn") === "faceOn";
-  const unit = isFaceOn ? "" : "°";
+  const r = scores.breakdown.rotation || {};
+const m = r.metrics?.measure || {};
+const ref = r.metrics?.ref || {};
 
-  // Réf rotation (si dispo) : tu la ranges dans breakdown.rotation.ref (si tu veux)
-  const rotRef = b?.rotation?.ref || window.REF?.rotation || null;
-  const rotRefOk =
-    rotRef &&
-    rotRef.shoulder && rotRef.hip && rotRef.xFactor &&
-    typeof rotRef.shoulder.target === "number" &&
-    typeof rotRef.shoulder.tol === "number" &&
-    typeof rotRef.hip.target === "number" &&
-    typeof rotRef.hip.tol === "number" &&
-    typeof rotRef.xFactor.target === "number" &&
-    typeof rotRef.xFactor.tol === "number";
+const rotationDetails = (!m || !ref)
+  ? `<em style="opacity:.7;">Rotation non évaluée.</em>`
+  : `
+    Épaules: ${fmt(m.shoulder, 2)}
+    <span style="opacity:.7;">
+      (réf. ${fmt(ref.shoulder.target, 2)} ± ${fmt(ref.shoulder.tol, 2)})
+    </span><br>
 
-  const rotationDetails = !rotM
-    ? `<em style="opacity:.7;">Rotation non évaluée (données insuffisantes).</em>`
-    : !rotRefOk
-      ? `<em style="opacity:.7;">Rotation non évaluée : référence incomplète.</em>`
-      : `
-        <div style="opacity:.85; margin-bottom:12px;">
-          <b>Référence :</b> ${window.REF_META?.club || "—"} · ${window.REF_META?.view || "—"}
-        </div>
+    Hanches: ${fmt(m.hip, 2)}
+    <span style="opacity:.7;">
+      (réf. ${fmt(ref.hip.target, 2)} ± ${fmt(ref.hip.tol, 2)})
+    </span><br>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; text-align:center;">
-          <div>
-            <b>Épaules</b><br>
-            🎯 ${fmt(rotRef.shoulder.target)}${unit} ±${fmt(rotRef.shoulder.tol)}${unit}<br>
-            ✅ ${fmt(rotM.shoulder)}${unit}
-          </div>
-          <div>
-            <b>Hanches</b><br>
-            🎯 ${fmt(rotRef.hip.target)}${unit} ±${fmt(rotRef.hip.tol)}${unit}<br>
-            ✅ ${fmt(rotM.hip)}${unit}
-          </div>
-          <div>
-            <b>X-Factor</b><br>
-            🎯 ${fmt(rotRef.xFactor.target)}${unit} ±${fmt(rotRef.xFactor.tol)}${unit}<br>
-            ✅ ${fmt(rotM.xFactor)}${unit}
-          </div>
-        </div>
+    X-Factor: ${fmt(m.xFactor, 2)}
+    <span style="opacity:.7;">
+      (réf. ${fmt(ref.xFactor.target, 2)} ± ${fmt(ref.xFactor.tol, 2)})
+    </span>
+  `;
 
-        <div style="margin-top:12px; opacity:.7; font-size:0.85rem;">
-          Étape analysée : <b>Base → Top</b><br>
-          Le score mesure ta capacité à reproduire la rotation du swing de référence.
-        </div>
-      `;
+${block(
+  "Rotation",
+  rotationScore,
+  "Épaules · Hanches · X-Factor (Base → Top)",
+  rotationDetails
+)}
+
 
   // ---------------------------------------------------------
   // Posture
