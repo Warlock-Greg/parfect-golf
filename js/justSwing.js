@@ -849,8 +849,11 @@ function onPoseFrame(landmarks) {
     !addressLocked &&
     isStableAddress(landmarks)
   ) {
-    engine.keyFrames.address = {
-      index: engine.frames.length,
+    const addrIndex =
+    Array.isArray(engine.frames) ? engine.frames.length : 0;
+
+      engine.keyFrames.address = {
+      index: addrIndex,
       pose: landmarks
     };
 
