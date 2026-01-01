@@ -849,6 +849,9 @@ function onPoseFrame(landmarks) {
     !addressLocked &&
     isStableAddress(landmarks)
   ) {
+    // 🛡️ INIT SAFE DES KEYFRAMES
+    if (!engine.keyFrames) engine.keyFrames = {};
+    
     const addrIndex =
     Array.isArray(engine.frames) ? engine.frames.length : 0;
 
