@@ -285,12 +285,15 @@ function showStartButton() {
     startCountdown();
   };
 
-  document.getElementById("jsw-view-face")?.onclick = () =>
-    setViewAndStart("faceOn");
+  const btnFace = document.getElementById("jsw-view-face");
+  if (btnFace) {
+  btnFace.onclick = () => setViewAndStart("faceOn");
+  }
 
-  document.getElementById("jsw-view-dtl")?.onclick = () =>
-    setViewAndStart("dtl");
-
+  const btnDtl = document.getElementById("jsw-view-dtl");
+  if (btnDtl) {
+  btnDtl.onclick = () => setViewAndStart("dtl");
+  }
   // -------------------------
   // Bouton retour
   // -------------------------
