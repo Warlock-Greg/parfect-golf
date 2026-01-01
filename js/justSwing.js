@@ -2081,12 +2081,6 @@ const rotationDetails = (!m || !ref)
     </span>
   `;
 
-${block(
-  "Rotation",
-  rotationScore,
-  "Épaules · Hanches · X-Factor (Base → Top)",
-  rotationDetails
-)}
 
 
   // ---------------------------------------------------------
