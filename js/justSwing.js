@@ -2510,7 +2510,33 @@ if (!addressLocked) {
     return;
   }
 
+async function saveReferenceToDB(ref) {
+  try {
+    const res = await fetch(window.NOCODB_REFERENCES_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN // ⚠️ IMPORTANT
+      },
+      body: JSON.stringify(ref)
+    });
 
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`NocoDB ${res.status} — ${txt}`);
+    }
+
+    const data = await res.json();
+    console.log("⭐ Référence sauvegardée", data);
+    return data;
+
+  } catch (err) {
+    console.error("❌ saveReferenceToDB failed", err);
+  }
+}
+
+
+  
   async function saveSwingToNocoDB(record) {
   try {
     await fetch("https://app.nocodb.com/api/v1/db/data/v1/parfect", {
