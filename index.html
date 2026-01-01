@@ -1034,7 +1034,16 @@ body.jsw-fullscreen #coach-ia {
 
   <!-- 3) Boutons actions -->
   <div class="swing-review-actions" style="display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap;">
-    <button id="swing-save-reference" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #00ff99; border-radius: 8px; cursor: pointer;">⭐ Définir comme référence</button>
+    <button id="swing-save-reference" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #00ff99; border-radius: 8px; cursor: pointer;">⭐ Définir comme ma référence</button>
+    <!-- Bouton PARFECT (superadmin uniquement) -->
+  <button
+    id="swing-save-parfect-reference"
+    class="jsw-btn-secondary"
+    style="flex:1; padding:8px 12px; background:#111;
+           color:#00ff99; border:1px dashed #00ff99; border-radius:8px;
+           cursor:pointer; display:none;">
+    ⭐ Définir comme référence PARFECT
+  </button>
     <button id="swing-review-next" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: #00ff99; color: #111; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">⏭️ Swing suivant</button>
   </div>
 
