@@ -2137,10 +2137,21 @@ function buildPremiumBreakdown(swing, scores) {
       </em>
     `
     : `
-      Extension Impact: ${fmt(extM.armImpact ?? extM.extImpact, 3)}<br>
-      Extension Finish: ${fmt(extM.armFinish ?? extM.extFinish, 3)}<br>
-      Progression: ${fmt(extM.progress, 3)} <span style="opacity:.7;">(bras qui se tendent après impact)</span>
-    `;
+      ${
+  typeof extensionScore === "number"
+    ? `
+      Extension Impact: ${metrics.extension.extImpact.toFixed(3)}<br>
+      Extension Finish: ${metrics.extension.extFinish.toFixed(3)}<br>
+      Progression: ${metrics.extension.progress.toFixed(3)}
+    `
+    : `
+      <span style="opacity:.7;">
+        Extension non évaluée<br>
+        (mains / poignets insuffisamment visibles)
+      </span>
+    `
+}
+;
 
   
   // ---------------------------------------------------------
