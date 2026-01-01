@@ -221,95 +221,89 @@ function exportSwingForTraining(swing, scores) {
 // ---------------------------------------------------------
 function showStartButton() {
   if (!bigMsgEl) return;
+
   state = JSW_STATE.WAITING_START;
   updateUI();
 
   bigMsgEl.innerHTML = `
-    <button id="jsw-start-btn" style="
-      background:#00ff99;
-      color:#111;
-      border:none;
-      border-radius:16px;
-      padding:16px 32px;
-      font-size:1.4rem;
-      font-weight:700;
-      cursor:pointer;
-      box-shadow:0 8px 20px rgba(0,255,153,0.4);
-    ">
-      🎬 Démarrer le swing
-    </button>
-    <button id="jsw-back-btn" style="
-    background:#333;
-    color:#ccc;
-    border:none;
-    border-radius:12px;
-    padding:10px 24px;
-    font-size:1rem;
-    cursor:pointer;
-  ">
-    ← Retour
-  </button>
-  `;
-  bigMsgEl.style.opacity = 1;
+    <div style="font-size:1.3rem;margin-bottom:14px;color:#fff;">
+      📐 Où est placée la caméra ?
+    </div>
 
-  const btn = document.getElementById("jsw-start-btn");
-  if (!btn) return;
-
-  const backBtn = document.getElementById("jsw-back-btn");
-if (backBtn) {
-  backBtn.onclick = () => {
-    // Retour accueil propre
-    window.JustSwing?.stopSession?.();
-    document.body.classList.remove("jsw-fullscreen");
-
-    // Simule clic Home
-    document.getElementById("home-btn")?.click();
-  };
-}
-
-
-  btn.onclick = () => {
-    // 👉 Étape 1 — Choix de la vue caméra
-    bigMsgEl.innerHTML = `
-      <div style="font-size:1.3rem;margin-bottom:12px;color:#fff;">
-        🎬 Démarrer le swing
-        <br>📐 Où est placée la caméra ?
-      </div>
-
+    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
       <button id="jsw-view-face" style="
-        background:#4ade80; padding:12px 18px;
-        font-size:1.1rem; border-radius:10px;
-        margin:6px; cursor:pointer; border:none;
-      ">📸 Face-On (caméra à hauteur de poitrine)</button>
-
-      <button id="jsw-view-mobile" style="
-        background:#22c55e; padding:12px 18px;
-        font-size:1.1rem; border-radius:10px;
-        margin:6px; cursor:pointer; border:none;
-      ">📱 Mobile Face-On (téléphone au sol devant toi)</button>
+        background:#4ade80;
+        padding:14px 18px;
+        font-size:1.1rem;
+        border-radius:12px;
+        cursor:pointer;
+        border:none;
+      ">
+        📸 Face-On<br>
+        <span style="font-size:.85rem; opacity:.8;">
+          Caméra à hauteur de poitrine
+        </span>
+      </button>
 
       <button id="jsw-view-dtl" style="
-        background:#60a5fa; padding:12px 18px;
-        font-size:1.1rem; border-radius:10px;
-        margin:6px; cursor:pointer; border:none;
-      ">🎥 Down-The-Line (derrière la ligne de jeu)</button>
-    `;
+        background:#60a5fa;
+        padding:14px 18px;
+        font-size:1.1rem;
+        border-radius:12px;
+        cursor:pointer;
+        border:none;
+      ">
+        🎥 Down-The-Line<br>
+        <span style="font-size:.85rem; opacity:.8;">
+          Derrière la ligne de jeu
+        </span>
+      </button>
+    </div>
 
-    const setViewAndStart = (view) => {
-      window.jswViewType = view;   // 🔑 utilisé dans le scorer
-      console.log("📐 Vue sélectionnée :", view);
-      startCountdown();
-    };
+    <button id="jsw-back-btn" style="
+      background:#333;
+      color:#ccc;
+      border:none;
+      border-radius:12px;
+      padding:10px 24px;
+      font-size:1rem;
+      cursor:pointer;
+      width:100%;
+    ">
+      ← Retour
+    </button>
+  `;
 
-    const btnFace   = document.getElementById("jsw-view-face");
-    const btnMobile = document.getElementById("jsw-view-mobile");
-    const btnDtl    = document.getElementById("jsw-view-dtl");
+  bigMsgEl.style.opacity = 1;
 
-    if (btnFace)   btnFace.onclick   = () => setViewAndStart("faceOn");
-    if (btnMobile) btnMobile.onclick = () => setViewAndStart("mobileFaceOn");
-    if (btnDtl)    btnDtl.onclick    = () => setViewAndStart("dtl");
+  // -------------------------
+  // Choix de la vue caméra
+  // -------------------------
+  const setViewAndStart = (view) => {
+    window.jswViewType = view; // 🔑 utilisé partout (scoring, ref, etc.)
+    console.log("📐 Vue sélectionnée :", view);
+    startCountdown();
   };
+
+  document.getElementById("jsw-view-face")?.onclick = () =>
+    setViewAndStart("faceOn");
+
+  document.getElementById("jsw-view-dtl")?.onclick = () =>
+    setViewAndStart("dtl");
+
+  // -------------------------
+  // Bouton retour
+  // -------------------------
+  const backBtn = document.getElementById("jsw-back-btn");
+  if (backBtn) {
+    backBtn.onclick = () => {
+      window.JustSwing?.stopSession?.();
+      document.body.classList.remove("jsw-fullscreen");
+      document.getElementById("home-btn")?.click();
+    };
+  }
 }
+
 
 
 
