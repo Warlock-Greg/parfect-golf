@@ -2244,42 +2244,36 @@ ${block(
       ${block(
         "Posture à l’adresse",
         postureScore,
-        "Alignement · Écart de pieds · Flexion",
         postureDetails
       )}
 
       ${block(
         "Rotation",
         rotationScore,
-        "Épaules · Hanches · X-Factor (Base → Top)",
         rotationDetails
       )}
 
        ${block(
         "Tempo",
         tempoScore,
-        "Backswing / Downswing",
         tempoDetails
       )}
 
       ${block(
         "Triangle bras/épaules",
         triangleScore,
-        "Stabilité au top et à l’impact",
         triangleDetails
       )}
 
       ${block(
         "Transfert de poids",
         weightShiftScore,
-        "Backswing → Impact",
         weightShiftDetails
       )}
 
       ${block(
         "Extension & Finish",
         extensionScore,
-        "Extension bras + stabilité du finish",
         extensionDetails
       )}
 
@@ -2287,7 +2281,6 @@ ${block(
       ${block(
         "Balance & Équilibre",
         balanceScore,
-        "Stabilité tête + hanches au finish",
         balanceDetails
       )}
 
