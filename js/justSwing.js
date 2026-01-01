@@ -53,6 +53,7 @@ const DEFAULT_ROUTINES = {
 
 // --- ADDRESS DETECTION ---
 let addressBuffer = [];
+let pendingAddress = false;
 let addressLocked = false;
 
 const ADDRESS_FRAMES_REQUIRED = 5;
@@ -508,6 +509,10 @@ function startRoutineSequence() {
         updateUI();
         console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
+        // 🔒 Prépare le lock de l’adresse (UX)
+        pendingAddress = true;
+        addressLocked = false;
+
         // ⏱️ Timeout GLOBAL de sécurité (sans logique swing)
         const SWING_TIMEOUT_MS = 6000;
 
@@ -787,36 +792,40 @@ function onPoseFrame(landmarks) {
   if (!engine || !landmarks) return;
   if (state !== JSW_STATE.SWING_CAPTURE) return;
 
+  // =====================================================
+  // 🔒 LOCK ADRESSE — posture statique AVANT swing
+  // =====================================================
+  if (
+    pendingAddress &&
+    !addressLocked &&
+    isStableAddress(landmarks)
+  ) {
+    engine.keyFrames.address = {
+      index: engine.frames.length,
+      pose: landmarks
+    };
+
+    pendingAddress = false;
+    addressLocked = true;
+
+    console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
+  }
+
+
+
+  
   // ----------------------------
-  // 1️⃣ Toujours pousser la frame au moteur
+  // 1 Toujours pousser la frame au moteur
   // ----------------------------
   const now = performance.now();
   const evt = engine.processPose(landmarks, now, currentClubType);
 
   if (!engine.keyFrames) return;
 
-  // ----------------------------
-  // 2️⃣ AUTO-LOCK ADDRESS
-  //    = frame juste AVANT le backswing
-  // ----------------------------
-  if (
-    !engine.keyFrames.address &&
-    engine.keyFrames.backswing &&
-    engine.keyFrames.backswing.index > 0 &&
-    engine.frames.length > engine.keyFrames.backswing.index - 1
-  ) {
-    const addrIndex = engine.keyFrames.backswing.index - 1;
-
-    engine.keyFrames.address = {
-      index: addrIndex,
-      pose: engine.frames[addrIndex]
-    };
-
-    console.log("🔒 ADDRESS AUTO-LOCKED @ frame", addrIndex);
-  }
+ 
 
   // ----------------------------
-  // 3️⃣ FIN DE SWING
+  // 2 FIN DE SWING
   // ----------------------------
   if (evt && evt.type === "swingComplete") {
     isRecordingActive = false;
@@ -2147,9 +2156,38 @@ async function handleSwingComplete(swing) {
 
     stopRecording();
     showBigMessage("😕 Oups… aucun swing détecté.\nRecommence calmement.");
-
+    // 🔁 Routine directe, sans bouton
+    startRoutineSequence();
     return; // ⛔ STOP ICI
   }
+
+  // ======================================================
+// ❌ Adresse NON lockée → on relance la routine
+// ======================================================
+if (!addressLocked) {
+  console.warn("❌ Adresse non verrouillée — restart routine");
+
+  stopRecording();
+
+  showBigMessage(`
+    🧍‍♂️ Reviens à l’adresse<br>
+    Stabilise-toi une seconde
+  `);
+
+  // 🔁 Relance automatique de la routine
+  setTimeout(() => {
+    hideBigMessage();
+
+    // reset minimal
+    addressLocked = false;
+    pendingAddress = false;
+
+    // 🔁 Routine directe, sans bouton
+    startRoutineSequence();
+  }, 1800);
+
+  return; // ⛔ STOP scoring
+}
 
   // ======================================================
   // 3️⃣ Fin capture / passage en REVIEW
