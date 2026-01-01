@@ -1840,56 +1840,90 @@ metrics.balance.score = balanceScore;
 // =====================================================
 // 8) TOTAL
 // =====================================================
+// =====================================================
+// 8) TOTAL — Pondération Parfect V1
+// - 3 axes majeurs à 20 pts
+// - 4 axes secondaires à 10 pts
+// - Les métrics non évaluées ne pénalisent PAS
+// =====================================================
 
+// 🎯 Pondérations officielles
+const METRIC_WEIGHTS = {
+  rotation:    20,
+  tempo:       20,
+  triangle:    20,
 
-const components = [
-  postureScore,
-  rotationScore,
-  triangleScore,
-  weightShiftScore,
-  tempoScore,
-  balanceScore,
-  ...(typeof extensionScore === "number" ? [extensionScore] : [])
-];
+  posture:     10,
+  weightShift: 10,
+  extension:   10,
+  balance:     10
+};
 
-const validComponents = components.filter(
-  v => typeof v === "number" && !isNaN(v)
-);
+// Scores calculés (sur 20 chacun)
+const metricScores = {
+  posture: postureScore,
+  rotation: rotationScore,
+  triangle: triangleScore,
+  weightShift: weightShiftScore,
+  extension: extensionScore,
+  tempo: tempoScore,
+  balance: balanceScore
+};
 
+let weightedSum = 0;
+let maxPossible = 0;
+
+// 🔢 Calcul pondéré robuste
+for (const key in METRIC_WEIGHTS) {
+  const score = metricScores[key];
+  const weight = METRIC_WEIGHTS[key];
+
+  // ✅ on ne prend que les métrics réellement évaluées
+  if (typeof score === "number" && !isNaN(score)) {
+    const normalized = score / 20; // score ∈ [0..1]
+    weightedSum += normalized * weight;
+    maxPossible += weight;
+  }
+}
+
+// 🎯 Score final normalisé sur 100
 const total =
-  validComponents.length > 0
-    ? Math.round(
-        validComponents.reduce((a, b) => a + b, 0) /
-        validComponents.length
-      )
-    : 0;    
-    
-    
+  maxPossible > 0
+    ? Math.round((weightedSum / maxPossible) * 100)
+    : 0;
+
+// =====================================================
+// RETURN FINAL (API stable pour UI / Coach / Replay)
+// =====================================================
 return {
   total,
-  totalDynamic: total, // ou ton calcul
+  totalDynamic: total,
+
+  postureScore,
   rotationScore,
-  tempoScore,
   triangleScore,
   weightShiftScore,
   extensionScore,
+  tempoScore,
   balanceScore,
-  postureScore,
 
-  // ✅ LE breakdown que la scorecard peut afficher
+  // ✅ Breakdown propre pour la scorecard
   breakdown: {
-    posture:   { score: postureScore,   metrics: metrics.address   || null },
-    rotation:  { score: rotationScore,  metrics: metrics.rotation  || null },
-    tempo:     { score: tempoScore,     metrics: metrics.tempo     || null },
-    triangle:  { score: triangleScore,  metrics: metrics.triangle  || null },
-    weightShift:{ score: weightShiftScore, metrics: metrics.weightShift || null },
-    extension: { score: extensionScore, metrics: metrics.extension || null },
-    balance:   { score: balanceScore,   metrics: metrics.balance   || null }
+    posture:     { score: postureScore,     metrics: metrics.posture     || null },
+    rotation:    { score: rotationScore,    metrics: metrics.rotation    || null },
+    triangle:    { score: triangleScore,    metrics: metrics.triangle    || null },
+    weightShift: { score: weightShiftScore, metrics: metrics.weightShift || null },
+    extension:   { score: extensionScore,   metrics: metrics.extension   || null },
+    tempo:       { score: tempoScore,       metrics: metrics.tempo       || null },
+    balance:     { score: balanceScore,     metrics: metrics.balance     || null }
   },
 
-  // utile debug
+  // 🔍 debug / export
   metrics
 };
+
+
+
 };
 
 
