@@ -2204,25 +2204,66 @@ const rotationDetails = !hasRotationDetails
   // ---------------------------------------------------------
   // Mini Coach (sans ton service externe)
   // ---------------------------------------------------------
-  function coachFromBreakdown() {
-    const pick = [];
+  function coachFromBreakdown(scores) {
+  const b = scores?.breakdown || {};
 
-    const sRot = rotationScore ?? 999;
-    const sWs  = weightShiftScore ?? 999;
-    const sTmp = tempoScore ?? 999;
-    const sExt = extensionScore ?? 999;
-    const sTri = triangleScore ?? 999;
+  const sRot      = b.rotation?.score;
+  const sTempo    = b.tempo?.score;
+  const sTriangle = b.triangle?.score;
+  const sWeight   = b.weightShift?.score;
+  const sExt      = b.extension?.score;
+  const sBalance  = b.balance?.score;
+  const sPosture  = b.posture?.score;
 
-    // Priorités simples : 2 axes max
-    if (sRot <= 7 && rotM) pick.push("Rotation faible : vérifie la vue Face-On (corps de profil) + tourne plus le buste au backswing.");
-    if (sWs <= 7 && wsM)  pick.push("Transfert faible : pense “hanches qui vont vers la cible” après le top.");
-    if (sTmp <= 7 && tempoM) pick.push("Tempo trop rapide : backswing plus long, descente plus douce (vise ~3:1).");
-    if (!extM) pick.push("Extension non mesurée : assure-toi que les poignets restent visibles (mains dans le cadre).");
-    if (sTri <= 10 && triM) pick.push("Triangle instable : garde les bras connectés au buste (moins de séparation au top/impact).");
+  const messages = [];
 
-    if (!pick.length) return "✅ Analyse OK : continue, et cherche la répétabilité sur 3 swings.";
-    return pick.slice(0, 2).join("<br>");
+  // 🎯 Priorité 1 — Rotation
+  if (typeof sRot === "number" && sRot < 10) {
+    messages.push(
+      "Rotation à travailler : tourne davantage les épaules au backswing."
+    );
   }
+
+  // 🎯 Priorité 2 — Tempo
+  if (typeof sTempo === "number" && sTempo < 10) {
+    messages.push(
+      "Tempo trop rapide : backswing plus long, descente plus progressive (vise ~3:1)."
+    );
+  }
+
+  // 🎯 Priorité 3 — Triangle
+  if (typeof sTriangle === "number" && sTriangle < 10) {
+    messages.push(
+      "Triangle instable : garde les bras connectés au buste au top."
+    );
+  }
+
+  // Axes secondaires
+  if (typeof sWeight === "number" && sWeight < 8) {
+    messages.push(
+      "Transfert insuffisant : laisse les hanches aller vers la cible après le top."
+    );
+  }
+
+  if (typeof sExt === "number" && sExt < 8) {
+    messages.push(
+      "Extension tardive : laisse les bras se tendre après l’impact."
+    );
+  }
+
+  if (typeof sBalance === "number" && sBalance < 8) {
+    messages.push(
+      "Finish instable : tiens ta position jusqu’à la fin."
+    );
+  }
+
+  if (messages.length === 0) {
+    messages.push("Swing solide. Conserve ces sensations.");
+  }
+
+  return messages;
+}
+
 
   const coachHtml = `
     <div style="
