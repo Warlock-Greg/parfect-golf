@@ -1846,7 +1846,7 @@ const components = [
   postureScore,
   rotationScore,
   triangleScore,
-  weightScore,
+  weightShiftScore,
   tempoScore,
   balanceScore,
   ...(typeof extensionScore === "number" ? [extensionScore] : [])
@@ -1878,7 +1878,7 @@ return {
 
   // ✅ LE breakdown que la scorecard peut afficher
   breakdown: {
-    posture:   { score: addressScore,   metrics: metrics.address   || null },
+    posture:   { score: postureScore,   metrics: metrics.address   || null },
     rotation:  { score: rotationScore,  metrics: metrics.rotation  || null },
     tempo:     { score: tempoScore,     metrics: metrics.tempo     || null },
     triangle:  { score: triangleScore,  metrics: metrics.triangle  || null },
