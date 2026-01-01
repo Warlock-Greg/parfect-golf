@@ -2062,7 +2062,14 @@ function buildPremiumBreakdown(swing, scores) {
 const m = r.metrics?.measure || {};
 const ref = r.metrics?.ref || {};
 
-const rotationDetails = (!m || !ref)
+const hasRotationDetails =
+  m &&
+  ref &&
+  ref.shoulder?.target != null &&
+  ref.hip?.target != null &&
+  ref.xFactor?.target != null;
+  
+const rotationDetails = !hasRotationDetails
   ? `<em style="opacity:.7;">Rotation non évaluée.</em>`
   : `
     Épaules: ${fmt(m.shoulder, 2)}
