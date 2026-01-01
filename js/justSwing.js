@@ -2000,347 +2000,221 @@ return {
 //   ✅ affiche un message si un module est non mesuré
 // ---------------------------------------------------------
 function buildPremiumBreakdown(swing, scores) {
-  const fmt = (v, digits = 1) =>
-    typeof v === "number" && Number.isFinite(v) ? v.toFixed(digits) : "—";
+  const fmt = (v, d = 1) =>
+    typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
 
   const el = document.getElementById("swing-score-breakdown");
   if (!el) return console.warn("No breakdown element found.");
 
-  // ⚠️ Source de vérité UI = breakdown
-  const b = scores?.breakdown || {};
+  // ---------------------------------------------------------
+  // Source de vérité
+  // ---------------------------------------------------------
+  const breakdown = scores?.breakdown || {};
 
-  // Safe getters
-  const scoreOf = (k) => (typeof b?.[k]?.score === "number" ? b[k].score : null);
-  const mOf = (k) => (b?.[k]?.metrics && typeof b[k].metrics === "object" ? b[k].metrics : null);
+  const scoreOf = (k) =>
+    typeof breakdown[k]?.score === "number" ? breakdown[k].score : null;
 
-  // --- 1) Helper rendering ---
-  const block = (title, score, subtitle, detailsHtml = "") => {
-    const safeScore = typeof score === "number" ? score : "—";
-    return `
-      <div style="
-        padding: 1rem;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.05);
-        margin-bottom: 1rem;
-        border-left: 4px solid ${scoreColor(typeof score === "number" ? score : 8)};
-      ">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h3 style="margin:0; font-size:1.2rem; color:#fff;">${title}</h3>
-          <div style="font-size:1.4rem; color:${scoreColor(typeof score === "number" ? score : 8)}; font-weight:700;">
-            ${safeScore}/20
-          </div>
-        </div>
+  const metricsOf = (k) =>
+    breakdown[k]?.metrics && typeof breakdown[k].metrics === "object"
+      ? breakdown[k].metrics
+      : null;
 
-        <p style="margin:0.3rem 0; color:#aaa">${subtitle}</p>
+  // ---------------------------------------------------------
+  // UI helpers
+  // ---------------------------------------------------------
+  function scoreColor(s) {
+    if (s >= 15) return "#4ade80";
+    if (s >= 8) return "#facc15";
+    return "#f87171";
+  }
 
-        <div style="
-          margin-top:0.5rem;
-          padding:0.6rem 0.8rem;
-          background:rgba(255,255,255,0.04);
-          border-radius:10px;
-          color:#ccc;
-          font-size:0.9rem;
-          line-height:1.35;
-        ">
-          ${detailsHtml}
+  const block = (title, score, subtitle, details = "") => `
+    <div style="
+      padding:1rem;
+      border-radius:12px;
+      background:rgba(255,255,255,0.05);
+      margin-bottom:1rem;
+      border-left:4px solid ${scoreColor(
+        typeof score === "number" ? score : 8
+      )};
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0;font-size:1.2rem;color:#fff;">${title}</h3>
+        <div style="font-size:1.4rem;font-weight:700;color:${scoreColor(
+          typeof score === "number" ? score : 8
+        )};">
+          ${typeof score === "number" ? score : "—"}/20
         </div>
       </div>
-    `;
-  };
 
-function safeRef(refObj) {
-  if (!refObj || typeof refObj !== "object") return null;
-  if (typeof refObj.target !== "number") return null;
-  return refObj;
-}
+      <p style="margin:0.3rem 0;color:#aaa;">${subtitle}</p>
 
-  
-  // --- 2) Color coding ---
-  function scoreColor(s) {
-    if (s >= 15) return "#4ade80"; // vert
-    if (s >= 8) return "#facc15";  // jaune
-    return "#f87171";              // rouge
-  }
-
-  // ---------------------------------------------------------
-  // Rotation details (FaceOn ratio ou DTL degrés)
-  // ---------------------------------------------------------
-  const r = scores.breakdown.rotation || {};
-const m = r.metrics?.measure || null;
-const ref = r.metrics?.ref || null;
-
-const shRef = safeRef(ref?.shoulder);
-const hipRef = safeRef(ref?.hip);
-const xfRef = safeRef(ref?.xFactor);
-
-const hasRotationDetails =
-  m && shRef && hipRef && xfRef;
-
-const rotationDetails = !hasRotationDetails
-  ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
-  : `
-    Épaules: ${fmt(m.shoulder, 2)}
-    <span style="opacity:.7;">
-      (réf. ${fmt(shRef.target, 2)} ± ${fmt(shRef.tol, 2)})
-    </span><br>
-
-    Hanches: ${fmt(m.hip, 2)}
-    <span style="opacity:.7;">
-      (réf. ${fmt(hipRef.target, 2)} ± ${fmt(hipRef.tol, 2)})
-    </span><br>
-
-    X-Factor: ${fmt(m.xFactor, 2)}
-    <span style="opacity:.7;">
-      (réf. ${fmt(xfRef.target, 2)} ± ${fmt(xfRef.tol, 2)})
-    </span>
-
-    <div style="margin-top:10px; opacity:.7; font-size:0.85rem;">
-      Étape analysée : <b>Base → Top</b><br>
-      Objectif : reproduire la rotation du swing de référence.
+      <div style="
+        margin-top:.5rem;
+        padding:.6rem .8rem;
+        background:rgba(255,255,255,.04);
+        border-radius:10px;
+        color:#ccc;
+        font-size:.9rem;
+        line-height:1.35;
+      ">
+        ${details}
+      </div>
     </div>
   `;
 
-
-
-
   // ---------------------------------------------------------
-  // Posture
+  // POSTURE
   // ---------------------------------------------------------
-  const postureScore = scoreOf("address") ?? scoreOf("posture"); // selon ton naming
-  const postM = mOf("address") || mOf("posture");
+  const postureScore = scoreOf("posture");
+  const postM = metricsOf("posture");
   const postureDetails = !postM
-    ? `<em style="opacity:.7;">Posture non évaluée (corps partiel / adresse non fiable).</em>`
+    ? `<em style="opacity:.7;">Posture non évaluée (adresse non fiable).</em>`
     : `
-      Flexion: ${fmt(postM.flexionDeg)}° <span style="opacity:.7;">(cible 30–45°)</span><br>
-      Ratio pieds/épaules: ${fmt(postM.feetShoulderRatio, 2)} <span style="opacity:.7;">(cible 1.1–1.3)</span><br>
-      Alignement épaules/hanches: ${fmt(postM.alignDiff)}° <span style="opacity:.7;">(cible ≤ 5°)</span>
+      Flexion : ${fmt(postM.flexionDeg)}° <span style="opacity:.7;">(30–45°)</span><br>
+      Ratio pieds/épaules : ${fmt(postM.feetShoulderRatio, 2)} <span style="opacity:.7;">(1.1–1.3)</span><br>
+      Alignement épaules/hanches : ${fmt(postM.alignDiff)}° <span style="opacity:.7;">(≤ 5°)</span>
     `;
-  
+
   // ---------------------------------------------------------
-  // Tempo
+  // ROTATION (STANDARDISÉE)
+  // ---------------------------------------------------------
+  const rotationScore = scoreOf("rotation");
+  const rotM = metricsOf("rotation");
+
+  const rotMeasure = rotM?.measure;
+  const rotRef = rotM?.ref;
+
+  const rotOk =
+    rotMeasure &&
+    rotRef?.shoulder?.target != null &&
+    rotRef?.hip?.target != null &&
+    rotRef?.xFactor?.target != null;
+
+  const rotationDetails = !rotOk
+    ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
+    : `
+      Épaules : ${fmt(rotMeasure.shoulder, 2)}
+      <span style="opacity:.7;">(cible ${fmt(rotRef.shoulder.target, 2)} ±${fmt(
+        rotRef.shoulder.tol,
+        2
+      )})</span><br>
+
+      Hanches : ${fmt(rotMeasure.hip, 2)}
+      <span style="opacity:.7;">(cible ${fmt(rotRef.hip.target, 2)} ±${fmt(
+        rotRef.hip.tol,
+        2
+      )})</span><br>
+
+      X-Factor : ${fmt(rotMeasure.xFactor, 2)}
+      <span style="opacity:.7;">(cible ${fmt(
+        rotRef.xFactor.target,
+        2
+      )} ±${fmt(rotRef.xFactor.tol, 2)})</span>
+    `;
+
+  // ---------------------------------------------------------
+  // TEMPO
   // ---------------------------------------------------------
   const tempoScore = scoreOf("tempo");
-  const tempoM = mOf("tempo");
+  const tempoM = metricsOf("tempo");
   const tempoDetails = !tempoM
-    ? `<em style="opacity:.7;">Tempo non évalué (timestamps ou keyframes manquants).</em>`
+    ? `<em style="opacity:.7;">Tempo non évalué.</em>`
     : `
-      Backswing: ${fmt(tempoM.backswingT, 2)}s <span style="opacity:.7;">(typique 0.7–1.1s)</span><br>
-      Downswing: ${fmt(tempoM.downswingT, 2)}s <span style="opacity:.7;">(typique 0.18–0.30s)</span><br>
-      Ratio: ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
+      Backswing : ${fmt(tempoM.backswingT, 2)}s<br>
+      Downswing : ${fmt(tempoM.downswingT, 2)}s<br>
+      Ratio : ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
     `;
 
-  
   // ---------------------------------------------------------
-  // Triangle
+  // TRIANGLE
   // ---------------------------------------------------------
   const triangleScore = scoreOf("triangle");
-  const triM = mOf("triangle");
+  const triM = metricsOf("triangle");
   const triangleDetails = !triM
-    ? `<em style="opacity:.7;">Triangle non évalué (poignets/épaules non détectés).</em>`
+    ? `<em style="opacity:.7;">Triangle non évalué.</em>`
     : `
-      Variation Top: ${fmt(triM.varTopPct)}% <span style="opacity:.7;">(cible ≤ 5%)</span><br>
-      Variation Impact: ${fmt(triM.varImpactPct)}% <span style="opacity:.7;">(cible ≤ 5%)</span>
+      Variation Top : ${fmt(triM.varTopPct)}%<br>
+      Variation Impact : ${fmt(triM.varImpactPct)}%
     `;
 
   // ---------------------------------------------------------
-  // Weight shift
+  // WEIGHT SHIFT
   // ---------------------------------------------------------
   const weightShiftScore = scoreOf("weightShift");
-  const wsM = mOf("weightShift");
+  const wsM = metricsOf("weightShift");
   const weightShiftDetails = !wsM
-    ? `<em style="opacity:.7;">Transfert non évalué (hanches/pieds non fiables).</em>`
+    ? `<em style="opacity:.7;">Transfert non évalué.</em>`
     : `
-      Shift Back: ${fmt(wsM.shiftBack, 3)} <span style="opacity:.7;">(cible ≥ 0.10)</span><br>
-      Shift Forward: ${fmt(wsM.shiftFwd, 3)} <span style="opacity:.7;">(cible ≥ 0.10)</span>
+      Shift Back : ${fmt(wsM.shiftBack, 3)}<br>
+      Shift Forward : ${fmt(wsM.shiftFwd, 3)}
     `;
 
   // ---------------------------------------------------------
-  // Extension (ton choix: pas de défaut → message "mains non captées")
+  // EXTENSION
   // ---------------------------------------------------------
   const extensionScore = scoreOf("extension");
-  const extM = mOf("extension");
+  const extM = metricsOf("extension");
   const extensionDetails = !extM
-    ? `
-      <em style="opacity:.7;">
-        Extension non évaluée : mains/poignets non captés de façon fiable (hors cadre / occlusion).
-      </em>
-    `
+    ? `<em style="opacity:.7;">Extension non évaluée (mains non captées).</em>`
     : `
-      ${
-  typeof extensionScore === "number"
-    ? `
-      Extension Impact: ${metrics.extension.extImpact.toFixed(3)}<br>
-      Extension Finish: ${metrics.extension.extFinish.toFixed(3)}<br>
-      Progression: ${metrics.extension.progress.toFixed(3)}
-    `
-    : `
-      <span style="opacity:.7;">
-        Extension non évaluée<br>
-        (mains / poignets insuffisamment visibles)
-      </span>
-    `
-}
-
- `;
-
-  
-  // ---------------------------------------------------------
-  // Balance
-  // ---------------------------------------------------------
-  const balanceScore = scoreOf("balance");
-  const balM = mOf("balance");
-  const balanceDetails = !balM
-    ? `<em style="opacity:.7;">Balance non évaluée (finish non fiable).</em>`
-    : `
-      Tête sur hanches: ${balM.headOverHips ? "oui" : "non"} <span style="opacity:.7;">(cible = OUI)</span><br>
-      Déplacement hanches: ${fmt(balM.finishMove, 3)} <span style="opacity:.7;">(cible ≤ 0.12)</span>
+      Impact : ${fmt(extM.extImpact, 3)}<br>
+      Finish : ${fmt(extM.extFinish, 3)}<br>
+      Progression : ${fmt(extM.progress, 3)}
     `;
 
   // ---------------------------------------------------------
-  // Total
+  // BALANCE
   // ---------------------------------------------------------
-  const total = typeof scores?.total === "number" ? scores.total : "—";
-
-  // ---------------------------------------------------------
-  // Mini Coach (sans ton service externe)
-  // ---------------------------------------------------------
-  function coachFromBreakdown(scores) {
-  const b = scores?.breakdown || {};
-
-  const sRot      = b.rotation?.score;
-  const sTempo    = b.tempo?.score;
-  const sTriangle = b.triangle?.score;
-  const sWeight   = b.weightShift?.score;
-  const sExt      = b.extension?.score;
-  const sBalance  = b.balance?.score;
-  const sPosture  = b.posture?.score;
-
-  const messages = [];
-
-  // 🎯 Priorité 1 — Rotation
-  if (typeof sRot === "number" && sRot < 10) {
-    messages.push(
-      "Rotation à travailler : tourne davantage les épaules au backswing."
-    );
-  }
-
-  // 🎯 Priorité 2 — Tempo
-  if (typeof sTempo === "number" && sTempo < 10) {
-    messages.push(
-      "Tempo trop rapide : backswing plus long, descente plus progressive (vise ~3:1)."
-    );
-  }
-
-  // 🎯 Priorité 3 — Triangle
-  if (typeof sTriangle === "number" && sTriangle < 10) {
-    messages.push(
-      "Triangle instable : garde les bras connectés au buste au top."
-    );
-  }
-
-  // Axes secondaires
-  if (typeof sWeight === "number" && sWeight < 8) {
-    messages.push(
-      "Transfert insuffisant : laisse les hanches aller vers la cible après le top."
-    );
-  }
-
-  if (typeof sExt === "number" && sExt < 8) {
-    messages.push(
-      "Extension tardive : laisse les bras se tendre après l’impact."
-    );
-  }
-
-  if (typeof sBalance === "number" && sBalance < 8) {
-    messages.push(
-      "Finish instable : tiens ta position jusqu’à la fin."
-    );
-  }
-
-  if (messages.length === 0) {
-    messages.push("Swing solide. Conserve ces sensations.");
-  }
-
-  return messages;
-}
-
-
-  const coachHtml = `
-    <div style="
-      margin-top:1.2rem;
-      padding:0.9rem 1rem;
-      border-radius:12px;
-      background:rgba(0,255,153,0.08);
-      border:1px solid rgba(0,255,153,0.25);
-      color:#cfe;
-      line-height:1.35;
-    ">
-      <b>Coach</b><br>
-      ${coachFromBreakdown()}
-    </div>
-  `;
+  const balanceScore = scoreOf("balance");
+  const balM = metricsOf("balance");
+  const balanceDetails = !balM
+    ? `<em style="opacity:.7;">Balance non évaluée.</em>`
+    : `
+      Tête sur hanches : ${balM.headOverHips ? "oui" : "non"}<br>
+      Déplacement hanches : ${fmt(balM.finishMove, 3)}
+    `;
 
   // ---------------------------------------------------------
-  // Render
+  // COACH
+  // ---------------------------------------------------------
+  const coach = (() => {
+    const msgs = [];
+    if (rotationScore != null && rotationScore < 10)
+      msgs.push("Travaille la rotation au backswing.");
+    if (tempoScore != null && tempoScore < 10)
+      msgs.push("Ralentis le backswing, vise un ratio ~3:1.");
+    if (triangleScore != null && triangleScore < 10)
+      msgs.push("Garde le triangle bras/épaules stable.");
+    if (!msgs.length) msgs.push("Swing solide. Continue comme ça.");
+    return msgs.join("<br>");
+  })();
+
+  // ---------------------------------------------------------
+  // RENDER
   // ---------------------------------------------------------
   el.style.display = "block";
   el.innerHTML = `
     <div style="padding:1.5rem;">
-
-      <div style="text-align:center; margin-bottom:2rem;">
-        <h2 style="font-size:2.5rem; margin:0; color:#4ade80; font-weight:800;">
-          ${total}/100
+      <div style="text-align:center;margin-bottom:2rem;">
+        <h2 style="font-size:2.5rem;margin:0;color:#4ade80;">
+          ${scores?.total ?? "—"}/100
         </h2>
-        <p style="margin:0; color:#aaa; font-size:1rem;">
-          Score Parfect Premium
-        </p>
+        <p style="color:#aaa;">Score Parfect Premium</p>
       </div>
 
-      ${block(
-        "Posture à l’adresse",
-        postureScore,
-        postureDetails
-      )}
+      ${block("Posture à l’adresse", postureScore, "Alignement · Stance · Flexion", postureDetails)}
+      ${block("Rotation", rotationScore, "Épaules · Hanches · X-Factor (Base → Top)", rotationDetails)}
+      ${block("Tempo", tempoScore, "Backswing / Downswing", tempoDetails)}
+      ${block("Triangle bras/épaules", triangleScore, "Stabilité au top et à l’impact", triangleDetails)}
+      ${block("Transfert de poids", weightShiftScore, "Backswing → Impact", weightShiftDetails)}
+      ${block("Extension & Finish", extensionScore, "Bras + finish", extensionDetails)}
+      ${block("Balance & Équilibre", balanceScore, "Finish stable", balanceDetails)}
 
-      ${block(
-        "Rotation",
-        rotationScore,
-        rotationDetails
-      )}
-
-       ${block(
-        "Tempo",
-        tempoScore,
-        tempoDetails
-      )}
-
-      ${block(
-        "Triangle bras/épaules",
-        triangleScore,
-        triangleDetails
-      )}
-
-      ${block(
-        "Transfert de poids",
-        weightShiftScore,
-        weightShiftDetails
-      )}
-
-      ${block(
-        "Extension & Finish",
-        extensionScore,
-        extensionDetails
-      )}
-
-
-      ${block(
-        "Balance & Équilibre",
-        balanceScore,
-        balanceDetails
-      )}
-
-      ${coachHtml}
-
+      <div style="margin-top:1rem;padding:1rem;border-radius:12px;
+        background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
+        <b>Coach</b><br>${coach}
+      </div>
     </div>
   `;
 }
