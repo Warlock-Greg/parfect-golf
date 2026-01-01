@@ -1463,7 +1463,7 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // ROTATION — carte premium (Base → Top) COMPARÉE À RÉFÉRENCE
 // =====================================================
 
-let rotationScore = 10;
+let rotationScore = null;
 let rotationMeasure = null;
 // 🔒 RÉFÉRENCE SAFE
 const refRotation = window.REF?.rotation ?? null;
