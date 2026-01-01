@@ -31,6 +31,18 @@ window.NC_TOKEN =
 // Nom logique du projet
 window.NC_PROJECT = "parfect";
 
+// =====================================================
+// PARFECT — CONFIG MVP
+// =====================================================
+
+// Superadmin MVP (temporaire)
+window.PARFECT_ADMIN_EMAILS = [
+  "gregoiremm@gmail.com"
+];
+
+// Optionnel : flag explicite
+window.PARFECT_ADMIN_MODE = true;
+
 
 // -----------------------------------------------------
 // LocalStorage KEYS (centralisées)
