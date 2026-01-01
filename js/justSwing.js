@@ -273,7 +273,8 @@ if (backBtn) {
     // 👉 Étape 1 — Choix de la vue caméra
     bigMsgEl.innerHTML = `
       <div style="font-size:1.3rem;margin-bottom:12px;color:#fff;">
-        📐 Où est placée la caméra ?
+        🎬 Démarrer le swing
+        <br>📐 Où est placée la caméra ?
       </div>
 
       <button id="jsw-view-face" style="
@@ -1679,80 +1680,72 @@ if (topPose && impactPose) {
 metrics.weightShift.score = weightScore;
 
 // =====================================================
-// EXTENSION — Face-On V2 (comparatif référence)
-// Mesure : progression bras IMPACT → FINISH
+// EXTENSION & FINISH — Face-On (STRICT)
 // =====================================================
-let extensionScore = 10;
+let extensionScore = null; // null = non scoré
+let extensionStatus = "ok"; // ok | no-hands | incomplete
 
-if (impactPose && finishPose) {
-
+if (!impactPose || !finishPose) {
+  extensionStatus = "incomplete";
+} else {
   const LSimp = LM(impactPose, 11);
   const RSimp = LM(impactPose, 12);
   const LSf   = LM(finishPose, 11);
   const RSf   = LM(finishPose, 12);
 
-  const LWimp = LM(impactPose, 15);
-  const RWimp = LM(impactPose, 16);
-  const LWf   = LM(finishPose, 15);
-  const RWf   = LM(finishPose, 16);
+  const LWimp = LMv(impactPose, 15);
+  const RWimp = LMv(impactPose, 16);
+  const LWf   = LMv(finishPose, 15);
+  const RWf   = LMv(finishPose, 16);
 
-  if (
-    LSimp && RSimp && LSf && RSf &&
-    (LWimp || RWimp) &&
-    (LWf || RWf)
-  ) {
+  // ❌ mains non détectées correctement
+  if ((!LWimp && !RWimp) || (!LWf && !RWf)) {
+    extensionStatus = "no-hands";
+  } else if (LSimp && RSimp && LSf && RSf) {
 
-    // 🔹 largeur épaules (normalisation robuste)
     const sw = Math.max(
-      jswDist(LSimp, RSimp) || 0,
-      jswDist(LSf, RSf) || 0,
-      0.25
+      jswDist(LSimp, RSimp),
+      jswDist(LSf, RSf)
     );
 
-    // 🔹 extension bras normalisée
-    const armImpact = Math.max(
-      LWimp ? jswDist(LSimp, LWimp) : 0,
-      RWimp ? jswDist(RSimp, RWimp) : 0
-    ) / sw;
+    if (sw > 0.15) {
+      const armImpact = Math.max(
+        LWimp ? jswDist(LSimp, LWimp) : 0,
+        RWimp ? jswDist(RSimp, RWimp) : 0
+      ) / sw;
 
-    const armFinish = Math.max(
-      LWf ? jswDist(LSf, LWf) : 0,
-      RWf ? jswDist(RSf, RWf) : 0
-    ) / sw;
+      const armFinish = Math.max(
+        LWf ? jswDist(LSf, LWf) : 0,
+        RWf ? jswDist(LSf, LWf) : 0
+      ) / sw;
 
-    const extensionProgress = armFinish - armImpact;
+      const progress = armFinish - armImpact;
 
-    // 🔹 metrics toujours renseignées (même sans ref)
-    metrics.extension = {
-      armImpact,
-      armFinish,
-      progress: extensionProgress
-    };
+      metrics.extension = {
+        armImpact,
+        armFinish,
+        progress,
+        status: "ok"
+      };
 
-    // 🔒 RÉFÉRENCE SAFE
-    const ref = window.REF?.extension?.progress;
-
-    const hasValidRef =
-      ref &&
-      typeof ref.target === "number" &&
-      typeof ref.tol === "number" &&
-      ref.tol > 0;
-
-    if (hasValidRef) {
-      const scoreProgress = jswClamp(
-        1 - Math.abs(extensionProgress - ref.target) / ref.tol,
-        0,
-        1
-      );
-      extensionScore = Math.round(scoreProgress * 20);
-    } else {
-      // 🎯 fallback neutre (pas de crash, pas de mensonge)
-      extensionScore = 10;
+      const ref = window.REF?.extension;
+      if (ref?.progress?.target != null && ref?.progress?.tol != null) {
+        const s = jswClamp(
+          1 - Math.abs(progress - ref.progress.target) / ref.progress.tol,
+          0,
+          1
+        );
+        extensionScore = Math.round(s * 20);
+      }
     }
   }
 }
 
+// 🧾 Toujours exposer l’état
+metrics.extension = metrics.extension || {};
+metrics.extension.status = extensionStatus;
 metrics.extension.score = extensionScore;
+
 
 
 
@@ -1845,30 +1838,56 @@ metrics.balance.score = balanceScore;
 // =====================================================
 // 8) TOTAL
 // =====================================================
-const total =
-  rotationScore +
-  triangleScore +
-  weightScore +
-  extensionScore +
-  tempoScore +
-  balanceScore;
-
-const extensionParfects = computeExtensionParfects(metrics.extension);
 
 
-return {
-  total: Math.round(total),
-  totalDynamic: Math.round(total),
+const components = [
+  addressScore,
   rotationScore,
   triangleScore,
-  weightShiftScore: weightScore,
-  extensionScore,
+  weightScore,
   tempoScore,
   balanceScore,
-  extensionParfects,
+  ...(typeof extensionScore === "number" ? [extensionScore] : [])
+];
+
+const validComponents = components.filter(
+  v => typeof v === "number" && !isNaN(v)
+);
+
+const total =
+  validComponents.length > 0
+    ? Math.round(
+        validComponents.reduce((a, b) => a + b, 0) /
+        validComponents.length
+      )
+    : 0;    
+    
+    
+return {
+  total,
+  totalDynamic: total, // ou ton calcul
+  rotationScore,
+  tempoScore,
+  triangleScore,
+  weightShiftScore,
+  extensionScore,
+  balanceScore,
+  addressScore,
+
+  // ✅ LE breakdown que la scorecard peut afficher
+  breakdown: {
+    address:   { score: addressScore,   metrics: metrics.address   || null },
+    rotation:  { score: rotationScore,  metrics: metrics.rotation  || null },
+    triangle:  { score: triangleScore,  metrics: metrics.triangle  || null },
+    weightShift:{ score: weightShiftScore, metrics: metrics.weightShift || null },
+    extension: { score: extensionScore, metrics: metrics.extension || null },
+    tempo:     { score: tempoScore,     metrics: metrics.tempo     || null },
+    balance:   { score: balanceScore,   metrics: metrics.balance   || null }
+  },
+
+  // utile debug
   metrics
 };
-
 };
 
 
@@ -2168,6 +2187,61 @@ function activateRecording() {
   console.warn("⚠️ activateRecording() temporairement désactivé (mode DEBUG).");
 }
 
+
+  // =====================================================
+// KF NORMALIZER — force {index, pose} + fallback address
+// =====================================================
+function jswNormalizeKeyFrames(keyFrames, frames) {
+  const kf = keyFrames || {};
+  const out = {};
+
+  const getPoseAt = (i) => {
+    if (!Array.isArray(frames)) return null;
+    if (typeof i !== "number") return null;
+    if (i < 0 || i >= frames.length) return null;
+    return frames[i] || null;
+  };
+
+  const normOne = (v) => {
+    if (v == null) return null;
+
+    // déjà bon format
+    if (typeof v === "object" && typeof v.index === "number") {
+      return {
+        index: v.index,
+        pose: v.pose || getPoseAt(v.index)
+      };
+    }
+
+    // format number
+    if (typeof v === "number") {
+      return { index: v, pose: getPoseAt(v) };
+    }
+
+    return null;
+  };
+
+  // normalise connus
+  const KEYS = ["address", "backswing", "top", "downswing", "impact", "release", "finish"];
+  for (const k of KEYS) out[k] = normOne(kf[k]);
+
+  // fallback address :
+  // 1) si address manquant → prends frame 0 (UX lock) si existe
+  // 2) sinon backswing-1 si dispo (optionnel)
+  if (!out.address || !out.address.pose) {
+    if (getPoseAt(0)) {
+      out.address = { index: 0, pose: getPoseAt(0) };
+    } else if (out.backswing && typeof out.backswing.index === "number" && out.backswing.index > 0) {
+      const ai = out.backswing.index - 1;
+      out.address = { index: ai, pose: getPoseAt(ai) };
+    } else {
+      out.address = null;
+    }
+  }
+
+  return out;
+}
+
   
   // ---------------------------------------------------------
   //   SWING COMPLETE → SCORE + UI
@@ -2182,7 +2256,10 @@ async function handleSwingComplete(swing) {
     console.warn("❌ Swing vide");
     return;
   }
-
+  
+  // ✅ Normalisation KEYFRAMES (sinon posture/tempo/rotation pètent)
+  swing.keyFrames = jswNormalizeKeyFrames(swing.keyFrames, swing.frames);
+  
   // ======================================================
   // 1️⃣ Sauvegarde brute (même si swing invalide)
   // ======================================================
