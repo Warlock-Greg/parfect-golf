@@ -167,8 +167,8 @@
   async function readLicenceFromNocoDB(email) {
     try {
       const res = await fetch(
-        `${window.NC_URL}?where=(${NC_FIELDS.EMAIL},eq,${email})`,
-        { headers: { "xc-token": window.NC_TOKEN } }
+        `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${email})`,
+        { headers: { "xc-token": window.NOCODB_TOKEN } }
       ).then(r => r.json());
 
       return res.list?.[0] || null;
