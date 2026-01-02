@@ -6,7 +6,7 @@
     "name": "Don't Stop Believin'",
     "goal": "Rentrer 5 putts d’affilée en gardant la même routine et confiance.",
     "objectif": 5,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_short.mp4"
+    "media": ""
   },
   {
     "id": "putt2",
@@ -14,7 +14,7 @@
     "name": "Smooth Operator",
     "goal": "10 putts avec rythme constant et toucher soyeux.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_rhythm.mp4"
+    "media": ""
   },
   {
     "id": "putt3",
@@ -22,7 +22,7 @@
     "name": "Here Comes the Sun",
     "goal": "Visualiser la ligne avant chaque putt pendant 5 minutes de calme total.",
     "objectif": 5,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/putting_lag.mp4"
+    "media": ""
   },
   {
     "id": "chip1",
@@ -30,7 +30,7 @@
     "name": "Stayin’ Alive",
     "goal": "10 chips avec un tempo fluide — le but est de rester dans le rythme.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_zone.jpg"
+    "media": ""
   },
   {
     "id": "chip2",
@@ -38,7 +38,7 @@
     "name": "Ain’t No Mountain High Enough",
     "goal": "5 réussites sur 10 pour monter la balle au bon spot sans forcer.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_focus.mp4"
+    "media": "" 
   },
   {
     "id": "chip3",
@@ -46,7 +46,7 @@
     "name": "Easy Like Sunday Morning",
     "goal": "8 chips avec tempo calme, sans crispation.",
     "objectif": 8,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/chipping_ladder.mp4"
+    "media": ""
   },
   {
     "id": "drive1",
@@ -54,7 +54,7 @@
     "name": "Eye of the Tiger",
     "goal": "10 drives concentrés, visualisés avant chaque swing.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_fairway.mp4"
+    "media": ""
   },
   {
     "id": "drive2",
@@ -62,7 +62,7 @@
     "name": "Highway to Hell",
     "goal": "10 drives puissants mais maîtrisés — sans quitter la route du fairway.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_target.mp4"
+    "media": ""
   },
   {
     "id": "drive3",
@@ -70,7 +70,7 @@
     "name": "Born to Be Wild",
     "goal": "Swing libre et naturel sur 10 balles — sans penser technique.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/driving_tempo.mp4"
+    "media": ""
   },
   {
     "id": "iron1",
@@ -86,7 +86,7 @@
     "name": "Walk This Way",
     "goal": "9 coups avec routine complète avant chaque swing.",
     "objectif": 9,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_alignment.jpg"
+    "media": ""
   },
   {
     "id": "iron3",
@@ -94,7 +94,7 @@
     "name": "Let It Be",
     "goal": "10 coups avec acceptation totale du résultat, sans jugement.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/iron_distance.mp4"
+    "media": ""
   },
   {
     "id": "mental1",
@@ -102,7 +102,7 @@
     "name": "Imagine",
     "goal": "Fermer les yeux 5 minutes et visualiser le parcours idéal.",
     "objectif": 5,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_visual.mp4"
+    "media": ""
   },
   {
     "id": "mental2",
@@ -110,7 +110,7 @@
     "name": "Chill Out",
     "goal": "Respirer 5 secondes avant 10 swings pour calmer ton rythme cardiaque.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_breathing.mp4"
+    "media": ""
   },
   {
     "id": "mental3",
@@ -118,7 +118,7 @@
     "name": "Don’t Worry Be Happy",
     "goal": "Sourire avant chaque swing — 10 fois d’affilée.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_focus.mp4"
+    "media": ""
   },
   {
     "id": "mental4",
@@ -126,7 +126,7 @@
     "name": "Happy",
     "goal": "Danser intérieurement avant chaque coup pendant 9 trous.",
     "objectif": 9,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_pressure.mp4"
+    "media": ""
   },
   {
     "id": "mental5",
@@ -134,7 +134,7 @@
     "name": "Lose Yourself",
     "goal": "10 swings 100% engagés sans douter une seule fois.",
     "objectif": 10,
-    "media": "https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/media/mental_routine.mp4"
+    "media": ""
   }
 
 ]
