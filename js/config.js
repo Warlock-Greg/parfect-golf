@@ -30,7 +30,7 @@ window.NOCODB_SWINGS_URL =
 
 // ⚠️ Token API (⚠️ MVP only — à sécuriser plus tard)
 window.NOCODB_TOKEN =
-  "pnOjTp-F7ZbPvGp5NEhceH3zQmDrXQAzFG3AXJz9";
+  "gJkWlHE4qzbs-JC5L5l2o0T1_UldcEYOIAHXpPtl";
 
 // Nom logique du projet
 window.NC_PROJECT = "parfect";
