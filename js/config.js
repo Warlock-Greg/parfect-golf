@@ -26,7 +26,7 @@ window.NOCODB_REFERENCES_URL =
 
 // ⚠️ URL API NocoDB (table swing)
 window.NOCODB_SWINGS_URL =
-  "https://app.nocodb.com/api/v2/tables/vwusd7vivwrhskgn/records";
+  "https://app.nocodb.com/api/v2/tables/mh0dt1rbylry99e/records";
 
 // ⚠️ Token API (⚠️ MVP only — à sécuriser plus tard)
 window.NOCODB_TOKEN =
