@@ -2731,21 +2731,38 @@ const isSuperAdmin =
   window.userLicence?.is_superadmin === true;
 
 const btnParfect = document.getElementById("swing-save-parfect");
+const feedbackEl = document.getElementById("parfect-ref-feedback");
 
-if (btnParfect) {
-  if (isSuperAdmin) {
-    btnParfect.style.display = "block";
-  } else {
-    btnParfect.style.display = "none";
-  }
-}
+if (btnParfect && isSuperAdmin) {
+  btnParfect.style.display = "block";
 
-  if (btnParfect && isSuperAdmin) {
-  btnParfect.onclick = () => {
-    saveParfectReference(swing, scores);
-    showBigMessage("⭐⭐ Référence PARFECT enregistrée");
+  btnParfect.onclick = async () => {
+    btnParfect.disabled = true;
+    btnParfect.innerText = "⏳ Sauvegarde…";
+
+    try {
+      await saveParfectReference(swing, scores);
+
+      // ✅ feedback visible
+      if (feedbackEl) {
+        feedbackEl.innerText = "⭐⭐ Référence PARFECT enregistrée";
+        feedbackEl.style.display = "block";
+      }
+
+      // ✅ état final bouton
+      btnParfect.innerText = "✅ Référence PARFECT";
+      btnParfect.style.background = "#00ff99";
+      btnParfect.style.color = "#111";
+      btnParfect.style.border = "none";
+
+    } catch (e) {
+      console.error("❌ PARFECT REF ERROR", e);
+      btnParfect.disabled = false;
+      btnParfect.innerText = "⭐ Définir comme référence PARFECT";
+    }
   };
 }
+
 
 
    // ---------------------------------------------------------
