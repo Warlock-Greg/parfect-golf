@@ -126,11 +126,11 @@
 
       // 2️⃣ Sync NocoDB (payload plat, sans fields)
       try {
-        await fetch(window.NC_URL, {
+        await fetch(window.NOCODB_REFERENCES_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "xc-token": window.NC_TOKEN
+            "xc-token": window.NOCODB_TOKEN
           },
           body: JSON.stringify({
             [NC_FIELDS.EMAIL]: email,
