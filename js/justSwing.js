@@ -2211,13 +2211,13 @@ function buildPremiumBreakdown(swing, scores) {
         <p style="color:#aaa;">Score Parfect Premium</p>
       </div>
 
-      ${block("Posture à l’adresse", postureScore, "Alignement · Stance · Flexion", postureDetails,10)}
-      ${block("Rotation", rotationScore, "Épaules · Hanches · X-Factor (Base → Top)", rotationDetails,20)}
-      ${block("Tempo", tempoScore, "Backswing / Downswing", tempoDetails,20)}
-      ${block("Triangle bras/épaules", triangleScore, "Stabilité au top et à l’impact", triangleDetails,20)}
-      ${block("Transfert de poids", weightShiftScore, "Backswing → Impact", weightShiftDetails,10)}
-      ${block("Extension & Finish", extensionScore, "Bras + finish", extensionDetails,10)}
-      ${block("Balance & Équilibre", balanceScore, "Finish stable", balanceDetails,10)}
+      ${block("Posture à l’adresse", postureScore, postureDetails,10)}
+      ${block("Rotation", rotationScore,rotationDetails,20)}
+      ${block("Tempo", tempoScore, tempoDetails,20)}
+      ${block("Triangle bras/épaules", triangleScore, triangleDetails,20)}
+      ${block("Transfert de poids", weightShiftScore, weightShiftDetails,10)}
+      ${block("Extension & Finish", extensionScore, extensionDetails,10)}
+      ${block("Balance & Équilibre", balanceScore,balanceDetails,10)}
 
       <div style="margin-top:1rem;padding:1rem;border-radius:12px;
         background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
