@@ -2510,47 +2510,81 @@ if (!addressLocked) {
     return;
   }
 
+// =====================================================
+// SAUVEGARDE RÉFÉRENCE DANS NOCODB
+// =====================================================
+
 async function saveReferenceToDB(ref) {
   try {
+    // 🔑 Vérifier que les variables d'environnement existent
+    if (!window.NOCODB_REFERENCES_URL || !window.NOCODB_TOKEN) {
+      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
+    }
+
+    console.log("📤 Sauvegarde référence...", ref);
+
     const res = await fetch(window.NOCODB_REFERENCES_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xc-token": window.NOCODB_TOKEN // ⚠️ IMPORTANT
+        "xc-token": window.NOCODB_TOKEN
       },
       body: JSON.stringify(ref)
     });
 
+    // ✅ Vérification statut HTTP
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`NocoDB ${res.status} — ${txt}`);
+      throw new Error(`NocoDB ${res.status} — ${txt}`); // ✅ Parenthèses corrigées
     }
 
     const data = await res.json();
-    console.log("⭐ Référence sauvegardée", data);
+    console.log("✅ Référence sauvegardée", data);
     return data;
 
   } catch (err) {
-    console.error("❌ saveReferenceToDB failed", err);
+    console.error("❌ Erreur saveReferenceToDB:", err.message);
+    throw err; // ✅ Propager l'erreur pour gestion en amont
   }
 }
 
+// =====================================================
+// SAUVEGARDE SWING DANS NOCODB
+// =====================================================
 
-  
-  async function saveSwingToNocoDB(record) {
+async function saveSwingToNocoDB(record) {
   try {
-    await fetch("https://app.nocodb.com/api/v1/db/data/v1/parfect", {
+    // 🔑 Vérifier que les variables existent
+    if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
+      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
+    }
+
+    console.log("📤 Sauvegarde swing...", record);
+
+    const res = await fetch(window.NOCODB_SWINGS_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xc-token":  window.NC_TOKEN
+        "xc-token": window.NOCODB_TOKEN // ✅ Nom cohérent
       },
       body: JSON.stringify(record)
     });
-  } catch (e) {
-    console.warn("⚠️ Swing non sauvegardé", e);
+
+    // ✅ Vérification statut HTTP
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`NocoDB ${res.status} — ${errorText}`);
+    }
+
+    const data = await res.json();
+    console.log("✅ Swing sauvegardé", data);
+    return data; // ✅ Retourner la réponse
+
+  } catch (err) {
+    console.error("❌ Erreur saveSwingToNocoDB:", err.message);
+    throw err; // ✅ Propager l'erreur
   }
-} 
+}
 
 
   // -------------------------------------------
