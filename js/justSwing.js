@@ -2396,7 +2396,7 @@ function saveUserReference(swing, scores) {
   );
 }
 
-  const btnParfect = document.getElementById("swing-save-parfect");
+  const btnParfect = document.getElementById("swing-save-parfect-reference");
 
   if (btnParfect && isSuperAdmin) {
     btnParfect.style.display = "block";
