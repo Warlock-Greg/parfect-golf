@@ -21,11 +21,15 @@ window.EXERCISE_JSON_URL = `${window.GH_RAW_BASE}/exercises.json`;
 // -----------------------------------------------------
 
 // ⚠️ URL API NocoDB (table users/licences)
-window.NC_URL =
+window.NOCODB_REFERENCES_URL =
   "https://app.nocodb.com/api/v2/tables/mfbnbl5kk5zmu73/records";
 
+// ⚠️ URL API NocoDB (table swing)
+window.NOCODB_SWINGS_URL =
+  "https://app.nocodb.com/api/v2/tables/vwusd7vivwrhskgn/records";
+
 // ⚠️ Token API (⚠️ MVP only — à sécuriser plus tard)
-window.NC_TOKEN =
+window.NOCODB_TOKEN =
   "pnOjTp-F7ZbPvGp5NEhceH3zQmDrXQAzFG3AXJz9";
 
 // Nom logique du projet
