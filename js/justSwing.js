@@ -310,7 +310,7 @@ function showStartButton() {
   // -------------------------
   // Choix de la vue caméra
   // -------------------------
-  const setViewAndStart = (view) => {
+  const setViewAndStart = async (view) => {
     window.jswViewType = view; // 🔑 utilisé partout (scoring, ref, etc.)
     console.log("📐 Vue sélectionnée :", view);
    if (await canStartSwing()) {
