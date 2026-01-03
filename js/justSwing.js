@@ -302,7 +302,7 @@ function showStartButton() {
     backBtn.onclick = () => {
       window.JustSwing?.stopSession?.();
       document.body.classList.remove("jsw-fullscreen");
-      document.getElementById("home-btn")?.click();
+        document.getElementById("home-btn")?.click();
     };
   }
 }
@@ -2324,7 +2324,7 @@ async function handleSwingComplete(swing) {
     quality: swing.quality || {}
   };
 
-  saveSwingToNocoDB(swingRecord);
+  (swingRecord);
 
 // ===============================
 // RÉFÉRENCES (USER / PARFECT)
@@ -2397,15 +2397,46 @@ function saveUserReference(swing, scores) {
 }
 
   const btnParfect = document.getElementById("swing-save-parfect-reference");
+if (btnParfect && isSuperAdmin) {
+  btnParfect.style.display = "block";
 
-  if (btnParfect && isSuperAdmin) {
-    btnParfect.style.display = "block";
+  btnParfect.onclick = async () => {
+    try {
+      // 🔒 éviter double clic
+      btnParfect.disabled = true;
 
-    btnParfect.onclick = () => {
+      // 🔄 feedback immédiat
+      btnParfect.innerHTML = "⏳ Enregistrement…";
+      btnParfect.style.opacity = "0.6";
+      btnParfect.style.cursor = "default";
+
       console.log("👑 PARFECT REF CLICKED");
-      saveParfectReference(swing, scores);
-    };
-  }
+
+      // ⏱️ attendre la sauvegarde réelle
+      await saveParfectReference(swing, scores);
+
+      // ✅ succès UI
+      btnParfect.innerHTML = "✅ Référence PARFECT définie";
+      btnParfect.style.background = "#00ff99";
+      btnParfect.style.color = "#111";
+      btnParfect.style.border = "none";
+      btnParfect.style.opacity = "1";
+
+      showBigMessage("⭐⭐ Référence PARFECT enregistrée");
+
+    } catch (err) {
+      console.error("❌ Échec sauvegarde référence PARFECT", err);
+
+      // 🔁 rollback UI
+      btnParfect.disabled = false;
+      btnParfect.innerHTML = "⭐ Définir comme référence PARFECT";
+      btnParfect.style.opacity = "1";
+      btnParfect.style.cursor = "pointer";
+
+      showBigMessage("❌ Erreur lors de l’enregistrement");
+    }
+  };
+}
 }
 
   
