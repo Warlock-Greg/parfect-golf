@@ -2235,9 +2235,9 @@ function buildPremiumBreakdown(swing, scores) {
   // ---------------------------------------------------------
   el.style.display = "block";
   el.innerHTML = `
-    <div style="padding:1.5rem;">
-      <div style="text-align:center;margin-bottom:2rem;">
-        <h2 style="font-size:2.5rem;margin:0;color:#4ade80;">
+    <div style="padding:.5rem;">
+      <div style="text-align:center;margin-bottom:1.1rem;">
+        <h2 style="font-size:1.1rem;margin:0;color:#4ade80;">
           ${scores?.total ?? "—"}/100
         </h2>
         <p style="color:#aaa;">Score Parfect Premium</p>
@@ -2251,7 +2251,7 @@ function buildPremiumBreakdown(swing, scores) {
       ${block("Extension & Finish", extensionScore, "",extensionDetails,10)}
       ${block("Balance & Équilibre", balanceScore,"",balanceDetails,10)}
 
-      <div style="margin-top:1rem;padding:1rem;border-radius:12px;
+      <div style="margin-top:.2rem;padding:.3rem;border-radius:12px;
         background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
         <b>Coach</b><br>${coach}
       </div>
