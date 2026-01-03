@@ -223,6 +223,30 @@ function exportSwingForTraining(swing, scores) {
     routineStepsEl.textContent = `Routine : ${steps.join(" · ")}`;
   }
 
+async function canStartSwing() {
+  const email = window.userLicence?.email;
+  if (!email) return true; // sécurité
+
+  const isPro =
+    window.userLicence?.role === "superadmin" ||
+    window.userLicence?.plan === "pro";
+
+  if (isPro) return true;
+
+  const count = await getTodaySwingCount(email);
+
+  if (count >= 10) {
+    showBigMessage(`
+      🚫 Quota atteint<br>
+      <span style="opacity:.8;">10 swings par jour (version gratuite)</span>
+    `);
+    return false;
+  }
+
+  return true;
+}
+
+  
 // ---------------------------------------------------------
 //   BOUTON START + CHOIX VUE (Face-On / Mobile FO / DTL)
 // ---------------------------------------------------------
@@ -289,7 +313,9 @@ function showStartButton() {
   const setViewAndStart = (view) => {
     window.jswViewType = view; // 🔑 utilisé partout (scoring, ref, etc.)
     console.log("📐 Vue sélectionnée :", view);
-    startCountdown();
+   if (await canStartSwing()) {
+  startCountdown();
+}
   };
 
   const btnFace = document.getElementById("jsw-view-face");
@@ -616,6 +642,27 @@ function initEngine() {
 }
 
 
+async function getTodaySwingCount(email) {
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const url =
+    `${window.NOCODB_SWINGS_URL}?` +
+    `where=(player_email,eq,${email})~and(created_at,ge,${today})`;
+
+  const res = await fetch(url, {
+    headers: { "xc-token": window.NOCODB_TOKEN }
+  });
+
+  if (!res.ok) {
+    throw new Error("Impossible de compter les swings");
+  }
+
+  const data = await res.json();
+  return data.list?.length || 0;
+}
+
+
+  
   
   // ---------------------------------------------------------
   //   SESSION START / STOP
@@ -2650,6 +2697,55 @@ async function saveSwingToNocoDB(record) {
 }
 
 
+  async function loadSwingHistory(email) {
+  const url =
+    `${window.NOCODB_SWINGS_URL}?` +
+    `where=(player_email,eq,${email})&sort=-created_at&limit=50`;
+
+  const res = await fetch(url, {
+    headers: { "xc-token": window.NOCODB_TOKEN }
+  });
+
+  if (!res.ok) throw new Error("Erreur historique");
+
+  const data = await res.json();
+  return data.list || [];
+}
+
+async function showSwingHistory() {
+  const email = window.userLicence?.email;
+  if (!email) return;
+
+  const swings = await loadSwingHistory(email);
+
+  const el = document.getElementById("swing-history");
+  if (!el) return;
+
+  el.innerHTML = swings
+    .map(
+      (s) => `
+      <div class="history-item">
+        <b>${new Date(s.created_at).toLocaleTimeString()}</b>
+        — ${s.club}
+        — ${s.scores?.total ?? "—"}/100
+      </div>
+    `
+    )
+    .join("");
+}
+
+async function updateQuotaUI() {
+  const email = window.userLicence?.email;
+  if (!email) return;
+
+  const count = await getTodaySwingCount(email);
+  const left = Math.max(0, 10 - count);
+
+  const el = document.getElementById("swing-quota");
+  if (el) el.textContent = `🎯 ${left} swings restants aujourd’hui`;
+}
+
+  
   // -------------------------------------------
   // 2️⃣ — Afficher le panneau Replay
   // -------------------------------------------
