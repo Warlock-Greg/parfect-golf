@@ -51,6 +51,13 @@ const DEFAULT_ROUTINES = {
   ],
 };
 
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("jsw-close-review");
+  if (closeBtn) {
+    closeBtn.onclick = closeSwingReview;
+  }
+});
+
 // --- ADDRESS DETECTION ---
 let addressBuffer = [];
 let pendingAddress = false;
@@ -889,6 +896,31 @@ function onPoseFrame(landmarks) {
   }
 }
 
+function closeSwingReview() {
+  console.log("❌ FERMER → retour Home");
+
+  // 1) Stop session JustSwing proprement
+  if (window.JustSwing?.stopSession) {
+    window.JustSwing.stopSession();
+  }
+
+  // 2) Nettoyage UI fullscreen
+  document.body.classList.remove("jsw-fullscreen");
+
+  const reviewPanel = document.getElementById("swing-review-panel");
+  if (reviewPanel) {
+    reviewPanel.style.display = "none";
+  }
+
+  // 3) Retour HOME via router (source de vérité)
+  const homeBtn = document.getElementById("home-btn");
+  if (homeBtn) {
+    homeBtn.click();
+  } else {
+    console.warn("⚠️ home-btn introuvable → reload sécurité");
+    window.location.reload();
+  }
+}
 
 
   // ---------------------------------------------------------
