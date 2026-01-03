@@ -2146,18 +2146,18 @@ function buildPremiumBreakdown(swing, scores) {
 
   return `
     <div style="
-      padding:1rem;
+      padding:.5rem;
       border-radius:12px;
       background:rgba(255,255,255,0.05);
-      margin-bottom:1rem;
+      margin-bottom:.3rem;
       border-left:4px solid ${scoreColor(colorScore)};
     ">
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;font-size:1.2rem;color:#fff;">
+        <h3 style="margin:0;font-size:1rem;color:#fff;">
           ${title}
         </h3>
         <div style="
-          font-size:1.4rem;
+          font-size:1rem;
           font-weight:700;
           color:${scoreColor(colorScore)};
         ">
