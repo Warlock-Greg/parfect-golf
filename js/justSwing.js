@@ -2736,31 +2736,32 @@ const feedbackEl = document.getElementById("parfect-ref-feedback");
 if (btnParfect && isSuperAdmin) {
   btnParfect.style.display = "block";
 
-  btnParfect.onclick = async () => {
-    btnParfect.disabled = true;
-    btnParfect.innerText = "⏳ Sauvegarde…";
+btnParfect.onclick = async () => {
+  console.log("👑 PARFECT REF CLICKED");
 
-    try {
-      await saveParfectReference(swing, scores);
+  // Feedback immédiat (avant async)
+  btnParfect.disabled = true;
+  const prevText = btnParfect.innerHTML;
+  btnParfect.innerHTML = "⏳ Enregistrement…";
 
-      // ✅ feedback visible
-      if (feedbackEl) {
-        feedbackEl.innerText = "⭐⭐ Référence PARFECT enregistrée";
-        feedbackEl.style.display = "block";
-      }
+  try {
+    await saveParfectReference(swing, scores);
 
-      // ✅ état final bouton
-      btnParfect.innerText = "✅ Référence PARFECT";
-      btnParfect.style.background = "#00ff99";
-      btnParfect.style.color = "#111";
-      btnParfect.style.border = "none";
+    // Feedback visible et durable
+    btnParfect.innerHTML = "✅ Référence enregistrée";
+    btnParfect.style.opacity = "0.9";
 
-    } catch (e) {
-      console.error("❌ PARFECT REF ERROR", e);
-      btnParfect.disabled = false;
-      btnParfect.innerText = "⭐ Définir comme référence PARFECT";
-    }
-  };
+    // Sécurité anti double clic
+    btnParfect.onclick = null;
+
+  } catch (err) {
+    console.error("❌ PARFECT REF ERROR", err);
+
+    // rollback UI
+    btnParfect.disabled = false;
+    btnParfect.innerHTML = prevText;
+  }
+};
 }
 
 
