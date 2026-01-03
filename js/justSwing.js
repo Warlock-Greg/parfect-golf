@@ -206,6 +206,23 @@ function exportSwingForTraining(swing, scores) {
     }, 20);
   }
 
+function closeSwingReview() {
+  console.log("❌ Fermeture Swing Review");
+
+  // 1️⃣ Stop session propre
+  window.JustSwing?.stopSession?.();
+
+  // 2️⃣ Quitte le mode fullscreen
+  document.body.classList.remove("jsw-fullscreen");
+
+  // 3️⃣ Masque le panneau review si présent
+  document.getElementById("swing-review-panel")?.classList.add("hidden");
+
+  // 4️⃣ Retour Home (router existant)
+  document.getElementById("home-btn")?.click();
+}
+
+  
   function hideBigMessage() {
     if (!bigMsgEl) return;
     bigMsgEl.style.opacity = 0;
