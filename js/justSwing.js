@@ -201,21 +201,44 @@ function exportSwingForTraining(swing, scores) {
     }, 20);
   }
 
+// =====================================================
+// ❌ FERMER LE SWING REVIEW → RETOUR HOME
+// =====================================================
 window.closeSwingReview = function () {
-  console.log("❌ Fermeture Swing Review");
+  console.log("❌ closeSwingReview()");
 
-  // Stop session
-  window.JustSwing?.stopSession?.();
+  // 1) Stop session swing proprement
+  if (window.JustSwing?.stopSession) {
+    window.JustSwing.stopSession();
+  }
 
-  // Quitte fullscreen
+  // 2) Quitte le mode fullscreen
   document.body.classList.remove("jsw-fullscreen");
 
-  // Masque panneau review
-  document.getElementById("swing-review-panel")?.classList.add("hidden");
+  // 3) Cache le panneau de review
+  const review = document.getElementById("swing-review-panel");
+  if (review) {
+    review.style.display = "none";
+    review.classList.add("hidden");
+  }
 
-  // Retour home
-  document.getElementById("home-btn")?.click();
+  // 4) Retour HOME via ton router existant
+  const homeBtn = document.getElementById("home-btn");
+  if (homeBtn) {
+    homeBtn.click();
+  } else {
+    console.warn("⚠️ home-btn introuvable");
+  }
 };
+
+// 👉 Délégation de clic (marche même si le DOM est recréé)
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("#jsw-close-review");
+  if (!btn) return;
+
+  e.preventDefault();
+  window.closeSwingReview();
+});
 
   
   function hideBigMessage() {
