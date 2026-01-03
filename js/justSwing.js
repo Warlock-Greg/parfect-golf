@@ -51,12 +51,7 @@ const DEFAULT_ROUTINES = {
   ],
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const closeBtn = document.getElementById("jsw-close-review");
-  if (closeBtn) {
-    closeBtn.onclick = closeSwingReview;
-  }
-});
+
 
 // --- ADDRESS DETECTION ---
 let addressBuffer = [];
@@ -3188,5 +3183,12 @@ if (nextBtn) {
     _debug: debug
   };
 })();
+
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("jsw-close-review");
+  if (closeBtn) {
+    closeBtn.onclick = closeSwingReview;
+  }
+});
 
 window.JustSwing = JustSwing;
