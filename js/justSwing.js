@@ -2174,14 +2174,15 @@ function onSwingValidated({ scores, currentClub }) {
   }
 
   
-  // 2️⃣ Sauvegarde Social (NocoDB)
+  // 2️⃣ Récupération de l'utilisateur
   const user = window.userLicence;
-
- const userEmail = user?.email || user?.Email || 'anonymous@justswing.app';
+  const PLAYER_EMAIL = user?.email || user?.Email;
   
-// ===============================
-  // 2️⃣ SAUVEGARDE NOCODB
-  // ===============================
+  if (!PLAYER_EMAIL) {
+    console.warn("⚠️ Email utilisateur introuvable, sauvegarde ignorée");
+    return;
+  }
+  
 
 // ===============================
   // 3️⃣ SAUVEGARDE NOCODB - FORMAT COMPLET
