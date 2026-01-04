@@ -2138,19 +2138,16 @@ function onSwingValidated({ scores, currentClub }) {
   }
 
   // 2️⃣ Sauvegarde Social (NocoDB)
-  const email = window.userLicence?.email;
+  const user = window.userLicence;
 
-  if (email) {
-    saveSwingToNocoDB({
-      player_email: email,
-      club: currentClub || "?",
-      breakdown,              // ✅ breakdown stocké
-      score_total: scores.total ?? null,
-      created_at: new Date().toISOString()
-    });
-  } else {
-    console.warn("⚠️ Swing non sauvegardé (email manquant)");
-  }
+saveSwingToNocoDB({
+  user_id: user.user_id || user.email, // fallback temporaire
+  email: user.email,                   // info lisible
+  club: currentClub || "?",
+  scores,
+  score_total: scores.total ?? null,
+  created_at: new Date().toISOString()
+});
 }
   
 // ---------------------------------------------------------
