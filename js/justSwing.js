@@ -2060,8 +2060,7 @@ return {
 
 
 
-
-  function jswDumpLandmarksJSON(swing) {
+ function jswDumpLandmarksJSON(swing, {scores,currentClub}) {
   const frames = swing.frames || [];
   const ts = swing.timestamps || [];
   const KF = swing.keyFrames || {};
@@ -2122,36 +2121,46 @@ return {
   URL.revokeObjectURL(url);
 
   console.log("📦 Swing JSON dump saved:", dump);
-}
-
-// ================================
-// ➕ AJOUT À LA SESSION EN COURS
-// ================================
-if (window.TrainingSession) {
-  TrainingSession.swings.unshift({
-    created_at: Date.now(),
-    club: currentClub || "?",
-    scores: scores // objet complet
-  });
-
-  // garde uniquement les 5 derniers
-  TrainingSession.swings = TrainingSession.swings.slice(0, 5);
-  renderSessionHistoryInline();
+ onSwingValidated({
+  scores,
+  currentClub
+});
 
 }
 
-const email = window.userLicence?.email;
+// ========================================
+// ✅ APPELÉ QUAND UN SWING EST VALIDÉ
+// ========================================
+function onSwingValidated({ scores, currentClub }) {
+  // 1️⃣ Session locale (optionnelle mais safe)
+  if (window.TrainingSession) {
+    TrainingSession.swings.unshift({
+      created_at: Date.now(),
+      club: currentClub || "?",
+      scores
+    });
 
-if (email) {
-  saveSwingToNocoDB({
-    player_email: email,
-    club: currentClub || "?",
-    scores: scores,            // objet complet
-    score_total: scores.total, // si tu as une colonne dédiée
-    created_at: new Date().toISOString()
-  });
-} else {
-  console.warn("⚠️ Swing non sauvegardé (email manquant)");
+    TrainingSession.swings = TrainingSession.swings.slice(0, 5);
+
+    if (typeof renderSessionHistoryInline === "function") {
+      renderSessionHistoryInline();
+    }
+  }
+
+  // 2️⃣ Sauvegarde Social (NocoDB)
+  const email = window.userLicence?.email;
+
+  if (email) {
+    saveSwingToNocoDB({
+      player_email: email,
+      club: currentClub || "?",
+      scores,
+      score_total: scores.total,
+      created_at: new Date().toISOString()
+    });
+  } else {
+    console.warn("⚠️ Swing non sauvegardé (email manquant)");
+  }
 }
 
   
