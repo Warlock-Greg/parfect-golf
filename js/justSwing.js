@@ -2118,12 +2118,19 @@ return {
 // ✅ APPELÉ QUAND UN SWING EST VALIDÉ
 // ========================================
 function onSwingValidated({ scores, currentClub }) {
-  // 1️⃣ Session locale (optionnelle mais safe)
+  if (!scores || !scores.breakdown) {
+    console.warn("⚠️ onSwingValidated appelé sans breakdown", scores);
+    return;
+  }
+
+  const breakdown = scores.breakdown;
+
+  // 1️⃣ Session locale (5 derniers swings)
   if (window.TrainingSession) {
     TrainingSession.swings.unshift({
       created_at: Date.now(),
       club: currentClub || "?",
-      breakdown: scores.breakdown
+      breakdown
     });
 
     TrainingSession.swings = TrainingSession.swings.slice(0, 5);
@@ -2140,15 +2147,14 @@ function onSwingValidated({ scores, currentClub }) {
     saveSwingToNocoDB({
       player_email: email,
       club: currentClub || "?",
-      scores,
-      score_total: scores.total,
+      breakdown,              // ✅ breakdown stocké
+      score_total: scores.total ?? null,
       created_at: new Date().toISOString()
     });
   } else {
     console.warn("⚠️ Swing non sauvegardé (email manquant)");
   }
 }
-
   
 // ---------------------------------------------------------
 //   historique session
@@ -2168,35 +2174,20 @@ function renderSessionHistoryInline() {
     return;
   }
 
-  const fmt = (v) =>
-    typeof v === "number" && Number.isFinite(v) ? v : "—";
-
   el.innerHTML = swings.map((s, i) => {
     const b = s.breakdown || {};
 
-    return `
-      <div class="history-item session-item" style="
-        padding:.35rem .4rem;
-        margin-bottom:.25rem;
-        border-radius:10px;
-        background:rgba(255,255,255,0.04);
-        font-size:.85rem;
-        color:#ddd;
-      ">
-        <div style="display:flex;justify-content:space-between;">
-          <b>#${swings.length - i}</b>
-          <span>${new Date(s.created_at).toLocaleTimeString()}</span>
-        </div>
+    const score = (k, max) =>
+      typeof b[k]?.score === "number" ? `${b[k].score}/${max}` : "—";
 
-        <div style="margin-top:.15rem;">
-          🧍 ${fmt(b.posture?.score)}
-          · 🌀 ${fmt(b.rotation?.score)}
-          · ⏱️ ${fmt(b.tempo?.score)}
-          · 🔺 ${fmt(b.triangle?.score)}
-          · ⚖️ ${fmt(b.weightShift?.score)}
-          · ↕️ ${fmt(b.extension?.score)}
-          · 🧘 ${fmt(b.balance?.score)}
-        </div>
+    return `
+      <div class="history-item session-item">
+        <b>#${swings.length - i}</b>
+        — ${new Date(s.created_at).toLocaleTimeString()}
+        — 🎯 ${score("rotation", 20)}
+        · ⏱️ ${score("tempo", 20)}
+        · 🔺 ${score("triangle", 20)}
+        · ⚖️ ${score("balance", 10)}
       </div>
     `;
   }).join("");
