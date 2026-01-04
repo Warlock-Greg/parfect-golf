@@ -2449,7 +2449,7 @@ if (backBtn) {
   };
 }
 
-
+}
 
 
 function activateRecording() {
