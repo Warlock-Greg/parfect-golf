@@ -2180,7 +2180,7 @@ function onSwingValidated({ scores, currentClub }) {
 
   
 saveSwingToNocoDB({
-  user_id: user.user_id || user.email, // fallback temporaire
+  player_email: email,          // ✅ clé stable
   email: user.email,                   // info lisible
   club: currentClub || "?",
   scores,
