@@ -2113,7 +2113,7 @@ function onSwingValidated({ scores, currentClub }) {
     TrainingSession.swings.unshift({
       created_at: Date.now(),
       club: currentClub || "?",
-      scores
+      breakdown: scores.breakdown
     });
 
     TrainingSession.swings = TrainingSession.swings.slice(0, 5);
@@ -2158,15 +2158,38 @@ function renderSessionHistoryInline() {
     return;
   }
 
-  el.innerHTML = swings.map((s, i) => `
-    <div class="history-item session-item">
-      <b>#${swings.length - i}</b>
-      — ${new Date(s.created_at).toLocaleTimeString()}
-      — 🎯 ${s.scores.total}
-      · 🔄 ${s.scores.rotationScore ?? "—"}
-      · ⚡ ${s.scores.impactScore ?? "—"}
-    </div>
-  `).join("");
+  const fmt = (v) =>
+    typeof v === "number" && Number.isFinite(v) ? v : "—";
+
+  el.innerHTML = swings.map((s, i) => {
+    const b = s.breakdown || {};
+
+    return `
+      <div class="history-item session-item" style="
+        padding:.35rem .4rem;
+        margin-bottom:.25rem;
+        border-radius:10px;
+        background:rgba(255,255,255,0.04);
+        font-size:.85rem;
+        color:#ddd;
+      ">
+        <div style="display:flex;justify-content:space-between;">
+          <b>#${swings.length - i}</b>
+          <span>${new Date(s.created_at).toLocaleTimeString()}</span>
+        </div>
+
+        <div style="margin-top:.15rem;">
+          🧍 ${fmt(b.posture?.score)}
+          · 🌀 ${fmt(b.rotation?.score)}
+          · ⏱️ ${fmt(b.tempo?.score)}
+          · 🔺 ${fmt(b.triangle?.score)}
+          · ⚖️ ${fmt(b.weightShift?.score)}
+          · ↕️ ${fmt(b.extension?.score)}
+          · 🧘 ${fmt(b.balance?.score)}
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
   
