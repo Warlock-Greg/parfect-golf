@@ -2137,9 +2137,49 @@ function onSwingValidated({ scores, currentClub }) {
     }
   }
 
+// =====================================================
+// SAUVEGARDE SWING DANS NOCODB
+// =====================================================
+
+window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
+  try {
+    if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
+      throw new Error("Variables NocoDB manquantes");
+    }
+
+    console.log("📤 Sauvegarde swing...", record);
+
+    const res = await fetch(window.NOCODB_SWINGS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN
+      },
+      body: JSON.stringify(record)
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`NocoDB ${res.status} — ${txt}`);
+    }
+
+    const data = await res.json();
+    console.log("✅ Swing sauvegardé", data);
+    return data;
+
+  } catch (err) {
+    console.error("❌ Erreur saveSwingToNocoDB:", err.message);
+    throw err;
+  }
+};
+
+
+  
   // 2️⃣ Sauvegarde Social (NocoDB)
   const user = window.userLicence;
 
+
+  
 saveSwingToNocoDB({
   user_id: user.user_id || user.email, // fallback temporaire
   email: user.email,                   // info lisible
@@ -2824,42 +2864,6 @@ async function saveReferenceToDB(ref) {
     throw err; // ✅ Propager l'erreur pour gestion en amont
   }
 }
-
-// =====================================================
-// SAUVEGARDE SWING DANS NOCODB
-// =====================================================
-
-window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
-  try {
-    if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
-      throw new Error("Variables NocoDB manquantes");
-    }
-
-    console.log("📤 Sauvegarde swing...", record);
-
-    const res = await fetch(window.NOCODB_SWINGS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "xc-token": window.NOCODB_TOKEN
-      },
-      body: JSON.stringify(record)
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`NocoDB ${res.status} — ${txt}`);
-    }
-
-    const data = await res.json();
-    console.log("✅ Swing sauvegardé", data);
-    return data;
-
-  } catch (err) {
-    console.error("❌ Erreur saveSwingToNocoDB:", err.message);
-    throw err;
-  }
-};
 
 
 
