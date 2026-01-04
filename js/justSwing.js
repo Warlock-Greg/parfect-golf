@@ -2174,12 +2174,18 @@ function onSwingValidated({ scores, currentClub }) {
   }
 
   
-  // 2️⃣ Récupération de l'utilisateur
-  const user = window.userLicence;
-  const PLAYER_EMAIL = user?.email || user?.Email;
+ // ✅ CORRECTION : l'email est en minuscules dans ton objet
+  const PLAYER_EMAIL = user?.email;  // Pas user?.Email (majuscule)
+  
+  console.log("🔍 Debug email:", {
+    user: user,
+    email: PLAYER_EMAIL,
+    userKeys: Object.keys(user || {})
+  });
   
   if (!PLAYER_EMAIL) {
     console.warn("⚠️ Email utilisateur introuvable, sauvegarde ignorée");
+    console.log("userLicence complet:", window.userLicence);
     return;
   }
   
@@ -2188,7 +2194,7 @@ function onSwingValidated({ scores, currentClub }) {
   // 3️⃣ SAUVEGARDE NOCODB - FORMAT COMPLET
   // ===============================
   const swingRecord = {
-    email: PLAYER_EMAIL,
+    player_email: PLAYER_EMAIL,
     created_at: new Date().toISOString(),
     club: swing?.club || currentClub || window.currentClubType || "?",
     view: swing?.view || window.jswViewType || "faceOn",
