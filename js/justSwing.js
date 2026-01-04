@@ -2182,12 +2182,27 @@ function onSwingValidated({ scores, currentClub }) {
 // ===============================
   // 2️⃣ SAUVEGARDE NOCODB
   // ===============================
-  window.saveSwingToNocoDB({
-    player_email: userEmail,               // 🔑 clé backend
-    club: currentClub || "?",
-    scores: scores ?? null,             // objet COMPLET
-    score_total: scores?.total ?? null,
-    created_at: new Date().toISOString()
+
+// ===============================
+  // 3️⃣ SAUVEGARDE NOCODB - FORMAT COMPLET
+  // ===============================
+  const swingRecord = {
+    email: PLAYER_EMAIL,
+    created_at: new Date().toISOString(),
+    club: swing?.club || currentClub || window.currentClubType || "?",
+    view: swing?.view || window.jswViewType || "faceOn",
+    frames_count: swing?.frames?.length || 0,
+    keyframes: swing?.keyFrames || {},
+    metrics: swing?.scores?.metrics || scores?.metrics || {},
+    scores: swing?.scores || scores || {},
+    is_valid: isValidSwing(swing),
+    quality: swing?.quality || {}
+  };
+  
+  console.log("📤 Envoi swing complet:", swingRecord);
+  
+  window.saveSwingToNocoDB(swingRecord).catch(err => {
+    console.error("❌ Erreur sauvegarde swing:", err);
   });
 }
   
