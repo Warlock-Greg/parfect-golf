@@ -206,7 +206,8 @@ function exportSwingForTraining(swing, scores) {
 // =====================================================
 window.closeSwingReview = function () {
   console.log("❌ closeSwingReview()");
-
+console.log("STATE AVANT", swingState);
+  
   // 1) Stop session swing proprement
   if (window.JustSwing?.stopSession) {
     window.JustSwing.stopSession();
@@ -215,11 +216,10 @@ window.closeSwingReview = function () {
   // 2) Quitte le mode fullscreen
   document.body.classList.remove("jsw-fullscreen");
 
-  // 3) Cache le panneau de review
+ // 3) Supprime vraiment le panneau (pas juste hide)
   const review = document.getElementById("swing-review-panel");
   if (review) {
-    review.style.display = "none";
-    review.classList.add("hidden");
+    review.remove();
   }
 
   // 4) Retour HOME via ton router existant
@@ -229,6 +229,7 @@ window.closeSwingReview = function () {
   } else {
     console.warn("⚠️ home-btn introuvable");
   }
+   console.log("STATE APRÈS", swingState);
 };
 
 // 👉 Délégation de clic (marche même si le DOM est recréé)
