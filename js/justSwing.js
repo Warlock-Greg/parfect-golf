@@ -19,6 +19,9 @@ const JSW_STATE = {
 };
 
 
+function getUserLicence() {
+  return window.userLicence || null;
+}
 
 
 const JSW_MODE = {
@@ -2176,13 +2179,16 @@ function onSwingValidated({ scores, currentClub, swing }) {
   // ✅ DÉCLARATION DE 'user' (cette ligne manquait !)
   const user = window.userLicence;
   
- // ✅ CORRECTION : l'email est en minuscules dans ton objet
-  const PLAYER_EMAIL = user?.email;  // Pas user?.Email (majuscule)
-  
-  console.log("🔍 Debug email:", {
-    user: user,
-    email: PLAYER_EMAIL,
-    userKeys: Object.keys(user || {})
+ 
+ // ===============================
+  // 2️⃣ LICENCE — SOURCE DE VÉRITÉ
+  // ===============================
+  const licence = getUserLicence(); // 🔑 OBLIGATOIRE
+  const PLAYER_EMAIL = licence?.email;
+
+  console.log("🔍 Debug email", {
+    licence,
+    email: PLAYER_EMAIL
   });
   
   if (!PLAYER_EMAIL) {
