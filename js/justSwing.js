@@ -2179,14 +2179,16 @@ function onSwingValidated({ scores, currentClub }) {
 
 
   
-saveSwingToNocoDB({
-  player_email: email,          // ✅ clé stable
-  email: user.email,                   // info lisible
-  club: currentClub || "?",
-  scores,
-  score_total: scores.total ?? null,
-  created_at: new Date().toISOString()
-});
+// ===============================
+  // 2️⃣ SAUVEGARDE NOCODB
+  // ===============================
+  window.saveSwingToNocoDB({
+    player_email: email,               // 🔑 clé backend
+    club: currentClub || "?",
+    scores: scores ?? null,             // objet COMPLET
+    score_total: scores?.total ?? null,
+    created_at: new Date().toISOString()
+  });
 }
   
 // ---------------------------------------------------------
