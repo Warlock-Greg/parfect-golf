@@ -2046,7 +2046,7 @@ return {
 
 
 
- function jswDumpLandmarksJSON(swing, {scores, payload = {}) {
+ function jswDumpLandmarksJSON(swing, payload = {}) {
   const { scores, currentClub } = payload;
   const frames = swing.frames || [];
   const ts = swing.timestamps || [];
