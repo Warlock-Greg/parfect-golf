@@ -308,6 +308,9 @@
     window.PARFECT_USER = user;
     window.PARFECT_LICENCE_OK = user.licence !== "expired";
 
+    // ✅ LIGNE MANQUANTE — SOURCE DE VÉRITÉ
+    window.userLicence = user;
+
     console.log("✅ Licence boot", user);
   }
 
