@@ -2412,6 +2412,10 @@ function buildPremiumBreakdown(swing, scores) {
   ← home
 </button>
 
+
+    </div>
+  `;
+
 const backBtn = document.getElementById("jsw-back-btn");
 if (backBtn) {
   backBtn.onclick = () => {
@@ -2422,9 +2426,7 @@ if (backBtn) {
     document.getElementById("home-btn")?.click();
   };
 }
-
-    </div>
-  `;
+  
 }
 
 
