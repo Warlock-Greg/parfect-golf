@@ -2140,6 +2140,21 @@ if (window.TrainingSession) {
 
 }
 
+const email = window.userLicence?.email;
+
+if (email) {
+  saveSwingToNocoDB({
+    player_email: email,
+    club: currentClub || "?",
+    scores: scores,            // objet complet
+    score_total: scores.total, // si tu as une colonne dédiée
+    created_at: new Date().toISOString()
+  });
+} else {
+  console.warn("⚠️ Swing non sauvegardé (email manquant)");
+}
+
+  
 // ---------------------------------------------------------
 //   historique session
 // ---------------------------------------------------------
@@ -2796,6 +2811,9 @@ async function saveSwingToNocoDB(record) {
 }
 
 
+
+
+  
   async function loadSwingHistory(email) {
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
