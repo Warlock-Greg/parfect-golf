@@ -2111,33 +2111,7 @@ return {
 
 }
 
-// ========================================
-// ✅ APPELÉ QUAND UN SWING EST VALIDÉ
-// ========================================
-function onSwingValidated({ scores, currentClub }) {
-  if (!scores || !scores.breakdown) {
-    console.warn("⚠️ onSwingValidated appelé sans breakdown", scores);
-    return;
-  }
-
-  const breakdown = scores.breakdown;
-
-  // 1️⃣ Session locale (5 derniers swings)
-  if (window.TrainingSession) {
-    TrainingSession.swings.unshift({
-      created_at: Date.now(),
-      club: currentClub || "?",
-      breakdown
-    });
-
-    TrainingSession.swings = TrainingSession.swings.slice(0, 5);
-
-    if (typeof renderSessionHistoryInline === "function") {
-      renderSessionHistoryInline();
-    }
-  }
-
-// =====================================================
+  // =====================================================
 // SAUVEGARDE SWING DANS NOCODB
 // =====================================================
 
@@ -2173,6 +2147,31 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   }
 };
 
+// ========================================
+// ✅ APPELÉ QUAND UN SWING EST VALIDÉ
+// ========================================
+function onSwingValidated({ scores, currentClub }) {
+  if (!scores || !scores.breakdown) {
+    console.warn("⚠️ onSwingValidated appelé sans breakdown", scores);
+    return;
+  }
+
+  const breakdown = scores.breakdown;
+
+  // 1️⃣ Session locale (5 derniers swings)
+  if (window.TrainingSession) {
+    TrainingSession.swings.unshift({
+      created_at: Date.now(),
+      club: currentClub || "?",
+      breakdown
+    });
+
+    TrainingSession.swings = TrainingSession.swings.slice(0, 5);
+
+    if (typeof renderSessionHistoryInline === "function") {
+      renderSessionHistoryInline();
+    }
+  }
 
   
   // 2️⃣ Sauvegarde Social (NocoDB)
