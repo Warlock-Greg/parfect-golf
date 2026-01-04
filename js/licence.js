@@ -9,7 +9,7 @@
   const LS_USER_KEY = "parfect_user";
 
   // Champs NocoDB (API names EXACTS)
-  const NC_FIELDS = {
+  const NOCODB_FIELDS = {
     EMAIL: "cf6385mi1wk7jim",
     LICENCE: "crkm9s61zfuyjqg",
     SOURCE: "source"
@@ -133,9 +133,9 @@
             "xc-token": window.NOCODB_TOKEN
           },
           body: JSON.stringify({
-            [NC_FIELDS.EMAIL]: email,
-            [NC_FIELDS.LICENCE]: "free",
-            [NC_FIELDS.SOURCE]: "modal-create-account"
+            [NOCODB_FIELDS.EMAIL]: email,
+            [NOCODB_FIELDS.LICENCE]: "free",
+            [NOCODB_FIELDS.SOURCE]: "modal-create-account"
           })
         });
       } catch (e) {
@@ -295,7 +295,7 @@
     const user = remote
       ? {
           email: local.email,
-          licence: remote[NC_FIELDS.LICENCE] || "free",
+          licence: remote[NOCODB_FIELDS.LICENCE] || "free",
           licence_expiry: remote.licence_expiry || null,
           synced: true
         }
