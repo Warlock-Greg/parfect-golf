@@ -2377,57 +2377,76 @@ function buildPremiumBreakdown(swing, scores) {
   // ---------------------------------------------------------
   // RENDER
   // ---------------------------------------------------------
-  el.style.display = "block";
-  el.innerHTML = `
-    <div style="padding:.5rem;">
-      <div style="text-align:center;margin-bottom:1.1rem;">
-        <h2 style="font-size:1.1rem;margin:0;color:#4ade80;">
-          ${scores?.total ?? "—"}/100
-        </h2>
-        <p style="color:#aaa;">Score Parfect Premium</p>
-      </div>
+ el.style.display = "block";
 
-      ${block("Posture à l’adresse", postureScore, "", postureDetails,10)}
-      ${block("Rotation", rotationScore, "",rotationDetails,20)}
-      ${block("Tempo", tempoScore, "",tempoDetails,20)}
-      ${block("Triangle bras/épaules", triangleScore, "",triangleDetails,20)}
-      ${block("Transfert de poids", weightShiftScore, "",weightShiftDetails,10)}
-      ${block("Extension & Finish", extensionScore, "",extensionDetails,10)}
-      ${block("Balance & Équilibre", balanceScore,"",balanceDetails,10)}
-
-      <div style="margin-top:.2rem;padding:.3rem;border-radius:12px;
-        background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
-        <b>Coach</b><br>${coach}
-      </div>
-      <button id="jsw-back-btn" style="
-  background:#333;
-  color:#ccc;
-  border:none;
-  border-radius:12px;
-  padding:10px 24px;
-  font-size:1rem;
-  cursor:pointer;
-  width:100%;
-">
-  ← home
-</button>
-
-
+el.innerHTML = `
+  <div style="padding:.5rem;">
+    <div style="text-align:center;margin-bottom:1.1rem;">
+      <h2 style="font-size:1.1rem;margin:0;color:#4ade80;">
+        ${scores?.total ?? "—"}/100
+      </h2>
+      <p style="color:#aaa;">Score Parfect Premium</p>
     </div>
-  `;
 
+    ${block("Posture à l’adresse", postureScore, "", postureDetails, 10)}
+    ${block("Rotation", rotationScore, "", rotationDetails, 20)}
+    ${block("Tempo", tempoScore, "", tempoDetails, 20)}
+    ${block("Triangle bras/épaules", triangleScore, "", triangleDetails, 20)}
+    ${block("Transfert de poids", weightShiftScore, "", weightShiftDetails, 10)}
+    ${block("Extension & Finish", extensionScore, "", extensionDetails, 10)}
+    ${block("Balance & Équilibre", balanceScore, "", balanceDetails, 10)}
+
+    <div style="
+      margin-top:.6rem;
+      padding:.4rem;
+      border-radius:12px;
+      background:rgba(0,255,153,.08);
+      border:1px solid rgba(0,255,153,.25);
+    ">
+      <b>Coach</b><br>${coach}
+    </div>
+
+    <button
+      id="jsw-back-btn"
+      style="
+        margin-top:.8rem;
+        background:#333;
+        color:#ccc;
+        border:none;
+        border-radius:12px;
+        padding:10px 24px;
+        font-size:1rem;
+        cursor:pointer;
+        width:100%;
+      "
+    >
+      ← home
+    </button>
+  </div>
+`;
+
+// ---------------------------------------------------------
+// BOUTON RETOUR (COMPORTEMENT)
+// ---------------------------------------------------------
 const backBtn = document.getElementById("jsw-back-btn");
+
 if (backBtn) {
   backBtn.onclick = () => {
+    console.log("← Retour depuis score breakdown");
+
+    // Stop moteur (source de vérité)
     window.JustSwing?.stopSession?.();
     window.SwingEngine?.reset?.();
+
+    // Nettoyage UI
     document.getElementById("swing-review-panel")?.remove();
     document.body.classList.remove("jsw-fullscreen");
+
+    // Navigation centrale
     document.getElementById("home-btn")?.click();
   };
 }
-  
-}
+
 
 
 
