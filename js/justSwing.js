@@ -213,35 +213,33 @@ function exportSwingForTraining(swing, scores) {
 // =====================================================
 // ❌ FERMER LE SWING REVIEW → RETOUR HOME
 // =====================================================
-window.closeSwingReview = function () {
-  console.log("❌ closeSwingReview()");
-  
-  // 🔴 STOP moteur (CRITIQUE)
-  if (window.JustSwing?.stopSession) {
-    window.JustSwing.stopSession();
-  }
-// 2️⃣ Reset moteur (important)
-  if (window.SwingEngine?.reset) {
-    window.SwingEngine.reset();
-  }
+window.jswGoHome = function () {
+  console.log("⬅️ JSW → HOME");
 
-  // 3️⃣ Supprimer TOUS les panneaux review
+  // 1️⃣ Stop logique JustSwing
+  window.JustSwing?.stopSession?.();
+
+  // 2️⃣ Reset moteur si présent
+  window.SwingEngine?.reset?.();
+
+  // 3️⃣ Nettoyage UI review
   document.getElementById("swing-review")?.remove();
   document.getElementById("swing-review-panel")?.remove();
   document.getElementById("swing-score-breakdown")?.remove();
 
-  // 4️⃣ Nettoyage fullscreen
+  // 4️⃣ Sortie fullscreen
   document.body.classList.remove("jsw-fullscreen");
 
-  // 5️⃣ Navigation via router (source de vérité)
+  // 5️⃣ Navigation Home (router = source de vérité)
   const homeBtn = document.getElementById("home-btn");
   if (homeBtn) {
     homeBtn.click();
   } else {
-    console.warn("⚠️ home-btn absent → reload sécurité");
+    console.warn("⚠️ home-btn introuvable → reload sécurité");
     location.reload();
   }
-}
+};
+
 
 
   
