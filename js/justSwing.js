@@ -220,11 +220,7 @@ window.closeSwingReview = function () {
     window.JustSwing.stopSession();
   }
 
-  // 🔴 STOP capture / render si présent
-  if (window.SwingEngine?.reset) {
-    window.SwingEngine.reset();
-  }
-
+ 
   // UI cleanup
   document.body.classList.remove("jsw-fullscreen");
   document.getElementById("swing-review-panel")?.remove();
@@ -233,15 +229,6 @@ window.closeSwingReview = function () {
   document.getElementById("home-btn")?.click();
 };
 
-// 👉 Délégation de clic (marche même si le DOM est recréé)
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest("#jsw-close-review");
-  if (!btn) return;
-
-  e.preventDefault();
-  
-  window.closeSwingReview();
-});
 
   
   function hideBigMessage() {
@@ -2412,6 +2399,30 @@ function buildPremiumBreakdown(swing, scores) {
         background:rgba(0,255,153,.08);border:1px solid rgba(0,255,153,.25);">
         <b>Coach</b><br>${coach}
       </div>
+      <button id="jsw-back-btn" style="
+  background:#333;
+  color:#ccc;
+  border:none;
+  border-radius:12px;
+  padding:10px 24px;
+  font-size:1rem;
+  cursor:pointer;
+  width:100%;
+">
+  ← home
+</button>
+
+const backBtn = document.getElementById("jsw-back-btn");
+if (backBtn) {
+  backBtn.onclick = () => {
+    window.JustSwing?.stopSession?.();
+    window.SwingEngine?.reset?.();
+    document.getElementById("swing-review-panel")?.remove();
+    document.body.classList.remove("jsw-fullscreen");
+    document.getElementById("home-btn")?.click();
+  };
+}
+
     </div>
   `;
 }
