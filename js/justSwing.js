@@ -2177,13 +2177,13 @@ function onSwingValidated({ scores, currentClub }) {
   // 2️⃣ Sauvegarde Social (NocoDB)
   const user = window.userLicence;
 
-
+ const userEmail = user?.email || user?.Email || 'anonymous@justswing.app';
   
 // ===============================
   // 2️⃣ SAUVEGARDE NOCODB
   // ===============================
   window.saveSwingToNocoDB({
-    player_email: email,               // 🔑 clé backend
+    player_email: userEmail,               // 🔑 clé backend
     club: currentClub || "?",
     scores: scores ?? null,             // objet COMPLET
     score_total: scores?.total ?? null,
