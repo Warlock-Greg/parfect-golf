@@ -220,15 +220,28 @@ window.closeSwingReview = function () {
   if (window.JustSwing?.stopSession) {
     window.JustSwing.stopSession();
   }
+// 2️⃣ Reset moteur (important)
+  if (window.SwingEngine?.reset) {
+    window.SwingEngine.reset();
+  }
 
- 
-  // UI cleanup
-  document.body.classList.remove("jsw-fullscreen");
+  // 3️⃣ Supprimer TOUS les panneaux review
+  document.getElementById("swing-review")?.remove();
   document.getElementById("swing-review-panel")?.remove();
+  document.getElementById("swing-score-breakdown")?.remove();
 
-  // navigation
-  document.getElementById("home-btn")?.click();
-};
+  // 4️⃣ Nettoyage fullscreen
+  document.body.classList.remove("jsw-fullscreen");
+
+  // 5️⃣ Navigation via router (source de vérité)
+  const homeBtn = document.getElementById("home-btn");
+  if (homeBtn) {
+    homeBtn.click();
+  } else {
+    console.warn("⚠️ home-btn absent → reload sécurité");
+    location.reload();
+  }
+}
 
 
   
@@ -2097,10 +2110,7 @@ return {
   URL.revokeObjectURL(url);
 
   console.log("📦 Swing JSON dump saved:", dump);
- onSwingValidated({
-  scores,
-  currentClub
-});
+);
 
 }
 
@@ -2769,6 +2779,11 @@ if (!addressLocked) {
   // ======================================================
   const scores = computeSwingScorePremium(swing);
   buildPremiumBreakdown(swing, scores);
+
+  onSwingValidated({
+  scores,
+  currentClub: swing.club || currentClubType
+});
 
   // 🔒 Brancher les actions APRÈS le render
   bindSwingReviewActions(swing, scores);
