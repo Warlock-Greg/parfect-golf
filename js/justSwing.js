@@ -3348,11 +3348,15 @@ if (nextBtn) {
   };
 })();
 
-document.addEventListener("DOMContentLoaded", () => {
-  const closeBtn = document.getElementById("jsw-close-review");
-  if (closeBtn) {
-    closeBtn.onclick = closeSwingReview;
-  }
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("#jsw-close-review, #jsw-back-btn");
+  if (!btn) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  window.jswGoHome();
 });
+
 
 window.JustSwing = JustSwing;
