@@ -51,6 +51,14 @@ const DEFAULT_ROUTINES = {
   ],
 };
 
+// ================================
+// 🧠 SESSION D’ENTRAÎNEMENT ACTIVE
+// ================================
+window.TrainingSession = {
+  startedAt: Date.now(),
+  swings: [] // max 5
+};
+
 
 
 // --- ADDRESS DETECTION ---
@@ -206,7 +214,6 @@ function exportSwingForTraining(swing, scores) {
 // =====================================================
 window.closeSwingReview = function () {
   console.log("❌ closeSwingReview()");
-console.log("STATE AVANT", swingState);
   
   // 1) Stop session swing proprement
   if (window.JustSwing?.stopSession) {
@@ -215,6 +222,13 @@ console.log("STATE AVANT", swingState);
 
   // 2) Quitte le mode fullscreen
   document.body.classList.remove("jsw-fullscreen");
+  window.isSwingSessionActive = false;
+
+  // recharge historique long terme
+  if (window.showSwingHistory) {
+    window.showSwingHistory();
+  }
+
 
  // 3) Supprime vraiment le panneau (pas juste hide)
   const review = document.getElementById("swing-review-panel");
@@ -229,7 +243,6 @@ console.log("STATE AVANT", swingState);
   } else {
     console.warn("⚠️ home-btn introuvable");
   }
-   console.log("STATE APRÈS", swingState);
 };
 
 // 👉 Délégation de clic (marche même si le DOM est recréé)
@@ -238,6 +251,7 @@ document.addEventListener("click", (e) => {
   if (!btn) return;
 
   e.preventDefault();
+  
   window.closeSwingReview();
 });
 
@@ -738,6 +752,8 @@ async function getTodaySwingCount(email) {
 
     updateUI();
     showStartButton();
+    window.isSwingSessionActive = true;
+
 
     if (loopId) cancelAnimationFrame(loopId);
     loopId = requestAnimationFrame(mainLoop);
@@ -759,7 +775,9 @@ async function getTodaySwingCount(email) {
     routineTimer = null;
 
     if (screenEl) screenEl.classList.add("hidden");
+    window.isSwingSessionActive = false;
     document.body.classList.remove("jsw-fullscreen");
+    
   }
 
   // ---------------------------------------------------------
@@ -2106,7 +2124,52 @@ return {
   console.log("📦 Swing JSON dump saved:", dump);
 }
 
+// ================================
+// ➕ AJOUT À LA SESSION EN COURS
+// ================================
+if (window.TrainingSession) {
+  TrainingSession.swings.unshift({
+    created_at: Date.now(),
+    club: currentClub || "?",
+    scores: scores // objet complet
+  });
 
+  // garde uniquement les 5 derniers
+  TrainingSession.swings = TrainingSession.swings.slice(0, 5);
+  renderSessionHistoryInline();
+
+}
+
+// ---------------------------------------------------------
+//   historique session
+// ---------------------------------------------------------
+  
+function renderSessionHistoryInline() {
+  const el = document.getElementById("swing-history");
+  if (!el) return;
+
+  const swings = window.TrainingSession?.swings || [];
+
+  if (!swings.length) {
+    el.innerHTML = `
+      <div style="color:#777;font-size:0.85rem;">
+        Aucun swing dans la session
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = swings.map((s, i) => `
+    <div class="history-item session-item">
+      <b>#${swings.length - i}</b>
+      — ${new Date(s.created_at).toLocaleTimeString()}
+      — 🎯 ${s.scores.total}
+      · 🔄 ${s.scores.rotationScore ?? "—"}
+      · ⚡ ${s.scores.impactScore ?? "—"}
+    </div>
+  `).join("");
+}
+
+  
 // ---------------------------------------------------------
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.breakdown)
 //   ✅ plus de "metrics.xxx" en direct dans l'UI
