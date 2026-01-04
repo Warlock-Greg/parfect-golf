@@ -2829,11 +2829,10 @@ async function saveReferenceToDB(ref) {
 // SAUVEGARDE SWING DANS NOCODB
 // =====================================================
 
-async function saveSwingToNocoDB(record) {
+window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   try {
-    // 🔑 Vérifier que les variables existent
     if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
-      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
+      throw new Error("Variables NocoDB manquantes");
     }
 
     console.log("📤 Sauvegarde swing...", record);
@@ -2842,26 +2841,25 @@ async function saveSwingToNocoDB(record) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "xc-token": window.NOCODB_TOKEN // ✅ Nom cohérent
+        "xc-token": window.NOCODB_TOKEN
       },
       body: JSON.stringify(record)
     });
 
-    // ✅ Vérification statut HTTP
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`NocoDB ${res.status} — ${errorText}`);
+      const txt = await res.text();
+      throw new Error(`NocoDB ${res.status} — ${txt}`);
     }
 
     const data = await res.json();
     console.log("✅ Swing sauvegardé", data);
-    return data; // ✅ Retourner la réponse
+    return data;
 
   } catch (err) {
     console.error("❌ Erreur saveSwingToNocoDB:", err.message);
-    throw err; // ✅ Propager l'erreur
+    throw err;
   }
-}
+};
 
 
 
