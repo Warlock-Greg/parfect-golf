@@ -215,34 +215,22 @@ function exportSwingForTraining(swing, scores) {
 window.closeSwingReview = function () {
   console.log("❌ closeSwingReview()");
   
-  // 1) Stop session swing proprement
+  // 🔴 STOP moteur (CRITIQUE)
   if (window.JustSwing?.stopSession) {
     window.JustSwing.stopSession();
   }
 
-  // 2) Quitte le mode fullscreen
+  // 🔴 STOP capture / render si présent
+  if (window.SwingEngine?.reset) {
+    window.SwingEngine.reset();
+  }
+
+  // UI cleanup
   document.body.classList.remove("jsw-fullscreen");
-  window.isSwingSessionActive = false;
+  document.getElementById("swing-review-panel")?.remove();
 
-  // recharge historique long terme
-  if (window.showSwingHistory) {
-    window.showSwingHistory();
-  }
-
-
- // 3) Supprime vraiment le panneau (pas juste hide)
-  const review = document.getElementById("swing-review-panel");
-  if (review) {
-    review.remove();
-  }
-
-  // 4) Retour HOME via ton router existant
-  const homeBtn = document.getElementById("home-btn");
-  if (homeBtn) {
-    homeBtn.click();
-  } else {
-    console.warn("⚠️ home-btn introuvable");
-  }
+  // navigation
+  document.getElementById("home-btn")?.click();
 };
 
 // 👉 Délégation de clic (marche même si le DOM est recréé)
@@ -2053,14 +2041,13 @@ return {
   metrics
 };
 
-
-
 };
 
 
 
 
- function jswDumpLandmarksJSON(swing, {scores,currentClub}) {
+ function jswDumpLandmarksJSON(swing, {scores, payload = {}) {
+  const { scores, currentClub } = payload;
   const frames = swing.frames || [];
   const ts = swing.timestamps || [];
   const KF = swing.keyFrames || {};
