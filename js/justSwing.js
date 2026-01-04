@@ -12,6 +12,7 @@ const JSW_STATE = {
   WAITING_START: "WAITING_START", // bouton start affiché
   COUNTDOWN: "COUNTDOWN",         // 3-2-1-Go
   ROUTINE: "ROUTINE",             // messages guidés
+  POSITIONING: "POSITIONING",
   ADDRESS_READY: "ADDRESS_READY", // prêt à swinguer
   SWING_CAPTURE: "SWING_CAPTURE", // swing en cours
   REVIEW: "REVIEW",               // affichage score
@@ -67,7 +68,7 @@ let pendingAddress = false;
 let addressLocked = false;
 
 const ADDRESS_FRAMES_REQUIRED = 5;
-const ADDRESS_EPSILON = 0.004; // tolérance stabilité
+const ADDRESS_EPSILON = 0.015; // tolérance stabilité
 
 
 let routineConfig = {
@@ -869,7 +870,6 @@ async function getTodaySwingCount(email) {
 // =====================================================
 
 const ADDRESS_STABILITY_FRAMES = 6;
-const ADDRESS_EPSILON = 0.015;
 
 let addressStabilityBuffer = [];
 
@@ -1070,6 +1070,10 @@ function jswDegDiff(a, b) {
   return d;
 }
 
+function safePose(pose) {
+  return Array.isArray(pose) ? pose : null;
+}
+  
 function jswSafePoseFromKF(kf) {
   // keyFrame type { index, pose } ou { pose } selon le moteur
   if (!kf) return null;
@@ -1435,9 +1439,7 @@ const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
     return Math.max(min, Math.min(max, v));
   }
 
-  function safePose(pose) {
-  return Array.isArray(pose) ? pose : null;
-}
+  
 
 
   function jswDist(a, b) {
