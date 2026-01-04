@@ -19,9 +19,6 @@ const JSW_STATE = {
 };
 
 
-function getUserLicence() {
-  return window.userLicence || null;
-}
 
 
 const JSW_MODE = {
@@ -167,6 +164,10 @@ fetch("/data/parfect_reference.json")
     console.warn("⚠️ Parfect reference not loaded", err);
   });
 
+function getUserLicence() {
+  return window.userLicence || null;
+}
+  
 function exportSwingForTraining(swing, scores) {
   const data = {
     metadata: {
