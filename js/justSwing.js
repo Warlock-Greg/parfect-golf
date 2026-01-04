@@ -2150,7 +2150,7 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
 // ========================================
 // ✅ APPELÉ QUAND UN SWING EST VALIDÉ
 // ========================================
-function onSwingValidated({ scores, currentClub }) {
+function onSwingValidated({ scores, currentClub, swing }) {
   if (!scores || !scores.breakdown) {
     console.warn("⚠️ onSwingValidated appelé sans breakdown", scores);
     return;
