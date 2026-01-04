@@ -2173,6 +2173,8 @@ function onSwingValidated({ scores, currentClub }) {
     }
   }
 
+  // ✅ DÉCLARATION DE 'user' (cette ligne manquait !)
+  const user = window.userLicence;
   
  // ✅ CORRECTION : l'email est en minuscules dans ton objet
   const PLAYER_EMAIL = user?.email;  // Pas user?.Email (majuscule)
