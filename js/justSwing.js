@@ -684,22 +684,35 @@ function initEngine() {
 
 
 async function getTodaySwingCount(email) {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  if (!email) throw new Error("Email manquant");
+
+  // 🔐 encode email (OBLIGATOIRE)
+  const safeEmail = encodeURIComponent(email);
+
+  // 🕒 début de journée ISO
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const isoStart = startOfDay.toISOString();
 
   const url =
-    `${window.NOCODB_SWINGS_URL}?` +
-    `where=(player_email,eq,${email})~and(created_at,ge,${today})`;
+    `${window.NOCODB_SWINGS_URL}` +
+    `?where=` +
+    `(player_email,eq,${safeEmail})~and(created_at,ge,${isoStart})`;
+
+  console.log("📡 NocoDB COUNT URL =", url);
 
   const res = await fetch(url, {
     headers: { "xc-token": window.NOCODB_TOKEN }
   });
 
   if (!res.ok) {
+    const txt = await res.text();
+    console.error("❌ NocoDB count error:", txt);
     throw new Error("Impossible de compter les swings");
   }
 
   const data = await res.json();
-  return data.list?.length || 0;
+  return data.list?.length ?? 0;
 }
 
 
