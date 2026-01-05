@@ -176,13 +176,13 @@ if (!window._justSwingInitDone) {
     coachReact?.("👥 Mode Social !");
   });
 
-  historyBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(historyBtn);
-    showOnly("play");
-    window.injectHistoryUI?.();
-    coachReact?.("📜 Historique");
-  });
+// historyBtn.addEventListener("click", () => {
+  //  leaveSwingMode();
+  //  setActive(historyBtn);
+  //    showOnly("play");
+  //  window.injectHistoryUI?.();
+  //  coachReact?.("📜 Historique");
+ // });
 
   homeBtn.addEventListener("click", () => {
     leaveSwingMode();
