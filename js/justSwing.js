@@ -695,9 +695,12 @@ async function getTodaySwingCount(email) {
   const isoStart = startOfDay.toISOString();
 
   const url =
-    `${window.NOCODB_SWINGS_URL}` +
-    `?where=` +
-    `(player_email,eq,${safeEmail})~and(created_at,ge,${isoStart})`;
+    `${window.NOCODB_SWINGS_URL}?` +
+    `where=(` +
+      `cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)}` +
+    `)~and(` +
+      `created_at,ge,${todayISO}` +
+    `)`;
 
   console.log("📡 NocoDB COUNT URL =", url);
 
