@@ -694,6 +694,9 @@ async function getTodaySwingCount(email) {
   startOfDay.setHours(0, 0, 0, 0);
   const isoStart = startOfDay.toISOString();
 
+// 🔑 Date ISO du début de journée (UTC-safe)
+  const todayISO = new Date().toISOString().slice(0, 10);
+  
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(` +
