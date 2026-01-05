@@ -718,6 +718,9 @@ async function getTodaySwingCount(email) {
   return data.list?.length ?? 0;
 }
 
+  window.getTodaySwingCount = getTodaySwingCount;
+
+
 
   
   
