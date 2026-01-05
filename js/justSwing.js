@@ -684,28 +684,15 @@ function initEngine() {
 
 
 async function getTodaySwingCount(email) {
-  if (!email) throw new Error("Email manquant");
+  if (!email) return 0;
 
-  // 🔐 encode email (OBLIGATOIRE)
-  const safeEmail = encodeURIComponent(email);
-
-  // 🕒 début de journée ISO
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const isoStart = startOfDay.toISOString();
-
-// 🔑 Date ISO du début de journée (UTC-safe)
-  const todayISO = new Date().toISOString().slice(0, 10);
-  
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(` +
       `cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)}` +
-    `)~and(` +
-      `createdAt,ge,${todayISO}` +
     `)`;
 
-  console.log("📡 NocoDB COUNT URL =", url);
+  console.log("📊 NocoDB FETCH URL =", url);
 
   const res = await fetch(url, {
     headers: { "xc-token": window.NOCODB_TOKEN }
@@ -713,13 +700,20 @@ async function getTodaySwingCount(email) {
 
   if (!res.ok) {
     const txt = await res.text();
-    console.error("❌ NocoDB count error:", txt);
-    throw new Error("Impossible de compter les swings");
+    console.error("❌ NocoDB error:", txt);
+    throw new Error("Impossible de récupérer les swings");
   }
 
   const data = await res.json();
-  return data.list?.length ?? 0;
+
+  // ⏱️ Filtrage côté JS (aujourd’hui uniquement)
+  const today = new Date().toISOString().slice(0, 10);
+
+  return (data.list || []).filter(r =>
+    r.createdAt?.startsWith(today)
+  ).length;
 }
+
 
   window.getTodaySwingCount = getTodaySwingCount;
 
