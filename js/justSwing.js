@@ -2216,7 +2216,7 @@ function onSwingValidated({ scores, currentClub, swing }) {
   // 3️⃣ SAUVEGARDE NOCODB - FORMAT COMPLET
   // ===============================
   const swingRecord = {
-    player_email: PLAYER_EMAIL,
+    cy88wsoi5b8bq9s: window.userLicence.email,
     created_at: new Date().toISOString(),
     club: swing?.club || currentClub || window.currentClubType || "?",
     view: swing?.view || window.jswViewType || "faceOn",
