@@ -134,6 +134,18 @@ main#split-layout {
   color: #fff;
 }
 
+.home-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.home-btn img {
+  width: 26px;
+  height: 26px;
+}
+    
 #coach-send {
   background: #0a2413;
   color: #111;
@@ -1140,12 +1152,15 @@ body.jsw-fullscreen #coach-ia {
   
   <!-- === Barre de navigation principale === -->
 <nav>
-  <button id="home-btn" title="Accueil">🏠</button>
-  <button id="play-btn" title="Jouer">⛳</button>
-  <button id="training-btn" title="S'entraîner">🧠</button>
-  <button id="just-swing-btn">🏌️‍♀️Just-Swing</button>
-  <button id="history-btn" title="Historique">📜</button>
-  <button id="friends-btn" title="Amis">👥</button>
+  <button id="home-btn" title="Accueil" class="home-btn">HOME</button>
+  <button id="just-swing-btn"class="home-btn">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-justswing.png"></button>
+  <button id="play-btn" title="Jouer"class="home-btn">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-play.png"></button>
+  <button id="training-btn" title="S'entraîner"class="home-btn">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-train.png"></button>
+  <button id="friends-btn" title="Amis"class="home-btn">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-espace.png"></button>
 </nav>
 
 
