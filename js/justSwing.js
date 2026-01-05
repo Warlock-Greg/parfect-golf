@@ -702,7 +702,7 @@ async function getTodaySwingCount(email) {
     `where=(` +
       `cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)}` +
     `)~and(` +
-      `created_at,ge,${todayISO}` +
+      `createdAt,ge,${todayISO}` +
     `)`;
 
   console.log("📡 NocoDB COUNT URL =", url);
