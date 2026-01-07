@@ -206,13 +206,17 @@ async function loadHistoryTab(type) {
     return;
   }
 
-  panel.innerHTML = swings.map(s => `
-    <div class="card">
-      🎥 <strong>${s.club || "?"}</strong>
-      — Score ${s.score_total ?? "—"}<br>
-      <small>${new Date(s.createdAt).toLocaleString()}</small>
-    </div>
-  `).join("");
+panel.innerHTML = swings.map(s => `
+  <div class="card">
+    🎥 <strong>${s.club || "?"}</strong>
+    — Score ${s.score_total ?? "—"}<br>
+    <small>
+      ${s.cmbvp0anzpjfsig
+        ? new Date(s.cmbvp0anzpjfsig).toLocaleString()
+        : "Date inconnue"}
+    </small>
+  </div>
+`).join("");
 }
 
 // ------------------------------------------------
@@ -225,7 +229,10 @@ async function loadSwingHistoryFromNocoDB() {
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-createdAt&limit=20`;
+    `&sort=-cmbvp0anzpjfsig` +   // ✅ ID du champ DateTime
+    `&limit=20`;
+
+  console.log("📊 NocoDB FETCH URL =", url);
 
   const res = await fetch(url, {
     headers: { "xc-token": window.NOCODB_TOKEN }
@@ -240,6 +247,7 @@ async function loadSwingHistoryFromNocoDB() {
   const data = await res.json();
   return data.list || [];
 }
+
 
 // ------------------------------------------------
 // EXPORT
