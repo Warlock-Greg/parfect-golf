@@ -111,12 +111,12 @@ function injectSocialUI() {
 // ------------------------------------------------
 // QUOTA UI
 // ------------------------------------------------
-async function refreshSwingQuotaUI() {
-  const el = $$("swing-quota");
+window.refreshSwingQuotaUI = async function () {
+  const el = document.getElementById("swing-quota");
   if (!el) return;
 
   const email = window.userLicence?.email;
-  if (!email || typeof window.getTodaySwingCount !== "function") {
+  if (!email) {
     el.textContent = "—";
     return;
   }
@@ -125,10 +125,11 @@ async function refreshSwingQuotaUI() {
     const count = await window.getTodaySwingCount(email);
     el.textContent = `${count}/10`;
   } catch (e) {
-    console.error("❌ Quota UI error", e);
+    console.error("❌ Quota refresh error", e);
     el.textContent = "—";
   }
-}
+};
+
 
 // ------------------------------------------------
 // INVITE FRIEND
@@ -213,7 +214,7 @@ async function loadHistoryTab(type) {
         <small>
           ${
             s.cmbvp0anzpjfsig
-              ? new Date(s.cmbvp0anzpjfsig).toLocaleString()
+              ? new Date(s[cmbvp0anzpjfsig]).toLocaleString()
               : "Date inconnue"
           }
         </small>
