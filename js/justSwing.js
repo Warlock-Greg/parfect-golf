@@ -2857,7 +2857,7 @@ if (!addressLocked) {
   scores,
   currentClub: swing.club || currentClubType,
     swing // 👈 LA LIGNE QUI MANQUAIT
-});
+  });
 
   // 🔒 Brancher les actions APRÈS le render
   bindSwingReviewActions(swing, scores);
