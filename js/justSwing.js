@@ -2167,6 +2167,7 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   }
 };
 
+  
 // ========================================
 // ✅ APPELÉ QUAND UN SWING EST VALIDÉ
 // ========================================
@@ -2192,6 +2193,12 @@ function onSwingValidated({ scores, currentClub, swing }) {
       renderSessionHistoryInline();
     }
   }
+
+  // après saveSwingToNocoDB(...)
+if (typeof window.refreshSwingQuotaUI === "function") {
+  window.refreshSwingQuotaUI();
+}
+
 
   // ✅ DÉCLARATION DE 'user' (cette ligne manquait !)
   const user = window.userLicence;
