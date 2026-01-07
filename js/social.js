@@ -174,6 +174,7 @@ function showHistoryTabs() {
     <div style="display:flex;gap:8px;margin-bottom:12px;">
       <button class="btn" data-tab="swing">🎥 Swings</button>
       <button class="btn" data-tab="training">🧠 Training</button>
+      <button class="btn" data-tab="round">🏌️ Parties</button>
     </div>
     <div id="history-panel"></div>
   `;
@@ -194,30 +195,94 @@ async function loadHistoryTab(type) {
   const panel = $$("history-panel");
   if (!panel) return;
 
-  if (type !== "swing") {
-    panel.innerHTML = `<p style="color:#777;">Historique non disponible.</p>`;
+  // -----------------------
+  // 🎥 SWINGS (NocoDB)
+  // -----------------------
+  if (type === "swing") {
+    const swings = await loadSwingHistoryFromNocoDB();
+
+    if (!swings.length) {
+      panel.innerHTML = `<p style="color:#777;">Aucun swing enregistré.</p>`;
+      return;
+    }
+
+    panel.innerHTML = swings.map(s => `
+      <div class="card">
+        🎥 <strong>${s.club || "?"}</strong>
+        — Score ${s.score_total ?? "—"}<br>
+        <small>
+          ${
+            s.cmbvp0anzpjfsig
+              ? new Date(s.cmbvp0anzpjfsig).toLocaleString()
+              : "Date inconnue"
+          }
+        </small>
+      </div>
+    `).join("");
+
     return;
   }
 
-  const swings = await loadSwingHistoryFromNocoDB();
+  // -----------------------
+  // 🧠 TRAINING (local)
+  // -----------------------
+  if (type === "training") {
+    const history = JSON.parse(
+      localStorage.getItem("trainingHistory") || "[]"
+    );
 
-  if (!swings.length) {
-    panel.innerHTML = `<p style="color:#777;">Aucun swing enregistré.</p>`;
+    if (!history.length) {
+      panel.innerHTML = `<p style="color:#777;">Aucune séance d’entraînement.</p>`;
+      return;
+    }
+
+    panel.innerHTML = history
+      .slice()
+      .reverse()
+      .map(h => `
+        <div class="card">
+          🧠 <strong>${h.name || "Training"}</strong><br>
+          ${h.quality || "—"} · Mental ${h.mentalScore ?? "—"}/5<br>
+          <small>${new Date(h.date).toLocaleDateString()}</small>
+        </div>
+      `)
+      .join("");
+
     return;
   }
 
-panel.innerHTML = swings.map(s => `
-  <div class="card">
-    🎥 <strong>${s.club || "?"}</strong>
-    — Score ${s.score_total ?? "—"}<br>
-    <small>
-      ${s.cmbvp0anzpjfsig
-        ? new Date(s.cmbvp0anzpjfsig).toLocaleString()
-        : "Date inconnue"}
-    </small>
-  </div>
-`).join("");
+  // -----------------------
+  // 🏌️ PARTIES (local)
+  // -----------------------
+  if (type === "round") {
+    const rounds = JSON.parse(
+      localStorage.getItem("roundHistory") || "[]"
+    );
+
+    if (!rounds.length) {
+      panel.innerHTML = `<p style="color:#777;">Aucune partie enregistrée.</p>`;
+      return;
+    }
+
+    panel.innerHTML = rounds
+      .slice()
+      .reverse()
+      .map(r => `
+        <div class="card">
+          🏌️ <strong>${r.golf || "Parcours"}</strong><br>
+          Score ${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar}
+          · 💚 ${r.parfects ?? 0} Parfects<br>
+          <small>${new Date(r.date).toLocaleDateString()}</small>
+        </div>
+      `)
+      .join("");
+
+    return;
+  }
+
+  panel.innerHTML = `<p style="color:#777;">Historique indisponible.</p>`;
 }
+
 
 // ------------------------------------------------
 // NOCODB — LOAD SWINGS
