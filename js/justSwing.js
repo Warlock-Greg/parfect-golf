@@ -1629,7 +1629,6 @@ metrics.rotation = {
 
 const basePose =
   jswSafePoseFromKF(kf.address) ||
-  jswSafePoseFromKF(kf.backswing) ||
   null;
 
 
@@ -1820,74 +1819,6 @@ if (topPose && impactPose) {
 
 metrics.weightShift.score = weightShiftScore;
 
-// =====================================================
-// EXTENSION & FINISH — Face-On (STRICT)
-// =====================================================
-let extensionScore = null; // null = non scoré
-let extensionStatus = "ok"; // ok | no-hands | incomplete
-
-if (!impactPose || !finishPose) {
-  extensionStatus = "incomplete";
-} else {
-  const LSimp = LM(impactPose, 11);
-  const RSimp = LM(impactPose, 12);
-  const LSf   = LM(finishPose, 11);
-  const RSf   = LM(finishPose, 12);
-
-  const LWimp = LM(impactPose, 15);
-  const RWimp = LM(impactPose, 16);
-  const LWf   = LM(finishPose, 15);
-  const RWf   = LM(finishPose, 16);
-
-  // ❌ mains non détectées correctement
-  if ((!LWimp && !RWimp) || (!LWf && !RWf)) {
-    extensionStatus = "no-hands";
-  } else if (LSimp && RSimp && LSf && RSf) {
-
-    const sw = Math.max(
-      jswDist(LSimp, RSimp),
-      jswDist(LSf, RSf)
-    );
-
-    if (sw > 0.15) {
-      const armImpact = Math.max(
-        LWimp ? jswDist(LSimp, LWimp) : 0,
-        RWimp ? jswDist(RSimp, RWimp) : 0
-      ) / sw;
-
-      const armFinish = Math.max(
-        LWf ? jswDist(LSf, LWf) : 0,
-        RWf ? jswDist(LSf, LWf) : 0
-      ) / sw;
-
-      const progress = armFinish - armImpact;
-
-      metrics.extension = {
-        armImpact,
-        armFinish,
-        progress,
-        status: "ok"
-      };
-
-      const ref = window.REF?.extension;
-      if (ref?.progress?.target != null && ref?.progress?.tol != null) {
-        const s = jswClamp(
-          1 - Math.abs(progress - ref.progress.target) / ref.progress.tol,
-          0,
-          1
-        );
-        extensionScore = Math.round(s * 20);
-      }
-    }
-  }
-}
-
-// 🧾 Toujours exposer l’état
-metrics.extension = metrics.extension || {};
-metrics.extension.status = extensionStatus;
-metrics.extension.score = extensionScore;
-
-
 
 
 // =====================================================
@@ -1941,9 +1872,43 @@ if (
   }
 }
 
-metrics.tempo.score = tempoScore;
 
 
+
+// =====================================================
+// TEMPO — SYNCHRO ROTATION ↔ EXTENSION
+// =====================================================
+let tempoSyncScore = null;
+
+if (
+  typeof kf.top?.index === "number" &&
+  typeof metrics.extension?.extDelayFrames === "number"
+) {
+  const syncFrames =
+    (kf.impact.index + metrics.extension.extDelayFrames) - kf.top.index;
+
+  metrics.tempo.syncFrames = syncFrames;
+
+  // zone idéale ~ 10–18 frames après top
+  const IDEAL_MIN = 8;
+  const IDEAL_MAX = 18;
+
+  let syncScore;
+  if (syncFrames < IDEAL_MIN) {
+    syncScore = 0.3; // extension trop tôt
+  } else if (syncFrames > IDEAL_MAX) {
+    syncScore = 0.4; // extension trop tard
+  } else {
+    syncScore = 1; // synchro OK
+  }
+
+  tempoSyncScore = Math.round(syncScore * 20);
+  metrics.tempo.syncScore = tempoSyncScore;
+}
+
+    tempoScore = Math.round((tempoScore * 0.7 + tempoSyncScore * 0.3));
+  metrics.tempo.score = tempoScore;
+    
 // =====================================================
 // 7) BALANCE — finish + base (address/backswing/top)
 // =====================================================
