@@ -2855,7 +2855,7 @@ if (!addressLocked) {
 
   onSwingValidated({
   scores,
-  currentClub: swing.club || currentClubType
+  currentClub: swing.club || currentClubType,
     swing // 👈 LA LIGNE QUI MANQUAIT
 });
 
