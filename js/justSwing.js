@@ -928,11 +928,10 @@ async function getTodaySwingCount(email) {
 
 const ADDRESS_STABILITY_FRAMES = 6;
 
-let addressStabilityBuffer = [];
 let addressCaptured = false;
+let addressStabilityBuffer = [];
 
-
-function isStableAddress(pose) {
+function isStableAddress(pose, frameIndex) {
   if (!pose || !Array.isArray(pose)) return false;
 
   addressStabilityBuffer.push(pose);
@@ -945,7 +944,6 @@ function isStableAddress(pose) {
     return false;
   }
 
-  // compare la première et la dernière frame
   const first = addressStabilityBuffer[0];
   const last  = addressStabilityBuffer[addressStabilityBuffer.length - 1];
 
@@ -965,19 +963,16 @@ function isStableAddress(pose) {
   if (!count) return false;
 
   const avgDist = total / count;
-
   const isStable = avgDist < ADDRESS_EPSILON;
 
-  // ✅ NOUVEAU : capture réelle de l’adresse
-  if (isStable && !addressCaptured) {
+  if (isStable && !addressCaptured && typeof frameIndex === "number") {
     addressCaptured = true;
 
-    registerKeyframe("address", currentFrameIndex, pose);
+    registerKeyframe("address", frameIndex, pose);
 
-    // reset buffer pour éviter re-capture
     addressStabilityBuffer = [];
 
-    console.log("📍 ADDRESS CAPTURED");
+    console.log("📍 ADDRESS CAPTURED @ frame", frameIndex);
   }
 
   return isStable;
