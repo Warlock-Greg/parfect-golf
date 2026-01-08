@@ -1843,8 +1843,8 @@ metrics.extension = {
 };
 
 kf = metrics.keyframes || {};
-const impactPose = kf.impact?.pose || null;
-const finishPose = kf.finish?.pose || null;
+impactPose = kf.impact?.pose || null;
+finishPose = kf.finish?.pose || null;
 
 if (!impactPose) {
   extensionStatus = "incomplete";
