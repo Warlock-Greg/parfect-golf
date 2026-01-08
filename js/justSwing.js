@@ -929,6 +929,8 @@ async function getTodaySwingCount(email) {
 const ADDRESS_STABILITY_FRAMES = 6;
 
 let addressStabilityBuffer = [];
+let addressCaptured = false;
+
 
 function isStableAddress(pose) {
   if (!pose || !Array.isArray(pose)) return false;
@@ -964,7 +966,21 @@ function isStableAddress(pose) {
 
   const avgDist = total / count;
 
-  return avgDist < ADDRESS_EPSILON;
+  const isStable = avgDist < ADDRESS_EPSILON;
+
+  // ✅ NOUVEAU : capture réelle de l’adresse
+  if (isStable && !addressCaptured) {
+    addressCaptured = true;
+
+    registerKeyframe("address", currentFrameIndex, pose);
+
+    // reset buffer pour éviter re-capture
+    addressStabilityBuffer = [];
+
+    console.log("📍 ADDRESS CAPTURED");
+  }
+
+  return isStable;
 }
 
   
