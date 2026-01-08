@@ -1842,7 +1842,7 @@ metrics.extension = {
   status: "incomplete"
 };
 
-const kf = metrics.keyframes || {};
+kf = metrics.keyframes || {};
 const impactPose = kf.impact?.pose || null;
 const finishPose = kf.finish?.pose || null;
 
