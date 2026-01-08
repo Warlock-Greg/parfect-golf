@@ -1014,6 +1014,22 @@ function onPoseFrame(landmarks) {
     addressLocked = true;
 
     console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
+
+    if (lastPose && Array.isArray(lastPose)) {
+  metrics.keyframes = metrics.keyframes || {};
+  metrics.keyframes.address = {
+    index: currentFrameIndex,
+    pose: lastPose.map(p => ({
+      x: p.x,
+      y: p.y,
+      z: p.z ?? null,
+      visibility: p.visibility ?? null
+    }))
+  };
+
+  console.log("📍 ADDRESS POSE SNAPSHOT SAVED");
+}
+
   }
 
 
