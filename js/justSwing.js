@@ -193,6 +193,26 @@ function exportSwingForTraining(swing, scores) {
     overlayEl.height = videoEl.clientHeight || window.innerHeight;
   }
 
+function registerKeyframe(type, index, pose) {
+  if (!window.currentSwing) return;
+
+  if (!window.currentSwing.keyframeLandmarks) {
+    window.currentSwing.keyframeLandmarks = {};
+  }
+
+  // snapshot profond (anti-mutation)
+  window.currentSwing.keyframeLandmarks[type] = {
+    index,
+    pose: pose.map(p => ({
+      x: p.x,
+      y: p.y,
+      z: p.z ?? null,
+      v: p.visibility ?? null
+    }))
+  };
+}
+
+  
   // ---------------------------------------------------------
   //   UI MESSAGES
   // ---------------------------------------------------------
@@ -657,6 +677,12 @@ function initEngine() {
 
     onKeyFrame: (evt) => {
       console.log("🎯 KEYFRAME", evt);
+        const { type, index, pose } = evt;
+
+  if (type && typeof index === "number" && Array.isArray(pose)) {
+    registerKeyframe(type, index, pose);
+  }
+
     },
 
     onSwingComplete: (evt) => {
@@ -1600,15 +1626,14 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 
     
 // =====================================================
-// ROTATION — carte premium (Base → Top) COMPARÉE À RÉFÉRENCE
+// ROTATION — carte premium (Keyframes → Référence)
 // =====================================================
 
 let rotationScore = null;
 let rotationMeasure = null;
-// 🔒 RÉFÉRENCE SAFE
+
 const refRotation = window.REF?.rotation ?? null;
 
-// 🛡️ Guard absolu : si la référence est incomplète → score neutre
 const isRotationRefValid =
   refRotation &&
   refRotation.shoulder &&
@@ -1627,20 +1652,27 @@ metrics.rotation = {
   stages: {}
 };
 
-const basePose =
-  jswSafePoseFromKF(kf.address) ||
-  null;
+// 🔑 NOUVELLE SOURCE DE VÉRITÉ
+const kfPose = metrics.keyframes || {};
 
+const basePose = kfPose.address?.pose || null;
+const topPose  = kfPose.top?.pose || null;
 
-const topPoseSafe = jswSafePoseFromKF(kf.top);
+if (basePose && topPose) {
 
-if (basePose && topPoseSafe) {
-
-  rotationMeasure = computeRotationSignature(basePose, topPoseSafe, viewType);
+  rotationMeasure = computeRotationSignature(
+    basePose,
+    topPose,
+    viewType
+  );
 
   if (rotationMeasure && isRotationRefValid) {
 
-    const scored = scoreRotationFromReference(rotationMeasure, refRotation);
+    const scored = scoreRotationFromReference(
+      rotationMeasure,
+      refRotation
+    );
+
     rotationScore = scored.score;
 
     metrics.rotation.stages.baseToTop = {
@@ -1662,43 +1694,22 @@ if (basePose && topPoseSafe) {
       score: rotationScore
     };
 
-    if (rotationMeasure) {
-  console.log("🌀 Rotation FO debug", {
-    base: {
-      LS: basePose?.[11]?.x,
-      RS: basePose?.[12]?.x
-    },
-    top: {
-      LS: topPoseSafe?.[11]?.x,
-      RS: topPoseSafe?.[12]?.x
-    },
-    rot: rotationMeasure
-  });
-}
+    metrics.rotation.measure = {
+      shoulder: rotationMeasure.shoulder,
+      hip: rotationMeasure.hip,
+      xFactor: rotationMeasure.xFactor
+    };
 
-
-  // =================================================
-  // ✅ AJOUT OBLIGATOIRE POUR L’UI (SIMPLE / PLAT)
-  // =================================================
-  metrics.rotation.measure = {
-    shoulder: rotationMeasure.shoulder,
-    hip: rotationMeasure.hip,
-    xFactor: rotationMeasure.xFactor
-  };
-
- metrics.rotation.ref = isRotationRefValid
-  ? {
+    metrics.rotation.ref = {
       shoulder: refRotation.shoulder,
       hip: refRotation.hip,
       xFactor: refRotation.xFactor
-    }
-  : null;
+    };
 
-
-  metrics.rotation.score = rotationScore;
-    }
-    
+    metrics.rotation.score = rotationScore;
   }
+}
+
 
 
 
@@ -1821,67 +1832,74 @@ metrics.weightShift.score = weightShiftScore;
 
 
 // =====================================================
-// 5) EXTENSION & FINISH — Face-On (ROBUSTE)
+// EXTENSION — robuste (impact → post-impact)
 // =====================================================
+
 let extensionScore = null;
 let extensionStatus = "ok";
 
-if (!impactPose || !swing.frames || !kf.impact) {
+metrics.extension = {
+  status: "incomplete"
+};
+
+const kf = metrics.keyframes || {};
+const impactPose = kf.impact?.pose || null;
+const finishPose = kf.finish?.pose || null;
+
+if (!impactPose) {
   extensionStatus = "incomplete";
 } else {
 
-  const impactIndex = kf.impact.index;
-  const EXT_WINDOW = 12; // frames après impact (~0.4s à 30fps)
+  const LS = impactPose[11];
+  const RS = impactPose[12];
+  const LW = impactPose[15];
+  const RW = impactPose[16];
 
-  let maxExt = null;
-  let extAtImpact = null;
-  let maxExtIndex = null;
-
-  for (let i = impactIndex; i < Math.min(impactIndex + EXT_WINDOW, swing.frames.length); i++) {
-    const pose = swing.frames[i];
-    if (!pose) continue;
-
-    const LS = LM(pose, 11);
-    const RS = LM(pose, 12);
-    const LW = LM(pose, 15);
-    const RW = LM(pose, 16);
-
-    if (!LS || !RS || (!LW && !RW)) continue;
-
-    const sw = jswDist(LS, RS);
-    if (!sw || sw < 0.12) continue;
-
-    const armExt = Math.max(
-      LW ? jswDist(LS, LW) : 0,
-      RW ? jswDist(RS, RW) : 0
-    ) / sw;
-
-    if (i === impactIndex) {
-      extAtImpact = armExt;
-    }
-
-    if (maxExt == null || armExt > maxExt) {
-      maxExt = armExt;
-      maxExtIndex = i;
-    }
-  }
-
-  if (extAtImpact == null || maxExt == null) {
+  if ((!LW && !RW) || !LS || !RS) {
     extensionStatus = "no-hands";
   } else {
-    const progress = maxExt - extAtImpact;
+
+    const shoulderWidth = Math.max(
+      jswDist(LS, RS),
+      0.001
+    );
+
+    // 👉 extension instantanée à l’impact
+    const extImpact = Math.max(
+      LW ? jswDist(LS, LW) : 0,
+      RW ? jswDist(RS, RW) : 0
+    ) / shoulderWidth;
+
+    // 👉 extension au finish (si existe)
+    let extFinish = extImpact;
+    if (finishPose) {
+      const LSf = finishPose[11];
+      const RSf = finishPose[12];
+      const LWf = finishPose[15];
+      const RWf = finishPose[16];
+
+      if (LSf && RSf && (LWf || RWf)) {
+        const swf = Math.max(jswDist(LSf, RSf), 0.001);
+        extFinish = Math.max(
+          LWf ? jswDist(LSf, LWf) : 0,
+          RWf ? jswDist(RSf, RWf) : 0
+        ) / swf;
+      }
+    }
+
+    const extensionValue = Math.max(extImpact, extFinish);
 
     metrics.extension = {
-      extAtImpact,
-      extMax: maxExt,
-      progress,
-      extDelayFrames: maxExtIndex - impactIndex
+      extImpact,
+      extFinish,
+      extensionValue,
+      status: "ok"
     };
 
     const ref = window.REF?.extension;
-    if (ref?.progress?.target != null && ref?.progress?.tol != null) {
+    if (ref?.value?.target != null && ref?.value?.tol != null) {
       const s = jswClamp(
-        1 - Math.abs(progress - ref.progress.target) / ref.progress.tol,
+        1 - Math.abs(extensionValue - ref.value.target) / ref.value.tol,
         0,
         1
       );
@@ -1890,97 +1908,78 @@ if (!impactPose || !swing.frames || !kf.impact) {
   }
 }
 
-metrics.extension = metrics.extension || {};
 metrics.extension.status = extensionStatus;
 metrics.extension.score = extensionScore;
 
 // =====================================================
-// 6) TEMPO — robuste + fallback si address manque
+// TEMPO — keyframes (address → top → impact)
 // =====================================================
-let tempoScore = 10;
 
-const iTop    = kf.top?.index;
-const iImpact = kf.impact?.index;
+let tempoScore = null;
+metrics.tempo = {};
 
-// fallback address : address → backswing → 0
-const iAddr =
-  (kf.address?.index != null ? kf.address.index :
-   kf.backswing?.index != null ? kf.backswing.index :
-   0);
+const kfIdx = {
+  address: kf.address?.index,
+  top:     kf.top?.index,
+  impact:  kf.impact?.index
+};
 
 if (
-  typeof iAddr === "number" &&
-  typeof iTop === "number" &&
-  typeof iImpact === "number" &&
-  T.length > Math.max(iAddr, iTop, iImpact)
+  typeof kfIdx.top === "number" &&
+  typeof kfIdx.impact === "number" &&
+  typeof kfIdx.address === "number" &&
+  T.length > Math.max(kfIdx.address, kfIdx.top, kfIdx.impact)
 ) {
-  const tAddr   = T[iAddr];
-  const tTop    = T[iTop];
-  const tImpact = T[iImpact];
 
-  if (
-    typeof tAddr === "number" &&
-    typeof tTop === "number" &&
-    typeof tImpact === "number" &&
-    tTop > tAddr &&
-    tImpact > tTop
-  ) {
+  const tAddr   = T[kfIdx.address];
+  const tTop    = T[kfIdx.top];
+  const tImpact = T[kfIdx.impact];
+
+  if (tTop > tAddr && tImpact > tTop) {
     const backswingT = (tTop - tAddr) / 1000;
     const downswingT = (tImpact - tTop) / 1000;
     const ratio = downswingT > 0 ? backswingT / downswingT : null;
 
-    metrics.tempo.backswingT = backswingT;
-    metrics.tempo.downswingT = downswingT;
-    metrics.tempo.ratio = ratio;
+    metrics.tempo = {
+      backswingT,
+      downswingT,
+      ratio
+    };
 
-    const REF = window.REF?.tempo || window.ParfectReference?.tempo || null;
-
-    if (REF?.ratio && ratio != null) {
+    const ref = window.REF?.tempo;
+    if (ref?.ratio?.target != null && ref?.ratio?.tol != null && ratio != null) {
       tempoScore = Math.round(
-        jswClamp(1 - Math.abs(ratio - REF.ratio.target) / REF.ratio.tol, 0, 1) * 20
+        jswClamp(
+          1 - Math.abs(ratio - ref.ratio.target) / ref.ratio.tol,
+          0,
+          1
+        ) * 20
       );
-    } else {
-      tempoScore = Math.round(jswClamp(1 - Math.abs((ratio ?? 3) - 3) / 2, 0, 1) * 20);
     }
   }
 }
 
-
+metrics.tempo.score = tempoScore;
 
 
 // =====================================================
-// TEMPO — SYNCHRO ROTATION ↔ EXTENSION
+// TEMPO ↔ EXTENSION SYNCHRO
 // =====================================================
-let tempoSyncScore = null;
 
 if (
-  typeof kf.top?.index === "number" &&
-  typeof metrics.extension?.extDelayFrames === "number"
+  metrics.extension?.score != null &&
+  metrics.tempo?.ratio != null
 ) {
-  const syncFrames =
-    (kf.impact.index + metrics.extension.extDelayFrames) - kf.top.index;
+  const ratio = metrics.tempo.ratio;
 
-  metrics.tempo.syncFrames = syncFrames;
-
-  // zone idéale ~ 10–18 frames après top
-  const IDEAL_MIN = 8;
-  const IDEAL_MAX = 18;
-
-  let syncScore;
-  if (syncFrames < IDEAL_MIN) {
-    syncScore = 0.3; // extension trop tôt
-  } else if (syncFrames > IDEAL_MAX) {
-    syncScore = 0.4; // extension trop tard
-  } else {
-    syncScore = 1; // synchro OK
+  // downswing très rapide → tolérance extension
+  if (ratio < 2.2 && extensionScore != null) {
+    extensionScore = Math.min(20, extensionScore + 2);
+    metrics.extension.score = extensionScore;
+    metrics.extension.syncedWithTempo = true;
   }
-
-  tempoSyncScore = Math.round(syncScore * 20);
-  metrics.tempo.syncScore = tempoSyncScore;
 }
 
-    tempoScore = Math.round((tempoScore * 0.7 + tempoSyncScore * 0.3));
-  metrics.tempo.score = tempoScore;
     
 // =====================================================
 // 7) BALANCE — finish + base (address/backswing/top)
@@ -2173,13 +2172,36 @@ return {
 // SAUVEGARDE SWING DANS NOCODB
 // =====================================================
 
+// =====================================================
+// 💾 SAUVEGARDE SWING — NOCODB (VERSION STABLE)
+// =====================================================
 window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   try {
+    // 🔐 Guards essentiels
     if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
-      throw new Error("Variables NocoDB manquantes");
+      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
     }
 
-    console.log("📤 Sauvegarde swing...", record);
+    if (!record || typeof record !== "object") {
+      throw new Error("Record swing invalide");
+    }
+
+    // 🧠 Normalisation minimale (sécurité)
+    const payload = {
+      email: record.email ?? window.userLicence?.email ?? null,
+      club: record.club ?? "?",
+      view: record.view ?? "unknown",
+      fps: record.fps ?? null,
+      CreatedAt: record.CreatedAt ?? new Date().toISOString(),
+      scores: record.scores ?? null,
+      metrics: record.metrics ?? null
+    };
+
+    if (!payload.email) {
+      throw new Error("Email utilisateur manquant — swing non sauvegardé");
+    }
+
+    console.log("📤 Sauvegarde swing NocoDB →", payload);
 
     const res = await fetch(window.NOCODB_SWINGS_URL, {
       method: "POST",
@@ -2187,7 +2209,7 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
         "Content-Type": "application/json",
         "xc-token": window.NOCODB_TOKEN
       },
-      body: JSON.stringify(record)
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -2196,14 +2218,16 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
     }
 
     const data = await res.json();
-    console.log("✅ Swing sauvegardé", data);
+    console.log("✅ Swing sauvegardé dans NocoDB", data);
+
     return data;
 
   } catch (err) {
-    console.error("❌ Erreur saveSwingToNocoDB:", err.message);
+    console.error("❌ Erreur saveSwingToNocoDB:", err);
     throw err;
   }
 };
+
 
   
 // ========================================
