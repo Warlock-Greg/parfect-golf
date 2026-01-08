@@ -1655,7 +1655,8 @@ metrics.rotation = {
 // 🔑 NOUVELLE SOURCE DE VÉRITÉ
 const kfPose = metrics.keyframes || {};
 
-
+const basePose = kfPose.address?.pose || null;
+    
 if (basePose && topPose) {
 
   rotationMeasure = computeRotationSignature(
