@@ -1656,7 +1656,7 @@ metrics.rotation = {
 const kfPose = metrics.keyframes || {};
 
 const basePose = kfPose.address?.pose || null;
-topPose  = kfPose.top?.pose || null;
+let topPose  = kfPose.top?.pose || null;
 
 if (basePose && topPose) {
 
