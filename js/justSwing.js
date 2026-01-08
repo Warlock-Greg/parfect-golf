@@ -1015,9 +1015,10 @@ function onPoseFrame(landmarks) {
 
     console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
 
-    if (lastPose && Array.isArray(lastPose)) {
-  metrics.keyframes = metrics.keyframes || {};
-  metrics.keyframes.address = {
+   if (lastPose && Array.isArray(lastPose)) {
+  swing.keyframeLandmarks = swing.keyframeLandmarks || {};
+
+  swing.keyframeLandmarks.address = {
     index: currentFrameIndex,
     pose: lastPose.map(p => ({
       x: p.x,
@@ -1029,6 +1030,7 @@ function onPoseFrame(landmarks) {
 
   console.log("📍 ADDRESS POSE SNAPSHOT SAVED");
 }
+
 
   }
 
@@ -1157,6 +1159,14 @@ function jswDegDiff(a, b) {
 function safePose(pose) {
   return Array.isArray(pose) ? pose : null;
 }
+
+function poseFromKeyframe(type, kf, swing) {
+  if (swing?.keyframeLandmarks?.[type]?.pose) {
+    return swing.keyframeLandmarks[type].pose;
+  }
+  return jswSafePoseFromKF(kf[type]) || null;
+}
+
   
 function jswSafePoseFromKF(kf) {
   // keyFrame type { index, pose } ou { pose } selon le moteur
