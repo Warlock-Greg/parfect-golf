@@ -1841,9 +1841,6 @@ metrics.extension = {
   status: "incomplete"
 };
 
-kf = metrics.keyframes || {};
-impactPose = kf.impact?.pose || null;
-finishPose = kf.finish?.pose || null;
 
 if (!impactPose) {
   extensionStatus = "incomplete";
