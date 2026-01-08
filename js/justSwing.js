@@ -1820,6 +1820,79 @@ if (topPose && impactPose) {
 metrics.weightShift.score = weightShiftScore;
 
 
+// =====================================================
+// 5) EXTENSION & FINISH — Face-On (ROBUSTE)
+// =====================================================
+let extensionScore = null;
+let extensionStatus = "ok";
+
+if (!impactPose || !swing.frames || !kf.impact) {
+  extensionStatus = "incomplete";
+} else {
+
+  const impactIndex = kf.impact.index;
+  const EXT_WINDOW = 12; // frames après impact (~0.4s à 30fps)
+
+  let maxExt = null;
+  let extAtImpact = null;
+  let maxExtIndex = null;
+
+  for (let i = impactIndex; i < Math.min(impactIndex + EXT_WINDOW, swing.frames.length); i++) {
+    const pose = swing.frames[i];
+    if (!pose) continue;
+
+    const LS = LM(pose, 11);
+    const RS = LM(pose, 12);
+    const LW = LM(pose, 15);
+    const RW = LM(pose, 16);
+
+    if (!LS || !RS || (!LW && !RW)) continue;
+
+    const sw = jswDist(LS, RS);
+    if (!sw || sw < 0.12) continue;
+
+    const armExt = Math.max(
+      LW ? jswDist(LS, LW) : 0,
+      RW ? jswDist(RS, RW) : 0
+    ) / sw;
+
+    if (i === impactIndex) {
+      extAtImpact = armExt;
+    }
+
+    if (maxExt == null || armExt > maxExt) {
+      maxExt = armExt;
+      maxExtIndex = i;
+    }
+  }
+
+  if (extAtImpact == null || maxExt == null) {
+    extensionStatus = "no-hands";
+  } else {
+    const progress = maxExt - extAtImpact;
+
+    metrics.extension = {
+      extAtImpact,
+      extMax: maxExt,
+      progress,
+      extDelayFrames: maxExtIndex - impactIndex
+    };
+
+    const ref = window.REF?.extension;
+    if (ref?.progress?.target != null && ref?.progress?.tol != null) {
+      const s = jswClamp(
+        1 - Math.abs(progress - ref.progress.target) / ref.progress.tol,
+        0,
+        1
+      );
+      extensionScore = Math.round(s * 20);
+    }
+  }
+}
+
+metrics.extension = metrics.extension || {};
+metrics.extension.status = extensionStatus;
+metrics.extension.score = extensionScore;
 
 // =====================================================
 // 6) TEMPO — robuste + fallback si address manque
