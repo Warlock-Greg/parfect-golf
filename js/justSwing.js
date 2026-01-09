@@ -1020,7 +1020,7 @@ function onPoseFrame(landmarks) {
     console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
     console.log("LIVE CHECK", {
   hasActiveSwing: !!activeSwing,
-  frame: currentFrameIndex,
+  frame: activeSwing.frames.length,
   hasKeyFrames: !!activeSwing?.keyFrames
 });
 
