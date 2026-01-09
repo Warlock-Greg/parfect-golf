@@ -1952,22 +1952,23 @@ metrics.weightShift.score = weightShiftScore;
 
 
 // =====================================================
-// EXTENSION & FINISH — robuste (impact prioritaire)
+// EXTENSION — robuste (impact prioritaire)
 // =====================================================
 
-let extensionScore = null;
-let extensionStatus = "incomplete";
+// ⚠️ NE PAS redéclarer impactPose / finishPose / metrics
 
-metrics.extension = {
+metrics.extension = metrics.extension || {
   impact: null,
   finish: null,
   value: null,
-  status: extensionStatus,
+  status: "incomplete",
   score: null
 };
 
+let extensionStatus = "incomplete";
+
 // -----------------------------------------------------
-// 🔑 Poses clés requises
+// 🔑 Landmarks depuis poses EXISTANTES
 // -----------------------------------------------------
 const LS = impactPose?.[11];
 const RS = impactPose?.[12];
@@ -1977,23 +1978,21 @@ const RW = impactPose?.[16];
 if (!LS || !RS || (!LW && !RW)) {
   extensionStatus = "no-hands";
 } else {
-  // ---------------------------------------------------
-  // 📏 Normalisation par largeur épaules
-  // ---------------------------------------------------
   const shoulderWidth = Math.max(jswDist(LS, RS), 0.001);
 
-  // 👉 Extension réelle à l’impact (PRIORITAIRE)
+  // 👉 extension réelle à l’impact (PRIORITÉ)
   const extImpact = Math.max(
     LW ? jswDist(LS, LW) : 0,
     RW ? jswDist(RS, RW) : 0
   ) / shoulderWidth;
 
-  // 👉 Extension post-impact (si détectable)
+  // 👉 extension post-impact (si dispo)
   let extFinish = null;
 
   if (
-    finishPose?.[11] &&
-    finishPose?.[12] &&
+    finishPose &&
+    finishPose[11] &&
+    finishPose[12] &&
     (finishPose[15] || finishPose[16])
   ) {
     const swf = Math.max(
@@ -2007,29 +2006,21 @@ if (!LS || !RS || (!LW && !RW)) {
     ) / swf;
   }
 
-  // 👉 Valeur retenue = la meilleure observée
-  const extensionValue = Math.max(
-    extImpact,
-    extFinish ?? 0
-  );
+  const extensionValue = Math.max(extImpact, extFinish ?? 0);
+
+  metrics.extension.impact = extImpact;
+  metrics.extension.finish = extFinish;
+  metrics.extension.value = extensionValue;
 
   extensionStatus = "ok";
 
-  metrics.extension = {
-    impact: extImpact,
-    finish: extFinish,
-    value: extensionValue,
-    status: extensionStatus,
-    score: null
-  };
-
   // ---------------------------------------------------
-  // 🎯 SCORING — pragmatique golf réel
+  // 🎯 Scoring (tolérance humaine)
   // ---------------------------------------------------
   const ref = window.REF?.extension;
 
   if (ref?.target != null && ref?.tol != null) {
-    extensionScore = Math.round(
+    metrics.extension.score = Math.round(
       jswClamp(
         1 - Math.abs(extensionValue - ref.target) / ref.tol,
         0,
@@ -2037,11 +2028,9 @@ if (!LS || !RS || (!LW && !RW)) {
       ) * 10
     );
   } else {
-    // fallback intelligent
-    extensionScore = extensionValue > 0.55 ? 7 : 4;
+    // fallback safe
+    metrics.extension.score = extensionValue > 0.55 ? 7 : 4;
   }
-
-  metrics.extension.score = extensionScore;
 }
 
 metrics.extension.status = extensionStatus;
