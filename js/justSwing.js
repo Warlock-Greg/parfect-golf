@@ -690,6 +690,8 @@ function initEngine() {
     onSwingComplete: (evt) => {
     
       console.log("🏁 SWING COMPLETE", evt);
+      activeSwing = null;
+
 
       if (swingTimeout) {
           clearTimeout(swingTimeout);
