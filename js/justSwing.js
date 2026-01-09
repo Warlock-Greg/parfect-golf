@@ -1763,8 +1763,6 @@ const basePose =
   kf.top?.pose ||
   null;
 
-const topPose = kf.top?.pose || null;
-
 // -----------------------------------------------------
 // 🧮 Calcul rotation réelle
 // -----------------------------------------------------
