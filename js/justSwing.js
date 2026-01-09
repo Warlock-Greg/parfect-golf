@@ -512,37 +512,23 @@ function hasRealMotion(swing) {
  }
 
 function isValidSwing(swing) {
-  if (!swing) return false;
-
   const kf = swing.keyFrames || {};
 
-  // ⛳ impact obligatoire (vérité terrain)
-  if (!kf.impact) {
-    console.warn("🚫 Swing rejeté — impact manquant");
-    return false;
-  }
+  // impact indispensable
+  if (!kf.impact) return false;
 
-  // 🎥 durée minimale
-  if (!swing.frames || swing.frames.length < 25) {
-    console.warn("🚫 Swing rejeté — trop court");
-    return false;
-  }
+  // top OU backswing acceptable
+  if (!kf.top && !kf.backswing) return false;
 
-  // 🏌️ mouvement réel (anti faux swing)
-  if (typeof hasRealMotion === "function") {
-    if (!hasRealMotion(swing)) {
-      console.warn("🚫 Faux swing détecté — pas de mouvement réel");
-      return false;
-    }
-  }
+  // durée minimale
+  if (!swing.frames || swing.frames.length < 25) return false;
 
-  // 🧠 top recommandé mais non bloquant
-  if (!kf.top) {
-    console.info("ℹ️ Swing sans top détecté (rapide ou punch)");
-  }
+  // mouvement réel
+  if (!hasRealMotion(swing)) return false;
 
   return true;
 }
+
 
 
   function showSwingRetryButton(messageHtml) {
