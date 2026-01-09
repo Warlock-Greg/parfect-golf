@@ -1754,7 +1754,7 @@ metrics.rotation = {
 // -----------------------------------------------------
 // 🔑 Source de vérité : keyframes capturées
 // -----------------------------------------------------
-const kf = metrics.keyframes || {};
+kf = metrics.keyframes || {};
 
 // base fiable : address → backswing → top
 const basePose =
