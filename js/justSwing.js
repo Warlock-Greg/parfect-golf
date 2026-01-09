@@ -1029,7 +1029,7 @@ function onPoseFrame(landmarks) {
   activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
 
   activeSwing.keyframeLandmarks.address = {
-    index: currentFrameIndex,
+    index: activeSwing.frames.length,
     pose: lastPose.map(p => ({
       x: p.x,
       y: p.y,
