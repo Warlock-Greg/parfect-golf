@@ -1955,72 +1955,47 @@ metrics.weightShift.score = weightShiftScore;
 let extensionScore = null;
 let extensionStatus = "ok";
 
-metrics.extension = {
-  status: "incomplete"
-};
 
+const LS = impactPose?.[11];
+const RS = impactPose?.[12];
+const LW = impactPose?.[15];
+const RW = impactPose?.[16];
 
-if (!impactPose) {
-  extensionStatus = "incomplete";
-} else {
+if (LS && RS && (LW || RW)) {
+  const sw = Math.max(jswDist(LS, RS), 0.001);
 
-  const LS = impactPose[11];
-  const RS = impactPose[12];
-  const LW = impactPose[15];
-  const RW = impactPose[16];
+  const extImpact = Math.max(
+    LW ? jswDist(LS, LW) : 0,
+    RW ? jswDist(RS, RW) : 0
+  ) / sw;
 
-  if ((!LW && !RW) || !LS || !RS) {
-    extensionStatus = "no-hands";
-  } else {
+  let extFinish = extImpact;
 
-    const shoulderWidth = Math.max(
-      jswDist(LS, RS),
-      0.001
+  if (finishPose?.[11] && finishPose?.[12] && (finishPose[15] || finishPose[16])) {
+    const swf = Math.max(jswDist(finishPose[11], finishPose[12]), 0.001);
+    extFinish = Math.max(
+      finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
+      finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
+    ) / swf;
+  }
+
+  const extensionValue = Math.max(extImpact, extFinish);
+
+  metrics.extension = {
+    impact: extImpact,
+    finish: extFinish,
+    value: extensionValue
+  };
+
+  // scoring
+  const ref = window.REF?.extension;
+  if (ref?.target && ref?.tol) {
+    extensionScore = Math.round(
+      jswClamp(1 - Math.abs(extensionValue - ref.target) / ref.tol, 0, 1) * 10
     );
-
-    // 👉 extension instantanée à l’impact
-    const extImpact = Math.max(
-      LW ? jswDist(LS, LW) : 0,
-      RW ? jswDist(RS, RW) : 0
-    ) / shoulderWidth;
-
-    // 👉 extension au finish (si existe)
-    let extFinish = extImpact;
-    if (finishPose) {
-      const LSf = finishPose[11];
-      const RSf = finishPose[12];
-      const LWf = finishPose[15];
-      const RWf = finishPose[16];
-
-      if (LSf && RSf && (LWf || RWf)) {
-        const swf = Math.max(jswDist(LSf, RSf), 0.001);
-        extFinish = Math.max(
-          LWf ? jswDist(LSf, LWf) : 0,
-          RWf ? jswDist(RSf, RWf) : 0
-        ) / swf;
-      }
-    }
-
-    const extensionValue = Math.max(extImpact, extFinish);
-
-    metrics.extension = {
-      extImpact,
-      extFinish,
-      extensionValue,
-      status: "ok"
-    };
-
-    const ref = window.REF?.extension;
-    if (ref?.value?.target != null && ref?.value?.tol != null) {
-      const s = jswClamp(
-        1 - Math.abs(extensionValue - ref.value.target) / ref.value.tol,
-        0,
-        1
-      );
-      extensionScore = Math.round(s * 20);
-    }
   }
 }
+
 
 metrics.extension.status = extensionStatus;
 metrics.extension.score = extensionScore;
@@ -2051,8 +2026,19 @@ if (
 
   if (tTop > tAddr && tImpact > tTop) {
     const backswingT = (tTop - tAddr) / 1000;
-    const downswingT = (tImpact - tTop) / 1000;
-    const ratio = downswingT > 0 ? backswingT / downswingT : null;
+const rawDownswingT = (tImpact - tTop) / 1000;
+
+// 🛡️ Sécurité MediaPipe (downswing trop court = bruit)
+const MIN_DOWNSWING = 0.12; // 120 ms plancher réaliste
+const downswingT = Math.max(rawDownswingT, MIN_DOWNSWING);
+
+const ratio = backswingT / downswingT;
+
+// exposé metrics
+metrics.tempo.backswingT = backswingT;
+metrics.tempo.downswingT = downswingT;
+metrics.tempo.rawDownswingT = rawDownswingT;
+metrics.tempo.ratio = ratio;
 
     metrics.tempo = {
       backswingT,
