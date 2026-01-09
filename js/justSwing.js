@@ -512,36 +512,33 @@ function hasRealMotion(swing) {
  }
 
 function isValidSwing(swing) {
+  if (!swing) return false;
+
   const kf = swing.keyFrames || {};
-  const kfl = swing.keyframeLandmarks || {};
 
-  // 1️⃣ keyframes indispensables
-  if (!kf.top || !kf.impact) return false;
-
-  // 2️⃣ durée minimale
-  if (!swing.frames || swing.frames.length < 25) return false;
-
-  // 3️⃣ mouvement réel (anti faux swing caméra)
-  if (!hasRealMotion(swing)) {
-    console.warn("🚫 Swing rejeté — pas de mouvement réel");
+  // ⛳ impact obligatoire (vérité terrain)
+  if (!kf.impact) {
+    console.warn("🚫 Swing rejeté — impact manquant");
     return false;
   }
 
-  // 4️⃣ intention golf : address → top
-  const addrPose = kfl.address?.pose;
-  const topPose  = kfl.top?.pose;
-
-  if (!addrPose || !topPose) {
-    console.warn("🚫 Swing rejeté — adresse ou top manquant");
+  // 🎥 durée minimale
+  if (!swing.frames || swing.frames.length < 25) {
+    console.warn("🚫 Swing rejeté — trop court");
     return false;
   }
 
-  const movement = computeGlobalMovement(addrPose, topPose);
-  const MIN_MOVEMENT = 0.015;
+  // 🏌️ mouvement réel (anti faux swing)
+  if (typeof hasRealMotion === "function") {
+    if (!hasRealMotion(swing)) {
+      console.warn("🚫 Faux swing détecté — pas de mouvement réel");
+      return false;
+    }
+  }
 
-  if (movement < MIN_MOVEMENT) {
-    console.warn("🚫 Swing rejeté — mouvement insuffisant", movement);
-    return false;
+  // 🧠 top recommandé mais non bloquant
+  if (!kf.top) {
+    console.info("ℹ️ Swing sans top détecté (rapide ou punch)");
   }
 
   return true;
