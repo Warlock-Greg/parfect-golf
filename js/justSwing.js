@@ -996,54 +996,53 @@ function onPoseFrame(landmarks) {
   if (state !== JSW_STATE.SWING_CAPTURE) return;
 
   // =====================================================
-  // 🔒 LOCK ADRESSE — posture statique AVANT swing
-  // =====================================================
-  if (
-    pendingAddress &&
-    !addressLocked &&
-    isStableAddress(landmarks)
-  ) {
-    // 🛡️ INIT SAFE DES KEYFRAMES
-    if (!engine.keyFrames) engine.keyFrames = {};
-    
-    const addrIndex =
-    Array.isArray(engine.frames) ? engine.frames.length : 0;
+// 🔒 LOCK ADRESSE — posture statique AVANT swing
+// =====================================================
+if (
+  pendingAddress &&
+  !addressLocked &&
+  isStableAddress(landmarks)
+) {
+  // ---------------------------------------------------
+  // 1️⃣ Verrou UX
+  // ---------------------------------------------------
+  pendingAddress = false;
+  addressLocked = true;
 
-      engine.keyFrames.address = {
-      index: addrIndex,
-      pose: landmarks
+  // ---------------------------------------------------
+  // 2️⃣ Index de frame SAFE
+  // ---------------------------------------------------
+  const frameIndex =
+    activeSwing?.frames?.length ??
+    (Array.isArray(engine.frames) ? engine.frames.length : 0);
+
+  // ---------------------------------------------------
+  // 3️⃣ Snapshot adresse dans le swing actif (SOURCE LIVE)
+  // ---------------------------------------------------
+  if (activeSwing && lastPose && Array.isArray(lastPose)) {
+    activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
+
+    activeSwing.keyframeLandmarks.address = {
+      index: frameIndex,
+      pose: lastPose.map(p => ({
+        x: p.x,
+        y: p.y,
+        z: p.z ?? null,
+        visibility: p.visibility ?? null
+      }))
     };
 
-    pendingAddress = false;
-    addressLocked = true;
-
-    console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
-    console.log("LIVE CHECK", {
-  hasActiveSwing: !!activeSwing,
-  frame: activeSwing.frames.length,
-  hasKeyFrames: !!activeSwing?.keyFrames
-});
-
-
-   if (activeSwing && lastPose && Array.isArray(lastPose)) {
-  activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
-
-  activeSwing.keyframeLandmarks.address = {
-    index: activeSwing.frames.length,
-    pose: lastPose.map(p => ({
-      x: p.x,
-      y: p.y,
-      z: p.z ?? null,
-      visibility: p.visibility ?? null
-    }))
-  };
-
-  console.log("📍 ADDRESS POSE SNAPSHOT SAVED");
-}
-
-
-
+    console.log("📍 ADDRESS POSE SNAPSHOT SAVED @", frameIndex);
   }
+
+  // ---------------------------------------------------
+  // 4️⃣ Log debug propre (optionnel)
+  // ---------------------------------------------------
+  console.log("🔒 ADDRESS LOCKED (UX)", frameIndex, {
+    hasActiveSwing: !!activeSwing,
+    hasPose: !!lastPose
+  });
+}
 
 
 
