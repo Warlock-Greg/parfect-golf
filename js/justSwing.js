@@ -607,7 +607,7 @@ setTimeout(() => {
     timestamps: [],
     keyFrames: {},
     keyframeLandmarks: {},
-    club: currentClub || "?",
+    club: currentClubType || "?",
     view: window.jswViewType || null,
     fps: engine?.fps || null
   };
