@@ -1726,7 +1726,12 @@ metrics.rotation = {
 // 🔑 NOUVELLE SOURCE DE VÉRITÉ
 const kfPose = metrics.keyframes || {};
 
-const basePose = kfPose.address?.pose || null;
+const basePose =
+  jswSafePoseFromKF(kf.address) ||
+  jswSafePoseFromKF(kf.backswing) ||
+  jswSafePoseFromKF(kf.top) ||
+  null;
+
     
 if (basePose && topPose) {
 
