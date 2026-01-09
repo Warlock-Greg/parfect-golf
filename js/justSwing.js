@@ -602,7 +602,22 @@ function startRoutineSequence() {
         console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
         showSwingMessage();
         updateUI();
-        console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
+        // Quand tu "armes" le swing (juste avant pendingAddress=true)
+    activeSwing = {
+        frames: [],
+        timestamps: [],
+        keyFrames: {},            // <= la source de vérité
+        keyframeLandmarks: {},    // <= snapshots propres optionnels
+        club: currentClub || "?",
+        view: window.jswViewType || null,
+        fps: engine?.fps || null
+      };
+
+      pendingAddress = true;
+      addressLocked = false;
+      addressStabilityBuffer = [];
+
+       console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
         // 🔒 Prépare le lock de l’adresse (UX)
         pendingAddress = true;
@@ -995,54 +1010,63 @@ function onPoseFrame(landmarks) {
   if (!engine || !landmarks) return;
   if (state !== JSW_STATE.SWING_CAPTURE) return;
 
-  // =====================================================
-// 🔒 LOCK ADRESSE — posture statique AVANT swing
 // =====================================================
-if (
-  pendingAddress &&
-  !addressLocked &&
-  isStableAddress(landmarks)
-) {
-  // ---------------------------------------------------
-  // 1️⃣ Verrou UX
-  // ---------------------------------------------------
-  pendingAddress = false;
-  addressLocked = true;
+// 🔒 LOCK ADRESSE — posture statique AVANT swing
+//   ✅ écrit DANS activeSwing (source de vérité)
+//   ✅ pas de metrics ici
+//   ✅ pas de engine.keyFrames (optionnel)
+// =====================================================
+if (pendingAddress && !addressLocked && isStableAddress(landmarks)) {
+  // Si activeSwing n'existe pas, on ne peut pas enregistrer l'adresse correctement
+  if (!activeSwing) {
+    console.warn("⚠️ ADDRESS LOCKED mais activeSwing absent → création SAFE");
+    activeSwing = {
+      frames: [],
+      timestamps: [],
+      keyFrames: {},
+      keyframeLandmarks: {},
+      club: currentClub || "?",
+      view: window.jswViewType || null,
+      fps: engine?.fps || null
+    };
+  }
 
-  // ---------------------------------------------------
-  // 2️⃣ Index de frame SAFE
-  // ---------------------------------------------------
-  const frameIndex =
-    activeSwing?.frames?.length ??
-    (Array.isArray(engine.frames) ? engine.frames.length : 0);
+  // index = frame courante dans la capture swing
+  const addrIndex = Array.isArray(activeSwing.frames) ? activeSwing.frames.length : 0;
 
-  // ---------------------------------------------------
-  // 3️⃣ Snapshot adresse dans le swing actif (SOURCE LIVE)
-  // ---------------------------------------------------
-  if (activeSwing && lastPose && Array.isArray(lastPose)) {
-    activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
-
-    activeSwing.keyframeLandmarks.address = {
-      index: frameIndex,
-      pose: lastPose.map(p => ({
+  // snapshot profond (anti-mutation)
+  const poseSnap = Array.isArray(landmarks)
+    ? landmarks.map(p => ({
         x: p.x,
         y: p.y,
         z: p.z ?? null,
         visibility: p.visibility ?? null
       }))
-    };
+    : null;
 
-    console.log("📍 ADDRESS POSE SNAPSHOT SAVED @", frameIndex);
+  if (!poseSnap) {
+    console.warn("⚠️ ADDRESS LOCKED mais landmarks invalides");
+    return;
   }
 
-  // ---------------------------------------------------
-  // 4️⃣ Log debug propre (optionnel)
-  // ---------------------------------------------------
-  console.log("🔒 ADDRESS LOCKED (UX)", frameIndex, {
+  // ✅ keyframe address dans le swing
+  activeSwing.keyFrames = activeSwing.keyFrames || {};
+  activeSwing.keyFrames.address = { index: addrIndex, pose: poseSnap };
+
+  // ✅ (optionnel) keyframeLandmarks pour debug/export
+  activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
+  activeSwing.keyframeLandmarks.address = { index: addrIndex, pose: poseSnap };
+
+  pendingAddress = false;
+  addressLocked = true;
+
+  console.log("🔒 ADDRESS LOCKED (SWING)", addrIndex, {
     hasActiveSwing: !!activeSwing,
-    hasPose: !!lastPose
+    frames: activeSwing.frames?.length ?? 0,
+    hasKeyFrames: !!activeSwing.keyFrames
   });
 }
+
 
 
 
