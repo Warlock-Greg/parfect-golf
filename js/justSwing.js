@@ -588,59 +588,56 @@ function startRoutineSequence() {
       clearInterval(routineInterval);
       routineInterval = null;
 
-      // 👉 Fin de routine → armement swing
-      setTimeout(() => {
-        console.log("⏳ Routine terminée → passage en capture directe");
+     // 👉 Fin de routine → armement swing
+setTimeout(() => {
+  console.log("⏳ Routine terminée → passage en capture directe");
 
-        engine.armForSwing();
+  // 1️⃣ Armement moteur (NE DOIT PAS reset activeSwing après)
+  engine.armForSwing();
 
-        captureArmed = true;
-        isRecordingActive = true;
-        state = JSW_STATE.SWING_CAPTURE;
-        frameIndex = 0;
+  // 2️⃣ État capture
+  captureArmed = true;
+  isRecordingActive = true;
+  state = JSW_STATE.SWING_CAPTURE;
+  frameIndex = 0;
 
-        console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
-        showSwingMessage();
-        updateUI();
-        // Quand tu "armes" le swing (juste avant pendingAddress=true)
-    activeSwing = {
-        frames: [],
-        timestamps: [],
-        keyFrames: {},            // <= la source de vérité
-        keyframeLandmarks: {},    // <= snapshots propres optionnels
-        club: currentClub || "?",
-        view: window.jswViewType || null,
-        fps: engine?.fps || null
-      };
+  // 3️⃣ CRÉATION UNIQUE DU SWING ACTIF (SOURCE DE VÉRITÉ)
+  activeSwing = {
+    frames: [],
+    timestamps: [],
+    keyFrames: {},
+    keyframeLandmarks: {},
+    club: currentClub || "?",
+    view: window.jswViewType || null,
+    fps: engine?.fps || null
+  };
 
-      pendingAddress = true;
-      addressLocked = false;
-      addressStabilityBuffer = [];
+  // 4️⃣ Prépare le lock adresse (UNE SEULE FOIS)
+  pendingAddress = true;
+  addressLocked = false;
+  addressStabilityBuffer = [];
 
-       console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
+  console.log("🎯 Swing ARMÉ → prêt pour ADDRESS");
+  console.log("🏌️ Capture ACTIVE (state=SWING_CAPTURE, rec=true)");
 
-        // 🔒 Prépare le lock de l’adresse (UX)
-        pendingAddress = true;
-        addressLocked = false;
+  showSwingMessage();
+  updateUI();
 
-        // ⏱️ Timeout GLOBAL de sécurité (sans logique swing)
-        const SWING_TIMEOUT_MS = 6000;
-
-      swingTimeout = setTimeout(() => {
-      
-      // ⛔ Pas de swing valide = pas d’impact
-      if (!engine.keyFrames?.impact) {
+  // 5️⃣ Timeout de sécurité swing
+  const SWING_TIMEOUT_MS = 6000;
+  swingTimeout = setTimeout(() => {
+    if (!activeSwing?.keyFrames?.impact) {
       console.warn("⏱️ Swing incomplet — aucun impact détecté");
 
       stopRecording();
+      showSwingRetryButton(
+        "😕 Je n’ai pas vu l’impact.<br>Reviens à l’adresse et recommence."
+      );
+    }
+  }, SWING_TIMEOUT_MS);
 
-      showSwingRetryButton("😕 Je n’ai pas vu l’impact.<br>Reviens à l’adresse et recommence.");
+}, 1500);
 
-  }
-}, SWING_TIMEOUT_MS);
-
-
-      }, 1500);
     }
   }, 3500);
 }
