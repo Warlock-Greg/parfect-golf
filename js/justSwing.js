@@ -477,6 +477,26 @@ function jswGetViewMessage() {
   `;
 }
 
+function computeGlobalMovement(poseA, poseB) {
+  if (!poseA || !poseB) return 0;
+
+  const IDS = [11, 12, 23, 24]; // épaules + hanches
+  let sum = 0;
+  let count = 0;
+
+  for (const id of IDS) {
+    const a = poseA[id];
+    const b = poseB[id];
+    if (!a || !b) continue;
+
+    sum += Math.hypot(b.x - a.x, b.y - a.y);
+    count++;
+  }
+
+  return count ? sum / count : 0;
+}
+
+  
 function hasRealMotion(swing) {
    const frames = swing.frames || [];
    let total = 0;
@@ -492,16 +512,41 @@ function hasRealMotion(swing) {
  }
 
 function isValidSwing(swing) {
-const kf = swing.keyFrames || {};
+  const kf = swing.keyFrames || {};
+  const kfl = swing.keyframeLandmarks || {};
 
-  // clés indispensables
+  // 1️⃣ keyframes indispensables
   if (!kf.top || !kf.impact) return false;
 
-  // durée minimale
+  // 2️⃣ durée minimale
   if (!swing.frames || swing.frames.length < 25) return false;
+
+  // 3️⃣ mouvement réel (anti faux swing caméra)
+  if (!hasRealMotion(swing)) {
+    console.warn("🚫 Swing rejeté — pas de mouvement réel");
+    return false;
+  }
+
+  // 4️⃣ intention golf : address → top
+  const addrPose = kfl.address?.pose;
+  const topPose  = kfl.top?.pose;
+
+  if (!addrPose || !topPose) {
+    console.warn("🚫 Swing rejeté — adresse ou top manquant");
+    return false;
+  }
+
+  const movement = computeGlobalMovement(addrPose, topPose);
+  const MIN_MOVEMENT = 0.015;
+
+  if (movement < MIN_MOVEMENT) {
+    console.warn("🚫 Swing rejeté — mouvement insuffisant", movement);
+    return false;
+  }
 
   return true;
 }
+
 
   function showSwingRetryButton(messageHtml) {
   if (!bigMsgEl) return;
