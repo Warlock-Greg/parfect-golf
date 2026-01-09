@@ -106,6 +106,8 @@ let captureArmed = false;
   let routineInterval = null;  // ← nécessaire pour la routine guidée
 
   let swingIndex = 0;
+  let activeSwing = null;
+
     // --- Swing capture guards ---
   let swingTimeout = null;
   let swingCompleted = false;
@@ -1014,11 +1016,17 @@ function onPoseFrame(landmarks) {
     addressLocked = true;
 
     console.log("🔒 ADDRESS LOCKED (UX)", engine.keyFrames.address.index);
+    console.log("LIVE CHECK", {
+  hasActiveSwing: !!activeSwing,
+  frame: currentFrameIndex,
+  hasKeyFrames: !!activeSwing?.keyFrames
+});
 
-   if (lastPose && Array.isArray(lastPose)) {
-  swing.keyframeLandmarks = swing.keyframeLandmarks || {};
 
-  swing.keyframeLandmarks.address = {
+   if (activeSwing && lastPose && Array.isArray(lastPose)) {
+  activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
+
+  activeSwing.keyframeLandmarks.address = {
     index: currentFrameIndex,
     pose: lastPose.map(p => ({
       x: p.x,
@@ -1030,6 +1038,7 @@ function onPoseFrame(landmarks) {
 
   console.log("📍 ADDRESS POSE SNAPSHOT SAVED");
 }
+
 
 
   }
