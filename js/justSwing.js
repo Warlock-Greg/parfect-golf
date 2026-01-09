@@ -1739,12 +1739,9 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // ROTATION — carte premium (Keyframes → Réalité swing)
 // =====================================================
 
-let rotationScore = null;
-let rotationMeasure = null;
+// ⚠️ NE PAS redéclarer metrics / topPose / view
 
-const refRotation = window.REF?.rotation ?? null;
-
-metrics.rotation = {
+metrics.rotation = metrics.rotation || {
   refKey: window.REF_META?.key || null,
   view: window.jswViewType || "unknown",
   stages: {},
@@ -1752,38 +1749,40 @@ metrics.rotation = {
 };
 
 // -----------------------------------------------------
-// 🔑 Source de vérité : keyframes capturées
+// 🔑 Source de vérité : keyframes EXISTANTES
 // -----------------------------------------------------
-kf = metrics.keyframes || {};
+const kfPose = metrics.keyframes || {};
 
 // base fiable : address → backswing → top
 const basePose =
-  kf.address?.pose ||
-  kf.backswing?.pose ||
-  kf.top?.pose ||
+  kfPose.address?.pose ||
+  kfPose.backswing?.pose ||
+  kfPose.top?.pose ||
   null;
 
 // -----------------------------------------------------
 // 🧮 Calcul rotation réelle
 // -----------------------------------------------------
 if (basePose && topPose) {
-  rotationMeasure = computeRotationSignature(
+
+  const rotationMeasure = computeRotationSignature(
     basePose,
     topPose,
     window.jswViewType
   );
 
   if (rotationMeasure) {
+
     const shoulder = rotationMeasure.shoulder;
-    const hip = rotationMeasure.hip;
-    const xFactor = shoulder - hip;
+    const hip      = rotationMeasure.hip;
+    const xFactor  = shoulder - hip;
 
     // -------------------------------------------------
-    // 🎯 Scoring pragmatique (réalité terrain)
+    // 🎯 Scoring pragmatique (terrain > dogme)
     // -------------------------------------------------
     let score = 0;
 
-    // 1️⃣ rotation globale effective
+    // 1️⃣ rotation réelle suffisante
     const globalRotationOK =
       shoulder > 0.35 &&
       hip > 0.30;
@@ -1792,23 +1791,23 @@ if (basePose && topPose) {
       score += 10;
     }
 
-    // 2️⃣ dissociation (si référence valide)
+    // 2️⃣ dissociation (si référence exploitable)
+    const ref = window.REF?.rotation;
+
     if (
-      refRotation?.xFactor?.target != null &&
-      refRotation?.xFactor?.tol != null
+      ref?.xFactor?.target != null &&
+      ref?.xFactor?.tol != null
     ) {
       if (
-        Math.abs(xFactor - refRotation.xFactor.target)
-        <= refRotation.xFactor.tol
+        Math.abs(xFactor - ref.xFactor.target)
+        <= ref.xFactor.tol
       ) {
         score += 10;
       }
     }
 
-    rotationScore = score;
-
     // -------------------------------------------------
-    // 🧾 Metrics exposées (UI / coach)
+    // 🧾 Metrics exposées
     // -------------------------------------------------
     metrics.rotation.measure = {
       shoulder,
@@ -1816,18 +1815,19 @@ if (basePose && topPose) {
       xFactor
     };
 
-    metrics.rotation.ref = refRotation || null;
+    metrics.rotation.ref = ref || null;
 
     metrics.rotation.stages.baseToTop = {
       actual: { shoulder, hip, xFactor },
-      target: refRotation?.xFactor?.target ?? null,
-      tol: refRotation?.xFactor?.tol ?? null,
-      score: rotationScore
+      target: ref?.xFactor?.target ?? null,
+      tol: ref?.xFactor?.tol ?? null,
+      score
     };
 
-    metrics.rotation.score = rotationScore;
+    metrics.rotation.score = score;
   }
 }
+
 
 
 
