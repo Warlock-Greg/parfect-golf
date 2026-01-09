@@ -1738,7 +1738,9 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // =====================================================
 // ROTATION — carte premium (Keyframes → Réalité swing)
 // =====================================================
+let rotationScore = 0;
 
+    
 // ⚠️ NE PAS redéclarer metrics / topPose / view
 
 metrics.rotation = metrics.rotation || {
