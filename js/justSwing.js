@@ -1736,7 +1736,7 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 
     
 // =====================================================
-// ROTATION — carte premium (Keyframes → Référence)
+// ROTATION — carte premium (Keyframes → Réalité swing)
 // =====================================================
 
 let rotationScore = null;
@@ -1744,86 +1744,92 @@ let rotationMeasure = null;
 
 const refRotation = window.REF?.rotation ?? null;
 
-const isRotationRefValid =
-  refRotation &&
-  refRotation.shoulder &&
-  refRotation.hip &&
-  refRotation.xFactor &&
-  typeof refRotation.shoulder.target === "number" &&
-  typeof refRotation.shoulder.tol === "number" &&
-  typeof refRotation.hip.target === "number" &&
-  typeof refRotation.hip.tol === "number" &&
-  typeof refRotation.xFactor.target === "number" &&
-  typeof refRotation.xFactor.tol === "number";
-
 metrics.rotation = {
   refKey: window.REF_META?.key || null,
   view: window.jswViewType || "unknown",
-  stages: {}
+  stages: {},
+  score: null
 };
 
-// 🔑 NOUVELLE SOURCE DE VÉRITÉ
-const kfPose = metrics.keyframes || {};
+// -----------------------------------------------------
+// 🔑 Source de vérité : keyframes capturées
+// -----------------------------------------------------
+const kf = metrics.keyframes || {};
 
+// base fiable : address → backswing → top
 const basePose =
-  jswSafePoseFromKF(kf.address) ||
-  jswSafePoseFromKF(kf.backswing) ||
-  jswSafePoseFromKF(kf.top) ||
+  kf.address?.pose ||
+  kf.backswing?.pose ||
+  kf.top?.pose ||
   null;
 
-    
-if (basePose && topPose) {
+const topPose = kf.top?.pose || null;
 
+// -----------------------------------------------------
+// 🧮 Calcul rotation réelle
+// -----------------------------------------------------
+if (basePose && topPose) {
   rotationMeasure = computeRotationSignature(
     basePose,
     topPose,
-    viewType
+    window.jswViewType
   );
 
-  if (rotationMeasure && isRotationRefValid) {
+  if (rotationMeasure) {
+    const shoulder = rotationMeasure.shoulder;
+    const hip = rotationMeasure.hip;
+    const xFactor = shoulder - hip;
 
-    const scored = scoreRotationFromReference(
-      rotationMeasure,
-      refRotation
-    );
+    // -------------------------------------------------
+    // 🎯 Scoring pragmatique (réalité terrain)
+    // -------------------------------------------------
+    let score = 0;
 
-    rotationScore = scored.score;
+    // 1️⃣ rotation globale effective
+    const globalRotationOK =
+      shoulder > 0.35 &&
+      hip > 0.30;
+
+    if (globalRotationOK) {
+      score += 10;
+    }
+
+    // 2️⃣ dissociation (si référence valide)
+    if (
+      refRotation?.xFactor?.target != null &&
+      refRotation?.xFactor?.tol != null
+    ) {
+      if (
+        Math.abs(xFactor - refRotation.xFactor.target)
+        <= refRotation.xFactor.tol
+      ) {
+        score += 10;
+      }
+    }
+
+    rotationScore = score;
+
+    // -------------------------------------------------
+    // 🧾 Metrics exposées (UI / coach)
+    // -------------------------------------------------
+    metrics.rotation.measure = {
+      shoulder,
+      hip,
+      xFactor
+    };
+
+    metrics.rotation.ref = refRotation || null;
 
     metrics.rotation.stages.baseToTop = {
-      actual: {
-        shoulder: rotationMeasure.shoulder,
-        hip: rotationMeasure.hip,
-        xFactor: rotationMeasure.xFactor
-      },
-      target: {
-        shoulder: refRotation.shoulder.target,
-        hip: refRotation.hip.target,
-        xFactor: refRotation.xFactor.target
-      },
-      tol: {
-        shoulder: refRotation.shoulder.tol,
-        hip: refRotation.hip.tol,
-        xFactor: refRotation.xFactor.tol
-      },
+      actual: { shoulder, hip, xFactor },
+      target: refRotation?.xFactor?.target ?? null,
+      tol: refRotation?.xFactor?.tol ?? null,
       score: rotationScore
-    };
-
-    metrics.rotation.measure = {
-      shoulder: rotationMeasure.shoulder,
-      hip: rotationMeasure.hip,
-      xFactor: rotationMeasure.xFactor
-    };
-
-    metrics.rotation.ref = {
-      shoulder: refRotation.shoulder,
-      hip: refRotation.hip,
-      xFactor: refRotation.xFactor
     };
 
     metrics.rotation.score = rotationScore;
   }
 }
-
 
 
 
@@ -1946,56 +1952,100 @@ metrics.weightShift.score = weightShiftScore;
 
 
 // =====================================================
-// EXTENSION — robuste (impact → post-impact)
+// EXTENSION & FINISH — robuste (impact prioritaire)
 // =====================================================
 
 let extensionScore = null;
-let extensionStatus = "ok";
+let extensionStatus = "incomplete";
 
+metrics.extension = {
+  impact: null,
+  finish: null,
+  value: null,
+  status: extensionStatus,
+  score: null
+};
 
+// -----------------------------------------------------
+// 🔑 Poses clés requises
+// -----------------------------------------------------
 const LS = impactPose?.[11];
 const RS = impactPose?.[12];
 const LW = impactPose?.[15];
 const RW = impactPose?.[16];
 
-if (LS && RS && (LW || RW)) {
-  const sw = Math.max(jswDist(LS, RS), 0.001);
+if (!LS || !RS || (!LW && !RW)) {
+  extensionStatus = "no-hands";
+} else {
+  // ---------------------------------------------------
+  // 📏 Normalisation par largeur épaules
+  // ---------------------------------------------------
+  const shoulderWidth = Math.max(jswDist(LS, RS), 0.001);
 
+  // 👉 Extension réelle à l’impact (PRIORITAIRE)
   const extImpact = Math.max(
     LW ? jswDist(LS, LW) : 0,
     RW ? jswDist(RS, RW) : 0
-  ) / sw;
+  ) / shoulderWidth;
 
-  let extFinish = extImpact;
+  // 👉 Extension post-impact (si détectable)
+  let extFinish = null;
 
-  if (finishPose?.[11] && finishPose?.[12] && (finishPose[15] || finishPose[16])) {
-    const swf = Math.max(jswDist(finishPose[11], finishPose[12]), 0.001);
+  if (
+    finishPose?.[11] &&
+    finishPose?.[12] &&
+    (finishPose[15] || finishPose[16])
+  ) {
+    const swf = Math.max(
+      jswDist(finishPose[11], finishPose[12]),
+      0.001
+    );
+
     extFinish = Math.max(
       finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
       finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
     ) / swf;
   }
 
-  const extensionValue = Math.max(extImpact, extFinish);
+  // 👉 Valeur retenue = la meilleure observée
+  const extensionValue = Math.max(
+    extImpact,
+    extFinish ?? 0
+  );
+
+  extensionStatus = "ok";
 
   metrics.extension = {
     impact: extImpact,
     finish: extFinish,
-    value: extensionValue
+    value: extensionValue,
+    status: extensionStatus,
+    score: null
   };
 
-  // scoring
+  // ---------------------------------------------------
+  // 🎯 SCORING — pragmatique golf réel
+  // ---------------------------------------------------
   const ref = window.REF?.extension;
-  if (ref?.target && ref?.tol) {
+
+  if (ref?.target != null && ref?.tol != null) {
     extensionScore = Math.round(
-      jswClamp(1 - Math.abs(extensionValue - ref.target) / ref.tol, 0, 1) * 10
+      jswClamp(
+        1 - Math.abs(extensionValue - ref.target) / ref.tol,
+        0,
+        1
+      ) * 10
     );
+  } else {
+    // fallback intelligent
+    extensionScore = extensionValue > 0.55 ? 7 : 4;
   }
+
+  metrics.extension.score = extensionScore;
 }
 
-
 metrics.extension.status = extensionStatus;
-metrics.extension.score = extensionScore;
+
 
 // =====================================================
 // TEMPO — keyframes (address → top → impact)
