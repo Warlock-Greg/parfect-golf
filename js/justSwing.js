@@ -1942,6 +1942,7 @@ metrics.weightShift.score = weightShiftScore;
 // =====================================================
 
 // ⚠️ NE PAS redéclarer impactPose / finishPose / metrics
+    let extensionScore = 0;
 
 metrics.extension = metrics.extension || {
   impact: null,
