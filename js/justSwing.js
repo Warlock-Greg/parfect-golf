@@ -2185,6 +2185,17 @@ for (const key in METRIC_WEIGHTS) {
   }
 }
 
+// =======================================
+// FAILSAFE — scores manquants
+// =======================================
+extensionScore ??= 0;
+rotationScore  ??= 0;
+tempoScore     ??= 0;
+triangleScore  ??= 0;
+weightShiftScore ??= 0;
+balanceScore   ??= 0;
+
+    
 // 🎯 Score final normalisé sur 100
 const total =
   maxPossible > 0
