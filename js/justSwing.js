@@ -1720,24 +1720,23 @@ postureScore = metrics.posture.score;
 
 const rotBasePose = backswingPose || topPose; // ✅ fallback
 
-    
 // =====================================================
 // ROTATION — carte premium (épaules + hanches ONLY)
 // =====================================================
 
-// 🔒 sécurité : score toujours défini
-let rotationScore = 0;
-
-// init metrics si absent
+// -----------------------------------------------------
+// 🛡️ INIT SAFE — metrics toujours cohérentes
+// -----------------------------------------------------
 metrics.rotation = metrics.rotation || {
   refKey: window.REF_META?.key || null,
   view: window.jswViewType || "unknown",
   stages: {},
+  measure: null,
   score: 0
 };
 
 // -----------------------------------------------------
-// 🔑 Source de vérité : keyframes capturées
+// 🔑 Source de vérité : keyframes
 // -----------------------------------------------------
 const kfPose = metrics.keyframes || {};
 
@@ -1764,40 +1763,36 @@ if (basePose && topPose) {
     const shoulder = measure.shoulder;
     const hip      = measure.hip;
 
-    // -------------------------------------------------
-    // 🎯 SCORING SIMPLE & ROBUSTE (20 pts)
-    // -------------------------------------------------
     const ref = window.REF?.rotation;
 
     let shoulderScore = 0;
     let hipScore = 0;
 
     if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-      shoulderScore = jswClamp(
-        1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
-        0,
-        1
-      ) * 10;
+      shoulderScore =
+        jswClamp(
+          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
+          0,
+          1
+        ) * 10;
     }
 
     if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-      hipScore = jswClamp(
-        1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
-        0,
-        1
-      ) * 10;
+      hipScore =
+        jswClamp(
+          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
+          0,
+          1
+        ) * 10;
     }
 
-    rotationScore = Math.round(shoulderScore + hipScore);
+    // ✅ SCORE UNIQUE DE RÉFÉRENCE
+    metrics.rotation.score = Math.round(shoulderScore + hipScore);
 
     // -------------------------------------------------
     // 🧾 Metrics exposées (UI / coach)
     // -------------------------------------------------
-    metrics.rotation.measure = {
-      shoulder,
-      hip
-    };
-
+    metrics.rotation.measure = { shoulder, hip };
     metrics.rotation.ref = ref || null;
 
     metrics.rotation.stages.baseToTop = {
@@ -1810,15 +1805,10 @@ if (basePose && topPose) {
         shoulder: ref?.shoulder?.tol ?? null,
         hip: ref?.hip?.tol ?? null
       },
-      score: rotationScore
+      score: metrics.rotation.score
     };
-
-    metrics.rotation.score = rotationScore;
   }
 }
-
-
-
 
 
 // =====================================================
