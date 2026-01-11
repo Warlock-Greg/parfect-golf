@@ -1540,10 +1540,12 @@ function scoreRotationFromReference(measure, ref) {
 function getKeyframePose(type, metrics, activeSwing) {
   return (
     metrics?.keyframes?.[type]?.pose ||
+    activeSwing?.keyFrames?.[type]?.pose ||
     activeSwing?.keyframeLandmarks?.[type]?.pose ||
     null
   );
 }
+
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
@@ -1730,72 +1732,68 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 
 
 // =====================================================
-// ROTATION — robust (shoulder + hip)
+// ROTATION — ROBUSTE & DÉFINITIVE (épaules + hanches)
 // =====================================================
 
-// ✅ init safe (ne redéclare pas metrics)
-metrics.rotation = metrics.rotation || {};
-metrics.rotation.score = typeof metrics.rotation.score === "number" ? metrics.rotation.score : 0;
+metrics.rotation = metrics.rotation || {
+  score: 0,
+  measure: null,
+  ref: null,
+  stages: {}
+};
 
-// 🔑 keyframes
-const kfPose = metrics.keyframes || {};
-const basePoseR =
-  getKF("address", metrics, activeSwing) ||
-  getKF("backswing", metrics, activeSwing) ||
-  null;
+const basePose = getKeyframePose("address", metrics, activeSwing)
+              || getKeyframePose("backswing", metrics, activeSwing);
 
-const topPoseR = getKF("top", metrics, activeSwing);
+const topPose  = getKeyframePose("top", metrics, activeSwing);
 
-if (!basePoseR || !topPoseR) {
-  console.warn("🌀 ROT ENGINE: missing basePose/topPose", {
-    hasBase: !!basePoseR,
-    hasTop: !!topPoseR
+if (!basePose || !topPose) {
+  console.warn("🌀 ROT ENGINE: missing base/top", {
+    base: !!basePose,
+    top: !!topPose
   });
 } else {
-  const m = computeRotationSignature(basePoseR, topPoseR, window.jswViewType);
+
+  const m = computeRotationSignature(basePose, topPose, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
-    const shoulder = m.shoulder;
-    const hip = m.hip;
 
-    // expose measure TOUJOURS (sinon UI ne peut rien afficher)
+    const shoulder = m.shoulder;
+    const hip      = m.hip;
+
     metrics.rotation.measure = { shoulder, hip };
 
-    // ref (si dispo)
     const ref = window.REF?.rotation || null;
+    metrics.rotation.ref = ref;
 
-    // ⚠️ IMPORTANT: on fournit bien shoulder/hip target/tol si dispo
-    metrics.rotation.ref = ref
-      ? {
-          shoulder: ref.shoulder ?? null,
-          hip: ref.hip ?? null
-        }
-      : null;
-
-    // scoring
     let score = 0;
 
     if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
       score += Math.round(
-        jswClamp(1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1) * 10
+        jswClamp(
+          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
+          0,
+          1
+        ) * 10
       );
     } else {
-      // fallback: rotation "présente"
-      score += shoulder < 0.85 ? 6 : 3;
+      score += shoulder < 0.9 ? 6 : 3;
     }
 
     if (ref?.hip?.target != null && ref?.hip?.tol != null) {
       score += Math.round(
-        jswClamp(1 - Math.abs(hip - ref.hip.target) / ref.hip.tol, 0, 1) * 10
+        jswClamp(
+          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
+          0,
+          1
+        ) * 10
       );
     } else {
-      score += hip < 0.90 ? 6 : 3;
+      score += hip < 0.9 ? 6 : 3;
     }
 
-    metrics.rotation.score = Math.max(0, Math.min(20, score));
+    metrics.rotation.score = Math.min(20, score);
 
-    // stages (optionnel mais utile)
-    metrics.rotation.stages = metrics.rotation.stages || {};
     metrics.rotation.stages.baseToTop = {
       actual: { shoulder, hip },
       target: {
@@ -1810,10 +1808,9 @@ if (!basePoseR || !topPoseR) {
     };
 
     console.log("🌀 ROT ENGINE OK", metrics.rotation);
-  } else {
-    console.warn("🌀 ROT ENGINE: measure null/invalid", m);
   }
 }
+
 
 
 
@@ -2300,9 +2297,6 @@ return {
 
 }
 
-  // =====================================================
-// SAUVEGARDE SWING DANS NOCODB
-// =====================================================
 
 // =====================================================
 // 💾 SAUVEGARDE SWING — NOCODB (VERSION STABLE)
@@ -2839,6 +2833,21 @@ async function handleSwingComplete(swing) {
   
   // ✅ Normalisation KEYFRAMES (sinon posture/tempo/rotation pètent)
   swing.keyFrames = jswNormalizeKeyFrames(swing.keyFrames, swing.frames);
+
+  // =====================================================
+// 🔁 SYNC KEYFRAMES → METRICS (SOURCE UNIQUE)
+// =====================================================
+metrics.keyframes = {};
+
+for (const k in swing.keyFrames) {
+  if (swing.keyFrames[k]?.pose) {
+    metrics.keyframes[k] = {
+      index: swing.keyFrames[k].index,
+      pose: swing.keyFrames[k].pose
+    };
+  }
+}
+
   
   // ======================================================
   // 1️⃣ Sauvegarde brute (même si swing invalide)
