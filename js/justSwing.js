@@ -1724,93 +1724,88 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // ROTATION — carte premium (épaules + hanches ONLY)
 // =====================================================
 
-// -----------------------------------------------------
-// 🛡️ INIT SAFE — metrics toujours cohérentes
-// -----------------------------------------------------
-metrics.rotation = metrics.rotation || {
-  refKey: window.REF_META?.key || null,
-  view: window.jswViewType || "unknown",
-  stages: {},
-  measure: null,
-  score: 0
-};
+// =====================================================
+// ROTATION — robust (shoulder + hip)
+// =====================================================
 
-// -----------------------------------------------------
-// 🔑 Source de vérité : keyframes
-// -----------------------------------------------------
+// ✅ init safe (ne redéclare pas metrics)
+metrics.rotation = metrics.rotation || {};
+metrics.rotation.score = typeof metrics.rotation.score === "number" ? metrics.rotation.score : 0;
+
+// 🔑 keyframes
 const kfPose = metrics.keyframes || {};
-
-// base fiable : address → backswing → top
 const basePose =
   kfPose.address?.pose ||
   kfPose.backswing?.pose ||
   kfPose.top?.pose ||
   null;
 
-// -----------------------------------------------------
-// 🧮 Calcul rotation réelle
-// -----------------------------------------------------
 if (basePose && topPose) {
+  const m = computeRotationSignature(basePose, topPose, window.jswViewType);
 
-  const measure = computeRotationSignature(
-    basePose,
-    topPose,
-    window.jswViewType
-  );
+  if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
+    const shoulder = m.shoulder;
+    const hip = m.hip;
 
-  if (measure) {
+    // expose measure TOUJOURS (sinon UI ne peut rien afficher)
+    metrics.rotation.measure = { shoulder, hip };
 
-    const shoulder = measure.shoulder;
-    const hip      = measure.hip;
+    // ref (si dispo)
+    const ref = window.REF?.rotation || null;
 
-    const ref = window.REF?.rotation;
+    // ⚠️ IMPORTANT: on fournit bien shoulder/hip target/tol si dispo
+    metrics.rotation.ref = ref
+      ? {
+          shoulder: ref.shoulder ?? null,
+          hip: ref.hip ?? null
+        }
+      : null;
 
-    let shoulderScore = 0;
-    let hipScore = 0;
+    // scoring
+    let score = 0;
 
     if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-      shoulderScore =
-        jswClamp(
-          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
-          0,
-          1
-        ) * 10;
+      score += Math.round(
+        jswClamp(1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1) * 10
+      );
+    } else {
+      // fallback: rotation "présente"
+      score += shoulder < 0.85 ? 6 : 3;
     }
 
     if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-      hipScore =
-        jswClamp(
-          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
-          0,
-          1
-        ) * 10;
+      score += Math.round(
+        jswClamp(1 - Math.abs(hip - ref.hip.target) / ref.hip.tol, 0, 1) * 10
+      );
+    } else {
+      score += hip < 0.90 ? 6 : 3;
     }
 
-    // ✅ SCORE UNIQUE DE RÉFÉRENCE
-    metrics.rotation.score = Math.round(shoulderScore + hipScore);
+    metrics.rotation.score = Math.max(0, Math.min(20, score));
 
-    // -------------------------------------------------
-    // 🧾 Metrics exposées (UI / coach)
-    // -------------------------------------------------
-    metrics.rotation.measure = { shoulder, hip };
-    metrics.rotation.ref = ref || null;
-
-    metrics.rotation.stages = {
-      baseToTop: {
-        actual: { shoulder, hip },
-        target: {
-          shoulder: ref?.shoulder?.target ?? null,
-          hip: ref?.hip?.target ?? null
-        },
-        tol: {
-          shoulder: ref?.shoulder?.tol ?? null,
-          hip: ref?.hip?.tol ?? null
-        },
-        score: metrics.rotation.score
-      }
+    // stages (optionnel mais utile)
+    metrics.rotation.stages = metrics.rotation.stages || {};
+    metrics.rotation.stages.baseToTop = {
+      actual: { shoulder, hip },
+      target: {
+        shoulder: ref?.shoulder?.target ?? null,
+        hip: ref?.hip?.target ?? null
+      },
+      tol: {
+        shoulder: ref?.shoulder?.tol ?? null,
+        hip: ref?.hip?.tol ?? null
+      },
+      score: metrics.rotation.score
     };
+
+    console.log("🌀 ROT ENGINE OK", metrics.rotation);
+  } else {
+    console.warn("🌀 ROT ENGINE: measure null/invalid", m);
   }
+} else {
+  console.warn("🌀 ROT ENGINE: missing basePose/topPose", { hasBase: !!basePose, hasTop: !!topPose });
 }
+
 
 
 // =====================================================
@@ -2574,6 +2569,18 @@ function buildPremiumBreakdown(swing, scores) {
   const rotMeasure = rotM?.measure;
   const rotRef = rotM?.ref;
 
+  console.log("🌀 ROT UI DEBUG", {
+  rotM,
+  rotMeasure,
+  rotRef,
+  rotOkCandidate: {
+    hasMeasure: !!rotMeasure,
+    shoulderTarget: rotRef?.shoulder?.target,
+    hipTarget: rotRef?.hip?.target
+  }
+});
+
+  
   const rotOk =
     rotMeasure &&
     rotRef?.shoulder?.target != null &&
