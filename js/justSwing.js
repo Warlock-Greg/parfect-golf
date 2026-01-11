@@ -1937,11 +1937,12 @@ metrics.weightShift.score = weightShiftScore;
     let extensionScore = 0;
 
 metrics.extension = metrics.extension || {
-  impact: null,
-  finish: null,
+  extImpact: null,
+  extFinish: null,
+  progress: null,
   value: null,
   status: "incomplete",
-  score: null
+  score: 0
 };
 
 let extensionStatus = "incomplete";
@@ -1987,19 +1988,23 @@ if (!LS || !RS || (!LW && !RW)) {
 
   const extensionValue = Math.max(extImpact, extFinish ?? 0);
 
-  metrics.extension.impact = extImpact;
-  metrics.extension.finish = extFinish;
+  metrics.extension.extImpact = extImpact;
+  metrics.extension.extFinish = extFinish;
+  metrics.extension.progress =
+    extFinish != null ? extFinish - extImpact : null;
+
   metrics.extension.value = extensionValue;
 
   extensionStatus = "ok";
 
+ 
   // ---------------------------------------------------
   // 🎯 Scoring (tolérance humaine)
   // ---------------------------------------------------
   const ref = window.REF?.extension;
 
   if (ref?.target != null && ref?.tol != null) {
-    metrics.extension.score = Math.round(
+    extensionScore = Math.round(
       jswClamp(
         1 - Math.abs(extensionValue - ref.target) / ref.tol,
         0,
@@ -2007,9 +2012,11 @@ if (!LS || !RS || (!LW && !RW)) {
       ) * 10
     );
   } else {
-    // fallback safe
-    metrics.extension.score = extensionValue > 0.55 ? 7 : 4;
+    // fallback intelligent
+    extensionScore = extensionValue > 0.55 ? 7 : 4;
   }
+
+  metrics.extension.score = extensionScore;
 }
 
 metrics.extension.status = extensionStatus;
@@ -2569,7 +2576,7 @@ function buildPremiumBreakdown(swing, scores) {
     rotMeasure &&
     rotRef?.shoulder?.target != null &&
     rotRef?.hip?.target != null &&
-    rotRef?.xFactor?.target != null;
+   
 
   const rotationDetails = !rotOk
     ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
@@ -2584,13 +2591,7 @@ function buildPremiumBreakdown(swing, scores) {
       <span style="opacity:.7;">(cible ${fmt(rotRef.hip.target, 2)} ±${fmt(
         rotRef.hip.tol,
         2
-      )})</span><br>
-
-      X-Factor : ${fmt(rotMeasure.xFactor, 2)}
-      <span style="opacity:.7;">(cible ${fmt(
-        rotRef.xFactor.target,
-        2
-      )} ±${fmt(rotRef.xFactor.tol, 2)})</span>
+      )})</span>
     `;
 
   // ---------------------------------------------------------
