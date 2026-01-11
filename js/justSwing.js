@@ -1454,7 +1454,7 @@ function computeRotationSignature(basePose, topPose, viewType = "faceOn") {
     return {
       shoulder: jswDegDiff(sh1, sh0),
       hip: jswDegDiff(hip1, hip0),
-      xFactor: jswDegDiff(sh1, sh0) - jswDegDiff(hip1, hip0)
+     // xFactor: jswDegDiff(sh1, sh0) - jswDegDiff(hip1, hip0)
     };
   }
 
@@ -1485,12 +1485,12 @@ function computeRotationFaceOnRatio(basePose, topPose) {
 
   const shoulderRatio = shTop / shBase; // ↓ = tourne
   const hipRatio      = hipTop / hipBase;
-  const xFactorRatio  = hipRatio - shoulderRatio;
+  //const xFactorRatio  = hipRatio - shoulderRatio;
 
   return {
     shoulder: shoulderRatio,
     hip: hipRatio,
-    xFactor: xFactorRatio
+    //xFactor: xFactorRatio
   };
 }
 
@@ -1501,7 +1501,7 @@ function scoreRotationFromReference(measure, ref) {
 
   const s = jswClamp(1 - Math.abs(measure.shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1);
   const h = jswClamp(1 - Math.abs(measure.hip      - ref.hip.target)      / ref.hip.tol,      0, 1);
-  const x = jswClamp(1 - Math.abs(measure.xFactor  - ref.xFactor.target)  / ref.xFactor.tol,  0, 1);
+ // const x = jswClamp(1 - Math.abs(measure.xFactor  - ref.xFactor.target)  / ref.xFactor.tol,  0, 1);
 
   return {
     score: Math.round((s * 0.4 + h * 0.4 + x * 0.2) * 20),
