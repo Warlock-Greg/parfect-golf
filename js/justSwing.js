@@ -2152,13 +2152,13 @@ const METRIC_WEIGHTS = {
 
 // Scores calculés (sur 20 chacun)
 const metricScores = {
-  posture: postureScore,
-  rotation: rotationScore,
-  triangle: triangleScore,
-  weightShift: weightShiftScore,
-  extension: extensionScore,
-  tempo: tempoScore,
-  balance: balanceScore
+posture:     metrics.posture?.score      ?? 0,
+  rotation:    metrics.rotation?.score     ?? 0,
+  triangle:    metrics.triangle?.score     ?? 0,
+  weightShift: metrics.weightShift?.score  ?? 0,
+  extension:   metrics.extension?.score    ?? 0,
+  tempo:       metrics.tempo?.score        ?? 0,
+  balance:     metrics.balance?.score      ?? 0
 };
 
 let weightedSum = 0;
