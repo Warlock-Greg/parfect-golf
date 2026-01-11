@@ -1544,6 +1544,16 @@ function scoreRotationFromReference(measure, ref) {
   return stars; // 0, 1 ou 2
 }
 
+// =====================================================
+// 🔧 KEYFRAME POSE RESOLVER (SOURCE DE VÉRITÉ)
+// =====================================================
+function getKeyframePose(type, metrics, activeSwing) {
+  return (
+    metrics?.keyframes?.[type]?.pose ||
+    activeSwing?.keyframeLandmarks?.[type]?.pose ||
+    null
+  );
+}
 
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
@@ -1735,12 +1745,14 @@ metrics.rotation.score = typeof metrics.rotation.score === "number" ? metrics.ro
 // 🔑 keyframes
 const kfPose = metrics.keyframes || {};
 const basePose =
-  kfPose.address?.pose ||
-  kfPose.backswing?.pose ||
-  kfPose.top?.pose ||
+  getKeyframePose("address", metrics, activeSwing) ||
+  getKeyframePose("backswing", metrics, activeSwing) ||
   null;
 
-if (basePose && topPose) {
+const topPoseSafe =
+  getKeyframePose("top", metrics, activeSwing);
+
+if (basePose && topPoseSafe) {
   const m = computeRotationSignature(basePose, topPose, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
