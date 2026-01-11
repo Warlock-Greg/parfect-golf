@@ -1752,7 +1752,7 @@ if (!basePoseR || !topPoseR) {
     hasTop: !!topPoseR
   });
 } else {
-  const m = computeRotationSignature(basePose, topPose, window.jswViewType);
+  const m = computeRotationSignature(basePoseR, topPoseR, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
     const shoulder = m.shoulder;
