@@ -1037,57 +1037,47 @@ function onPoseFrame(landmarks) {
 
 // =====================================================
 // 🔒 LOCK ADRESSE — posture statique AVANT swing
-//   ✅ écrit DANS activeSwing (source de vérité)
-//   ✅ pas de metrics ici
-//   ✅ pas de engine.keyFrames (optionnel)
+// (source de vérité: activeSwing.keyFrames)
 // =====================================================
 if (pendingAddress && !addressLocked && isStableAddress(landmarks)) {
-  // Si activeSwing n'existe pas, on ne peut pas enregistrer l'adresse correctement
-  if (!activeSwing) {
-    console.warn("⚠️ ADDRESS LOCKED mais activeSwing absent → création SAFE");
-    activeSwing = {
-      frames: [],
-      timestamps: [],
-      keyFrames: {},
-      keyframeLandmarks: {},
-      club: currentClub || "?",
-      view: window.jswViewType || null,
-      fps: engine?.fps || null
-    };
-  }
 
-  // index = frame courante dans la capture swing
+  // Sécurité
+  if (!activeSwing) {
+    console.warn("🔒 ADDRESS LOCK skipped: no activeSwing");
+    return;
+  }
+  if (!activeSwing.keyFrames) activeSwing.keyFrames = {};
+  if (!activeSwing.keyframeLandmarks) activeSwing.keyframeLandmarks = {};
+
+  // index = frame courant (si tu pushes frames ailleurs, sinon 0)
   const addrIndex = Array.isArray(activeSwing.frames) ? activeSwing.frames.length : 0;
 
-  // snapshot profond (anti-mutation)
+  // snapshot profond (évite mutation mediapipe)
   const poseSnap = Array.isArray(landmarks)
     ? landmarks.map(p => ({
-        x: p.x,
-        y: p.y,
+        x: p.x, y: p.y,
         z: p.z ?? null,
         visibility: p.visibility ?? null
       }))
     : null;
 
   if (!poseSnap) {
-    console.warn("⚠️ ADDRESS LOCKED mais landmarks invalides");
+    console.warn("🔒 ADDRESS LOCK failed: no landmarks");
     return;
   }
 
-  // ✅ keyframe address dans le swing
-  activeSwing.keyFrames = activeSwing.keyFrames || {};
+  // ✅ SOURCE DE VÉRITÉ POUR LE SCORING
   activeSwing.keyFrames.address = { index: addrIndex, pose: poseSnap };
 
-  // ✅ (optionnel) keyframeLandmarks pour debug/export
-  activeSwing.keyframeLandmarks = activeSwing.keyframeLandmarks || {};
+  // ✅ Optionnel (debug / export)
   activeSwing.keyframeLandmarks.address = { index: addrIndex, pose: poseSnap };
 
   pendingAddress = false;
   addressLocked = true;
 
   console.log("🔒 ADDRESS LOCKED (SWING)", addrIndex, {
-    hasActiveSwing: !!activeSwing,
-    frames: activeSwing.frames?.length ?? 0,
+    hasActiveSwing: true,
+    frames: addrIndex,
     hasKeyFrames: !!activeSwing.keyFrames
   });
 }
@@ -1602,7 +1592,15 @@ const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
     return Math.max(min, Math.min(max, v));
   }
 
-  
+  function getKF(type, metrics, activeSwing) {
+  return (
+    metrics?.keyframes?.[type]?.pose ||
+    activeSwing?.keyFrames?.[type]?.pose ||        // ✅ SOURCE DE VÉRITÉ
+    activeSwing?.keyframeLandmarks?.[type]?.pose || // fallback
+    null
+  );
+}
+
 
 
   function jswDist(a, b) {
@@ -1730,9 +1728,6 @@ postureScore = metrics.posture.score;
 
 const rotBasePose = backswingPose || topPose; // ✅ fallback
 
-// =====================================================
-// ROTATION — carte premium (épaules + hanches ONLY)
-// =====================================================
 
 // =====================================================
 // ROTATION — robust (shoulder + hip)
@@ -1744,15 +1739,19 @@ metrics.rotation.score = typeof metrics.rotation.score === "number" ? metrics.ro
 
 // 🔑 keyframes
 const kfPose = metrics.keyframes || {};
-const basePose =
-  getKeyframePose("address", metrics, activeSwing) ||
-  getKeyframePose("backswing", metrics, activeSwing) ||
+const basePoseR =
+  getKF("address", metrics, activeSwing) ||
+  getKF("backswing", metrics, activeSwing) ||
   null;
 
-const topPoseSafe =
-  getKeyframePose("top", metrics, activeSwing);
+const topPoseR = getKF("top", metrics, activeSwing);
 
-if (basePose && topPoseSafe) {
+if (!basePoseR || !topPoseR) {
+  console.warn("🌀 ROT ENGINE: missing basePose/topPose", {
+    hasBase: !!basePoseR,
+    hasTop: !!topPoseR
+  });
+} else {
   const m = computeRotationSignature(basePose, topPose, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
