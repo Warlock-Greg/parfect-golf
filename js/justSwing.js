@@ -2129,9 +2129,6 @@ metrics.balance.score = balanceScore;
 
 
 // =====================================================
-// 8) TOTAL
-// =====================================================
-// =====================================================
 // 8) TOTAL — Pondération Parfect V1
 // - 3 axes majeurs à 20 pts
 // - 4 axes secondaires à 10 pts
@@ -2150,26 +2147,30 @@ const METRIC_WEIGHTS = {
   balance:     10
 };
 
-// Scores calculés (sur 20 chacun)
+// -----------------------------------------------------
+// 🔢 Scores sources (UNE SEULE SOURCE DE VÉRITÉ)
+// -----------------------------------------------------
 const metricScores = {
-posture:     metrics.posture?.score      ?? 0,
-  rotation:    metrics.rotation?.score     ?? 0,
-  triangle:    metrics.triangle?.score     ?? 0,
-  weightShift: metrics.weightShift?.score  ?? 0,
-  extension:   metrics.extension?.score    ?? 0,
-  tempo:       metrics.tempo?.score        ?? 0,
-  balance:     metrics.balance?.score      ?? 0
+  posture:     metrics.posture?.score      ?? null,
+  rotation:    metrics.rotation?.score     ?? null,
+  triangle:    metrics.triangle?.score     ?? null,
+  weightShift: metrics.weightShift?.score  ?? null,
+  extension:   metrics.extension?.score    ?? null,
+  tempo:       metrics.tempo?.score        ?? null,
+  balance:     metrics.balance?.score      ?? null
 };
 
 let weightedSum = 0;
 let maxPossible = 0;
 
-// 🔢 Calcul pondéré robuste
+// -----------------------------------------------------
+// 🧮 Calcul pondéré robuste
+// -----------------------------------------------------
 for (const key in METRIC_WEIGHTS) {
-  const score = metricScores[key];
+  const score  = metricScores[key];
   const weight = METRIC_WEIGHTS[key];
 
-  // ✅ on ne prend que les métrics réellement évaluées
+  // ✅ on ignore les métrics non évaluées
   if (typeof score === "number" && !isNaN(score)) {
     const normalized = score / 20; // score ∈ [0..1]
     weightedSum += normalized * weight;
@@ -2177,44 +2178,45 @@ for (const key in METRIC_WEIGHTS) {
   }
 }
 
-
-    
+// -----------------------------------------------------
 // 🎯 Score final normalisé sur 100
+// -----------------------------------------------------
 const total =
   maxPossible > 0
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 
 // =====================================================
-// RETURN FINAL (API stable pour UI / Coach / Replay)
+// RETURN FINAL — API STABLE
 // =====================================================
 return {
   total,
   totalDynamic: total,
 
-  postureScore,
-  rotationScore,
-  triangleScore,
-  weightShiftScore,
-  extensionScore,
-  tempoScore,
-  balanceScore,
-
-  // ✅ Breakdown propre pour la scorecard
-  breakdown: {
-    posture:     { score: postureScore,     metrics: metrics.posture     || null },
-    rotation:    { score: rotationScore,    metrics: metrics.rotation    || null },
-    triangle:    { score: triangleScore,    metrics: metrics.triangle    || null },
-    weightShift: { score: weightShiftScore, metrics: metrics.weightShift || null },
-    extension:   { score: extensionScore,   metrics: metrics.extension   || null },
-    tempo:       { score: tempoScore,       metrics: metrics.tempo       || null },
-    balance:     { score: balanceScore,     metrics: metrics.balance     || null }
+  // ✅ Scores lisibles directement depuis metrics
+  scores: {
+    posture:     metrics.posture?.score      ?? 0,
+    rotation:    metrics.rotation?.score     ?? 0,
+    triangle:    metrics.triangle?.score     ?? 0,
+    weightShift: metrics.weightShift?.score  ?? 0,
+    extension:   metrics.extension?.score    ?? 0,
+    tempo:       metrics.tempo?.score        ?? 0,
+    balance:     metrics.balance?.score      ?? 0
   },
 
-  // 🔍 debug / export
-  metrics
-};
+  // ✅ Breakdown propre pour UI / Coach
+  breakdown: {
+    posture:     { score: metrics.posture?.score      ?? 0, metrics: metrics.posture     || null },
+    rotation:    { score: metrics.rotation?.score     ?? 0, metrics: metrics.rotation    || null },
+    triangle:    { score: metrics.triangle?.score     ?? 0, metrics: metrics.triangle    || null },
+    weightShift: { score: metrics.weightShift?.score  ?? 0, metrics: metrics.weightShift || null },
+    extension:   { score: metrics.extension?.score    ?? 0, metrics: metrics.extension   || null },
+    tempo:       { score: metrics.tempo?.score        ?? 0, metrics: metrics.tempo       || null },
+    balance:     { score: metrics.balance?.score      ?? 0, metrics: metrics.balance     || null }
+  },
 
+  // 🔍 debug / export complet
+  metrics
 };
 
 
