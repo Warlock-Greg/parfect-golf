@@ -1813,9 +1813,7 @@ if (!basePoseR || !topPoseR) {
   } else {
     console.warn("🌀 ROT ENGINE: measure null/invalid", m);
   }
-} else {
-  console.warn("🌀 ROT ENGINE: missing basePose/topPose", { hasBase: !!basePose, hasTop: !!topPose });
-}
+
 
 
 
