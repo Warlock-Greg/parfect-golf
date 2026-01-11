@@ -1745,16 +1745,16 @@ metrics.rotation = metrics.rotation || {
 const basePose = getKeyframePose("address", metrics, activeSwing)
               || getKeyframePose("backswing", metrics, activeSwing);
 
-const topPose  = getKeyframePose("top", metrics, activeSwing);
+const topPoseR  = getKeyframePose("top", metrics, activeSwing);
 
-if (!basePose || !topPose) {
+if (!basePose || !topPoseR) {
   console.warn("🌀 ROT ENGINE: missing base/top", {
     base: !!basePose,
-    top: !!topPose
+    top: !!topPoseR
   });
 } else {
 
-  const m = computeRotationSignature(basePose, topPose, window.jswViewType);
+  const m = computeRotationSignature(basePose, topPoseR, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
 
