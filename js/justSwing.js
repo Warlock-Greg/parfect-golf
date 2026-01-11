@@ -1795,17 +1795,19 @@ if (basePose && topPose) {
     metrics.rotation.measure = { shoulder, hip };
     metrics.rotation.ref = ref || null;
 
-    metrics.rotation.stages.baseToTop = {
-      actual: { shoulder, hip },
-      target: {
-        shoulder: ref?.shoulder?.target ?? null,
-        hip: ref?.hip?.target ?? null
-      },
-      tol: {
-        shoulder: ref?.shoulder?.tol ?? null,
-        hip: ref?.hip?.tol ?? null
-      },
-      score: metrics.rotation.score
+    metrics.rotation.stages = {
+      baseToTop: {
+        actual: { shoulder, hip },
+        target: {
+          shoulder: ref?.shoulder?.target ?? null,
+          hip: ref?.hip?.target ?? null
+        },
+        tol: {
+          shoulder: ref?.shoulder?.tol ?? null,
+          hip: ref?.hip?.tol ?? null
+        },
+        score: metrics.rotation.score
+      }
     };
   }
 }
