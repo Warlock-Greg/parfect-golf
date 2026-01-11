@@ -2236,7 +2236,10 @@ return {
 };
 
 };
-
+console.log("🧪 resolver test", {
+  address: !!getKeyframePose("address", metrics, activeSwing),
+  top: !!getKeyframePose("top", metrics, activeSwing)
+});
 
  function jswDumpLandmarksJSON(swing, payload = {}) {
   const { scores, currentClub } = payload;
