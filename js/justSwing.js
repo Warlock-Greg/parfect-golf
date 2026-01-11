@@ -2837,7 +2837,9 @@ async function handleSwingComplete(swing) {
   // =====================================================
 // 🔁 SYNC KEYFRAMES → METRICS (SOURCE UNIQUE)
 // =====================================================
-metrics.keyframes = {};
+const metrics = {};
+  
+  metrics.keyframes = {};
 
 for (const k in swing.keyFrames) {
   if (swing.keyFrames[k]?.pose) {
