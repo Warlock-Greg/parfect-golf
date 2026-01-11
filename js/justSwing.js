@@ -2596,13 +2596,11 @@ function buildPremiumBreakdown(swing, scores) {
 });
 
   
-  const rotOk =
-    rotMeasure &&
-    rotRef?.shoulder?.target != null &&
-    rotRef?.hip?.target != null;
+ const rotOk = !!rotMeasure;
+
    
 
-  const rotationDetails = !rotOk
+  const rotationDetails = !rotMeasure
     ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
     : `
       Épaules : ${fmt(rotMeasure.shoulder, 2)}
