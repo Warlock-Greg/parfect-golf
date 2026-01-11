@@ -2219,7 +2219,7 @@ return {
   metrics
 };
 
-
+};
 
 
  function jswDumpLandmarksJSON(swing, payload = {}) {
