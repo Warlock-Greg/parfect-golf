@@ -1561,7 +1561,7 @@ function getKeyframePose(type, metrics, activeSwing) {
     
   const fps    = swing.fps || 30;
   const frames = swing.frames || [];
-  const kf     = swing.keyFrames || {};
+  const kf = swing.keyFrames || swing.keyframes || {};
   const T = swing.timestamps || [];
 
   
@@ -1735,79 +1735,65 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // ROTATION — ROBUSTE & DÉFINITIVE (épaules + hanches)
 // =====================================================
 
-metrics.rotation = metrics.rotation || {
-  score: 0,
-  measure: null,
-  ref: null,
-  stages: {}
-};
+// =====================================================
+// ROTATION — robuste (shoulder + hip) — utilise kf.* poses
+// =====================================================
+metrics.rotation = metrics.rotation || { stages: {} };
+metrics.rotation.score = 0; // default safe (évite undefined)
 
-const basePose = getKeyframePose("address", metrics, activeSwing)
-              || getKeyframePose("backswing", metrics, activeSwing);
+const basePoseRot = addressPose || backswingPose || null;
+const topPoseRot  = topPose || null;
 
-const topPoseR  = getKeyframePose("top", metrics, activeSwing);
-
-if (!basePose || !topPoseR) {
+if (!basePoseRot || !topPoseRot) {
   console.warn("🌀 ROT ENGINE: missing base/top", {
-    base: !!basePose,
-    top: !!topPoseR
+    base: !!basePoseRot,
+    top:  !!topPoseRot
   });
+  metrics.rotation.status = "incomplete";
 } else {
-
-  const m = computeRotationSignature(basePose, topPoseR, window.jswViewType);
+  const m = computeRotationSignature(basePoseRot, topPoseRot, window.jswViewType);
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
-
     const shoulder = m.shoulder;
     const hip      = m.hip;
 
+    // expose measure TOUJOURS (sinon UI n’affiche rien)
     metrics.rotation.measure = { shoulder, hip };
 
     const ref = window.REF?.rotation || null;
-    metrics.rotation.ref = ref;
+    metrics.rotation.ref = ref ? { shoulder: ref.shoulder ?? null, hip: ref.hip ?? null } : null;
 
-    let score = 0;
+    // scoring /20 = 10 épaules + 10 hanches
+    let s10 = 0;
+    let h10 = 0;
 
     if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-      score += Math.round(
-        jswClamp(
-          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
-          0,
-          1
-        ) * 10
-      );
-    } else {
-      score += shoulder < 0.9 ? 6 : 3;
+      s10 = jswClamp(1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1) * 10;
     }
-
     if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-      score += Math.round(
-        jswClamp(
-          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
-          0,
-          1
-        ) * 10
-      );
-    } else {
-      score += hip < 0.9 ? 6 : 3;
+      h10 = jswClamp(1 - Math.abs(hip - ref.hip.target) / ref.hip.tol, 0, 1) * 10;
     }
 
-    metrics.rotation.score = Math.min(20, score);
+    metrics.rotation.score = Math.round(s10 + h10);
+    metrics.rotation.status = "ok";
 
     metrics.rotation.stages.baseToTop = {
       actual: { shoulder, hip },
       target: {
         shoulder: ref?.shoulder?.target ?? null,
-        hip: ref?.hip?.target ?? null
+        hip:      ref?.hip?.target ?? null
       },
       tol: {
         shoulder: ref?.shoulder?.tol ?? null,
-        hip: ref?.hip?.tol ?? null
+        hip:      ref?.hip?.tol ?? null
       },
       score: metrics.rotation.score
     };
 
     console.log("🌀 ROT ENGINE OK", metrics.rotation);
+  } else {
+    console.warn("🌀 ROT ENGINE: measure null/invalid", m);
+    metrics.rotation.status = "invalid-measure";
   }
 }
 
