@@ -2575,7 +2575,7 @@ function buildPremiumBreakdown(swing, scores) {
   const rotOk =
     rotMeasure &&
     rotRef?.shoulder?.target != null &&
-    rotRef?.hip?.target != null &&
+    rotRef?.hip?.target != null;
    
 
   const rotationDetails = !rotOk
