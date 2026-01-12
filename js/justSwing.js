@@ -2569,284 +2569,158 @@ function renderSessionHistoryInline() {
 //   ✅ affiche un message si un module est non mesuré
 // ---------------------------------------------------------
 function buildPremiumBreakdown(swing, scores) {
-  const fmt = (v, d = 1) =>
-    typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
-
   const el = document.getElementById("swing-score-breakdown");
-  if (!el) return console.warn("No breakdown element found.");
+  if (!el) return;
 
-  // ---------------------------------------------------------
-  // Source de vérité
-  // ---------------------------------------------------------
   const breakdown = scores?.breakdown || {};
 
-  const scoreOf = (k) =>
-    typeof breakdown[k]?.score === "number" ? breakdown[k].score : null;
+  const fmt = (v, d = 2) =>
+    typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
 
-  const metricsOf = (k) =>
-    breakdown[k]?.metrics && typeof breakdown[k].metrics === "object"
-      ? breakdown[k].metrics
-      : null;
+  const zone = (s, max) => {
+    if (typeof s !== "number") return "mid";
+    const r = s / max;
+    if (r >= .7) return "good";
+    if (r >= .4) return "mid";
+    return "bad";
+  };
 
-  // ---------------------------------------------------------
-  // UI helpers
-  // ---------------------------------------------------------
-  function scoreColor(s) {
-    if (s >= 15) return "#4ade80";
-    if (s >= 8) return "#facc15";
-    return "#f87171";
-  }
+  const coachMsg = (key, s) => {
+    if (typeof s !== "number") return "Mesure incomplète.";
+    if (s >= 14) return "Très solide 👍";
+    if (s >= 8)  return "Peut mieux faire.";
+    switch (key) {
+      case "rotation": return "Travaille la rotation au backswing.";
+      case "tempo": return "Ralentis le backswing.";
+      case "triangle": return "Stabilise le triangle bras/épaules.";
+      case "extension": return "Finis plus étendu.";
+      case "weightShift": return "Accentue le transfert.";
+      default: return "Axe à travailler.";
+    }
+  };
 
-  const block = (title, score, subtitle, details = "", maxScore = 20) => {
-  const safeScore = typeof score === "number" ? score : null;
-  const colorScore = typeof score === "number" ? score : 8;
+  const card = ({ key, title, max = 20, details }) => {
+    const score = breakdown[key]?.score ?? null;
+    const z = zone(score, max);
+    const pct = score != null ? Math.min(100, Math.max(0, (score / max) * 100)) : 0;
 
-  return `
-    <div style="
-      padding:.5rem;
-      border-radius:12px;
-      background:rgba(255,255,255,0.05);
-      margin-bottom:.3rem;
-      border-left:4px solid ${scoreColor(colorScore)};
-    ">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <h3 style="margin:0;font-size:1rem;color:#fff;">
-          ${title}
-        </h3>
-        <div style="
-          font-size:1rem;
-          font-weight:700;
-          color:${scoreColor(colorScore)};
-        ">
-          ${safeScore !== null ? safeScore : "—"}/${maxScore}
+    return `
+      <div class="jsw-card">
+        <div style="display:flex;justify-content:space-between;">
+          <div class="jsw-title">${title}</div>
+          <div class="jsw-score jsw-score-${z}">
+            ${score ?? "—"}/${max}
+          </div>
+        </div>
+
+        <div class="jsw-bar">
+          <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
+        </div>
+
+        <div class="jsw-details">${details}</div>
+
+        <div class="jsw-coach jsw-${z}">
+          🧠 ${coachMsg(key, score)}
+        </div>
+      </div>
+    `;
+  };
+
+  // ---------------- DETAILS ----------------
+
+  const rotM = breakdown.rotation?.metrics;
+  const rotationDetails = rotM?.measure
+    ? `
+      Épaules : ${fmt(rotM.measure.shoulder)}
+      <br>Hanches : ${fmt(rotM.measure.hip)}
+    `
+    : `<em>Rotation non évaluée</em>`;
+
+  const tempoM = breakdown.tempo?.metrics;
+  const tempoDetails = tempoM
+    ? `
+      Back : ${fmt(tempoM.backswingT)}s
+      <br>Down : ${fmt(tempoM.downswingT)}s
+      <br>Ratio : ${fmt(tempoM.ratio)}:1
+    `
+    : `<em>Tempo non évalué</em>`;
+
+  const triM = breakdown.triangle?.metrics;
+  const triangleDetails = triM
+    ? `
+      Top : ${fmt(triM.varTopPct)}%
+      <br>Impact : ${fmt(triM.varImpactPct)}%
+    `
+    : `<em>Triangle non évalué</em>`;
+
+  const extM = breakdown.extension?.metrics;
+  const extensionDetails = extM
+    ? `
+      Impact : ${fmt(extM.impact)}
+      <br>Finish : ${fmt(extM.finish)}
+    `
+    : `<em>Extension non évaluée</em>`;
+
+  const wsM = breakdown.weightShift?.metrics;
+  const wsDetails = wsM
+    ? `
+      Back : ${fmt(wsM.shiftBack)}
+      <br>Forward : ${fmt(wsM.shiftFwd)}
+    `
+    : `<em>Transfert non évalué</em>`;
+
+  const balM = breakdown.balance?.metrics;
+  const balanceDetails = balM
+    ? `
+      Tête stable : ${balM.headOverHips ? "oui" : "non"}
+      <br>Hanches : ${fmt(balM.finishMove)}
+    `
+    : `<em>Balance non évaluée</em>`;
+
+  // ---------------- RENDER ----------------
+
+  el.innerHTML = `
+    <div style="padding:.6rem;">
+      <div style="text-align:center;margin-bottom:.9rem;">
+        <div style="font-size:1.4rem;font-weight:900;color:#4ade80;">
+          ${scores.total ?? "—"}
+        </div>
+        <div style="font-size:.8rem;color:#aaa;">
+          Score Parfect Premium
         </div>
       </div>
 
-      <p style="margin:0.3rem 0;color:#aaa;">
-        ${subtitle}
-      </p>
-
-      <div style="
-        margin-top:.5rem;
-        padding:.6rem .8rem;
-        background:rgba(255,255,255,.04);
-        border-radius:10px;
-        color:#ccc;
-        font-size:.9rem;
-        line-height:1.35;
-      ">
-        ${details}
+      <div class="jsw-grid">
+        ${card({ key:"rotation", title:"Rotation", max:20, details:rotationDetails })}
+        ${card({ key:"tempo", title:"Tempo", max:20, details:tempoDetails })}
+        ${card({ key:"triangle", title:"Triangle", max:20, details:triangleDetails })}
+        ${card({ key:"weightShift", title:"Transfert", max:10, details:wsDetails })}
+        ${card({ key:"extension", title:"Extension", max:10, details:extensionDetails })}
+        ${card({ key:"balance", title:"Balance", max:10, details:balanceDetails })}
       </div>
-    </div>
-  `;
-};
 
-
-  // ---------------------------------------------------------
-  // POSTURE
-  // ---------------------------------------------------------
-  const postureScore = scoreOf("posture");
-  const postM = metricsOf("posture");
-  const postureDetails = !postM
-    ? `<em style="opacity:.7;">Posture non évaluée (adresse non fiable).</em>`
-    : `
-      Flexion : ${fmt(postM.flexionDeg)}° <span style="opacity:.7;">(30–45°)</span><br>
-      Ratio pieds/épaules : ${fmt(postM.feetShoulderRatio, 2)} <span style="opacity:.7;">(1.1–1.3)</span><br>
-      Alignement épaules/hanches : ${fmt(postM.alignDiff)}° <span style="opacity:.7;">(≤ 5°)</span>
-    `;
-
-  // ---------------------------------------------------------
-  // ROTATION (STANDARDISÉE)
-  // ---------------------------------------------------------
-  const rotationScore = scoreOf("rotation");
-  const rotM = metricsOf("rotation");
-
-  const rotMeasure = rotM?.measure;
-  const rotRef = rotM?.ref;
-
-  console.log("🌀 ROT UI DEBUG", {
-  rotM,
-  rotMeasure,
-  rotRef,
-  rotOkCandidate: {
-    hasMeasure: !!rotMeasure,
-    shoulderTarget: rotRef?.shoulder?.target,
-    hipTarget: rotRef?.hip?.target
-  }
-});
-
-  
- const rotOk = !!rotMeasure;
-
-   
-
-  const rotationDetails = !rotMeasure
-    ? `<em style="opacity:.7;">Rotation non évaluée (référence ou captation incomplète).</em>`
-    : `
-      Épaules : ${fmt(rotMeasure.shoulder, 2)}
-      <span style="opacity:.7;">(cible ${fmt(rotRef.shoulder.target, 2)} ±${fmt(
-        rotRef.shoulder.tol,
-        2
-      )})</span><br>
-
-      Hanches : ${fmt(rotMeasure.hip, 2)}
-      <span style="opacity:.7;">(cible ${fmt(rotRef.hip.target, 2)} ±${fmt(
-        rotRef.hip.tol,
-        2
-      )})</span>
-    `;
-
-  // ---------------------------------------------------------
-  // TEMPO
-  // ---------------------------------------------------------
-  const tempoScore = scoreOf("tempo");
-  const tempoM = metricsOf("tempo");
-  const tempoDetails = !tempoM
-    ? `<em style="opacity:.7;">Tempo non évalué.</em>`
-    : `
-      Backswing : ${fmt(tempoM.backswingT, 2)}s<br>
-      Downswing : ${fmt(tempoM.downswingT, 2)}s<br>
-      Ratio : ${fmt(tempoM.ratio, 2)}:1 <span style="opacity:.7;">(cible 3:1)</span>
-    `;
-
-  // ---------------------------------------------------------
-  // TRIANGLE
-  // ---------------------------------------------------------
-  const triangleScore = scoreOf("triangle");
-  const triM = metricsOf("triangle");
-  const triangleDetails = !triM
-    ? `<em style="opacity:.7;">Triangle non évalué.</em>`
-    : `
-      Variation Top : ${fmt(triM.varTopPct)}%<br>
-      Variation Impact : ${fmt(triM.varImpactPct)}%
-    `;
-
-  // ---------------------------------------------------------
-  // WEIGHT SHIFT
-  // ---------------------------------------------------------
-  const weightShiftScore = scoreOf("weightShift");
-  const wsM = metricsOf("weightShift");
-  const weightShiftDetails = !wsM
-    ? `<em style="opacity:.7;">Transfert non évalué.</em>`
-    : `
-      Shift Back : ${fmt(wsM.shiftBack, 3)}<br>
-      Shift Forward : ${fmt(wsM.shiftFwd, 3)}
-    `;
-
-  // ---------------------------------------------------------
-  // EXTENSION
-  // ---------------------------------------------------------
-  const extensionScore = scoreOf("extension");
-  const extM = metricsOf("extension");
-  const extensionDetails = !extM
-    ? `<em style="opacity:.7;">Extension non évaluée (mains non captées).</em>`
-    : `
-      Impact : ${fmt(extM.extImpact, 3)}<br>
-      Finish : ${fmt(extM.extFinish, 3)}<br>
-      Progression : ${fmt(extM.progress, 3)}
-    `;
-
-  // ---------------------------------------------------------
-  // BALANCE
-  // ---------------------------------------------------------
-  const balanceScore = scoreOf("balance");
-  const balM = metricsOf("balance");
-  const balanceDetails = !balM
-    ? `<em style="opacity:.7;">Balance non évaluée.</em>`
-    : `
-      Tête sur hanches : ${balM.headOverHips ? "oui" : "non"}<br>
-      Déplacement hanches : ${fmt(balM.finishMove, 3)}
-    `;
-
-  // ---------------------------------------------------------
-  // COACH
-  // ---------------------------------------------------------
-  const coach = (() => {
-    const msgs = [];
-    if (rotationScore != null && rotationScore < 10)
-      msgs.push("Travaille la rotation au backswing.");
-    if (tempoScore != null && tempoScore < 10)
-      msgs.push("Ralentis le backswing, vise un ratio ~3:1.");
-    if (triangleScore != null && triangleScore < 10)
-      msgs.push("Garde le triangle bras/épaules stable.");
-    if (!msgs.length) msgs.push("Swing solide. Continue comme ça.");
-    return msgs.join("<br>");
-  })();
-
-  // ---------------------------------------------------------
-  // RENDER
-  // ---------------------------------------------------------
- el.style.display = "block";
-
-el.innerHTML = `
-  <div style="padding:.5rem;">
-    <div style="text-align:center;margin-bottom:1.1rem;">
-      <h2 style="font-size:1.1rem;margin:0;color:#4ade80;">
-        ${scores?.total ?? "—"}/100
-      </h2>
-      <p style="color:#aaa;">Score Parfect Premium</p>
-    </div>
-
-    ${block("Posture à l’adresse", postureScore, "", postureDetails, 10)}
-    ${block("Rotation", rotationScore, "", rotationDetails, 20)}
-    ${block("Tempo", tempoScore, "", tempoDetails, 20)}
-    ${block("Triangle bras/épaules", triangleScore, "", triangleDetails, 20)}
-    ${block("Transfert de poids", weightShiftScore, "", weightShiftDetails, 10)}
-    ${block("Extension & Finish", extensionScore, "", extensionDetails, 10)}
-    ${block("Balance & Équilibre", balanceScore, "", balanceDetails, 10)}
-
-    <div style="
-      margin-top:.6rem;
-      padding:.4rem;
-      border-radius:12px;
-      background:rgba(0,255,153,.08);
-      border:1px solid rgba(0,255,153,.25);
-    ">
-      <b>Coach</b><br>${coach}
-    </div>
-
-    <button
-      id="jsw-back-btn"
-      style="
-        margin-top:.8rem;
+      <button id="jsw-back-btn" style="
+        margin-top:1rem;
+        width:100%;
         background:#333;
         color:#ccc;
         border:none;
-        border-radius:12px;
-        padding:10px 24px;
+        border-radius:14px;
+        padding:.8rem;
         font-size:1rem;
-        cursor:pointer;
-        width:100%;
-      "
-    >
-      ← home
-    </button>
-  </div>
-`;
+      ">
+        ← Home
+      </button>
+    </div>
+  `;
 
-// ---------------------------------------------------------
-// BOUTON RETOUR (COMPORTEMENT)
-// ---------------------------------------------------------
-const backBtn = document.getElementById("jsw-back-btn");
-
-if (backBtn) {
-  backBtn.onclick = () => {
-    console.log("← Retour depuis score breakdown");
-
-    // Stop moteur (source de vérité)
+  document.getElementById("jsw-back-btn")?.onclick = () => {
     window.JustSwing?.stopSession?.();
     window.SwingEngine?.reset?.();
-
-    // Nettoyage UI
-    document.getElementById("swing-review-panel")?.remove();
-    document.body.classList.remove("jsw-fullscreen");
-
-    // Navigation centrale
     document.getElementById("home-btn")?.click();
   };
 }
 
-}
 
 
 function activateRecording() {
