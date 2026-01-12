@@ -453,6 +453,64 @@ body.jsw-fullscreen #coach-ia {
 }
 
 
+.jsw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+}
+
+.jsw-card {
+  background: rgba(255,255,255,.05);
+  border-radius: 14px;
+  padding: .6rem .7rem;
+  position: relative;
+}
+
+.jsw-title {
+  font-size: .85rem;
+  color: #ddd;
+}
+
+.jsw-score {
+  font-weight: 800;
+  font-size: .95rem;
+}
+
+.jsw-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.12);
+  overflow: hidden;
+  margin: .35rem 0 .4rem;
+}
+
+.jsw-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.jsw-details {
+  font-size: .75rem;
+  line-height: 1.35;
+  color: #aaa;
+}
+
+.jsw-coach {
+  margin-top: .35rem;
+  font-size: .75rem;
+  padding: .35rem .45rem;
+  border-radius: 10px;
+}
+
+.jsw-good { color:#4ade80; background:rgba(74,222,128,.12); }
+.jsw-mid  { color:#facc15; background:rgba(250,204,21,.12); }
+.jsw-bad  { color:#f87171; background:rgba(248,113,113,.12); }
+
+.jsw-score-good { color:#4ade80; }
+.jsw-score-mid  { color:#facc15; }
+.jsw-score-bad  { color:#f87171; }
+
+
     /*body.jsw-fullscreen nav {
   display:none !important;
 }*/
