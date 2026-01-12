@@ -1563,6 +1563,30 @@ function getKeyframePose(type, metrics, activeSwing) {
 
   
   function computeSwingScorePremium(swing) {
+ // =====================================================
+  // 🔑 RÉFÉRENCE ACTIVE — club + view (SOURCE UNIQUE)
+  // =====================================================
+  const club = swing.club || "default";
+  const view = window.jswViewType || "faceOn";
+
+  const refKey = `${club}_${view}`;
+
+  if (window.ParfectReference) {
+    window.REF =
+      window.ParfectReference[refKey] ||
+      window.ParfectReference.default ||
+      null;
+  } else {
+    window.REF = null;
+  }
+
+  console.log("🎯 Active Reference", {
+    refKey,
+    ref: window.REF
+  });
+    
+    
+    
   //const PARFECT_REF = window.parfectReference?.rotation;
   let postureScore = 0;   // valeur neutre, informative
   let addressScore = null; // ⚠️ null = “non scoré”
