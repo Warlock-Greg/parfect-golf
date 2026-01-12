@@ -2724,6 +2724,8 @@ if (backBtn) {
   };
 }
 
+}
+
 
 
 function activateRecording() {
