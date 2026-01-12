@@ -1464,25 +1464,31 @@ function computeRotationFaceOnRatio(basePose, topPose) {
   const LS1 = topPose[11],  RS1 = topPose[12];
   const LH1 = topPose[23],  RH1 = topPose[24];
 
-  if (!LS0||!RS0||!LH0||!RH0||!LS1||!RS1||!LH1||!RH1) return null;
+  if (!LS0 || !RS0 || !LH0 || !RH0 || !LS1 || !RS1 || !LH1 || !RH1) {
+    return null;
+  }
 
+  // Largeurs projetées
   const shBase = Math.abs(LS0.x - RS0.x);
   const shTop  = Math.abs(LS1.x - RS1.x);
   const hipBase = Math.abs(LH0.x - RH0.x);
   const hipTop  = Math.abs(LH1.x - RH1.x);
 
-  if (shBase < 0.12 || hipBase < 0.12) return null;
+  // 🛡️ Sécurité numérique (évite divisions foireuses)
+  if (shBase < 0.02 || hipBase < 0.02) {
+    return null;
+  }
 
-  const shoulderRatio = shTop / shBase; // ↓ = tourne
-  const hipRatio      = hipTop / hipBase;
-  //const xFactorRatio  = hipRatio - shoulderRatio;
+  // 🔑 Rotation = variation RELATIVE (pas absolue)
+  const shoulderRotation = 1 - shTop / shBase;
+  const hipRotation      = 1 - hipTop / hipBase;
 
   return {
-    shoulder: shoulderRatio,
-    hip: hipRatio,
-    //xFactor: xFactorRatio
+    shoulder: shoulderRotation,
+    hip: hipRotation
   };
 }
+
 
 
 
@@ -1735,9 +1741,6 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 // ROTATION — ROBUSTE & DÉFINITIVE (épaules + hanches)
 // =====================================================
 
-// =====================================================
-// ROTATION — robuste (shoulder + hip) — utilise kf.* poses
-// =====================================================
 metrics.rotation = metrics.rotation || { stages: {} };
 metrics.rotation.score = 0; // default safe (évite undefined)
 
