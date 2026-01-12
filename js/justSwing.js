@@ -1795,6 +1795,9 @@ if (!basePoseRot || !topPoseRot) {
     metrics.rotation.score = Math.round(s10 + h10);
     metrics.rotation.status = "ok";
 
+    // 🛡️ INIT STAGES (💥 ton bug était ici)
+    metrics.rotation.stages = metrics.rotation.stages || {};
+
     metrics.rotation.stages.baseToTop = {
       actual: { shoulder, hip },
       target: {
