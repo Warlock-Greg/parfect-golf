@@ -160,6 +160,9 @@ fetch("/data/parfect_reference.json")
   .then(r => r.json())
   .then(json => {
     window.ParfectReference = json;
+
+    // ✅ SOURCE UNIQUE UTILISÉE PAR LE MOTEUR
+    window.REF = json.default;
     console.log("📌 Parfect Reference loaded", json);
   })
   .catch(err => {
