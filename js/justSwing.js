@@ -1738,12 +1738,15 @@ const rotBasePose = backswingPose || topPose; // ✅ fallback
 
 
 // =====================================================
-// ROTATION — ROBUSTE & DÉFINITIVE (épaules + hanches)
+// ROTATION — robuste (shoulder + hip)
 // =====================================================
 
+// init safe
 metrics.rotation = metrics.rotation || { stages: {} };
-metrics.rotation.score = 0; // default safe (évite undefined)
+metrics.rotation.score = 0;
+metrics.rotation.status = "incomplete";
 
+// poses déjà extraites PLUS HAUT (source unique)
 const basePoseRot = addressPose || backswingPose || null;
 const topPoseRot  = topPose || null;
 
@@ -1752,29 +1755,41 @@ if (!basePoseRot || !topPoseRot) {
     base: !!basePoseRot,
     top:  !!topPoseRot
   });
-  metrics.rotation.status = "incomplete";
 } else {
-  const m = computeRotationSignature(basePoseRot, topPoseRot, window.jswViewType);
+  const m = computeRotationSignature(
+    basePoseRot,
+    topPoseRot,
+    window.jswViewType
+  );
 
   if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
+
     const shoulder = m.shoulder;
     const hip      = m.hip;
 
-    // expose measure TOUJOURS (sinon UI n’affiche rien)
+    // toujours exposer les mesures
     metrics.rotation.measure = { shoulder, hip };
 
     const ref = window.REF?.rotation || null;
-    metrics.rotation.ref = ref ? { shoulder: ref.shoulder ?? null, hip: ref.hip ?? null } : null;
+    metrics.rotation.ref = ref;
 
-    // scoring /20 = 10 épaules + 10 hanches
     let s10 = 0;
     let h10 = 0;
 
     if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-      s10 = jswClamp(1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1) * 10;
+      s10 = jswClamp(
+        1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
+        0,
+        1
+      ) * 10;
     }
+
     if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-      h10 = jswClamp(1 - Math.abs(hip - ref.hip.target) / ref.hip.tol, 0, 1) * 10;
+      h10 = jswClamp(
+        1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
+        0,
+        1
+      ) * 10;
     }
 
     metrics.rotation.score = Math.round(s10 + h10);
@@ -1795,8 +1810,8 @@ if (!basePoseRot || !topPoseRot) {
 
     console.log("🌀 ROT ENGINE OK", metrics.rotation);
   } else {
-    console.warn("🌀 ROT ENGINE: measure null/invalid", m);
     metrics.rotation.status = "invalid-measure";
+    console.warn("🌀 ROT ENGINE: invalid rotation measure", m);
   }
 }
 
