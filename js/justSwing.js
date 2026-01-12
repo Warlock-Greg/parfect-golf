@@ -2714,7 +2714,10 @@ function buildPremiumBreakdown(swing, scores) {
     </div>
   `;
 
-  document.getElementById("jsw-back-btn")?.onclick = () => {
+const backBtn = document.getElementById("jsw-back-btn");
+
+if (backBtn) {
+  backBtn.onclick = () => {
     window.JustSwing?.stopSession?.();
     window.SwingEngine?.reset?.();
     document.getElementById("home-btn")?.click();
