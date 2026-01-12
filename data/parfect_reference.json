@@ -7,8 +7,8 @@
 
 "default": {
     "rotation": {
-    "shoulder": { "target": 0.55, "tol": 0.08 },
-    "hip":      { "target": 0.72,  "tol": 0.08 },
+    "shoulder": { "target": 0.05, "tol": 0.08 },
+    "hip":      { "target": 0.12,  "tol": 0.10 },
     "xFactor":  { "target": 0.17, "tol": 0.07}
     },
 
@@ -38,17 +38,17 @@
 
 "driver_mobileFaceOn": {
     "rotation": {
-      "shoulder": { "target": 20, "tol": 5 },
-      "hip":      { "target": 8,  "tol": 3 },
-      "xFactor":  { "target": 12, "tol": 4 }
+   "shoulder": { "target": 0.04, "tol": 0.08 },
+    "hip":      { "target": 0.10,  "tol": 0.10 },
+    "xFactor":  { "target": 0.17, "tol": 0.07}
     }
   },
 
 "fer7_mobileFaceOn": {
     "rotation": {
-      "shoulder": { "target": 17, "tol": 5 },
-      "hip":      { "target": 6,  "tol": 3 },
-      "xFactor":  { "target": 11, "tol": 4 }
+      "shoulder": { "target": 0.05, "tol": 0.08 },
+    "hip":      { "target": 0.12,  "tol": 0.10 },
+    "xFactor":  { "target": 0.17, "tol": 0.07}
     }
   }
 
