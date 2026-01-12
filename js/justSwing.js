@@ -1736,17 +1736,31 @@ postureScore = metrics.posture.score;
 
 const rotBasePose = backswingPose || topPose; // ✅ fallback
 
+// =====================================================
+// ROTATION FACE-ON — scoring par seuils (ROBUSTE)
+// =====================================================
+function scoreFaceOnRotationRatio(ratio) {
+  if (ratio == null || isNaN(ratio)) return 0;
+
+  if (ratio < 0.20) return 10;   // rotation excellente
+  if (ratio < 0.35) return 8;
+  if (ratio < 0.50) return 5;
+  if (ratio < 0.65) return 2;
+  return 0;
+}
 
 // =====================================================
-// ROTATION — robuste (shoulder + hip)
+// ROTATION — robuste (Face-On & DTL)
+// source unique : addressPose / backswingPose / topPose
 // =====================================================
 
-// init safe
-metrics.rotation = metrics.rotation || { stages: {} };
+// init SAFE (ne redéclare rien ailleurs)
+metrics.rotation = metrics.rotation || {};
+metrics.rotation.stages = metrics.rotation.stages || {};
 metrics.rotation.score = 0;
 metrics.rotation.status = "incomplete";
 
-// poses déjà extraites PLUS HAUT (source unique)
+// poses déjà extraites PLUS HAUT
 const basePoseRot = addressPose || backswingPose || null;
 const topPoseRot  = topPose || null;
 
@@ -1756,65 +1770,109 @@ if (!basePoseRot || !topPoseRot) {
     top:  !!topPoseRot
   });
 } else {
+
   const m = computeRotationSignature(
     basePoseRot,
     topPoseRot,
     window.jswViewType
   );
 
-  if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
+  if (!m || typeof m.shoulder !== "number" || typeof m.hip !== "number") {
+    metrics.rotation.status = "invalid-measure";
+    console.warn("🌀 ROT ENGINE: invalid rotation measure", m);
+  } else {
 
     const shoulder = m.shoulder;
     const hip      = m.hip;
 
-    // toujours exposer les mesures
+    // 🔑 TOUJOURS exposer les mesures (sinon UI = vide)
     metrics.rotation.measure = { shoulder, hip };
 
-    const ref = window.REF?.rotation || null;
-    metrics.rotation.ref = ref;
+    // =================================================
+    // 🎯 SCORING — dépend de la vue
+    // =================================================
+    let score = 0;
 
-    let s10 = 0;
-    let h10 = 0;
+    if (window.jswViewType === "dtl") {
 
-    if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-      s10 = jswClamp(
-        1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
-        0,
-        1
-      ) * 10;
+      // ---------- DTL : angles réels ----------
+      // seuils réalistes (degrés)
+      const SHOULDER_OK = 45;
+      const HIP_OK      = 25;
+      const SEP_OK      = 10;
+
+      const sep = shoulder - hip;
+
+      // épaules (10 pts)
+      if (shoulder >= SHOULDER_OK) score += 10;
+      else if (shoulder >= 30) score += 6;
+      else if (shoulder >= 20) score += 3;
+
+      // hanches (6 pts)
+      if (hip >= HIP_OK) score += 6;
+      else if (hip >= 15) score += 4;
+      else if (hip >= 10) score += 2;
+
+      // dissociation (4 pts)
+      if (sep >= SEP_OK) score += 4;
+
+      metrics.rotation.ref = {
+        shoulder: { ok: SHOULDER_OK },
+        hip: { ok: HIP_OK },
+        separation: { ok: SEP_OK }
+      };
+
+      metrics.rotation.stages.baseToTop = {
+        actual: { shoulder, hip, separation: sep },
+        score
+      };
+
+    } else {
+
+      // ---------- FACE-ON : ratios projetés ----------
+      const ref = window.REF?.rotation || null;
+
+      let s10 = 0;
+      let h10 = 0;
+
+      if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
+        s10 = jswClamp(
+          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
+          0,
+          1
+        ) * 10;
+      }
+
+      if (ref?.hip?.target != null && ref?.hip?.tol != null) {
+        h10 = jswClamp(
+          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
+          0,
+          1
+        ) * 10;
+      }
+
+      score = Math.round(s10 + h10);
+
+      metrics.rotation.ref = ref;
+
+      metrics.rotation.stages.baseToTop = {
+        actual: { shoulder, hip },
+        target: {
+          shoulder: ref?.shoulder?.target ?? null,
+          hip: ref?.hip?.target ?? null
+        },
+        tol: {
+          shoulder: ref?.shoulder?.tol ?? null,
+          hip: ref?.hip?.tol ?? null
+        },
+        score
+      };
     }
 
-    if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-      h10 = jswClamp(
-        1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
-        0,
-        1
-      ) * 10;
-    }
-
-    metrics.rotation.score = Math.round(s10 + h10);
+    metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
     metrics.rotation.status = "ok";
 
-    // 🛡️ INIT STAGES (💥 ton bug était ici)
-    metrics.rotation.stages = metrics.rotation.stages || {};
-
-    metrics.rotation.stages.baseToTop = {
-      actual: { shoulder, hip },
-      target: {
-        shoulder: ref?.shoulder?.target ?? null,
-        hip:      ref?.hip?.target ?? null
-      },
-      tol: {
-        shoulder: ref?.shoulder?.tol ?? null,
-        hip:      ref?.hip?.tol ?? null
-      },
-      score: metrics.rotation.score
-    };
-
     console.log("🌀 ROT ENGINE OK", metrics.rotation);
-  } else {
-    metrics.rotation.status = "invalid-measure";
-    console.warn("🌀 ROT ENGINE: invalid rotation measure", m);
   }
 }
 
