@@ -139,6 +139,77 @@ body {
 }
 
 
+/* === ONBOARDING === */
+
+.pg-onboarding {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #12181D 0%, #0C1114 100%);
+  color: var(--pg-text-main);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  z-index: 20000;
+}
+
+.pg-logo {
+  width: 160px;
+  margin-bottom: 16px;
+}
+
+.pg-onboarding h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.pg-subtitle {
+  color: var(--pg-text-muted);
+  margin: 12px 0 20px;
+}
+
+.pg-onboarding-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.pg-card {
+  background: var(--pg-bg-glass);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 14px;
+  backdrop-filter: var(--pg-blur);
+}
+
+.pg-card h3 {
+  margin: 0 0 6px;
+  color: var(--pg-blue-main);
+  font-size: 1rem;
+}
+
+.pg-highlight {
+  margin-top: 6px;
+  color: var(--pg-green-main);
+  font-weight: 600;
+}
+
+.pg-btn-primary {
+  margin-top: 20px;
+  background: var(--pg-green-main);
+  color: #0C1114;
+  border: none;
+  border-radius: var(--pg-radius);
+  padding: 12px 26px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+
 /* === Coach IA Modes === */
 
 #coach-ia {
