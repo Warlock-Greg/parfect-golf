@@ -1,4 +1,4 @@
-/* === Parfect.golfr v6 — Style global === */
+/* === Parfect.golfr v2026 — Style global === */
 
 /* Base */
 * {
@@ -73,6 +73,69 @@ body {
   color:#111 !important;
   box-shadow:0 0 10px #00ff99aa;
   font-weight:bold;
+}
+
+
+/* === HOME CSS === */
+
+.pg-home {
+  padding: 20px 16px 90px;
+  color: var(--pg-text-main);
+}
+
+.pg-home-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.pg-home-logo {
+  height: 56px;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.pg-home h2 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.pg-home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pg-home-card {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.pg-home-card h3 {
+  margin: 0 0 6px;
+  color: var(--pg-blue-main);
+}
+
+.pg-home-card p {
+  margin: 0;
+  color: var(--pg-text-muted);
+  line-height: 1.4;
+}
+
+.pg-home-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+}
+
+.pg-home-footnote {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--pg-text-muted);
+  font-size: 0.9rem;
 }
 
 
