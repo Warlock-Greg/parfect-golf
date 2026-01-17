@@ -5,6 +5,47 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* =========================
+     FONDS & STRUCTURE
+     ========================= */
+  --pg-bg-main: #0C1114;          /* fond principal */
+  --pg-bg-soft: #12181D;          /* cartes / panels */
+  --pg-bg-glass: rgba(18,24,29,0.75);
+
+  /* =========================
+     TEXTE
+     ========================= */
+  --pg-text-main: #E6EBEF;
+  --pg-text-muted: #9AA4AD;
+  --pg-text-soft: rgba(230,235,239,0.75);
+
+  /* =========================
+     COULEURS DE MARQUE
+     ========================= */
+  --pg-blue-main: #2F6FED;        /* confiance, structure */
+  --pg-blue-soft: rgba(47,111,237,0.15);
+
+  --pg-green-main: #3DDC97;       /* progrès, Parfect */
+  --pg-green-soft: rgba(61,220,151,0.15);
+
+  /* =========================
+     ETATS
+     ========================= */
+  --pg-warning: #F5C76A;
+  --pg-danger-soft: rgba(248,113,113,0.15);
+
+  /* =========================
+     UI
+     ========================= */
+  --pg-border-soft: rgba(255,255,255,0.08);
+  --pg-radius: 12px;
+  --pg-radius-pill: 999px;
+
+  --pg-blur: blur(10px);
+}
+
+
 body {
   font-family: "Poppins", sans-serif;
   margin: 0;
@@ -115,6 +156,8 @@ body {
   font-weight: bold;
   transform: scale(1.05);
 }
+
+
 
 
 /* === SWING ANALYZER V2.1 (vue mobile) === */
