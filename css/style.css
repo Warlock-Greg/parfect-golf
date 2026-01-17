@@ -208,6 +208,19 @@ body {
   cursor: pointer;
 }
 
+/* === bouton retour global === */
+.pg-back-btn {
+  position: fixed;
+  top: env(safe-area-inset-top, 10px);
+  left: 10px;
+  z-index: 10000;
+  padding: 8px 14px;
+  border-radius: var(--pg-radius-pill);
+  background: rgba(0,0,0,0.55);
+  color: var(--pg-text-main);
+  border: 1px solid var(--pg-border-soft);
+  backdrop-filter: var(--pg-blur);
+}
 
 
 /* === Coach IA Modes === */
