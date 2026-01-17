@@ -1,3 +1,5 @@
+index.html backup avant charte 2026
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1004,46 +1006,16 @@ body.jsw-fullscreen #coach-ia {
     </section>
 
     <!-- 🎯 INTERACTION ZONE -->
-    <section id="interaction-zone"> </section>
+    <section id="interaction-zone">
 
-<!-- 🏌️ Mode home -->
-<div id="home-content" style="display:none;">
-<section id="home-area" class="pg-home">
-
-  <h2>Que veux-tu travailler maintenant ?</h2>
-
-  <div class="pg-home-actions">
-
-    <button class="pg-home-card" id="home-play">
-      <h3>Jouer un parcours</h3>
-      <p>Scorer coup par coup et collecter des Parfect</p>
-    </button>
-
-    <button class="pg-home-card" id="home-just-swing">
-      <h3>Just Swing</h3>
-      <p>Travailler ton swing sans pression</p>
-    </button>
-
-    <button class="pg-home-card" id="home-training">
-      <h3>Entraînement mental</h3>
-      <p>Routine, focus et régularité</p>
-    </button>
-  </div>
-  </section>
-   </div>
-    
       <!-- 🏌️ Mode Jeu -->
       <div id="game-area" style="display:none;">
         <div id="golf-select"></div>
         <div id="hole-card"></div>
       </div>
        <!-- 💪 Entraînement --> 
-      <div id="training-area" style="display:none;"> 
-        <button class="pg-back-btn" onclick="history.back()">Retour</button>
-      </div>
-     <div id="friends-area" style="display:none;"> 
-     <button class="pg-back-btn" onclick="history.back()">Retour</button>
-      </div>
+      <div id="training-area" style="display:none;"></div>
+     <div id="friends-area" style="display:none;"></div>
      <div id="history-area" style="display:none;"></div>
 
     </section>
@@ -1052,7 +1024,6 @@ body.jsw-fullscreen #coach-ia {
 <!-- ============================= -->
 
 <section id="just-swing-area" style="display:none;">
-<button class="pg-back-btn" onclick="history.back()">Retour</button>
 
   <!-- == VIDÉO + OVERLAY == -->
   <div id="just-swing-screen" class="jsw-screen">
@@ -1103,8 +1074,7 @@ body.jsw-fullscreen #coach-ia {
 <!--  SWING REVIEW PRO - COMPLET (SCORE + VIDEO + HISTORIQUE) -->
 <!-- ========================================================= -->
 <section id="swing-review" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25000; padding: 1.5rem; background: rgba(0,0,0,0.95); border-radius: 16px; border: 2px solid #4ade80; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto; width: 95%;">
-  <button class="pg-back-btn" onclick="history.back()">Retour</button>
-
+  
   <!-- 1) Video Player -->
   <div class="swing-review-video" style="margin-bottom: 1rem;">
     <video id="swing-video" playsinline style="width: 100%; border-radius: 8px; background: #000; max-height: 300px;"></video>
@@ -1166,8 +1136,6 @@ body.jsw-fullscreen #coach-ia {
     <div id="swing-history" class="swing-history-list" style="max-height: 150px; overflow-y: auto;">
       <!-- rempli automatiquement -->
     </div>
-    <button class="pg-back-btn" onclick="history.back()">Retour</button>
-
   </div>
 
  <button
@@ -1198,56 +1166,48 @@ body.jsw-fullscreen #coach-ia {
  
 
 <!-- === ONBOARDING PARFECT.GOLFR === -->
-<div id="onboarding" class="pg-onboarding">
+<div id="onboarding" style="
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #0d0f10 0%, #000 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 20000;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+">
+  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo-parfect-golfr.png" 
+       alt="Parfect.golfr" 
+       style="width:200px;border-radius:16px;margin-bottom:14px;">
 
-  <img src="logo-parfect-golfr.png" class="pg-logo" alt="Parfect Golfr">
+  <h2 style="color:#00ff99;margin:0 0 10px;font-size:1.8rem;">Bienvenue !<br>Avec Parfect.golfr :</h2>
 
-  <h1>Bienvenue sur Parfect Golfr</h1>
-
-  <p class="pg-subtitle">
-    Une méthode de scoring et de coaching<br>
-    basée sur le processus, pas sur la pression.
+  <p style="max-width:400px;margin:10px 0 16px;opacity:0.9;">
+    🧠 Baisse ton index et optimise ton swing<br>
+   en te forgeant un mental de champion 💪 .
   </p>
 
-  <div class="pg-onboarding-cards">
+  <p style="max-width:420px;margin:6px 0 16px;opacity:0.85;">
+    🏌️‍♀️ <strong>Just-Swing</strong> : améliore ton swing avec notre ia <br>
+    🎯 Practice ton <strong>mental</strong> avec nos exercices <br> 
+    💚 <strong>Enregistre</strong> tes parties à la façon <strong>Parfect</strong> et tu sauras les secteurs sur lesquels tu dois progresser.
+  </p>
 
-    <div class="pg-card">
-      <h3>Carte de score intelligente</h3>
-      <p>
-        Saisie coup par coup pour mieux décider.<br>
-        On ne vise pas le par.<br>
-        On vise le fairway, le GIR, puis le 2 putts.
-      </p>
-      <p class="pg-highlight">
-        Chaque bonne décision rapporte un Parfect.
-      </p>
-    </div>
-
-    <div class="pg-card">
-      <h3>Just Swing</h3>
-      <p>
-        Améliore ton swing à ta façon,<br>
-        sans modèle imposé,<br>
-        avec un coach IA bienveillant.
-      </p>
-    </div>
-
-    <div class="pg-card">
-      <h3>Le mental avant la technique</h3>
-      <p>
-        Routine, clarté, décisions simples.<br>
-        Moins de stress, plus de régularité.
-      </p>
-    </div>
-
-  </div>
-
-  <button id="start-onboarding" class="pg-btn-primary">
-    Commencer mon parcours
-  </button>
-
+  <button id="start-onboarding" class="btn" style="
+    background:#00ff99;
+    color:#111;
+    border:none;
+    border-radius:10px;
+    padding:10px 24px;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:12px;
+  ">🚀 C’est parti</button>
 </div>
-
   
 
   
