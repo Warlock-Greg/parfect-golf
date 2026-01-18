@@ -428,10 +428,25 @@
     });
 
     // Home tiles
-    document.getElementById("home-play")?.addEventListener("click", () => document.getElementById("play-btn")?.click());
-    document.getElementById("home-training")?.addEventListener("click", () => document.getElementById("training-btn")?.click());
-    document.getElementById("home-just-swing")?.addEventListener("click", () => document.getElementById("just-swing-btn")?.click());
-    document.getElementById("home-friends")?.addEventListener("click", () => document.getElementById("friends-btn")?.click());
+   document.getElementById("home-play")?.addEventListener("click", () => {
+  hideAllViews();
+  document.getElementById("play-btn")?.click();
+  });
+
+  document.getElementById("home-training")?.addEventListener("click", () => {
+  hideAllViews();
+  document.getElementById("training-btn")?.click();
+  });
+
+  document.getElementById("home-just-swing")?.addEventListener("click", () => {
+  hideAllViews();
+  document.getElementById("just-swing-btn")?.click();
+  });
+
+  document.getElementById("home-friends")?.addEventListener("click", () => {
+  hideAllViews();
+  document.getElementById("friends-btn")?.click();
+  });
 
     // Just Swing exit
     document.getElementById("jsw-exit-btn")?.addEventListener("click", exitJustSwing);
