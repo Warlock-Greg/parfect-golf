@@ -1,13 +1,17 @@
-index.html backup avant charte 2026
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parfect.golfr – MVP 1221</title>
+  <title>Parfect.golfr – MVP 0126</title>
   <link rel="stylesheet" href="js/style.css">
 
+  <!-- Police -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  
   <style>
    /* === RESET GLOBAL === */
 html, body {
@@ -983,313 +987,201 @@ body.jsw-fullscreen #coach-ia {
   </style>
 </head>
 
-<body>
-  <!-- === En-tête === -->
-  <header>
-    <h1></h1><img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/logo-parfect-golfr.png" alt="Logo Parfect-golfr" />
-    </h1>
-  </header>
+<body class="onboarding-active">
 
-  <!-- === Compteur Parfect collectés === -->
-<div id="parfect-counter">💚 0 Parfect collecté</div>
+<!-- =========================
+     HEADER GLOBAL
+     ========================= -->
+<header id="pg-header">
+  <img
+    src="logo-parfect-golfr.png"
+    alt="Parfect Golfr"
+    class="pg-header-logo"
+  />
+</header>
 
+<!-- =========================
+     PARFECT COUNTER
+     ========================= -->
+<div id="parfect-counter" class="pg-parfect-counter">
+  0 Parfect collecté
+</div>
 
-  <!-- === Split Layout === -->
-  <main id="split-layout">
-    <!-- 🧠 COACH ZONE -->
-    <section id="coach-ia">
-      <div id="coach-log"></div>
-      <div id="coach-input-zone">
-        <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
-        <button id="coach-send">Envoyer</button>
+<!-- =========================
+     MAIN APP
+     ========================= -->
+<main id="app">
+
+  <!-- =========================
+       COACH IA
+       ========================= -->
+  <section id="coach-ia" class="pg-coach">
+    <div id="coach-log" class="pg-coach-log"></div>
+
+    <div id="coach-input-zone" class="pg-coach-input-zone">
+      <input
+        id="coach-input"
+        type="text"
+        placeholder="Pose ta question au coach…"
+      />
+      <button id="coach-send" class="pg-btn-primary">
+        Envoyer
+      </button>
+    </div>
+  </section>
+
+  <!-- =========================
+       ZONE INTERACTIVE
+       ========================= -->
+  <section id="interaction-zone">
+
+    <!-- ===== HOME ===== -->
+    <section
+      id="home-area"
+      class="pg-home"
+      style="display:none;"
+    >
+      <div class="pg-home-header">
+        <img src="logo-parfect-golfr.png" class="pg-home-logo" alt="Parfect Golfr">
+        <h2>Que veux-tu travailler maintenant ?</h2>
       </div>
+
+      <div class="pg-home-actions">
+        <button id="home-play" class="pg-home-card">
+          <h3>Jouer un parcours</h3>
+          <p>Scorer coup par coup et collecter des Parfect</p>
+        </button>
+
+        <button id="home-just-swing" class="pg-home-card">
+          <h3>Just Swing</h3>
+          <p>Travailler ton swing sans pression</p>
+        </button>
+
+        <button id="home-training" class="pg-home-card">
+          <h3>Entraînement mental</h3>
+          <p>Routine, clarté et régularité</p>
+        </button>
+      </div>
+
+      <p class="pg-home-footnote">
+        Chaque Parfect récompense une bonne décision.
+      </p>
     </section>
 
-    <!-- 🎯 INTERACTION ZONE -->
-    <section id="interaction-zone">
+    <!-- ===== JEU ===== -->
+    <section id="game-area" style="display:none;"></section>
 
-      <!-- 🏌️ Mode Jeu -->
-      <div id="game-area" style="display:none;">
-        <div id="golf-select"></div>
-        <div id="hole-card"></div>
-      </div>
-       <!-- 💪 Entraînement --> 
-      <div id="training-area" style="display:none;"></div>
-     <div id="friends-area" style="display:none;"></div>
-     <div id="history-area" style="display:none;"></div>
+    <!-- ===== TRAINING ===== -->
+    <section id="training-area" style="display:none;"></section>
 
-    </section>
-<!-- ============================= -->
-<!--      JUST SWING   (JSW)      -->
-<!-- ============================= -->
+    <!-- ===== FRIENDS ===== -->
+    <section id="friends-area" style="display:none;"></section>
 
+    <!-- ===== HISTORY ===== -->
+    <section id="history-area" style="display:none;"></section>
+
+  </section>
+</main>
+
+<!-- =========================
+     JUST SWING
+     ========================= -->
 <section id="just-swing-area" style="display:none;">
+  <div class="jsw-topbar">
+    <img src="logo-parfect-golfr.png" class="jsw-logo" alt="Parfect Golfr">
+    <button class="pg-back-btn" id="jsw-back-btn">Retour</button>
+  </div>
 
-  <!-- == VIDÉO + OVERLAY == -->
-  <div id="just-swing-screen" class="jsw-screen">
-
+  <div id="just-swing-screen">
     <video id="jsw-video" autoplay playsinline></video>
     <canvas id="jsw-overlay"></canvas>
-
-    <!-- Message centré -->
-    <div id="jsw-big-msg" class="jsw-big-msg"></div>
-
-  </div>
-
-  <!-- == UI BAS : status + routine + timer + restart == -->
-  <!--div id="jsw-ui">
-
-    <!-- Status -->
-    <!--div id="jsw-status-text"></div>
-
-    <!-- Routine dynamique -->
-    <!--div id="jsw-routine-steps"></div>
-
-    <!-- Timer -->
-    <!--div id="jsw-timer"></div>
-
-    <!-- Restart -->
-    <!--button id="jsw-restart" class="jsw-btn-restart">Recommencer</button>
-
-</div-->
-
-  <!-- == TOP RIGHT : Choix club + bouton routine == -->
-  <div class="jsw-top-right">
-    <select id="jsw-club-select" class="jsw-select">
-      <option value="fer7">Fer 7</option>
-      <option value="fer8">Fer 8</option>
-      <option value="fer9">Fer 9</option>
-      <option value="pw">PW</option>
-      <option value="sw">SW</option>
-      <option value="driver">Driver</option>
-      <option value="bois3">Bois 3</option>
-    </select>
-
-    <button id="jsw-open-routine-modal" class="jsw-btn-secondary">
-      🧠 Routine
-    </button>
+    <div id="jsw-big-msg"></div>
   </div>
 </section>
-<!-- ========================================================= -->
-<!--  SWING REVIEW PRO - COMPLET (SCORE + VIDEO + HISTORIQUE) -->
-<!-- ========================================================= -->
-<section id="swing-review" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 25000; padding: 1.5rem; background: rgba(0,0,0,0.95); border-radius: 16px; border: 2px solid #4ade80; box-shadow: 0 8px 32px rgba(0,0,0,0.8); max-width: 90vw; max-height: 90vh; overflow-y: auto; width: 95%;">
-  
-  <!-- 1) Video Player -->
-  <div class="swing-review-video" style="margin-bottom: 1rem;">
-    <video id="swing-video" playsinline style="width: 100%; border-radius: 8px; background: #000; max-height: 300px;"></video>
 
-    <div class="swing-player-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-      <button id="swing-play-pause" style="padding: 6px 12px; background: #00ff99; border: none; border-radius: 6px; cursor: pointer;">▶️</button>
-      
-      <select id="swing-speed" style="padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 6px;">
-        <option value="0.25">0.25×</option>
-        <option value="0.5">0.5×</option>
-        <option value="1" selected>1×</option>
-        <option value="1.5">1.5×</option>
-        <option value="2">2×</option>
-      </select>
+<!-- =========================
+     ONBOARDING
+     ========================= -->
+<div id="onboarding" class="pg-onboarding">
 
-      <input id="swing-timeline" type="range" min="0" max="100" value="0" style="flex: 1; min-width: 100px;">
-      
-      <span id="swing-time-label" style="color: #fff; font-family: monospace; font-size: 0.9rem;">0.0s</span>
+  <img src="logo-parfect-golfr.png" class="pg-logo" alt="Parfect Golfr">
+
+  <h1>Bienvenue sur Parfect Golfr</h1>
+
+  <p class="pg-subtitle">
+    Une méthode de scoring et de coaching<br>
+    basée sur le processus, pas sur la pression.
+  </p>
+
+  <div class="pg-onboarding-cards">
+
+    <div class="pg-card">
+      <h3>Carte de score intelligente</h3>
+      <p>
+        On ne vise pas le par.<br>
+        On vise le fairway, le GIR, puis le 2 putts.
+      </p>
+      <p class="pg-highlight">
+        Chaque bonne décision rapporte un Parfect.
+      </p>
     </div>
+
+    <div class="pg-card">
+      <h3>Just Swing</h3>
+      <p>
+        Améliore ton swing à ta façon,<br>
+        sans modèle imposé.
+      </p>
+    </div>
+
+    <div class="pg-card">
+      <h3>Le mental avant la technique</h3>
+      <p>
+        Routine, clarté, décisions simples.
+      </p>
+    </div>
+
   </div>
 
-  <!-- 2) Score + Commentaire -->
-  <div id="swing-score-breakdown" style="display: none; margin-top: .3rem; padding: .4rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
-  <!-- Rempli automatiquement -->
-</div>
-  <div class="swing-review-info" style="margin: .5rem 0; padding: .5rem; background: rgba(74, 222, 128, 0.1); border-radius: 8px;">
-    <h2 id="swing-review-score" style="font-size: 0.1rem; margin: 0 0 0.5rem 0; color: #4ade80; text-align: center; display: none;">Score : --</h2>
-    <p id="swing-review-comment" style="font-size: 0.1rem; margin: 0; color: rgba(255,255,255,0.9); text-align: center; display: none;">Analyse technique…</p>
-  </div>
-
-  <!-- 3) Boutons actions -->
-  <div class="swing-review-actions" style="display: flex; gap: 8px; margin: 1rem 0; flex-wrap: wrap;">
-    <button id="swing-save-reference" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #00ff99; border-radius: 8px; cursor: pointer;">⭐ Définir comme ma référence</button>
-    <!-- Bouton PARFECT (superadmin uniquement) -->
-  <button
-    id="swing-save-parfect-reference"
-    class="jsw-btn-secondary"
-    style="flex:1; padding:8px 12px; background:#111;
-           color:#00ff99; border:1px dashed #00ff99; border-radius:8px;
-           cursor:pointer; display:none;">
-    ⭐ Définir comme référence PARFECT
+  <button id="start-onboarding" class="pg-btn-primary">
+    Commencer mon parcours
   </button>
-  <div id="parfect-ref-feedback"
-     style="display:none;
-            margin-top:8px;
-            padding:6px 10px;
-            border-radius:8px;
-            background:rgba(0,255,153,0.15);
-            color:#00ff99;
-            font-size:0.9rem;">
 </div>
-  
-    <button id="swing-review-next" class="jsw-btn-secondary" style="flex: 1; padding: 8px 12px; background: #00ff99; color: #111; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">⏭️ Swing suivant</button>
-  </div>
 
-  <!-- 4) Historique des swings -->
-  <div style="margin-top: 1rem;">
-    <h3 style="color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">Historique</h3>
-    <div id="swing-history" class="swing-history-list" style="max-height: 150px; overflow-y: auto;">
-      <!-- rempli automatiquement -->
-    </div>
-  </div>
-
- <button
-  id="jsw-close-review"
-  style="
-    width: 100%;
-    margin-top: 1rem;
-    padding: 10px;
-    background: rgba(255,0,0,0.2);
-    color: #fff;
-    border: 1px solid #f00;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-  "
->
-  ❌ Fermer
-</button>
-
-</section>
-      
-
-
-    
-    </section>
-  </main>
-
- 
-
-<!-- === ONBOARDING PARFECT.GOLFR === -->
-<div id="onboarding" style="
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at top, #0d0f10 0%, #000 100%);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  z-index: 20000;
-  padding: 20px;
-  font-family: 'Poppins', sans-serif;
-">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/main/logo-parfect-golfr.png" 
-       alt="Parfect.golfr" 
-       style="width:200px;border-radius:16px;margin-bottom:14px;">
-
-  <h2 style="color:#00ff99;margin:0 0 10px;font-size:1.8rem;">Bienvenue !<br>Avec Parfect.golfr :</h2>
-
-  <p style="max-width:400px;margin:10px 0 16px;opacity:0.9;">
-    🧠 Baisse ton index et optimise ton swing<br>
-   en te forgeant un mental de champion 💪 .
-  </p>
-
-  <p style="max-width:420px;margin:6px 0 16px;opacity:0.85;">
-    🏌️‍♀️ <strong>Just-Swing</strong> : améliore ton swing avec notre ia <br>
-    🎯 Practice ton <strong>mental</strong> avec nos exercices <br> 
-    💚 <strong>Enregistre</strong> tes parties à la façon <strong>Parfect</strong> et tu sauras les secteurs sur lesquels tu dois progresser.
-  </p>
-
-  <button id="start-onboarding" class="btn" style="
-    background:#00ff99;
-    color:#111;
-    border:none;
-    border-radius:10px;
-    padding:10px 24px;
-    font-weight:bold;
-    cursor:pointer;
-    margin-top:12px;
-  ">🚀 C’est parti</button>
-</div>
-  
-
-  
-  <!-- === Barre de navigation principale === -->
-<nav>
-  <button id="home-btn" title="Accueil" class="home-btn"> <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/fav-icon.png"></button>
-  <button id="just-swing-btn"class="home-btn">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-justswing.png"></button>
-  <button id="play-btn" title="Jouer"class="home-btn">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-play.png"></button>
-  <button id="training-btn" title="S'entraîner"class="home-btn">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-train.png"></button>
-  <button id="friends-btn" title="Amis"class="home-btn">
-  <img src="https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/parfect-espace.png"></button>
+<!-- =========================
+     NAVIGATION
+     ========================= -->
+<nav id="pg-nav">
+  <button id="home-btn">Accueil</button>
+  <button id="just-swing-btn">Just Swing</button>
+  <button id="play-btn">Jouer</button>
+  <button id="training-btn">Entraînement</button>
+  <button id="friends-btn">Espace</button>
 </nav>
 
-
-  <!-- === Helper global (corrige l’erreur $ is not defined) === -->
-  <script>
-    if (!window.$) {
-      window.$ = (id) => document.getElementById(id);
-    }
-  </script>
-
-  <!-- === Scripts === -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="js/coachIA.js"></script>
-  <script src="js/play.js"></script>
-  <script src="js/training.js"></script>
-  <script src="js/HistoryHub.js"></script>
-  <script src="js/social.js"></script>
-  <!--script src="js/swing-analyzer.v2.js"></script>
-  <script src="js/history.js"></script>
-
-  <!--script src="js/swing-analyzer.js"></script>
-  <script src="js/swing-analyzer.movenet.js"></script-->
- 
+<!-- =========================
+     SCRIPTS
+     ========================= -->
 <script src="js/config.js"></script>
 <script src="js/licence.js"></script>
-   <script src="js/main.js"></script>
+<script src="js/coachIA.js"></script>
+<script src="js/play.js"></script>
+<script src="js/training.js"></script>
+<script src="js/HistoryHub.js"></script>
+<script src="js/social.js"></script>
+<script src="js/router.js"></script>
+
 <script>
-  if (!window.coachReact) {
-    window.coachReact = (msg) => {
-      if (typeof appendCoachMessage === "function") {
-        appendCoachMessage(msg);
-      } else {
-        console.warn("appendCoachMessage non disponible :", msg);
-      }
-    };
-  }
+  // Onboarding close
+  document.getElementById("start-onboarding")?.addEventListener("click", () => {
+    document.body.classList.remove("onboarding-active");
+    document.getElementById("onboarding").style.display = "none";
+    document.getElementById("home-area").style.display = "block";
+  });
 </script>
-<!-- MediaPipe (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
 
-<script src="js/mediapipe-init.js"></script>
-<script src="js/faceOnAnalyzer.js"></script>
-<script src="js/SwingEngine.js"></script>
-<script src="js/SwingScorer.js"></script>
-<script src="js/SwingCapture.js"></script>
-<script src="js/SwingPlayer.js"></script>
-<script src="js/SwingHistory.js"></script>
-  
-<script src="js/justSwing.js"></script>
-
-<!-- Just Swing -->
-<!--script src="js/swingMetrics.js"></script>
-<script src="js/swingScoring.js"></script>
-  <!-- Modules UI JustSwing -->
-<script src="js/jsw-clubs.js"></script>
-<script src="js/jsw-routine-modal.js"></script>
-<script src="js/jsw-swing-log.js"></script>
-<script src="js/jsw-replay.js"></script>
-
-
-
-
-<!-- Si tu sépares l'angle -->
-<!-- <script src="js/launchAngle.js"></script> -->
-
-  
-  <script src="js/router.js"></script>
+</body>
+</html>
 
 
 
