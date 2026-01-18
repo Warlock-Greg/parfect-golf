@@ -3,1117 +3,482 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Parfect.golfr – MVP 0126</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Parfect.golfr — Zen & Mental 2026</title>
 
-  <!-- Police -->
+  <!-- Google Font (optionnel) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-  
-  <style>
-   /* === RESET GLOBAL === */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #0d0f10 url('https://raw.githubusercontent.com/Warlock-Greg/parfect-golf/refs/heads/main/backgroundv5.png') center/cover fixed;
-  color: #eee;
-  font-family: "Poppins", system-ui, sans-serif;
-  display: flex;
-  flex-direction: column;
-}
-
-/* === HEADER === */
-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-}
-
-header img {
-  width: 80px;
-  border-radius: 8px;
-}
-
-h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: #0a2413;
-}
-
-/* --- Animation changement de trou (verticale) --- */
-@keyframes holeOut {
-  0% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-40px); }
-}
-@keyframes holeIn {
-  0% { opacity: 0; transform: translateY(40px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.hole-animate-out {
-  animation: holeOut 0.35s ease forwards;
-}
-.hole-animate-in {
-  animation: holeIn 0.35s ease forwards;
-}
-
-    
-
-.home-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-}
-
-.home-btn img {
-  width: 40px;
-  height: 40px;
-}
-    
-#coach-send {
-  background: #0a2413;
-  color: #111;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* === ZONE INTERACTIVE (Play / Training / Friends) === */
-#interaction-zone {
-  flex: 1;
-  position: relative;
-  overflow-y: auto;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 8px;
-}
-
-    .btn.active {
-  background:white !important;
-  color:#111 !important;
-  box-shadow:0 0 10px #00ff99aa;
-  font-weight:bold;
-}
-
-
-
-
-/* Panel de score */
-#score-panel {
-  margin: 12px auto 6px;
-  width: 92%;
-  color: #fff;
-  text-align: center;
-  min-height: 50px;
-}
-
-/* Mini coach local */
-#coach-ia-mini {
-  width: 100%;
-  background: rgba(0,0,0,0.45);
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  border-radius: 6px;
-  color: #00ff99;
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-/* Options (club + ref) */
-#swing-options {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  width: 94%;
-  margin: 10px auto;
-}
-
-#swing-options select {
-  flex: 1;
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #333;
-  background: #000;
-  color: #fff;
-}
-
-
-/* Overlay décompte */
-#countdown-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.75);
-  color: #00ff99;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  font-size: 6rem;
-  z-index: 9999;
-}
-
-/* Optionnel : rendre le coach global plus petit UNIQUEMENT en mode swing */
-body.mode-swing #coach-ia {
-  flex: 0 0 0% !important;
-  display: none;
-}
-/* === Modales === */
-.modal-backdrop {
-  position: fixed; /* ✅ couvre tout l’écran indépendamment du parent */
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 15000; /* ✅ passe devant le coach (z-index 9000) et toutes les zones */
-}
-
-.modal-card {
-  background: #121619;
-  padding: 20px;
-  border-radius: 12px;
-  color: #fff;
-  max-width: 420px;
-  text-align: center;
-}
-
-/* === Footer / Navigation === */
-nav, footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #111;
-  border-top: 1px solid #333;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0;
-  z-index: 9999;
-}
-
-nav button,
-footer button {
-  background: none;
-  border: none;
-  color: #0a2413;
-  font-size: 1.3rem;
-  cursor: pointer;
-  transition: transform 0.15s;
-}
-
-nav button.active,
-footer button.active {
-  color: #fff;
-  transform: scale(1.2);
-}
-
-/* === Boutons généraux === */
-.btn {
-  background: #0a2413;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.btn:hover {
-  background: white;
-}
-
-/* === Parfect Counter === */
-#parfect-counter {
-  position: fixed;
-  top: 0px; /* juste sous le header */
-  right: 0px;
-  background: rgba(0, 255, 153, 0.15);
-  border: 1px solid #00ff99;
-  color: #00ff99;
-  font-weight: bold;
-  font-size: 0.9rem;
-  padding: 6px 10px;
-  border-radius: 8px;
-  z-index: 9500;
-  backdrop-filter: blur(4px);
-  transition: all 0.3s ease;
-}
-
-#parfect-counter.flash {
-  transform: scale(1.2);
-  background: rgba(0, 255, 153, 0.35);
-}
-
-
-.hidden {
-  display: none;
-}
-
-
-
-    
-/* ========= JUST SWING — FULLSCREEN VIDEO FIX ========= */
-
-#just-swing-screen {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden; /* IMPORTANT */
-  background: black;
-}
-
-
-
-/* Bouton config routine dans l’UI Just Swing */
-.jsw-btn-config {
-  margin-top:4px;
-  padding:4px 10px;
-  border-radius:999px;
-  border:none;
-  background:rgba(0,0,0,0.7);
-  color:#00ff99;
-  font-size:0.8rem;
-}
-
-    
-/* 🔙 Bouton retour */
-.jsw-exit-top {
-  position: absolute;
-  top: env(safe-area-inset-top, 10px);
-  left: 10px;
-  z-index: 99999;
-  padding: 8px 14px;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.55);
-  color: #00ff99;
-  border: 1px solid #00ff99;
-  font-size: 0.9rem;
-  backdrop-filter: blur(4px);
-}
-
-
-/* Bouton "recommencer" */
-.jsw-btn-restart {
- margin-top: 6px;
-  background: #0a2413;
-  color: #fff;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-
-
-    .jsw-select {
-  position: absolute;
-  top: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 20;
-  background: rgba(0,0,0,0.65);
-  color: #00ff99;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 1rem;
-  border: 1px solid #00ff99;
-  backdrop-filter: blur(6px);
-}
-
-    /* === JUST SWING FULLSCREEN PAYSAGE === */
-
-body.jsw-fullscreen {
-  background:#000;
-  overflow:hidden;
-}
-
-/* On masque le header, le coach global et la nav pendant Just Swing */
-body.jsw-fullscreen header,
-body.jsw-fullscreen #coach-ia {
-  display:none !important;
-}
-
-    
-
-#jsw-status-text {
-  font-size: 15px;
-}
-
-
-
-#jsw-timer {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-/* Panel résultat */
-#jsw-result-panel {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.85);
-  border-radius: 12px;
-  padding: 16px;
-  color: #fff;
-  font-family: system-ui, sans-serif;
-}
-
-#jsw-result-panel button {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  background: #00c67a;
-  color: #000;
-  font-weight: 600;
-}
-
-
-.jsw-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .6rem;
-}
-
-.jsw-card {
-  background: rgba(255,255,255,.05);
-  border-radius: 14px;
-  padding: .6rem .7rem;
-  position: relative;
-}
-
-.jsw-title {
-  font-size: .85rem;
-  color: #ddd;
-}
-
-.jsw-score {
-  font-weight: 800;
-  font-size: .95rem;
-}
-
-.jsw-bar {
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.12);
-  overflow: hidden;
-  margin: .35rem 0 .4rem;
-}
-
-.jsw-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-}
-
-.jsw-details {
-  font-size: .75rem;
-  line-height: 1.35;
-  color: #aaa;
-}
-
-.jsw-coach {
-  margin-top: .35rem;
-  font-size: .75rem;
-  padding: .35rem .45rem;
-  border-radius: 10px;
-}
-
-.jsw-good { color:#4ade80; background:rgba(74,222,128,.12); }
-.jsw-mid  { color:#facc15; background:rgba(250,204,21,.12); }
-.jsw-bad  { color:#f87171; background:rgba(248,113,113,.12); }
-
-.jsw-score-good { color:#4ade80; }
-.jsw-score-mid  { color:#facc15; }
-.jsw-score-bad  { color:#f87171; }
-
-
-    /*body.jsw-fullscreen nav {
-  display:none !important;
-}*/
-
-/* Just Swing recouvre tout l'écran */
-#just-swing-area {
-  position:fixed;
-  inset:0;
-  z-index:20000;
-  background:#000;
-}
-
-#just-swing-screen.jsw-screen {
-  position:relative;
-  width:100vw;
-  height:100vh;
-  border-radius:0;
-  box-shadow:none;
-  overflow:hidden;
-}
-
-/* 📹 Vidéo plein écran, sans crop (zoom) + miroir selfie */
-#jsw-video {
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:contain;  /* pas de crop */
-  background:#000;
-  z-index:1;
-  /* Pas de transform ici (géré par JS) */
-}
-
-/* 🦴 Overlay squelette par-dessus la vidéo */
-
-
-
-/* 📝 Gros message central lisible de loin */
-#jsw-big-msg {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  max-width:80vw;
-  text-align:center;
-  color:#fff;
-  font-size:1.4rem;
-  font-weight:600;
-  padding:12px 16px;
-  border-radius:12px;
-  background:rgba(0,0,0,0.45);
-  text-shadow:0 0 8px rgba(0,0,0,0.9);
-  z-index:5;
-  transition:opacity 0.3s ease;
-}
-
-/* 🧰 UI du bas (statut / routine / timer / restart) */
-#jsw-ui {
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:calc(env(safe-area-inset-bottom, 0px) + 8px);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:4px;
-  padding:4px 8px;
-  font-size:0.8rem;
-  color:#fff;
-  text-shadow:0 0 4px #000;
-  z-index:4;
-}
-
-#jsw-status-text {
-  font-size:0.9rem;
-  font-weight:600;
-}
-
-
-#jsw-timer {
-  font-family:monospace;
-}
-
-/* 🔄 Bouton Recommencer */
-.jsw-btn-restart {
-  margin-top:4px;
-  padding:6px 10px;
-  border-radius:999px;
-  border:none;
-  background:rgba(0,0,0,0.7);
-  color:#00ff99;
-  font-size:0.8rem;
-}
-
-/* 🧾 Panel résultat au-dessus de l’UI bas */
-#jsw-result-panel {
-  position:absolute;
-  left:4vw;
-  right:4vw;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
-  background:rgba(0,0,0,0.85);
-  padding:10px;
-  border-radius:12px;
-  font-size:0.8rem;
-  z-index:6;
-}
-#jsw-result-panel.hidden {
-  display:none;
-}
-
-/* =========================================================
-   JUST SWING — FULLSCREEN UI 2025
-   Version premium + routine stylée
-   ========================================================= */
-
-#just-swing-area {
-  position: fixed;
-  inset: 0;
-  z-index: 20000;
-  background: #000;
-  display: none;
-  overflow: hidden;
-}
-
-/* 📹 Écran principal (vidéo + overlay + halo) */
-#just-swing-screen.jsw-screen {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: #000;
-}
-
-
-/* ---------------------------------------------------------
-   VIDÉO + OVERLAY
-   --------------------------------------------------------- */
-
-#jsw-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;  /* pas de cadre coupé */
-  background: #000;
-  z-index: 1;
-}
-
-#jsw-overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 2;
-  /*transform: scaleX(-1); /* miroir selfie */
-}
-
-/* ---------------------------------------------------------
-   TOPBAR (statut, club, routine, timer)
-   --------------------------------------------------------- */
-
-.jsw-topbar {
-  position: absolute;
-  top: env(safe-area-inset-top, 10px);
-  left: 0;
-  width: 100%;
-  padding: 6px 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
-  z-index: 35;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.jsw-topbar select,
-.jsw-topbar button {
-  z-index: 40;
-}
-
-/* Texte du statut (gauche) */
-#jsw-status-text {
-  color: #00ff99;
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-shadow: 0 0 4px #000;
-}
-
-/* Select club */
-.jsw-select {
-  background: rgba(0,0,0,0.55);
-  color: #00ff99;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid #00ff99;
-  backdrop-filter: blur(4px);
-  font-size: 0.9rem;
-}
-
-/* Routine modal button */
-.jsw-btn-secondary {
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  border: 1px solid #00ff99;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-}
-
-/* Timer */
-#jsw-timer {
-  color: #fff;
-  font-family: monospace;
-  opacity: 0.8;
-}
-
-/* ---------------------------------------------------------
-   ROUTINE — version premium ✨
-   --------------------------------------------------------- */
-
-#jsw-routine-steps {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 10px) + 55px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 45;
-
-  padding: 10px 18px;
-  border-radius: 12px;
-
-  font-size: .5rem;
-  font-weight: 600;
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(0,0,0,0.7);
-  white-space: nowrap;
-
-  /* effet verre + glow léger */
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0,255,153,0.4);
-  box-shadow:
-    0 0 15px rgba(0,255,153,0.25),
-    inset 0 0 10px rgba(0,255,153,0.15);
-  
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.jsw-score-breakdown {
-  margin-top: 8px;
-  font-size: 0.8rem;
-}
-
-.jsw-score-breakdown h3 {
-  margin: 6px 0;
-  font-size: 0.9rem;
-}
-
-.jsw-score-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.jsw-score-table td {
-  padding: 2px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.jsw-score-table td:first-child {
-  opacity: 0.8;
-}
-
-.jsw-session-history {
-  margin-top: 10px;
-  font-size: 0.8rem;
-}
-
-.jsw-session-history h3 {
-  margin: 6px 0;
-  font-size: 0.9rem;
-}
-
-.jsw-history-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.jsw-history-item {
-  width: 100%;
-  text-align: left;
-  background: rgba(255,255,255,0.05);
-  border: none;
-  border-radius: 6px;
-  padding: 4px 6px;
-  margin-bottom: 4px;
-  color: #fff;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-
-    
-/* Apparition */
-#jsw-routine-steps.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Disparition */
-#jsw-routine-steps.hide {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
-
-
-/* ---------------------------------------------------------
-   MESSAGE CENTRAL (adresse / installation)
-   --------------------------------------------------------- */
-#jsw-big-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 50;
-  max-width: 90vw;
-  padding: 22px 28px;
-  background: rgba(0,0,0,0.55);
-  border-radius: 18px;
-  color: #fff;
-  font-size: 2.4rem;
-  font-weight: 700;
-  text-shadow: 0 0 12px rgba(0,0,0,0.9);
-  backdrop-filter: blur(8px);
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-/* ---------------------------------------------------------
-   PANEL RÉSULTAT
-   --------------------------------------------------------- */
-
-#jsw-result-panel {
-  position: absolute;
-  bottom: calc(env(safe-area-inset-bottom,0px) + 85px);
-  left: 5vw;
-  right: 5vw;
-  z-index: 60;
-
-  background: rgba(0,0,0,0.85);
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  color: #fff;
-  border: 1px solid rgba(0,255,153,0.2);
-  box-shadow: 0 0 12px rgba(0,255,153,0.15);
-}
-
-#jsw-result-panel.show {
-  display: block;
-}
-
-/* Boutons du résultat */
-#jsw-result-panel button {
-  margin-top: 6px;
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  background: #00ff99;
-  color: #111;
-  font-weight: 600;
-  border: none;
-}
-
-/* ---------------------------------------------------------
-   MODE FULLSCREEN (cache header + coach + nav)
-   --------------------------------------------------------- */
-
-body.jsw-fullscreen {
-  background: #000;
-  overflow: hidden;
-}
-
-body.jsw-fullscreen header,
-body.jsw-fullscreen nav,
-body.jsw-fullscreen #coach-ia {
-  display: none !important;
-}
-/* ========================================= */
-/* SWING REVIEW PRO                           */
-/* ========================================= */
-
-#swing-review {
-  padding: 16px;
-  background: rgba(0,0,0,0.75);
-  backdrop-filter: blur(6px);
-  color: #fff;
-}
-
-.swing-review-video {
-  max-width: 100%;
-  margin-bottom: 16px;
-}
-
-#swing-video {
-  width: 100%;
-  border-radius: 12px;
-  background: black;
-}
-
-.swing-player-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-}
-
-.swing-review-info {
-  margin: 12px 0;
-}
-
-.swing-review-actions {
-  display: flex;
-  gap: 10px;
-  margin: 12px 0;
-}
-
-.swing-history-list {
-  margin-top: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.swing-history-item {
-  padding: 8px 12px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 8px;
-  cursor: pointer;
-}
-.swing-history-item:hover {
-  background: rgba(255,255,255,0.15);
-}
-
-    
-    
-/* === Responsive === */
-/@media (max-width: 768px) {
-  /*#coach-ia {
-    flex: 0 0 88%;
-  }*/
-
-  #interaction-zone {
-    padding-bottom: 80px; /* Laisse de la place au footer */
-  }
-
-  nav button {
-    font-size: 1.1rem;
-  }
-}
-
-
-  </style>
+  <!-- Ton CSS principal -->
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- (Optionnel) Fav icon -->
+  <link rel="icon" href="fav-icon.ico.png" />
 </head>
 
-<body class="onboarding-active">
+<body class="zen-theme onboarding-active">
 
-<!-- =========================
-     HEADER GLOBAL
-     ========================= -->
-<header id="pg-header">
-  <img
-    src="logo-parfect-golfr.png"
-    alt="Parfect Golfr"
-    class="pg-header-logo"
-  />
-</header>
+  <!-- =========================================
+       COACH WHISPER (ZEN)
+       - Discret, auto-hide
+       - Swipe down (ou click) pour ouvrir l'historique
+       ========================================= -->
+  <div id="coach-whisper" class="pg-whisper whisper-hidden" aria-live="polite">
+    <div class="pg-whisper-inner">
+      <span class="pg-whisper-icon">Coach</span>
+      <p id="whisper-text" class="pg-whisper-text">Respire, visualise ta cible...</p>
+    </div>
+  </div>
 
-<!-- =========================
-     PARFECT COUNTER
-     ========================= -->
-<div id="parfect-counter" class="pg-parfect-counter">
-  0 Parfect collecté
-</div>
+  <!-- Historique (ouvrable) -->
+  <div id="coach-whisper-history" class="pg-whisper-history hidden">
+    <div class="pg-whisper-history-card">
+      <div class="pg-whisper-history-header">
+        <div class="pg-whisper-history-title">Historique des conseils</div>
+        <button id="whisper-history-close" class="pg-btn-secondary" type="button">Fermer</button>
+      </div>
+      <div id="whisper-history-list" class="pg-whisper-history-list"></div>
+    </div>
+  </div>
 
-<!-- =========================
-     MAIN APP
-     ========================= -->
-<main id="app split-layout">
+  <!-- =========================================
+       HEADER (Zen)
+       - Visible sur Home/Play/Training/Friends
+       - Caché en mode JustSwing fullscreen
+       ========================================= -->
+  <header id="pg-header" class="pg-header">
+    <img
+      src="logo-parfect-golfr.png"
+      alt="Logo Parfect.golfr"
+      class="pg-header-logo"
+    />
+  </header>
 
-  <!-- =========================
-       COACH IA
-       ========================= -->
-  <section id="coach-ia" class="pg-coach coach-medium">
-    <div id="coach-log" class="pg-coach-log"></div>
+  <!-- =========================================
+       PARFECT COUNTER (reward doux)
+       ========================================= -->
+  <div id="parfect-counter" class="pg-parfect-counter">0 Parfect collecté</div>
 
-    <div id="coach-input-zone" class="pg-coach-input-zone">
-      <input
-        id="coach-input"
-        type="text"
-        placeholder="Pose ta question au coach…"
-      />
-      <button id="coach-send" class="pg-btn-primary">
-        Envoyer
+  <!-- =========================================
+       APP CONTAINER
+       - Une seule vue visible à la fois
+       ========================================= -->
+  <main id="app-container" class="pg-app">
+
+    <!-- ===== Viewport (tes vues) ===== -->
+    <section id="view-port" class="pg-viewport">
+
+      <!-- HOME (Hub) -->
+      <section id="home-area" class="pg-home" style="display:none;">
+        <div class="pg-home-header">
+          <h1 class="pg-home-title">Que veux-tu faire maintenant ?</h1>
+          <p class="pg-home-subtitle">
+            On vise le fairway, puis le GIR, puis le 2 putts.
+            Les Parfect récompensent tes bonnes décisions.
+          </p>
+        </div>
+
+        <div class="pg-home-tiles">
+          <button id="home-play" class="pg-tile" type="button">
+            <div class="pg-tile-title">Parcours</div>
+            <div class="pg-tile-desc">Score coup par coup, méthode Parfect</div>
+          </button>
+
+          <button id="home-just-swing" class="pg-tile" type="button">
+            <div class="pg-tile-title">Just Swing</div>
+            <div class="pg-tile-desc">Focus technique, session pleine écran</div>
+          </button>
+
+          <button id="home-training" class="pg-tile" type="button">
+            <div class="pg-tile-title">Training</div>
+            <div class="pg-tile-desc">Répétition, routine, mental</div>
+          </button>
+
+          <button id="home-friends" class="pg-tile" type="button">
+            <div class="pg-tile-title">Club-house</div>
+            <div class="pg-tile-desc">Social, historique, espace</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- PLAY -->
+      <section id="game-area" class="pg-view" style="display:none;">
+        <!-- Placeholders indispensables pour play.js -->
+        <div id="golf-select"></div>
+        <div id="hole-card"></div>
+      </section>
+
+      <!-- TRAINING -->
+      <section id="training-area" class="pg-view" style="display:none;"></section>
+
+      <!-- FRIENDS -->
+      <section id="friends-area" class="pg-view" style="display:none;"></section>
+
+      <!-- HISTORY -->
+      <section id="history-area" class="pg-view" style="display:none;"></section>
+
+    </section>
+  </main>
+
+  <!-- =========================================
+       JUST SWING (fullscreen focus)
+       - header/nav cachés via body.jsw-fullscreen
+       - bouton Quitter unique
+       ========================================= -->
+  <section id="just-swing-area" class="jsw-area" style="display:none;">
+    <div id="just-swing-screen" class="jsw-screen">
+      <video id="jsw-video" autoplay playsinline></video>
+      <canvas id="jsw-overlay"></canvas>
+      <div id="jsw-big-msg" class="jsw-big-msg"></div>
+
+      <!-- Top minimal : logo discret + whisper déjà au-dessus (global) -->
+      <div class="jsw-top-minimal">
+        <img src="logo-parfect-golfr.png" alt="Parfect.golfr" class="jsw-logo" />
+      </div>
+
+      <!-- Bas : action unique -->
+      <div class="jsw-bottom-action">
+        <button id="jsw-exit-btn" class="pg-btn-primary" type="button">Quitter</button>
+      </div>
+    </div>
+
+    <!-- Sélecteur club + routine (si tes scripts l’attendent) -->
+    <div class="jsw-top-right" style="display:none;">
+      <select id="jsw-club-select" class="jsw-select">
+        <option value="fer7">Fer 7</option>
+        <option value="fer8">Fer 8</option>
+        <option value="fer9">Fer 9</option>
+        <option value="pw">PW</option>
+        <option value="sw">SW</option>
+        <option value="driver">Driver</option>
+        <option value="bois3">Bois 3</option>
+      </select>
+
+      <button id="jsw-open-routine-modal" class="pg-btn-secondary" type="button">
+        Routine
       </button>
     </div>
   </section>
 
-  <!-- =========================
-       ZONE INTERACTIVE
-       ========================= -->
-  <section id="interaction-zone">
+  <!-- =========================================
+       SWING REVIEW (tu l’avais en overlay)
+       - je conserve tes IDs
+       ========================================= -->
+  <section id="swing-review" style="display:none;">
+    <div class="swing-review-video">
+      <video id="swing-video" playsinline></video>
 
-    <!-- ===== HOME ===== -->
-    <section
-      id="home-area"
-      class="pg-home"
-      style="display:none;"
-    >
-      <div class="pg-home-header">
-        <img src="logo-parfect-golfr.png" class="pg-home-logo" alt="Parfect Golfr">
-        <h2>Que veux-tu travailler maintenant ?</h2>
+      <div class="swing-player-controls">
+        <button id="swing-play-pause" type="button">Play</button>
+
+        <select id="swing-speed">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.5">1.5×</option>
+          <option value="2">2×</option>
+        </select>
+
+        <input id="swing-timeline" type="range" min="0" max="100" value="0">
+        <span id="swing-time-label">0.0s</span>
       </div>
+    </div>
 
-      <div class="pg-home-actions">
-        <button id="home-play" class="pg-home-card">
-          <h3>Jouer un parcours</h3>
-          <p>Scorer coup par coup et collecter des Parfect</p>
-        </button>
+    <div id="swing-score-breakdown" style="display:none;"></div>
 
-        <button id="home-just-swing" class="pg-home-card">
-          <h3>Just Swing</h3>
-          <p>Travailler ton swing sans pression</p>
-        </button>
+    <div class="swing-review-info">
+      <h2 id="swing-review-score" style="display:none;">Score : --</h2>
+      <p id="swing-review-comment" style="display:none;">Analyse…</p>
+    </div>
 
-        <button id="home-training" class="pg-home-card">
-          <h3>Entraînement mental</h3>
-          <p>Routine, clarté et régularité</p>
-        </button>
-      </div>
+    <div class="swing-review-actions">
+      <button id="swing-save-reference" class="pg-btn-secondary" type="button">
+        Définir comme ma référence
+      </button>
 
-      <p class="pg-home-footnote">
-        Chaque Parfect récompense une bonne décision.
-      </p>
-    </section>
+      <button id="swing-save-parfect-reference" class="pg-btn-secondary" type="button" style="display:none;">
+        Définir comme référence PARFECT
+      </button>
 
-    <!-- ===== JEU ===== -->
-    <section id="game-area" style="display:none;"></section>
+      <div id="parfect-ref-feedback" style="display:none;"></div>
 
-    <!-- ===== TRAINING ===== -->
-    <section id="training-area" style="display:none;"></section>
+      <button id="swing-review-next" class="pg-btn-primary" type="button">
+        Swing suivant
+      </button>
+    </div>
 
-    <!-- ===== FRIENDS ===== -->
-    <section id="friends-area" style="display:none;"></section>
+    <div class="swing-review-history">
+      <h3>Historique</h3>
+      <div id="swing-history" class="swing-history-list"></div>
+    </div>
 
-    <!-- ===== HISTORY ===== -->
-    <section id="history-area" style="display:none;"></section>
-
+    <button id="jsw-close-review" class="pg-btn-secondary" type="button">
+      Fermer
+    </button>
   </section>
-</main>
 
-<!-- =========================
-     JUST SWING
-     ========================= -->
-<section id="just-swing-area" style="display:none;">
-  <div class="jsw-topbar">
-    <img src="logo-parfect-golfr.png" class="jsw-logo" alt="Parfect Golfr">
-    <button class="pg-back-btn" id="jsw-back-btn">Retour</button>
-  </div>
+  <!-- =========================================
+       ONBOARDING (Zen)
+       - garde tes principes, mention carte coup par coup + Parfect
+       ========================================= -->
+  <div id="onboarding" class="pg-onboarding">
+    <img src="logo-parfect-golfr.png" alt="Parfect.golfr" class="pg-logo">
 
-  <div id="just-swing-screen">
-    <video id="jsw-video" autoplay playsinline></video>
-    <canvas id="jsw-overlay"></canvas>
-    <div id="jsw-big-msg"></div>
-  </div>
-</section>
+    <h2 class="pg-onboarding-title">Bienvenue sur Parfect.golfr</h2>
 
-<!-- =========================
-     ONBOARDING
-     ========================= -->
-<div id="onboarding" class="pg-onboarding">
+    <p class="pg-onboarding-subtitle">
+      Une méthode de progression orientée décisions.
+      Moins de pression, plus de régularité.
+    </p>
 
-  <img src="logo-parfect-golfr.png" class="pg-logo" alt="Parfect Golfr">
+    <div class="pg-onboarding-cards">
+      <div class="pg-card">
+        <h3>Carte de score coup par coup</h3>
+        <p>
+          Tu ne vises pas le par.
+          Tu vises le fairway, puis le GIR, puis le 2 putts.
+        </p>
+        <p class="pg-highlight">
+          Chaque bonne décision te rapporte un Parfect.
+        </p>
+      </div>
 
-  <h1>Bienvenue sur Parfect Golfr</h1>
+      <div class="pg-card">
+        <h3>Just Swing</h3>
+        <p>
+          Une session focus technique en plein écran,
+          avec un accompagnement simple et bienveillant.
+        </p>
+      </div>
 
-  <p class="pg-subtitle">
-    Une méthode de scoring et de coaching<br>
-    basée sur le processus, pas sur la pression.
-  </p>
-
-  <div class="pg-onboarding-cards">
-
-    <div class="pg-card">
-      <h3>Carte de score intelligente</h3>
-      <p>
-        On ne vise pas le par.<br>
-        On vise le fairway, le GIR, puis le 2 putts.
-      </p>
-      <p class="pg-highlight">
-        Chaque bonne décision rapporte un Parfect.
-      </p>
+      <div class="pg-card">
+        <h3>Mental</h3>
+        <p>
+          Routine, clarté, intentions simples.
+          L’IA soutient, elle ne juge pas.
+        </p>
+      </div>
     </div>
 
-    <div class="pg-card">
-      <h3>Just Swing</h3>
-      <p>
-        Améliore ton swing à ta façon,<br>
-        sans modèle imposé.
-      </p>
-    </div>
-
-    <div class="pg-card">
-      <h3>Le mental avant la technique</h3>
-      <p>
-        Routine, clarté, décisions simples.
-      </p>
-    </div>
-
+    <button id="start-onboarding" class="pg-btn-primary" type="button">
+      Commencer
+    </button>
   </div>
 
-  <button id="start-onboarding" class="pg-btn-primary">
-    Commencer mon parcours
-  </button>
-</div>
+  <!-- =========================================
+       NAV BOTTOM (Home hub)
+       - Visible hors Just Swing fullscreen
+       - On garde TES IDs pour router.js
+       ========================================= -->
+  <nav id="pg-nav" class="bottom-nav">
+    <button id="home-btn" class="nav-btn" type="button">
+      <img src="fav-icon.png" alt="Accueil">
+      <span>Accueil</span>
+    </button>
 
-<!-- =========================
-     NAVIGATION
-     ========================= -->
-<nav id="pg-nav">
-  <button id="home-btn">Accueil</button>
-  <button id="just-swing-btn">Just Swing</button>
-  <button id="play-btn">Jouer</button>
-  <button id="training-btn">Entraînement</button>
-  <button id="friends-btn">Espace</button>
-</nav>
+    <button id="just-swing-btn" class="nav-btn" type="button">
+      <img src="parfect-justswing.png" alt="Just Swing">
+      <span>Swing</span>
+    </button>
 
-<!-- =========================
-     SCRIPTS
-     ========================= -->
-<script src="js/config.js"></script>
-<script src="js/licence.js"></script>
-<script src="js/coachIA.js"></script>
-<script src="js/play.js"></script>
-<script src="js/training.js"></script>
-<script src="js/HistoryHub.js"></script>
-<script src="js/social.js"></script>
-<script src="js/router.js"></script>
+    <button id="play-btn" class="nav-btn" type="button">
+      <img src="parfect-play.png" alt="Parcours">
+      <span>Parcours</span>
+    </button>
 
-<script>
-  // Onboarding close
-  document.getElementById("start-onboarding")?.addEventListener("click", () => {
-    document.body.classList.remove("onboarding-active");
-    document.getElementById("onboarding").style.display = "none";
-    document.getElementById("home-area").style.display = "block";
-  });
-</script>
+    <button id="training-btn" class="nav-btn" type="button">
+      <img src="parfect-train.png" alt="Training">
+      <span>Training</span>
+    </button>
+
+    <button id="friends-btn" class="nav-btn" type="button">
+      <img src="parfect-espace.png" alt="Club-house">
+      <span>Club-house</span>
+    </button>
+  </nav>
+
+  <!-- =========================================
+       LEGACY COACH (compat JS)
+       - On le garde pour éviter les crashs
+       - Mais tu peux le masquer via CSS (Zen Whisper remplace l’UI)
+       ========================================= -->
+  <section id="coach-ia" class="pg-coach-legacy" style="display:none;">
+    <div id="coach-log"></div>
+    <div id="coach-input-zone">
+      <input id="coach-input" type="text" placeholder="Pose ta question au coach…">
+      <button id="coach-send" type="button">Envoyer</button>
+    </div>
+  </section>
+
+  <!-- Helper global $ -->
+  <script>
+    if (!window.$) window.$ = (id) => document.getElementById(id);
+  </script>
+
+  <!-- =========================================
+       COACH REACT -> Zen Whisper
+       - remplace l’ancienne UX chat
+       - auto-hide 4s
+       - stocke un historique
+       ========================================= -->
+  <script>
+    (function () {
+      const whisper = document.getElementById("coach-whisper");
+      const whisperText = document.getElementById("whisper-text");
+      const historyWrap = document.getElementById("coach-whisper-history");
+      const historyList = document.getElementById("whisper-history-list");
+      const closeBtn = document.getElementById("whisper-history-close");
+
+      let hideTimer = null;
+      const history = [];
+
+      function showWhisper(message) {
+        if (!whisper || !whisperText) return;
+
+        // message court (Zen)
+        const clean = String(message || "").trim();
+        if (!clean) return;
+
+        whisperText.textContent = clean;
+
+        whisper.classList.remove("whisper-hidden");
+        whisper.classList.add("whisper-show");
+
+        // historise
+        history.unshift({ t: Date.now(), m: clean });
+        if (history.length > 30) history.pop();
+        renderHistory();
+
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(() => {
+          whisper.classList.add("whisper-hidden");
+          whisper.classList.remove("whisper-show");
+        }, 4000);
+      }
+
+      function renderHistory() {
+        if (!historyList) return;
+        historyList.innerHTML = history
+          .map((h) => `<div class="pg-whisper-item">${escapeHtml(h.m)}</div>`)
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, (c) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+        }[c]));
+      }
+
+      // click sur la bulle => ouvre l'historique
+      whisper?.addEventListener("click", () => {
+        historyWrap?.classList.remove("hidden");
+      });
+
+      closeBtn?.addEventListener("click", () => {
+        historyWrap?.classList.add("hidden");
+      });
+
+      // expose coachReact global pour router.js & autres
+      window.coachReact = window.coachReact || function (msg) {
+        // si appendCoachMessage existe, on le laisse vivre, mais on pousse aussi le whisper
+        try {
+          if (typeof appendCoachMessage === "function") appendCoachMessage(msg);
+        } catch (_) {}
+        showWhisper(msg);
+      };
+
+      // expose util pour debug
+      window.__pgWhisper = { showWhisper };
+    })();
+  </script>
+
+  <!-- =========================================
+       ONBOARDING / NAV FLOW (une tâche, un esprit)
+       ========================================= -->
+  <script>
+    function showView(viewId) {
+      const ids = ["home-area", "game-area", "training-area", "friends-area", "history-area"];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === viewId) ? "block" : "none";
+      });
+    }
+
+    function enterJustSwing() {
+      document.body.classList.add("jsw-fullscreen");
+      document.getElementById("just-swing-area").style.display = "block";
+    }
+
+    function exitJustSwing() {
+      document.body.classList.remove("jsw-fullscreen");
+      document.getElementById("just-swing-area").style.display = "none";
+      // sécurité: stop sessions si dispo
+      window.JustSwing?.stopSession?.();
+      window.SwingEngine?.reset?.();
+      // retour Home
+      document.getElementById("home-btn")?.click();
+    }
+
+    document.getElementById("start-onboarding")?.addEventListener("click", () => {
+      document.body.classList.remove("onboarding-active");
+      document.getElementById("onboarding").style.display = "none";
+      showView("home-area");
+      window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
+    });
+
+    // Home tiles
+    document.getElementById("home-play")?.addEventListener("click", () => document.getElementById("play-btn")?.click());
+    document.getElementById("home-training")?.addEventListener("click", () => document.getElementById("training-btn")?.click());
+    document.getElementById("home-just-swing")?.addEventListener("click", () => document.getElementById("just-swing-btn")?.click());
+    document.getElementById("home-friends")?.addEventListener("click", () => document.getElementById("friends-btn")?.click());
+
+    // Just Swing exit
+    document.getElementById("jsw-exit-btn")?.addEventListener("click", exitJustSwing);
+
+    // Default view safety
+    if (document.body.classList.contains("onboarding-active")) {
+      showView("home-area"); // sera masquée par onboarding, mais évite état vide après
+    }
+  </script>
+
+  <!-- =========================================
+       DEPENDENCIES & MODULES (TES SCRIPTS)
+       - on garde ton ordre logique
+       ========================================= -->
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="js/coachIA.js"></script>
+  <script src="js/play.js"></script>
+  <script src="js/training.js"></script>
+  <script src="js/HistoryHub.js"></script>
+  <script src="js/social.js"></script>
+
+  <script src="js/config.js"></script>
+  <script src="js/licence.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- MediaPipe -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+
+  <script src="js/mediapipe-init.js"></script>
+  <script src="js/faceOnAnalyzer.js"></script>
+  <script src="js/SwingEngine.js"></script>
+  <script src="js/SwingScorer.js"></script>
+  <script src="js/SwingCapture.js"></script>
+  <script src="js/SwingPlayer.js"></script>
+  <script src="js/SwingHistory.js"></script>
+
+  <script src="js/justSwing.js"></script>
+  <script src="js/jsw-clubs.js"></script>
+  <script src="js/jsw-routine-modal.js"></script>
+  <script src="js/jsw-swing-log.js"></script>
+  <script src="js/jsw-replay.js"></script>
+
+  <!-- Router (en dernier) -->
+  <script src="js/router.js"></script>
 
 </body>
 </html>
-
-
-
-
-
-</body>
-</html>
-
