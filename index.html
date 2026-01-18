@@ -223,48 +223,39 @@
        - garde tes principes, mention carte coup par coup + Parfect
        ========================================= -->
   <div id="onboarding" class="pg-onboarding">
-    <img src="logo-parfect-golfr.png" alt="Parfect.golfr" class="pg-logo">
 
-    <h2 class="pg-onboarding-title">Bienvenue sur Parfect.golfr</h2>
-
-    <p class="pg-onboarding-subtitle">
-      Une méthode de progression orientée décisions.
-      Moins de pression, plus de régularité.
+  <div class="pg-onboarding-step active" data-step="1">
+    <h2>Bienvenue sur Parfect.golfr</h2>
+    <p>
+      Une méthode orientée décisions, pas pression.
     </p>
+    <button class="pg-btn-primary" data-next>Continuer</button>
+  </div>
 
-    <div class="pg-onboarding-cards">
-      <div class="pg-card">
-        <h3>Carte de score coup par coup</h3>
-        <p>
-          Tu ne vises pas le par.
-          Tu vises le fairway, puis le GIR, puis le 2 putts.
-        </p>
-        <p class="pg-highlight">
-          Chaque bonne décision te rapporte un Parfect.
-        </p>
-      </div>
+  <div class="pg-onboarding-step" data-step="2">
+    <h2>La carte Parfect</h2>
+    <p>
+      On ne vise pas le par.<br>
+      Fairway → GIR → 2 putts.
+    </p>
+    <p class="pg-highlight">
+      Chaque bonne décision rapporte un Parfect.
+    </p>
+    <button class="pg-btn-primary" data-next>Continuer</button>
+  </div>
 
-      <div class="pg-card">
-        <h3>Just Swing</h3>
-        <p>
-          Une session focus technique en plein écran,
-          avec un accompagnement simple et bienveillant.
-        </p>
-      </div>
-
-      <div class="pg-card">
-        <h3>Mental</h3>
-        <p>
-          Routine, clarté, intentions simples.
-          L’IA soutient, elle ne juge pas.
-        </p>
-      </div>
-    </div>
-
-    <button id="start-onboarding" class="pg-btn-primary" type="button">
+  <div class="pg-onboarding-step" data-step="3">
+    <h2>Just Swing & Mental</h2>
+    <p>
+      Une bulle de focus.<br>
+      L’IA t’accompagne, sans juger.
+    </p>
+    <button id="finish-onboarding" class="pg-btn-primary">
       Commencer
     </button>
   </div>
+
+</div>
 
   <!-- =========================================
        NAV BOTTOM (Home hub)
@@ -397,6 +388,54 @@
        ONBOARDING / NAV FLOW (une tâche, un esprit)
        ========================================= -->
   <script>
+
+    !-- ======================================================
+     ONBOARDING LOGIC (ISOLÉE)
+     ====================================================== -->
+
+ (function () {
+  const KEY = "parfect:onboarding:done";
+  const onboarding = $("onboarding");
+
+  if (!onboarding) return;
+
+  // Déjà vu → on supprime
+  if (localStorage.getItem(KEY) === "true") {
+    onboarding.remove();
+    return;
+  }
+
+  document.body.classList.add("onboarding-active");
+
+  let step = 1;
+  const steps = onboarding.querySelectorAll(".pg-onboarding-step");
+
+  function showStep(n) {
+    steps.forEach(s => s.classList.remove("active"));
+    onboarding.querySelector(`[data-step="${n}"]`)?.classList.add("active");
+  }
+
+  onboarding.querySelectorAll("[data-next]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      step++;
+      showStep(step);
+    });
+  });
+
+  $("finish-onboarding")?.addEventListener("click", () => {
+    localStorage.setItem(KEY, "true");
+    onboarding.classList.add("fade-out");
+
+    setTimeout(() => onboarding.remove(), 400);
+    document.body.classList.remove("onboarding-active");
+
+    // 👉 entrée officielle dans l'app
+    window.navigate?.("home", { silent: true });
+    window.coachReact?.("Choisis une action. Une seule intention.");
+  });
+
+  showStep(1);
+})();
     function showView(viewId) {
       const ids = ["home-area", "game-area", "training-area", "friends-area", "history-area"];
       ids.forEach((id) => {
