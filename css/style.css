@@ -138,6 +138,36 @@ body {
   font-size: 0.9rem;
 }
 
+/* =========================
+   SPLIT LAYOUT
+   ========================= */
+
+#split-layout {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px); /* header */
+}
+
+/* Zone coach */
+#coach-ia {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--pg-bg-glass);
+  border-bottom: 1px solid var(--pg-border-soft);
+  padding: 8px;
+  transition: all 0.35s ease;
+}
+
+/* Zone interaction */
+#interaction-zone {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.35);
+  padding: 8px;
+}
+
 
 /* === ONBOARDING === */
 
