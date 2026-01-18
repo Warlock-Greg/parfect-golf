@@ -1,194 +1,229 @@
 // ==========================================================
-//  ROUTER.JS — NAVIGATION CENTRALE PARFECT.GOLFR
-//  Version clean 2025 — Swing Analyzer V2 désactivé
-//  Just Swing = module swing unique
+// ROUTER.JS — NAVIGATION CENTRALE PARFECT.GOLFR (Refactor 2026)
+// Objectifs:
+// - Une seule vue visible a la fois (pas de superposition)
+// - Tolere DOM incomplet (pas de crash)
+// - Flow Onboarding -> Home hub
+// - JustSwing stable + reprise apres activation licence
 // ==========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("🚀 Router chargé");
+  console.log("Router charge");
 
-  // 🔐 Boot licence / compte (UNE FOIS)
-  if (window.initLicence) {
-   window.initLicence();
-  }
-
-  // ==========================================================
-// 🔑 Licence activée à chaud → reprise du flow JustSwing
-// ==========================================================
-window.addEventListener("parfect:licence:activated", async () => {
-  console.log("🔓 Licence activée → reprise JustSwing");
-
-  // On vérifie qu’on est bien sur JustSwing
-  setActive(justSwingBtn);
-  showOnly("justswing");
-
-  document.body.classList.add("mode-swing");
-
-  // Laisse le DOM respirer
-  await new Promise(r => requestAnimationFrame(r));
-
-  // Init JustSwing si pas déjà fait
-  if (!window._justSwingInitDone) {
-    if (window.JustSwing?.initJustSwing) {
-      JustSwing.initJustSwing();
-      window._justSwingInitDone = true;
-    }
-  }
-
-  // Caméra + session
-  await window.startJustSwingCamera?.();
-  JustSwing.startSession("swing");
-
-  coachReact?.("🟢 Licence activée — Just Swing prêt !");
-});
-
-  
   const $ = (id) => document.getElementById(id);
 
-  // Zones
-  const gameArea     = $("game-area");
-  const trainingArea = $("training-area");
-  const swingArea    = $("swing-analyzer");
-  const friendsArea  = $("friends-area");
-  const justSwingArea = $("just-swing-area");
+  // --------------------------
+  // Zones (views)
+  // --------------------------
+  const views = {
+    home: $("home-area"),
+    play: $("game-area"),
+    training: $("training-area"),
+    friends: $("friends-area"),
+    history: $("history-area"),      // optionnel
+    justswing: $("just-swing-area"),
+    swing: $("swing-analyzer")       // legacy (si encore present)
+  };
 
-  // Boutons
-  const playBtn     = $("play-btn");
-  const trainingBtn = $("training-btn");
-  const swingBtn    = $("swing-btn");
-  const justSwingBtn = $("just-swing-btn");
-  const historyBtn  = $("history-btn");
-  const friendsBtn  = $("friends-btn");
-  const homeBtn     = $("home-btn");
+  // --------------------------
+  // Nav buttons
+  // --------------------------
+  const navButtons = {
+    home: $("home-btn"),
+    play: $("play-btn"),
+    training: $("training-btn"),
+    friends: $("friends-btn"),
+    justswing: $("just-swing-btn"),
+    // legacy:
+    swing: $("swing-btn"),
+    history: $("history-btn")
+  };
 
-  // Helper showOnly
-  function showOnly(id) {
-    [gameArea, trainingArea, swingArea, friendsArea, justSwingArea].forEach(el => {
+  // --------------------------
+  // Safe coach message
+  // --------------------------
+  function say(msg) {
+    try {
+      window.coachReact?.(msg);
+    } catch (e) {
+      console.warn("coachReact error:", e);
+    }
+  }
+
+  // --------------------------
+  // One rule: hide everything before showing one view
+  // --------------------------
+  function hideAllViews() {
+    Object.values(views).forEach((el) => {
       if (el) el.style.display = "none";
     });
-    const target = ({ 
-      play: gameArea,
-      training: trainingArea,
-      swing: swingArea,
-      friends: friendsArea,
-      justswing: justSwingArea
-    })[id];
-    if (target) target.style.display = "block";
   }
 
-  // Active visuel
-  function setActive(btn) {
-    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-    btn?.classList.add("active");
+  function setActive(routeKey) {
+    // retire active sur tous les boutons de nav connus
+    document.querySelectorAll("nav button").forEach((b) => b.classList.remove("active"));
+    navButtons[routeKey]?.classList.add("active");
   }
 
-  // ==========================
-  // 🧹 Leave Swing (toujours utile)
-  // ==========================
+  // --------------------------
+  // Leave swing modes (stop camera etc.)
+  // --------------------------
   function leaveSwingMode() {
+    // quitte le fullscreen JSW si tu utilises cette classe
     document.body.classList.remove("jsw-fullscreen");
-    const video = document.querySelector("video");
-    if (video?.srcObject) {
-      video.srcObject.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-    }
-    window.initSwingAnalyzerV2 = () => console.log("⛔ Swing Analyzer désactivé");
+    document.body.classList.remove("mode-swing");
+
+    // arret camera naive: on stoppe uniquement les videos actives
+    document.querySelectorAll("video").forEach((video) => {
+      try {
+        if (video?.srcObject) {
+          video.srcObject.getTracks().forEach((t) => t.stop());
+          video.srcObject = null;
+        }
+      } catch (_) {}
+    });
+
+    // legacy: swing analyzer v2 desactive
+    window.initSwingAnalyzerV2 = () => console.log("Swing Analyzer desactive");
   }
 
-  // ==========================
-  // 🎬 Onboarding
-  // ==========================
+  // --------------------------
+  // Navigate (single source of truth)
+  // --------------------------
+  async function navigate(routeKey, opts = {}) {
+    const { silent = false } = opts;
+
+    // toujours: pas de vues empilees
+    hideAllViews();
+
+    // toujours: sortir des modes swing quand on va ailleurs
+    if (routeKey !== "justswing") leaveSwingMode();
+
+    // activer nav
+    setActive(routeKey);
+
+    // afficher la vue cible si elle existe
+    const target = views[routeKey];
+    if (target) target.style.display = "block";
+
+    if (!silent) {
+      // messages courts, sans emojis
+      const messages = {
+        home: "Accueil",
+        play: "Mode parcours",
+        training: "Mode entrainement",
+        friends: "Mode social",
+        justswing: "Just Swing"
+      };
+      if (messages[routeKey]) say(messages[routeKey]);
+    }
+
+    // hooks ecran
+    if (routeKey === "play") {
+      window.showResumeOrNewModal?.();
+    }
+
+    if (routeKey === "training") {
+      window.initTraining?.();
+    }
+
+    if (routeKey === "friends") {
+      window.injectSocialUI?.();
+    }
+
+    if (routeKey === "history") {
+      window.injectHistoryUI?.();
+    }
+
+    if (routeKey === "justswing") {
+      // JustSwing: on ne force pas leaveSwingMode ici
+      document.body.classList.add("mode-swing");
+      document.body.classList.add("jsw-fullscreen"); // si ton CSS masque header/nav
+
+      // laisse le DOM respirer
+      await new Promise((r) => requestAnimationFrame(r));
+
+      // init une fois
+      if (!window._justSwingInitDone) {
+        if (window.JustSwing?.initJustSwing) {
+          window.JustSwing.initJustSwing();
+          window._justSwingInitDone = true;
+        }
+      }
+
+      // camera + session
+      if (typeof window.startJustSwingCamera === "function") {
+        await window.startJustSwingCamera();
+      }
+
+      window.JustSwing?.startSession?.("swing");
+    }
+  }
+
+  // --------------------------
+  // Licence boot (une fois)
+  // --------------------------
+  if (typeof window.initLicence === "function") {
+    window.initLicence();
+  }
+
+  // --------------------------
+  // Onboarding
+  // --------------------------
   const startBtn = $("start-onboarding");
   const onboarding = $("onboarding");
 
-  if (startBtn) {
-    startBtn.addEventListener("click", () => {
+  if (startBtn && onboarding) {
+    startBtn.addEventListener("click", async () => {
       onboarding.style.opacity = "0";
       onboarding.style.transition = "opacity .5s ease";
       setTimeout(() => onboarding.remove(), 500);
 
-      // Licence
-      if (typeof initLicence === "function") initLicence();
-
-      // Play par défaut
-      setActive(playBtn);
-      showOnly("play");
-
-      coachReact?.("👋 Bienvenue — Clique sur Jouer !");
+      // Flow: onboarding -> Home (hub)
+      await navigate("home", { silent: true });
+      say("Choisis une action.");
     });
   }
 
-  // ==========================
-  // ROUTES
-  // ==========================
-  playBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(playBtn);
-    showOnly("play");
-    window.showResumeOrNewModal?.();
-    coachReact?.("🎯 Mode Jouer activé !");
+  // --------------------------
+  // Nav bindings (safe)
+  // --------------------------
+  navButtons.play?.addEventListener("click", () => navigate("play"));
+  navButtons.training?.addEventListener("click", () => navigate("training"));
+  navButtons.friends?.addEventListener("click", () => navigate("friends"));
+  navButtons.home?.addEventListener("click", () => navigate("home"));
+  navButtons.justswing?.addEventListener("click", () => navigate("justswing"));
+
+  // --------------------------
+  // Home tiles bindings (si tu les as dans le DOM)
+  // --------------------------
+  $("home-play")?.addEventListener("click", () => navigate("play"));
+  $("home-training")?.addEventListener("click", () => navigate("training"));
+  $("home-friends")?.addEventListener("click", () => navigate("friends"));
+  $("home-just-swing")?.addEventListener("click", () => navigate("justswing"));
+
+  // --------------------------
+  // Licence activée a chaud -> reprise JustSwing
+  // --------------------------
+  window.addEventListener("parfect:licence:activated", async () => {
+    console.log("Licence activee -> reprise JustSwing");
+
+    // on se place sur JSW
+    await navigate("justswing", { silent: true });
+
+    say("Licence activee. Just Swing pret.");
   });
 
-  trainingBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(trainingBtn);
-    showOnly("training");
-    window.initTraining?.();
-    coachReact?.("💪 Mode Entraînement activé !");
-  });
-
-  
-  justSwingBtn.addEventListener("click", async () => {
-    leaveSwingMode();
-    setActive(justSwingBtn);
-    showOnly("justswing");
-
-    document.body.classList.add("mode-swing");
-
-    console.log("▶️ JustSwing startSession()");
-
-// 1) On s’assure que le DOM est prêt
-  await new Promise(r => requestAnimationFrame(r));
-
-// 2) Init quand le DOM est vraiment prêt
-if (!window._justSwingInitDone) {
-    if (window.JustSwing?.initJustSwing) {
-      JustSwing.initJustSwing();
-      window._justSwingInitDone = true;
-    }
+  // --------------------------
+  // Etat initial
+  // - si onboarding present: ne force rien (onboarding couvre)
+  // - sinon: home
+  // --------------------------
+  if (!$("onboarding")) {
+    navigate("home", { silent: true });
+  } else {
+    // evite un ecran vide derriere onboarding
+    hideAllViews();
+    views.home && (views.home.style.display = "block");
   }
-
-    
-    // 🔥 IMPORTANT : on démarre la caméra AVANT tout
-    await window.startJustSwingCamera();
-
-    JustSwing.startSession("swing");
-
-    coachReact?.("🟢 Just Swing actif !");
-});
-
-
-  friendsBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(friendsBtn);
-    showOnly("friends");
-    window.injectSocialUI?.();
-    coachReact?.("👥 Mode Social !");
-  });
-
-// historyBtn.addEventListener("click", () => {
-  //  leaveSwingMode();
-  //  setActive(historyBtn);
-  //    showOnly("play");
-  //  window.injectHistoryUI?.();
-  //  coachReact?.("📜 Historique");
- // });
-
-  homeBtn.addEventListener("click", () => {
-    leaveSwingMode();
-    setActive(homeBtn);
-    showOnly("play");
-    coachReact?.("🏠 Accueil");
-  });
-
 });
