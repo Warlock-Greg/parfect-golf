@@ -15,8 +15,8 @@
   --pg-green-main: #2D5A27;     /* Classic Green */
   --pg-green-soft: rgba(45, 90, 39, 0.12);
 
-  --pg-accent-sand: #E8E2D6;    /* Sand */
-  --pg-accent-gold: #D4AF37;    /* Gold discret */
+  --pg-accent-sand: #E8E2D6;
+  --pg-accent-gold: #D4AF37;
 
   --pg-border-soft: rgba(47, 54, 51, 0.12);
 
@@ -38,6 +38,9 @@ body.dark {
   --pg-border-soft: rgba(255,255,255,0.12);
 }
 
+/* =========================================
+   RESET & BASE
+   ========================================= */
 
 * {
   box-sizing: border-box;
@@ -55,6 +58,9 @@ body {
   color: var(--pg-text-main);
 }
 
+/* =========================================
+   HEADER
+   ========================================= */
 
 .pg-header {
   position: sticky;
@@ -71,7 +77,10 @@ body {
   height: 42px;
 }
 
-/* Nav bas */
+/* =========================================
+   NAVIGATION BASSE
+   ========================================= */
+
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -82,6 +91,7 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 6px 0;
+  z-index: 1000;
 }
 
 .nav-btn {
@@ -101,11 +111,15 @@ body {
 
 .nav-btn.active {
   color: var(--pg-green-main);
+  font-weight: 600;
 }
 
+/* =========================================
+   HOME (HUB)
+   ========================================= */
 
 .pg-home {
-  padding: 28px 18px 100px;
+  padding: 28px 18px 140px; /* espace nav + coach input */
 }
 
 .pg-home-header {
@@ -137,6 +151,11 @@ body {
   text-align: left;
   box-shadow: var(--pg-shadow-soft);
   cursor: pointer;
+  transition: transform .2s ease;
+}
+
+.pg-tile:hover {
+  transform: translateY(-2px);
 }
 
 .pg-tile-title {
@@ -151,6 +170,9 @@ body {
   margin-top: 4px;
 }
 
+/* =========================================
+   COACH WHISPER (PASSIF)
+   ========================================= */
 
 .pg-whisper {
   position: fixed;
@@ -179,8 +201,64 @@ body {
 .pg-whisper-text {
   font-size: 0.9rem;
   color: var(--pg-green-main);
+  font-weight: 500;
 }
 
+/* =========================================
+   COACH INPUT (ACTIF — API + LOCAL)
+   ========================================= */
+
+.pg-coach-input {
+  position: fixed;
+  bottom: 72px; /* au-dessus de la nav */
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92%, 520px);
+
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  box-shadow: var(--pg-shadow-soft);
+
+  z-index: 1200;
+}
+
+.pg-coach-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  color: var(--pg-text-main);
+}
+
+.pg-coach-input input::placeholder {
+  color: var(--pg-text-muted);
+}
+
+.pg-coach-input button {
+  border: none;
+  background: var(--pg-green-main);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: var(--pg-radius-pill);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* En mode Just Swing : pas d’input */
+body.jsw-fullscreen .pg-coach-input {
+  display: none;
+}
+
+/* =========================================
+   JUST SWING (FULLSCREEN)
+   ========================================= */
 
 body.jsw-fullscreen {
   overflow: hidden;
@@ -204,9 +282,17 @@ body.jsw-fullscreen .bottom-nav {
   height: 100%;
 }
 
+#jsw-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .jsw-logo {
   height: 28px;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .jsw-bottom-action {
@@ -218,6 +304,9 @@ body.jsw-fullscreen .bottom-nav {
   justify-content: center;
 }
 
+/* =========================================
+   BOUTONS
+   ========================================= */
 
 .pg-btn-primary {
   background: var(--pg-green-main);
@@ -236,6 +325,10 @@ body.jsw-fullscreen .bottom-nav {
   border-radius: var(--pg-radius-pill);
   padding: 10px 20px;
 }
+
+/* =========================================
+   ONBOARDING
+   ========================================= */
 
 .pg-onboarding {
   position: fixed;
@@ -272,6 +365,9 @@ body.jsw-fullscreen .bottom-nav {
   font-weight: 600;
 }
 
+/* =========================================
+   PARFECT COUNTER
+   ========================================= */
 
 .pg-parfect-counter {
   position: fixed;
@@ -284,4 +380,3 @@ body.jsw-fullscreen .bottom-nav {
   font-size: 0.8rem;
   z-index: 1500;
 }
-
