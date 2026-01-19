@@ -296,6 +296,8 @@
        - Mais tu peux le masquer via CSS (Zen Whisper remplace l’UI)
        ========================================= -->
   <section id="coach-ia" class="pg-coach-legacy">
+    <button id="coach-close-btn" type="button" aria-label="Fermer le coach">✕</button>
+
     <div id="coach-log"></div>
     <div id="coach-input-zone">
       <input id="coach-input" type="text" placeholder="Pose ta question au coach…">
@@ -541,6 +543,9 @@
 
   <!-- Router (en dernier) -->
   <script src="js/router.js"></script>
+  <button id="coach-reopen-btn" class="hidden" type="button">
+  Coach
+  </button>
 
 </body>
 </html>
