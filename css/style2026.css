@@ -776,6 +776,8 @@ body.jsw-fullscreen .bottom-nav {
   cursor: pointer;
 }
 
+#end-round {background: var(--pg-green-main);}
+
 .btn.active {
   background: var(--pg-green-main);
   color: #fff;
