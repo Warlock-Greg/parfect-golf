@@ -156,7 +156,7 @@ function showDoubleReasonModal(onReasonChosen) {
         <button class="btn reason-btn" data-reason="negociation">Coup mal négocié</button>
         <button class="btn reason-btn" data-reason="autre">Autre</button>
       </div>
-      <button id="confirm-double-reason" class="btn" style="margin-top:16px;background:#00ff99;color:#111;">Valider</button>
+      <button id="confirm-double-reason" class="btn" style="margin-top:16px;color:#111;">Valider</button>
     </div>
   `;
 
@@ -265,7 +265,7 @@ async function initGolfSelect() {
     const golfs = await res.json();
 
     golfSelect.innerHTML = `
-      <h3 style="color:#00ff99;margin:8px 0;">Choisis ton golf</h3>
+      <h3 style="margin:8px 0;">Choisis ton golf</h3>
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${golfs
           .map(
@@ -391,7 +391,7 @@ function showMoodAndStrategyModal(onConfirm) {
         <button class="btn coach" data-coach="gauthier">Gauthier</button>
       </div>
 
-      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+      <button id="start-round" class="btn" style="margin-top:20px;color:#111;">🚀 Démarrer</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -475,7 +475,7 @@ function renderHole(number = currentHole) {
 
   holeCard.innerHTML = `
     <div class="scorecard" style="text-align:center;padding:12px;">
-      <h3 style="color:#00ff99;">⛳ Trou ${number}/${holes.length}</h3>
+      <h3>⛳ Trou ${number}/${holes.length}</h3>
       <p>Par ${par} — Total :
         <strong style="color:${totalVsPar > 0 ? "#ff6666" : totalVsPar < 0 ? "#00ff99" : "#fff"}">
           ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}
@@ -511,7 +511,7 @@ function renderHole(number = currentHole) {
       <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
         <button id="prev-hole" class="btn" ${number === 1 ? "disabled" : ""}>⬅️ Préc.</button>
         <div id="hole-info" style="font-size:0.9rem;color:#aaa;">Trou ${number}/${holes.length}</div>
-        <button id="next-hole" class="btn" style="background:#00ff99;color:#111;">Suivant ➡️</button>
+        <button id="next-hole" class="btn" style="color:#111;">Suivant ➡️</button>
       </div>
     </div>`;
 
