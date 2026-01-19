@@ -670,8 +670,14 @@ body.jsw-fullscreen .bottom-nav {
   color: var(--pg-text-muted);
 }
 
+#hole-card {
+  background: transparent;
+  padding: 0;
+}
+
 .scorecard {
-  background: var(--pg-bg-soft);
+  background: var(--pg-bg-soft)!important;
+   color: var(--pg-text-main);
   border-radius: var(--pg-radius);
   padding: 18px;
   box-shadow: var(--pg-shadow-soft);
