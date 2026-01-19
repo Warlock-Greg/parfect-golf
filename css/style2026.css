@@ -235,13 +235,13 @@ body {
 
 #coach-ia.pg-coach-legacy {
   position: fixed;
-  bottom: 0;
+  bottom: 7%;
   left: 0;
   right: 0;
 
   height: 42vh;                 /* hauteur raisonnable */
-  max-height: 420px;
-  min-height: 220px;
+  max-height: 15%x;
+  min-height: 7%px;
 
   display: flex;
   flex-direction: column;
