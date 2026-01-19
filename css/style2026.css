@@ -483,6 +483,134 @@ body.jsw-fullscreen .bottom-nav {
   font-weight: 600;
 }
 
+/* ================================
+   TRAINING — ZEN 2026
+   ================================ */
+
+.pg-training {
+  padding: 20px 18px 100px;
+}
+
+.pg-training-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.pg-training-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--pg-green-main);
+}
+
+.pg-training-header p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--pg-text-muted);
+}
+
+.pg-training-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pg-chip {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--pg-text-main);
+}
+
+.pg-chip:hover {
+  border-color: var(--pg-green-main);
+}
+
+.pg-chip.active {
+  background: var(--pg-green-main);
+  color: #fff;
+}
+
+.pg-training-list {
+  display: grid;
+  gap: 14px;
+}
+
+.pg-exercise-card {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 14px;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+.pg-exercise-card h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--pg-green-main);
+}
+
+.pg-exercise-card p {
+  margin: 6px 0 10px;
+  font-size: 0.85rem;
+  color: var(--pg-text-muted);
+}
+
+.pg-training-session {
+  background: var(--pg-bg-soft);
+  border-radius: var(--pg-radius);
+  padding: 18px;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+.pg-training-session h3 {
+  margin-top: 0;
+  color: var(--pg-green-main);
+}
+
+.pg-quality {
+  display: flex;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.pg-quality button {
+  flex: 1;
+  background: var(--pg-bg-muted);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.pg-quality button.active {
+  background: var(--pg-green-main);
+  color: #fff;
+}
+
+.pg-training-session label {
+  font-size: 0.85rem;
+  color: var(--pg-text-muted);
+}
+
+.pg-training-session input[type="range"] {
+  width: 100%;
+  margin: 10px 0 16px;
+}
+
+.pg-actions {
+  display: flex;
+  gap: 12px;
+}
+
+
 /* =========================================
    PARFECT COUNTER
    ========================================= */
