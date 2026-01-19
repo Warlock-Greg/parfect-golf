@@ -1,331 +1,198 @@
-// === TRAINING.JS – Parfect.golfr MVP+ (v2) ===
-console.log("🏋️ Parfect.golfr Training.js chargé");
+// === TRAINING.JS — Parfect.golfr Zen 2026 ===
+console.log("🏋️ Training (Zen 2026) chargé");
 
-// Helper global (utilise celui de play.js si déjà défini)
 if (typeof window.$$ !== "function") {
   window.$$ = (id) => document.getElementById(id);
 }
 
 let EXERCISES_CACHE = null;
 
-// --- Chargement des exercices (avec cache) ---
+// -----------------------------
+// Data
+// -----------------------------
 async function loadExercises() {
   if (EXERCISES_CACHE) return EXERCISES_CACHE;
   try {
     const res = await fetch("./data/exercises.json");
-    const data = await res.json();
-    EXERCISES_CACHE = data;
-    return data;
-  } catch (err) {
-    console.error("❌ Erreur chargement exercises.json", err);
+    EXERCISES_CACHE = await res.json();
+    return EXERCISES_CACHE;
+  } catch (e) {
+    console.error("Erreur chargement exercises", e);
     return [];
   }
 }
 
-// --- Initialisation du mode Entraînement ---
+// -----------------------------
+// Init Training
+// -----------------------------
 async function initTraining() {
-  console.log("🏋️ Mode Training lancé");
+  const root = $$("training-root");
+  if (!root) return;
 
-  const container = $$("coach-log");
-  if (!container) {
-    console.warn("⚠️ coach-log introuvable");
-    return;
-  }
-
-  container.innerHTML = `
-    <p style="color:#00ff99;">🧠 Préparation de ta zone d'entraînement...</p>
+  root.innerHTML = `
+    <div class="pg-training-header">
+      <h2>Entraînement</h2>
+      <p>Une intention. Une répétition consciente.</p>
+    </div>
+    <div class="pg-training-body" id="training-body"></div>
   `;
 
-  // Si un coach est déjà choisi (play ou training), on l’utilise directement
-  const existingCoach = localStorage.getItem("coach");
-  if (existingCoach) {
-    showCoachIA?.(`🏋️ ${existingCoach} t’accompagne pour cette session d’entraînement.`);
-    showTrainingExerciseSelect();
+  const coach = localStorage.getItem("coach");
+  if (coach) {
+    coachReact?.(`${coach} t’accompagne pour cette séance.`);
+    showTrainingTypes();
   } else {
     showTrainingCoachSelectModal();
   }
 }
 
-// --- Modale de sélection du coach (version Training) ---
+// -----------------------------
+// Coach selection (modal)
+// -----------------------------
 function showTrainingCoachSelectModal() {
-  // Empêche d’ouvrir deux fois la même modale
-  if (document.querySelector(".modal-backdrop.training-coach-modal")) return;
+  if (document.querySelector(".training-coach-modal")) return;
 
   const modal = document.createElement("div");
   modal.className = "modal-backdrop training-coach-modal";
   modal.innerHTML = `
-    <div class="modal-card" style="max-width:420px;text-align:center;padding:20px;">
-      <h2 style="color:#00ff99;">🎯 Choisis ton coach pour l'entraînement</h2>
-      <p style="color:#ccc;margin-bottom:16px;">Chaque coach a sa vibe pour t’aider à forger ton mental.</p>
-
-      <div class="coach-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <button class="coach-choice btn" data-coach="Dorothee">💚 Dorothée<br><small>Bienveillance & Flow</small></button>
-        <button class="coach-choice btn" data-coach="Gauthier">🔵 Gauthier<br><small>Technique mentale</small></button>
-        <button class="coach-choice btn" data-coach="Greg">💥 Greg<br><small>Énergie & Data</small></button>
-        <button class="coach-choice btn" data-coach="Chill">🌿 Chill<br><small>Zen & Flow</small></button>
+    <div class="modal-card">
+      <h3>Choisis ton coach</h3>
+      <div class="coach-grid">
+        ${["Dorothee", "Gauthier", "Greg", "Chill"]
+          .map(c => `<button class="coach-choice" data-coach="${c}">${c}</button>`)
+          .join("")}
       </div>
-
-      <p id="coach-desc" style="margin-top:14px;font-style:italic;color:#aaa;">Clique sur un coach pour voir sa vibe.</p>
-      <button id="validate-coach" class="btn" style="margin-top:18px;background:#00ff99;color:#111;">Valider</button>
+      <button class="pg-btn-primary" id="validate-coach">Valider</button>
     </div>
   `;
   document.body.appendChild(modal);
 
-  let selectedCoach = null;
-  const desc = modal.querySelector("#coach-desc");
+  let selected = null;
 
-  const coachProfiles = {
-    Dorothee: "💚 Douce, bienveillante, elle t’accompagne sans pression. Focus sur le calme et la respiration.",
-    Gauthier: "🔵 Posé et précis. Il t’aide à structurer ta pratique et à comprendre ton plan de progression.",
-    Greg: "💥 Dynamique et méthodique. Il te pousse à performer avec des mini-défis et des données mentales.",
-    Chill: "🌿 Relax et intuitif. Il t’aide à relâcher la tension pour retrouver ton flow."
-  };
-
-  modal.querySelectorAll(".coach-choice").forEach((btn) => {
+  modal.querySelectorAll(".coach-choice").forEach(btn => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".coach-choice").forEach((b) => b.classList.remove("active"));
+      modal.querySelectorAll(".coach-choice").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
-      selectedCoach = btn.dataset.coach;
-      desc.textContent = coachProfiles[selectedCoach] || "Coach sélectionné.";
-      desc.style.color = "#aaa";
+      selected = btn.dataset.coach;
     });
   });
 
-  modal.querySelector("#validate-coach").addEventListener("click", () => {
-    if (!selectedCoach) {
-      desc.textContent = "👉 Choisis ton coach avant de valider.";
-      desc.style.color = "#f66";
-      return;
-    }
-
-    localStorage.setItem("coach", selectedCoach);
+  modal.querySelector("#validate-coach").onclick = () => {
+    if (!selected) return;
+    localStorage.setItem("coach", selected);
     modal.remove();
-
-    showCoachIA?.(`🏋️ ${selectedCoach} t’accompagne pour cette session d’entraînement.`);
-    showTrainingExerciseSelect();
-  });
+    coachReact?.(`${selected} est avec toi.`);
+    showTrainingTypes();
+  };
 }
 
-// --- Étape 2 : affichage des exercices depuis le JSON ---
-async function showTrainingExerciseSelect() {
-  const log = $$("coach-log");
-  if (!log) return;
-
-  log.innerHTML = `<p style="color:#00ff99;">📂 Chargement des exercices...</p>`;
-
+// -----------------------------
+// Step 1 : Types
+// -----------------------------
+async function showTrainingTypes() {
+  const body = $$("training-body");
   const exercises = await loadExercises();
-  if (!exercises.length) {
-    log.innerHTML = `<p style="color:#f55;">❌ Impossible de charger les exercices.</p>`;
-    return;
-  }
+  const types = [...new Set(exercises.map(e => e.type))];
 
-  const types = [...new Set(exercises.map((e) => e.type))];
-
-  log.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <h3 style="color:#00ff99;margin:0;">Choisis un domaine :</h3>
-      <button id="change-coach-training" class="btn" style="font-size:0.75rem;padding:4px 8px;">Changer de coach</button>
+  body.innerHTML = `
+    <div class="pg-training-types">
+      ${types.map(t => `<button class="pg-chip" data-type="${t}">${t}</button>`).join("")}
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:12px;">
-      ${types
-        .map(
-          (t) =>
-            `<button class="btn training-type" data-type="${t}">
-              ${t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>`
-        )
-        .join("")}
-    </div>
-    <div id="training-list" style="margin-top:10px;text-align:left;"></div>
+    <div id="training-list"></div>
   `;
 
-  // Changer de coach
-  $$("change-coach-training")?.addEventListener("click", showTrainingCoachSelectModal);
-
-  // Choix du type
-  log.querySelectorAll(".training-type").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      log.querySelectorAll(".training-type").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      const selectedType = btn.dataset.type;
-      const filtered = exercises.filter((e) => e.type === selectedType);
-      const list = log.querySelector("#training-list");
-
-      list.innerHTML = `
-        <h4 style="color:#00ff99;margin:6px 0 8px;">Exercices ${selectedType} :</h4>
-        ${filtered
-          .map(
-            (e) => `
-          <div class="exercise-card" style="background:#111;border:1px solid #333;border-radius:8px;padding:10px;margin-top:6px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <strong>${e.name}</strong><br>
-                <small style="color:#aaa;">🎯 ${e.goal}</small><br>
-                <small style="color:#777;">Objectif : ${e.objectif}</small>
-              </div>
-              <button class="btn start-exo" data-id="${e.id}" style="margin-left:8px;">Démarrer</button>
-            </div>
-          </div>
-        `
-          )
-          .join("")}
-      `;
-
-      list.querySelectorAll(".start-exo").forEach((b) => {
-        b.addEventListener("click", () => startTrainingSession(b.dataset.id));
-      });
-    });
+  body.querySelectorAll(".pg-chip").forEach(btn => {
+    btn.onclick = () => showTrainingList(btn.dataset.type);
   });
 }
 
-// --- Étape 3 : Lancement de la session ---
-async function startTrainingSession(exoId) {
-  const log = $$("coach-log");
-  if (!log) return;
-
+// -----------------------------
+// Step 2 : Exercises
+// -----------------------------
+async function showTrainingList(type) {
+  const list = $$("training-list");
   const exercises = await loadExercises();
-  const exo = exercises.find((e) => e.id === exoId);
-  if (!exo) {
-    log.innerHTML = `<p style="color:#f55;">❌ Exercice introuvable.</p>`;
-    return; 
-  }
+  const filtered = exercises.filter(e => e.type === type);
 
-  const hasVideo = exo.media && exo.media.trim() !== "";
-
-log.innerHTML = `
-  <h3 style="color:#00ff99;">🏋️ ${exo.name}</h3>
-
-  <div class="training-layout ${hasVideo ? "has-video" : "no-video"}">
-
-    <div class="training-video">
-      ${
-        hasVideo
-          ? `<video src="${exo.media}" controls playsinline></video>`
-          : ``
-      }
+  list.innerHTML = `
+    <div class="pg-training-list">
+      ${filtered.map(e => `
+        <div class="pg-exercise-card">
+          <h4>${e.name}</h4>
+          <p>${e.goal}</p>
+          <button class="pg-btn-secondary" data-id="${e.id}">Démarrer</button>
+        </div>
+      `).join("")}
     </div>
+  `;
 
-    <div class="training-content">
-      <p style="margin-top:8px;">🎯 Objectif : ${exo.goal}</p>
-      <p style="margin-top:4px;font-size:0.9rem;color:#aaa;">
-        Cible : <strong>${exo.objectif}</strong> répétitions / essais.
-      </p>
+  list.querySelectorAll("button").forEach(btn => {
+    btn.onclick = () => startTrainingSession(btn.dataset.id);
+  });
+}
 
-      <div style="margin-top:14px;text-align:left;">
-        <p style="margin-bottom:6px;">📝 Comment tu évalues ta séance ?</p>
+// -----------------------------
+// Step 3 : Session
+// -----------------------------
+async function startTrainingSession(id) {
+  const body = $$("training-body");
+  const exercises = await loadExercises();
+  const exo = exercises.find(e => e.id === id);
+  if (!exo) return;
 
-        <div id="training-quality" style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn quality-btn" data-quality="success">✅ Réussi</button>
-          <button class="btn quality-btn" data-quality="medium">😌 Moyen</button>
-          <button class="btn quality-btn" data-quality="hard">😵 Difficile</button>
-        </div>
+  body.innerHTML = `
+    <div class="pg-training-session">
+      <h3>${exo.name}</h3>
+      <p>${exo.goal}</p>
 
-        <div style="margin-top:14px;">
-          <label for="mental-feeling" style="font-size:0.9rem;">🧠 Ressenti mental :</label><br>
-          <input id="mental-feeling" type="range" min="1" max="5" value="3" style="width:100%;margin-top:6px;">
-          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#aaa;">
-            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-          </div>
-          <p id="mental-label" style="margin-top:4px;font-size:0.9rem;color:#ccc;">Niveau : 3/5</p>
-        </div>
+      <div class="pg-quality">
+        <button data-q="success">Réussi</button>
+        <button data-q="medium">Moyen</button>
+        <button data-q="hard">Difficile</button>
+      </div>
 
-        <div style="margin-top:16px;display:flex;justify-content:space-between;gap:10px;">
-          <button id="back-to-exercises" class="btn" style="flex:1;">↩️ Retour</button>
-          <button id="validate-training" class="btn" style="flex:1;background:#00ff99;color:#111;">
-            ✅ Valider la séance
-          </button>
-        </div>
+      <label>Ressenti mental</label>
+      <input id="mental" type="range" min="1" max="5" value="3">
+
+      <div class="pg-actions">
+        <button id="back">Retour</button>
+        <button id="save" class="pg-btn-primary">Valider</button>
       </div>
     </div>
-  </div>
-`;
-
-
-  let selectedQuality = null;
-
-  // Sélection qualité
-  log.querySelectorAll(".quality-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      log.querySelectorAll(".quality-btn").forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedQuality = btn.dataset.quality;
-    });
-  });
-
-  // Slider ressenti
-  const feelingInput = $$("mental-feeling");
-  const feelingLabel = $$("mental-label");
-  feelingInput?.addEventListener("input", () => {
-    feelingLabel.textContent = `Niveau : ${feelingInput.value}/5`;
-  });
-
-  // Retour aux exercices
-  $$("back-to-exercises")?.addEventListener("click", showTrainingExerciseSelect);
-
-  // Validation séance
-  $$("validate-training")?.addEventListener("click", () => {
-    if (!selectedQuality) {
-      // petit feedback visuel
-      const q = $$("training-quality");
-      q.style.animation = "shake 0.2s";
-      setTimeout(() => (q.style.animation = ""), 200);
-      return;
-    }
-    const mentalScore = parseInt(feelingInput?.value || "3", 10);
-    recordTrainingAndRecap(exo, selectedQuality, mentalScore);
-  });
-}
-
-// --- Étape 4 : Enregistrement + Récapitulatif ---
-function recordTrainingAndRecap(exo, quality, mentalScore) {
-  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-  const coach = localStorage.getItem("coach") || "Inconnu";
-
-  const entry = {
-    id: exo.id,
-    type: exo.type,
-    name: exo.name,
-    objectif: exo.objectif,
-    quality,           // "success" | "medium" | "hard"
-    mentalScore,       // 1..5
-    coach,
-    date: new Date().toISOString()
-  };
-
-  history.push(entry);
-  localStorage.setItem("trainingHistory", JSON.stringify(history));
-
-  const log = $$("coach-log");
-  if (!log) return;
-
-  const qualityText =
-    quality === "success"
-      ? "✅ Tu as validé l’objectif ou tu en es très proche. Séance solide."
-      : quality === "medium"
-      ? "😌 Séance correcte, tu as travaillé mais tu peux encore stabiliser."
-      : "😵 Séance difficile, mais ultra utile pour progresser mentalement.";
-
-  log.innerHTML = `
-    <div style="text-align:center;margin-top:20px;">
-      <h3 style="color:#00ff99;">✅ Entraînement enregistré</h3>
-      <p style="margin:4px 0;">Coach : <strong>${coach}</strong></p>
-      <p style="margin:4px 0;">Exercice : <strong>${exo.name}</strong></p>
-      <p style="margin:4px 0;">Qualité ressentie : <strong>${
-        quality === "success" ? "Réussi" : quality === "medium" ? "Moyen" : "Difficile"
-      }</strong></p>
-      <p style="margin:4px 0;">Ressenti mental : <strong>${mentalScore}/5</strong></p>
-      <p style="margin-top:8px;color:#ccc;font-size:0.9rem;">${qualityText}</p>
-      <button id="back-training" class="btn" style="margin-top:12px;">↩️ Revenir aux exercices</button>
-    </div>
   `;
 
-  showCoachIA?.(`🧠 ${coach} : belle séance "${exo.name}". Ce ressenti ${quality === "success" ? "positif" : "authentique"} est précieux.`);
+  let quality = null;
+  body.querySelectorAll(".pg-quality button").forEach(b => {
+    b.onclick = () => {
+      body.querySelectorAll(".pg-quality button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      quality = b.dataset.q;
+    };
+  });
 
-  $$("back-training")?.addEventListener("click", showTrainingExerciseSelect);
+  $$("back").onclick = showTrainingTypes;
+  $$("save").onclick = () => {
+    if (!quality) return;
+    recordTraining(exo, quality, +$$("mental").value);
+  };
 }
 
-// --- Export global ---
+// -----------------------------
+// Step 4 : Save
+// -----------------------------
+function recordTraining(exo, quality, mentalScore) {
+  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+  history.push({
+    ...exo,
+    quality,
+    mentalScore,
+    date: new Date().toISOString()
+  });
+  localStorage.setItem("trainingHistory", JSON.stringify(history));
+
+  coachReact?.(`Séance "${exo.name}" enregistrée. Ressenti ${mentalScore}/5.`);
+  showTrainingTypes();
+}
+
+// Export
 window.initTraining = initTraining;
-
-
