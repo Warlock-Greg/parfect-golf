@@ -300,14 +300,7 @@
       <input id="coach-input" type="text" placeholder="Pose ta question au coach…">
       <button id="coach-send" type="button">Envoyer</button>
     </div>
-    <div class="pg-coach-input" id="coach-input-bar">
-  <input
-    id="coach-input"
-    type="text"
-    placeholder="Pose une question au coach…"
-  />
-  <button id="coach-send" type="button">OK</button>
-</div>
+   
 
   </section>
 
@@ -323,74 +316,81 @@
        - stocke un historique
        ========================================= -->
   <script>
-    (function () {
-      const whisper = document.getElementById("coach-whisper");
-      const whisperText = document.getElementById("whisper-text");
-      const historyWrap = document.getElementById("coach-whisper-history");
-      const historyList = document.getElementById("whisper-history-list");
-      const closeBtn = document.getElementById("whisper-history-close");
+   (function () {
+  const whisper = document.getElementById("coach-whisper");
+  const whisperText = document.getElementById("whisper-text");
 
-      let hideTimer = null;
-      const history = [];
+  const historyWrap = document.getElementById("coach-whisper-history");
+  const historyList = document.getElementById("whisper-history-list");
+  const closeBtn = document.getElementById("whisper-history-close");
 
-      function showWhisper(message) {
-        if (!whisper || !whisperText) return;
+  let hideTimer = null;
+  const history = [];
 
-        // message court (Zen)
-        const clean = String(message || "").trim();
-        if (!clean) return;
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    }[c]));
+  }
 
-        whisperText.textContent = clean;
+  function renderHistory() {
+    if (!historyList) return;
+    historyList.innerHTML = history
+      .map((h) => `<div class="pg-whisper-item">${escapeHtml(h.m)}</div>`)
+      .join("");
+  }
 
-        whisper.classList.remove("whisper-hidden");
-        whisper.classList.add("whisper-show");
+  function showWhisper(message) {
+    if (!whisper || !whisperText) return;
 
-        // historise
-        history.unshift({ t: Date.now(), m: clean });
-        if (history.length > 30) history.pop();
-        renderHistory();
+    const clean = String(message || "").trim();
+    if (!clean) return;
 
-        if (hideTimer) clearTimeout(hideTimer);
-        hideTimer = setTimeout(() => {
-          whisper.classList.add("whisper-hidden");
-          whisper.classList.remove("whisper-show");
-        }, 4000);
-      }
+    whisperText.textContent = clean;
 
-      function renderHistory() {
-        if (!historyList) return;
-        historyList.innerHTML = history
-          .map((h) => `<div class="pg-whisper-item">${escapeHtml(h.m)}</div>`)
-          .join("");
-      }
+    whisper.classList.remove("whisper-hidden");
+    whisper.classList.add("whisper-show");
 
-      function escapeHtml(str) {
-        return str.replace(/[&<>"']/g, (c) => ({
-          "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-        }[c]));
-      }
+    history.unshift({ t: Date.now(), m: clean });
+    if (history.length > 30) history.pop();
+    renderHistory();
 
-      // click sur la bulle => ouvre l'historique
-      whisper?.addEventListener("click", () => {
-        historyWrap?.classList.remove("hidden");
-      });
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      whisper.classList.add("whisper-hidden");
+      whisper.classList.remove("whisper-show");
+    }, 4000);
+  }
 
-      closeBtn?.addEventListener("click", () => {
-        historyWrap?.classList.add("hidden");
-      });
+  // OUVRIR historique : click sur la bulle
+  whisper?.addEventListener("click", () => {
+    historyWrap?.classList.add("is-open");
+  });
 
-      // expose coachReact global pour router.js & autres
-      window.coachReact = window.coachReact || function (msg) {
-        // si appendCoachMessage existe, on le laisse vivre, mais on pousse aussi le whisper
-        try {
-          if (typeof appendCoachMessage === "function") appendCoachMessage(msg);
-        } catch (_) {}
-        showWhisper(msg);
-      };
+  // FERMER historique : click bouton
+  closeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    historyWrap?.classList.remove("is-open");
+  });
 
-      // expose util pour debug
-      window.__pgWhisper = { showWhisper };
-    })();
+  // FERMER historique : click en dehors de la carte
+  historyWrap?.addEventListener("click", (e) => {
+    if (e.target === historyWrap) {
+      historyWrap.classList.remove("is-open");
+    }
+  });
+
+  // expose coachReact global
+  window.coachReact = window.coachReact || function (msg) {
+    try {
+      if (typeof appendCoachMessage === "function") appendCoachMessage(msg);
+    } catch (_) {}
+    showWhisper(msg);
+  };
+
+  window.__pgWhisper = { showWhisper };
+})();
+
   </script>
 
   <!-- =========================================
