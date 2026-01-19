@@ -208,89 +208,7 @@ body {
    COACH INPUT (ACTIF — API + LOCAL)
    ========================================= */
 
-.pg-coach-input {
-  position: fixed;
-  bottom: 72px; /* au-dessus de la nav */
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(92%, 520px);
 
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-
-  background: var(--pg-bg-soft);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: var(--pg-radius-pill);
-  box-shadow: var(--pg-shadow-soft);
-
-  z-index: 1200;
-}
-
-.pg-coach-input input {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 0.9rem;
-  padding: 6px 10px;
-  color: var(--pg-text-main);
-}
-
-.pg-coach-input input::placeholder {
-  color: var(--pg-text-muted);
-}
-
-.pg-coach-input button {
-  border: none;
-  background: var(--pg-green-main);
-  color: #fff;
-  padding: 6px 16px;
-  border-radius: var(--pg-radius-pill);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pg-coach-legacy {
-  position: fixed;
-  bottom: 72px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(94%, 520px);
-
-  background: var(--pg-bg-soft);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: var(--pg-radius);
-  box-shadow: var(--pg-shadow-soft);
-
-  z-index: 1200;
-}
-
-/* Log scrollable mais compact */
-#coach-log {
-  max-height: 160px;
-  overflow-y: auto;
-  padding: 10px;
-  font-size: 0.85rem;
-  color: var(--pg-text-muted);
-}
-
-/* Log conversation */
-#coach-log {
-  max-height: 140px;
-  overflow-y: auto;
-  padding: 10px;
-  font-size: 0.85rem;
-  color: var(--pg-text-muted);
-}
-
-/* Input zone */
-#coach-input-zone {
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  border-top: 1px solid var(--pg-border-soft);
-}
 
 #coach-input {
   flex: 1;
@@ -310,6 +228,109 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* =====================================
+   COACH IA — ZEN CONVERSATIONNEL 2026
+   ===================================== */
+
+#coach-ia.pg-coach-legacy {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 42vh;                 /* hauteur raisonnable */
+  max-height: 420px;
+  min-height: 220px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--pg-bg-soft);
+  border-top: 1px solid var(--pg-border-soft);
+  box-shadow: 0 -8px 24px rgba(0,0,0,0.06);
+
+  z-index: 1300;
+}
+
+/* =====================
+   LOG (messages)
+   ===================== */
+
+#coach-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--pg-text-main);
+}
+
+/* Messages (si tu as .msg) */
+#coach-log .msg {
+  margin-bottom: 8px;
+}
+
+#coach-log .msg.coach {
+  color: var(--pg-green-main);
+}
+
+/* =====================
+   INPUT ZONE — TOUJOURS EN BAS
+   ===================== */
+
+#coach-input-zone {
+  position: sticky;
+  bottom: 0;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+  background: var(--pg-bg-soft);
+  border-top: 1px solid var(--pg-border-soft);
+}
+
+/* Champ texte pleine largeur */
+#coach-input {
+  flex: 1;
+  height: 42px;
+
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 0 16px;
+
+  font-size: 0.95rem;
+  color: var(--pg-text-main);
+  background: var(--pg-bg-main);
+
+  outline: none;
+}
+
+/* Bouton envoyer */
+#coach-send {
+  height: 42px;
+  padding: 0 18px;
+
+  background: var(--pg-green-main);
+  color: #fff;
+  border: none;
+  border-radius: var(--pg-radius-pill);
+
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* =====================
+   SAFE AREA (iOS)
+   ===================== */
+
+#coach-ia {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 
 /* ================================
    WHISPER HISTORY (OVERLAY)
@@ -369,6 +390,70 @@ body {
   color: var(--pg-text-main);
   font-size: 0.9rem;
 }
+
+/* =====================================
+   COACH — FERMETURE TEMPORAIRE
+   ===================================== */
+
+/* Bouton fermer (croix) */
+#coach-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+
+  width: 28px;
+  height: 28px;
+
+  border-radius: 50%;
+  border: none;
+  background: var(--pg-bg-muted);
+  color: var(--pg-text-muted);
+
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: 10;
+}
+
+#coach-close-btn:hover {
+  background: var(--pg-accent-sand);
+  color: var(--pg-text-main);
+}
+
+/* Coach fermé */
+body.coach-hidden #coach-ia {
+  transform: translateY(100%);
+  transition: transform 0.35s ease;
+}
+
+/* Animation normale */
+#coach-ia {
+  transition: transform 0.35s ease;
+}
+
+/* Bouton flottant pour rouvrir */
+#coach-reopen-btn {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+
+  padding: 10px 16px;
+  border-radius: var(--pg-radius-pill);
+  border: 1px solid var(--pg-border-soft);
+
+  background: var(--pg-bg-soft);
+  color: var(--pg-green-main);
+  font-weight: 600;
+
+  box-shadow: var(--pg-shadow-soft);
+  cursor: pointer;
+  z-index: 1400;
+}
+
+/* utilitaire */
+.hidden {
+  display: none !important;
+}
+
 
 /* IMPORTANT : on neutralise l’ancien .hidden si tu l’utilises ailleurs */
 .hidden { display: none; }
@@ -783,3 +868,5 @@ body.jsw-fullscreen .bottom-nav {
   color: #fff;
   border-color: var(--pg-green-main);
 }
+
+
