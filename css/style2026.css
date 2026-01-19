@@ -637,3 +637,141 @@ body.jsw-fullscreen .bottom-nav {
   font-size: 0.8rem;
   z-index: 1500;
 }
+
+/* ================================
+   PLAY — ZEN MODE 2026
+   ================================ */
+
+#game-area {
+  padding: 20px 16px 120px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+#golf-select h3 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  text-align: center;
+  color: var(--pg-green-main);
+}
+
+#golf-select button {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 14px;
+  text-align: left;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+#golf-select button small {
+  color: var(--pg-text-muted);
+}
+
+.scorecard {
+  background: var(--pg-bg-soft);
+  border-radius: var(--pg-radius);
+  padding: 18px;
+  box-shadow: var(--pg-shadow-soft);
+  border: 1px solid var(--pg-border-soft);
+}
+
+.scorecard h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--pg-green-main);
+}
+
+.scorecard p {
+  font-size: 0.9rem;
+  color: var(--pg-text-muted);
+}
+
+.score-btn {
+  background: var(--pg-bg-muted);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.score-btn.active {
+  background: var(--pg-green-main);
+  color: #fff;
+  border-color: var(--pg-green-main);
+}
+
+.scorecard label {
+  font-size: 0.85rem;
+  color: var(--pg-text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scorecard input[type="checkbox"] {
+  accent-color: var(--pg-green-main);
+}
+
+#dist2 {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+#prev-hole,
+#next-hole {
+  border-radius: var(--pg-radius-pill);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+}
+
+#prev-hole {
+  background: var(--pg-bg-muted);
+}
+
+#next-hole {
+  background: var(--pg-green-main);
+  color: #fff;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 40, 36, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 12000;
+}
+
+.modal-card {
+  background: var(--pg-bg-soft);
+  border-radius: var(--pg-radius);
+  padding: 20px;
+  max-width: 420px;
+  width: 92%;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+.btn {
+  background: var(--pg-bg-muted);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn.active {
+  background: var(--pg-green-main);
+  color: #fff;
+  border-color: var(--pg-green-main);
+}
