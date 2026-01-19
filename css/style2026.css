@@ -240,8 +240,8 @@ body {
   right: 0;
 
   height: 42vh;                 /* hauteur raisonnable */
-  max-height: 15%x;
-  min-height: 7%px;
+  max-height: 15%;
+  min-height: 7%;
 
   display: flex;
   flex-direction: column;
