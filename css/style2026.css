@@ -275,6 +275,15 @@ body {
   color: var(--pg-text-muted);
 }
 
+/* Log conversation */
+#coach-log {
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 10px;
+  font-size: 0.85rem;
+  color: var(--pg-text-muted);
+}
+
 /* Input zone */
 #coach-input-zone {
   display: flex;
@@ -286,9 +295,10 @@ body {
 #coach-input {
   flex: 1;
   border: none;
-  background: transparent;
   outline: none;
+  background: transparent;
   font-size: 0.9rem;
+  color: var(--pg-text-main);
 }
 
 #coach-send {
@@ -298,6 +308,7 @@ body {
   border-radius: var(--pg-radius-pill);
   padding: 6px 16px;
   font-weight: 600;
+  cursor: pointer;
 }
 
 /* ================================
