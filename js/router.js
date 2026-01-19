@@ -214,6 +214,32 @@ document.addEventListener("DOMContentLoaded", () => {
     say("Licence activee. Just Swing pret.");
   });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const closeBtn = document.getElementById("coach-close-btn");
+  const reopenBtn = document.getElementById("coach-reopen-btn");
+
+  if (!closeBtn || !reopenBtn) return;
+
+  // état initial
+  if (localStorage.getItem("coachHidden") === "true") {
+    document.body.classList.add("coach-hidden");
+    reopenBtn.classList.remove("hidden");
+  }
+
+  closeBtn.addEventListener("click", () => {
+    document.body.classList.add("coach-hidden");
+    localStorage.setItem("coachHidden", "true");
+    reopenBtn.classList.remove("hidden");
+  });
+
+  reopenBtn.addEventListener("click", () => {
+    document.body.classList.remove("coach-hidden");
+    localStorage.setItem("coachHidden", "false");
+    reopenBtn.classList.add("hidden");
+  });
+});
+
+  
   // --------------------------
   // Etat initial
   // - si onboarding present: ne force rien (onboarding couvre)
