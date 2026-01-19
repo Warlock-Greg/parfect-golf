@@ -26,25 +26,37 @@ async function loadExercises() {
 // Init Training
 // -----------------------------
 async function initTraining() {
-  const root = $$("training-root");
+  const root = document.getElementById("training-root");
   if (!root) return;
 
   root.innerHTML = `
     <div class="pg-training-header">
-      <h2>Entraînement</h2>
-      <p>Une intention. Une répétition consciente.</p>
+      <div>
+        <h2>Entraînement</h2>
+        <p>Une intention. Une répétition consciente.</p>
+      </div>
+      <button id="change-training-coach" class="pg-btn-secondary">
+        Coach : ${localStorage.getItem("coach") || "Choisir"}
+      </button>
     </div>
     <div class="pg-training-body" id="training-body"></div>
   `;
 
-  const coach = localStorage.getItem("coach");
-  if (coach) {
-    coachReact?.(`${coach} t’accompagne pour cette séance.`);
-    showTrainingTypes();
-  } else {
+  document
+    .getElementById("change-training-coach")
+    ?.addEventListener("click", showTrainingCoachSelectModal);
+
+  // 👉 Toujours proposer le coach si pas encore défini
+  if (!localStorage.getItem("coach")) {
     showTrainingCoachSelectModal();
+  } else {
+    coachReact?.(
+      `${localStorage.getItem("coach")} t’accompagne pour cette séance.`
+    );
+    showTrainingTypes();
   }
 }
+
 
 // -----------------------------
 // Coach selection (modal)
