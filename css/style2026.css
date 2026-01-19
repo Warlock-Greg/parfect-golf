@@ -300,6 +300,69 @@ body {
   font-weight: 600;
 }
 
+/* ================================
+   WHISPER HISTORY (OVERLAY)
+   ================================ */
+
+.pg-whisper-history {
+  position: fixed;
+  inset: 0;
+  z-index: 3000; /* au-dessus du coach input */
+  display: none; /* caché par défaut */
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(26, 36, 33, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.pg-whisper-history.is-open {
+  display: flex;
+}
+
+.pg-whisper-history-card {
+  width: min(94vw, 520px);
+  max-height: 70vh;
+  overflow: hidden;
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  box-shadow: var(--pg-shadow-soft);
+}
+
+.pg-whisper-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--pg-border-soft);
+}
+
+.pg-whisper-history-title {
+  font-weight: 600;
+  color: var(--pg-text-main);
+}
+
+.pg-whisper-history-list {
+  padding: 10px 12px;
+  overflow-y: auto;
+  max-height: calc(70vh - 54px);
+}
+
+.pg-whisper-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--pg-bg-muted);
+  border-radius: 12px;
+  color: var(--pg-text-main);
+  font-size: 0.9rem;
+}
+
+/* IMPORTANT : on neutralise l’ancien .hidden si tu l’utilises ailleurs */
+.hidden { display: none; }
+
+
 /* En Just Swing → caché */
 body.jsw-fullscreen #coach-ia {
   display: none;
