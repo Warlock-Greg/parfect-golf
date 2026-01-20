@@ -298,7 +298,7 @@
   <section id="coach-ia" class="pg-coach-legacy">
     <button id="coach-close-btn" type="button" aria-label="Fermer le coach">✕</button>
 
-    <div id="coach-log"></div>
+    <div id="coach-chat-log"></div>
     <div id="coach-input-zone">
       <input id="coach-input" type="text" placeholder="Pose ta question au coach…">
       <button id="coach-send" type="button">Envoyer</button>
@@ -312,89 +312,131 @@
     if (!window.$) window.$ = (id) => document.getElementById(id);
   </script>
 
-  <!-- =========================================
-       COACH REACT -> Zen Whisper
-       - remplace l’ancienne UX chat
-       - auto-hide 4s
-       - stocke un historique
-       ========================================= -->
-  <script>
-   (function () {
+ <!-- =========================================
+     ZEN WHISPER — Coach Passif
+     - Affiche uniquement les messages du coach
+     - Auto-hide
+     - Historique consultable
+     ========================================= -->
+<script>
+(function () {
   const whisper = document.getElementById("coach-whisper");
   const whisperText = document.getElementById("whisper-text");
 
-  const historyWrap = document.getElementById("coach-whisper-history");
+  const historyOverlay = document.getElementById("coach-whisper-history");
   const historyList = document.getElementById("whisper-history-list");
   const closeBtn = document.getElementById("whisper-history-close");
+
+  if (!whisper || !whisperText) {
+    console.warn("⚠️ Zen Whisper : éléments manquants");
+    return;
+  }
 
   let hideTimer = null;
   const history = [];
 
-  function escapeHtml(str) {
-    return str.replace(/[&<>"']/g, (c) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  /* =========================
+     Utils
+     ========================= */
+  function sanitize(str) {
+    return String(str || "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
     }[c]));
   }
 
   function renderHistory() {
     if (!historyList) return;
     historyList.innerHTML = history
-      .map((h) => `<div class="pg-whisper-item">${escapeHtml(h.m)}</div>`)
+      .map(h => `<div class="pg-whisper-item">${sanitize(h.text)}</div>`)
       .join("");
   }
 
-  function showWhisper(message) {
-    if (!whisper || !whisperText) return;
+  /* =========================
+     Core Whisper
+     ========================= */
+  function showWhisper(message, options = {}) {
+    const text = String(message || "").trim();
+    if (!text) return;
 
-    const clean = String(message || "").trim();
-    if (!clean) return;
-
-    whisperText.textContent = clean;
+    whisperText.textContent = text;
 
     whisper.classList.remove("whisper-hidden");
     whisper.classList.add("whisper-show");
 
-    history.unshift({ t: Date.now(), m: clean });
-    if (history.length > 30) history.pop();
+    // Historique
+    history.unshift({
+      text,
+      ts: Date.now()
+    });
+    if (history.length > 40) history.pop();
     renderHistory();
 
     if (hideTimer) clearTimeout(hideTimer);
-    hideTimer = setTimeout(() => {
-      whisper.classList.add("whisper-hidden");
-      whisper.classList.remove("whisper-show");
-    }, 4000);
+    if (options.persist !== true) {
+      hideTimer = setTimeout(hide, options.delay ?? 4000);
+    }
   }
 
-  // OUVRIR historique : click sur la bulle
-  whisper?.addEventListener("click", () => {
-    historyWrap?.classList.add("is-open");
+  function hide() {
+    whisper.classList.add("whisper-hidden");
+    whisper.classList.remove("whisper-show");
+  }
+
+  /* =========================
+     UI Events
+     ========================= */
+
+  // Ouvrir l’historique
+  whisper.addEventListener("click", () => {
+    historyOverlay?.classList.add("is-open");
   });
 
-  // FERMER historique : click bouton
+  // Fermer via bouton
   closeBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    historyWrap?.classList.remove("is-open");
+    e.stopPropagation();
+    historyOverlay?.classList.remove("is-open");
   });
 
-  // FERMER historique : click en dehors de la carte
-  historyWrap?.addEventListener("click", (e) => {
-    if (e.target === historyWrap) {
-      historyWrap.classList.remove("is-open");
+  // Fermer en cliquant hors carte
+  historyOverlay?.addEventListener("click", (e) => {
+    if (e.target === historyOverlay) {
+      historyOverlay.classList.remove("is-open");
     }
   });
 
-  // expose coachReact global
-  window.coachReact = window.coachReact || function (msg) {
+  /* =========================
+     API PUBLIQUE
+     ========================= */
+
+  /**
+   * 👉 Point d’entrée UNIQUE pour les messages coach
+   * - utilisé par play.js, training.js, justswing, coachia.js
+   */
+  window.coachReact = function (msg, opts = {}) {
     try {
-      if (typeof appendCoachMessage === "function") appendCoachMessage(msg);
-    } catch (_) {}
-    showWhisper(msg);
+      // ⚠️ Le chat actif est géré ailleurs
+      // Ici : Whisper uniquement
+      showWhisper(msg, opts);
+    } catch (err) {
+      console.warn("coachReact error", err);
+    }
   };
 
-  window.__pgWhisper = { showWhisper };
-})();
+  // Debug / accès interne si besoin
+  window.__pgWhisper = {
+    show: showWhisper,
+    hide,
+    history
+  };
 
-  </script>
+})();
+</script>
+
 
   <!-- =========================================
        ONBOARDING / NAV FLOW (une tâche, un esprit)
