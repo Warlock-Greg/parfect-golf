@@ -1159,43 +1159,43 @@ position: fixed;
   display: none !important;
 }
 
+
 /* === JUST SWING — TOP RIGHT CONTROLS === */
 
-/* =========================================
-   JUST SWING — ZEN PURE MODE
-   ========================================= */
-
 .jsw-top-right {
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(10px);
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
+  position: absolute;
+  top: env(safe-area-inset-top, 10px);
+  right: 12px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  z-index: 40; /* au-dessus vidéo + overlay */
 }
 
-/* Select ultra discret */
-.jsw-top-right select {
-  background: transparent;
-  border: none;
+/* Select club */
+.jsw-top-right .jsw-select {
+  background: rgba(0,0,0,0.55);
   color: #00ff99;
-  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,255,153,0.5);
   font-size: 0.9rem;
-  appearance: none;
-  padding-right: 12px;
+  backdrop-filter: blur(6px);
 }
 
-/* Bouton routine zen */
-.jsw-top-right button {
-  background: transparent;
-  border: none;
+/* Bouton routine */
+.jsw-top-right .pg-btn-secondary {
+  background: rgba(0,0,0,0.55);
   color: #fff;
-  opacity: 0.7;
+  border: 1px solid rgba(0,255,153,0.5);
+  padding: 6px 12px;
+  border-radius: 10px;
   font-size: 0.85rem;
 }
 
-.jsw-top-right button:hover {
-  opacity: 1;
-}
+
 
 
 
