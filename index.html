@@ -410,20 +410,31 @@
   /* =========================
      API PUBLIQUE
      ========================= */
-
   /**
-   * 👉 Point d’entrée UNIQUE pour les messages coach
-   * - utilisé par play.js, training.js, justswing, coachia.js
-   */
-  window.coachReact = function (msg, opts = {}) {
-    try {
-      // ⚠️ Le chat actif est géré ailleurs
-      // Ici : Whisper uniquement
-      showWhisper(msg, options);
-    } catch (err) {
-      console.warn("coachReact error", err);
+ * 👉 Point d’entrée UNIQUE pour les messages coach
+ * - utilisé par play.js, training.js, justswing, coachia.js
+ * - envoie le message vers :
+ *   1) Whisper (feedback passif)
+ *   2) Log coach (mémoire)
+ */
+window.coachReact = function (msg, opts = {}) {
+  if (!msg) return;
+
+  try {
+    // 1️⃣ Whisper zen (bulle)
+    if (window.__pgWhisper?.showWhisper) {
+      window.__pgWhisper.showWhisper(msg);
     }
-  };
+
+    // 2️⃣ Log coach (historique conversation)
+    if (typeof appendCoachMessage === "function") {
+      appendCoachMessage(msg);
+    }
+  } catch (err) {
+    console.warn("coachReact error", err);
+  }
+};
+
 
   // Debug / accès interne si besoin
   window.__pgWhisper = {
