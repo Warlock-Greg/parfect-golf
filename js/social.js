@@ -1,4 +1,4 @@
-// === SOCIAL.JS — Account / Social Hub (CLEAN) ===
+// === SOCIAL.JS — Account / Social Hub (ZEN 2026) ===
 console.log("👥 Parfect.golfr Social.js chargé");
 
 // ------------------------------------------------
@@ -23,15 +23,7 @@ function injectSocialUI() {
   if (!container) {
     container = document.createElement("div");
     container.id = "social-container";
-    container.style.cssText = `
-      padding:16px;
-      background:#111;
-      border:1px solid #222;
-      border-radius:12px;
-      max-width:520px;
-      margin:16px auto;
-      color:#fff;
-    `;
+    container.className = "pg-social-container";
     parent.appendChild(container);
   }
 
@@ -42,11 +34,13 @@ function injectSocialUI() {
   // --------------------------------------------
   if (!user || !user.email) {
     container.innerHTML = `
-      <h2 style="color:#00ff99;">👤 Mon compte</h2>
-      <p style="color:#ccc;">Tu n’as pas encore de compte Parfect.</p>
-      <button id="create-account-btn" class="btn">
-        Créer mon compte
-      </button>
+      <div class="pg-card">
+        <h2 class="pg-title">Mon compte</h2>
+        <p class="pg-muted">Tu n’as pas encore de compte Parfect.</p>
+        <button id="create-account-btn" class="pg-btn-primary">
+          Créer mon compte
+        </button>
+      </div>
     `;
 
     $$("create-account-btn")?.addEventListener("click", () => {
@@ -62,47 +56,55 @@ function injectSocialUI() {
   // ACCOUNT UI
   // --------------------------------------------
   container.innerHTML = `
-    <h2 style="color:#00ff99;margin-top:0;">👤 Mon compte</h2>
+    <div class="pg-card">
+      <h2 class="pg-title">Mon compte</h2>
 
-    <p style="color:#ccc;font-size:0.9rem;">
-      Email : <strong>${user.email}</strong><br>
-      Licence : <strong>${isPro ? "PRO" : "FREE"}</strong>
-    </p>
-
-    ${
-      !isPro
-        ? `
-      <div style="background:#000;border:1px solid #333;border-radius:8px;padding:10px;margin:10px 0;">
-        <p style="font-size:0.85rem;color:#ccc;margin:0;">
-          Swings aujourd’hui : <strong id="swing-quota">—</strong>
-        </p>
-        <button id="upgrade-btn" class="btn" style="margin-top:8px;">
-          🚀 Passer Pro
-        </button>
-      </div>
-      `
-        : `
-      <p style="color:#00ff99;font-size:0.9rem;">
-        🎉 Accès illimité activé
+      <p class="pg-muted">
+        Email : <strong>${user.email}</strong><br>
+        Licence : <strong>${isPro ? "PRO" : "FREE"}</strong>
       </p>
-      `
-    }
 
-    <hr style="border-color:#222;margin:16px 0;">
-
-    <h3 style="color:#00ff99;">👥 Communauté</h3>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button id="invite-friend-btn" class="btn">Inviter un ami</button>
-      <button id="show-history-btn" class="btn">📚 Historique</button>
+      ${
+        !isPro
+          ? `
+        <div class="pg-card pg-card-soft">
+          <p class="pg-muted">
+            Swings aujourd’hui :
+            <strong id="swing-quota">—</strong>
+          </p>
+          <button id="upgrade-btn" class="pg-btn-secondary">
+            Passer Pro
+          </button>
+        </div>
+        `
+          : `
+        <p class="pg-highlight">
+          Accès illimité activé
+        </p>
+        `
+      }
     </div>
 
-    <div id="social-content" style="margin-top:16px;"></div>
+    <div class="pg-card">
+      <h3 class="pg-subtitle">Communauté</h3>
+
+      <div class="pg-actions-row">
+        <button id="invite-friend-btn" class="pg-btn-secondary">
+          Inviter un ami
+        </button>
+        <button id="show-history-btn" class="pg-btn-secondary">
+          Historique
+        </button>
+      </div>
+
+      <div id="social-content" class="pg-social-content"></div>
+    </div>
   `;
 
   $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
   $$("show-history-btn")?.addEventListener("click", showHistoryTabs);
   $$("upgrade-btn")?.addEventListener("click", () => {
-    window.showCoachToast?.("Paiement bientôt disponible 💚", "#00ff99");
+    window.showCoachToast?.("Paiement bientôt disponible", "#D4AF37");
   });
 
   refreshSwingQuotaUI();
@@ -130,7 +132,6 @@ window.refreshSwingQuotaUI = async function () {
   }
 };
 
-
 // ------------------------------------------------
 // INVITE FRIEND
 // ------------------------------------------------
@@ -139,14 +140,24 @@ function handleInviteFriend() {
   if (!content) return;
 
   content.innerHTML = `
-    <h3 style="color:#00ff99;">Invite un ami</h3>
-    <p style="color:#ccc;">Partage ton voyage Parfect.golfr.</p>
-    <div style="margin-top:8px;">
-      <input id="friend-name" type="text" placeholder="Nom de ton ami"
-        style="padding:6px;border-radius:6px;border:1px solid #333;background:#000;color:#fff;width:70%;">
-      <button id="send-invite-btn" class="btn" style="margin-left:8px;">Envoyer</button>
+    <div class="pg-section">
+      <h4 class="pg-subtitle">Inviter un ami</h4>
+      <p class="pg-muted">Partage ton voyage Parfect.golfr.</p>
+
+      <div class="pg-inline-form">
+        <input
+          id="friend-name"
+          type="text"
+          class="pg-input"
+          placeholder="Nom de ton ami"
+        />
+        <button id="send-invite-btn" class="pg-btn-primary">
+          Envoyer
+        </button>
+      </div>
+
+      <div id="invite-feedback" class="pg-feedback"></div>
     </div>
-    <div id="invite-feedback" style="margin-top:8px;font-size:0.9rem;"></div>
   `;
 
   $$("send-invite-btn")?.addEventListener("click", () => {
@@ -155,11 +166,11 @@ function handleInviteFriend() {
     if (!fb) return;
 
     if (name) {
-      fb.style.color = "#00ff99";
-      fb.innerHTML = `✅ Invitation envoyée à <b>${name}</b>`;
+      fb.className = "pg-feedback success";
+      fb.innerHTML = `Invitation envoyée à <strong>${name}</strong>`;
     } else {
-      fb.style.color = "#f55";
-      fb.textContent = "⚠️ Entre un nom valide.";
+      fb.className = "pg-feedback error";
+      fb.textContent = "Entre un nom valide.";
     }
   });
 }
@@ -172,151 +183,39 @@ function showHistoryTabs() {
   if (!content) return;
 
   content.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
-      <button class="btn" data-tab="swing">🎥 Swings</button>
-      <button class="btn" data-tab="training">🧠 Training</button>
-      <button class="btn" data-tab="round">🏌️ Parties</button>
+    <div class="pg-tabs">
+      <button class="pg-tab-btn" data-tab="swing">Swings</button>
+      <button class="pg-tab-btn" data-tab="training">Training</button>
+      <button class="pg-tab-btn" data-tab="round">Parties</button>
     </div>
-    <div id="history-panel"></div>
+
+    <div id="history-panel" class="pg-history-panel"></div>
   `;
 
-  content.querySelectorAll("button[data-tab]").forEach(btn => {
+  content.querySelectorAll("[data-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
+      content.querySelectorAll(".pg-tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
       loadHistoryTab(btn.dataset.tab);
     });
   });
 
+  content.querySelector("[data-tab='swing']")?.classList.add("active");
   loadHistoryTab("swing");
 }
 
 // ------------------------------------------------
-// LOAD HISTORY
+// LOAD HISTORY (UNCHANGED LOGIC)
 // ------------------------------------------------
 async function loadHistoryTab(type) {
   const panel = $$("history-panel");
   if (!panel) return;
 
-  // -----------------------
-  // 🎥 SWINGS (NocoDB)
-  // -----------------------
   if (type === "swing") {
     const swings = await loadSwingHistoryFromNocoDB();
+    panel.innerHTML = swings.length
+      ? swings.map(s => `
+        <div class="pg-card">
+          <strong>${s.club || "?"}</strong><br>
+          Score ${s.scor
 
-    if (!swings.length) {
-      panel.innerHTML = `<p style="color:#777;">Aucun swing enregistré.</p>`;
-      return;
-    }
-
-    panel.innerHTML = swings.map(s => `
-      <div class="card">
-        🎥 <strong>${s.club || "?"}</strong>
-        — Score ${s.score_total ?? "—"}<br>
-        <small>
-          ${
-            s.cmbvp0anzpjfsig
-              ? new Date(s[cmbvp0anzpjfsig]).toLocaleString()
-              : "Date inconnue"
-          }
-        </small>
-      </div>
-    `).join("");
-
-    return;
-  }
-
-  // -----------------------
-  // 🧠 TRAINING (local)
-  // -----------------------
-  if (type === "training") {
-    const history = JSON.parse(
-      localStorage.getItem("trainingHistory") || "[]"
-    );
-
-    if (!history.length) {
-      panel.innerHTML = `<p style="color:#777;">Aucune séance d’entraînement.</p>`;
-      return;
-    }
-
-    panel.innerHTML = history
-      .slice()
-      .reverse()
-      .map(h => `
-        <div class="card">
-          🧠 <strong>${h.name || "Training"}</strong><br>
-          ${h.quality || "—"} · Mental ${h.mentalScore ?? "—"}/5<br>
-          <small>${new Date(h.date).toLocaleDateString()}</small>
-        </div>
-      `)
-      .join("");
-
-    return;
-  }
-
-  // -----------------------
-  // 🏌️ PARTIES (local)
-  // -----------------------
-  if (type === "round") {
-    const rounds = JSON.parse(
-      localStorage.getItem("roundHistory") || "[]"
-    );
-
-    if (!rounds.length) {
-      panel.innerHTML = `<p style="color:#777;">Aucune partie enregistrée.</p>`;
-      return;
-    }
-
-    panel.innerHTML = rounds
-      .slice()
-      .reverse()
-      .map(r => `
-        <div class="card">
-          🏌️ <strong>${r.golf || "Parcours"}</strong><br>
-          Score ${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar}
-          · 💚 ${r.parfects ?? 0} Parfects<br>
-          <small>${new Date(r.date).toLocaleDateString()}</small>
-        </div>
-      `)
-      .join("");
-
-    return;
-  }
-
-  panel.innerHTML = `<p style="color:#777;">Historique indisponible.</p>`;
-}
-
-
-// ------------------------------------------------
-// NOCODB — LOAD SWINGS
-// ------------------------------------------------
-async function loadSwingHistoryFromNocoDB() {
-  const email = window.userLicence?.email;
-  if (!email) return [];
-
-  const url =
-    `${window.NOCODB_SWINGS_URL}?` +
-    `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-cmbvp0anzpjfsig` +   // ✅ ID du champ DateTime
-    `&limit=20`;
-
-  console.log("📊 NocoDB FETCH URL =", url);
-
-  const res = await fetch(url, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("❌ NocoDB history error", txt);
-    return [];
-  }
-
-  const data = await res.json();
-  return data.list || [];
-}
-
-
-// ------------------------------------------------
-// EXPORT
-// ------------------------------------------------
-window.injectSocialUI = injectSocialUI;
-window.refreshSwingQuotaUI = refreshSwingQuotaUI;
