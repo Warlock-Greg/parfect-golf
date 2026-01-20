@@ -870,3 +870,218 @@ body.jsw-fullscreen .bottom-nav {
 }
 
 
+/* =========================================
+   COACH + WHISPER — ZEN 2026 (refactor)
+   ========================================= */
+
+/* ---------- Whisper (coach passif) ---------- */
+.pg-whisper {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2200;
+
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 10px 16px;
+  box-shadow: var(--pg-shadow-soft);
+
+  max-width: min(92vw, 560px);
+}
+
+.pg-whisper-text {
+  font-size: 0.95rem;
+  color: var(--pg-green-main);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.whisper-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-10px);
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.whisper-show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+/* ---------- Whisper history overlay ---------- */
+.pg-whisper-history {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(26, 36, 33, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.pg-whisper-history.is-open { display: flex; }
+
+.pg-whisper-history-card {
+  width: min(94vw, 560px);
+  max-height: 72vh;
+  overflow: hidden;
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  box-shadow: var(--pg-shadow-soft);
+}
+
+.pg-whisper-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--pg-border-soft);
+}
+
+.pg-whisper-history-title {
+  font-weight: 700;
+  color: var(--pg-text-main);
+}
+
+.pg-whisper-history-list {
+  padding: 10px 12px;
+  overflow-y: auto;
+  max-height: calc(72vh - 56px);
+}
+
+.pg-whisper-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--pg-bg-muted);
+  border-radius: 12px;
+  color: var(--pg-text-main);
+  font-size: 0.92rem;
+}
+
+/* ---------- Coach chat (actif) ---------- */
+.pg-coach-legacy {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 72px; /* au-dessus nav bottom */
+  width: min(96vw, 620px);
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  box-shadow: var(--pg-shadow-soft);
+
+  z-index: 2100;
+  overflow: hidden;
+}
+
+/* Header + bouton fermer */
+.pg-coach-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pg-border-soft);
+  background: linear-gradient(180deg, var(--pg-bg-soft), var(--pg-bg-muted));
+}
+
+.pg-coach-title {
+  font-weight: 700;
+  color: var(--pg-text-main);
+  font-size: 0.95rem;
+}
+
+.pg-coach-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--pg-border-soft);
+  background: var(--pg-bg-soft);
+  cursor: pointer;
+  color: var(--pg-text-main);
+  font-weight: 800;
+}
+
+/* Zone messages (chat) */
+.pg-coach-chat-log {
+  padding: 10px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--pg-bg-soft);
+}
+
+/* Bulles chat */
+.chat-msg {
+  display: inline-block;
+  max-width: 88%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  margin: 6px 0;
+  line-height: 1.25;
+  font-size: 0.92rem;
+  border: 1px solid var(--pg-border-soft);
+}
+
+.chat-msg.user {
+  background: var(--pg-accent-sand);
+  color: var(--pg-text-main);
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.chat-msg.coach {
+  background: var(--pg-bg-muted);
+  color: var(--pg-text-main);
+  align-self: flex-start;
+  margin-right: auto;
+}
+
+/* Input bar sticky bottom inside coach */
+.pg-coach-input-zone {
+  display: flex;
+  gap: 8px;
+  padding: 10px 10px;
+  border-top: 1px solid var(--pg-border-soft);
+  background: var(--pg-bg-soft);
+}
+
+.pg-coach-input-zone input {
+  flex: 1;
+  border: 1px solid var(--pg-border-soft);
+  background: var(--pg-bg-muted);
+  border-radius: var(--pg-radius-pill);
+  padding: 10px 12px;
+  outline: none;
+  color: var(--pg-text-main);
+}
+
+.pg-coach-input-zone input::placeholder {
+  color: var(--pg-text-muted);
+}
+
+.pg-coach-input-zone .pg-btn-primary {
+  padding: 10px 16px;
+}
+
+/* Coach fermé (toggle) */
+.pg-coach-legacy.is-collapsed .pg-coach-chat-log,
+.pg-coach-legacy.is-collapsed .pg-coach-input-zone {
+  display: none;
+}
+.pg-coach-legacy.is-collapsed {
+  width: min(92vw, 420px);
+}
+
+
