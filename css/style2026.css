@@ -465,29 +465,7 @@ body.jsw-fullscreen #coach-ia {
 }
 
 
-/* =========================================
-   COACH IA — BAR FIXE BAS DE PAGE (ZEN)
-   ========================================= */
 
-#coach-ia {
-  position: fixed;
-  bottom: 72px;              /* au-dessus de la nav */
-  left: 50%;
-  transform: translateX(-50%);
-  
-  width: min(96%, 640px);    /* centré + lisible desktop */
-  max-height: 55vh;
-
-  display: flex;
-  flex-direction: column;
-
-  background: var(--pg-bg-soft);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: 16px;
-  box-shadow: var(--pg-shadow-soft);
-
-  z-index: 1200;
-}
 
 
 /* En mode Just Swing : pas d’input */
@@ -993,22 +971,23 @@ body.jsw-fullscreen .bottom-nav {
 
 /* ---------- Coach chat (actif) ---------- */
 .pg-coach-legacy {
-  position: fixed;
+position: fixed;
+  bottom: 72px;              /* au-dessus de la nav */
   left: 50%;
   transform: translateX(-50%);
-  bottom: 72px; /* au-dessus nav bottom */
-  width: min(96vw, 620px);
+  
+  width: min(96%, 640px);    /* centré + lisible desktop */
+  max-height: 55vh;
 
   display: flex;
   flex-direction: column;
 
   background: var(--pg-bg-soft);
   border: 1px solid var(--pg-border-soft);
-  border-radius: var(--pg-radius);
+  border-radius: 16px;
   box-shadow: var(--pg-shadow-soft);
 
-  z-index: 2100;
-  overflow: hidden;
+  z-index: 1200;
 }
 
 /* Header + bouton fermer */
