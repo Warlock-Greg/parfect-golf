@@ -124,38 +124,31 @@ function appendCoachMessage(text, options = {}) {
   const message = String(text || "").trim();
   if (!message) return;
 
-  const {
-    whisper = true,
-    persist = false
-  } = options;
+  const { whisper = true } = options;
 
   /* =========================
-     1️⃣ CHAT ACTIF (log)
+     CHAT ACTIF
      ========================= */
   const log = document.getElementById("coach-log");
-
   if (log) {
     const div = document.createElement("div");
     div.className = "msg coach";
     div.textContent = message;
-    div.setAttribute("data-role", "coach");
-    div.setAttribute("aria-live", "polite");
-
     log.appendChild(div);
 
-    // scroll doux sans voler le focus
     requestAnimationFrame(() => {
       log.scrollTop = log.scrollHeight;
     });
   }
 
   /* =========================
-     2️⃣ ZEN WHISPER (passif)
+     ZEN WHISPER
      ========================= */
   if (whisper && typeof window.coachReact === "function") {
-    window.coachReact(message, { persist });
+    window.coachReact(message); // ✅ UN SEUL ARGUMENT
   }
 }
+
 
 
 
