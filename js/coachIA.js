@@ -3,6 +3,11 @@
 let coachVisible = true;
 
 // --- Initialisation du coach ---
+function getChatLog() {
+  return document.getElementById("coach-chat-log");
+}
+
+
 function initCoachIA() {
   const coachLog = document.getElementById("coach-log");
   const coachInput = document.getElementById("coach-input");
@@ -89,23 +94,34 @@ async function respondAsCoach(message) {
 
 // --- Affichage d’un message du joueur ---
 function appendUserMessage(text) {
-  const log = document.getElementById("coach-log");
+  const log = document.getElementById("coach-chat-log");
+  if (!log) return;
+
   const div = document.createElement("div");
-  div.className = "msg user";
+  div.className = "chat-msg user";
   div.textContent = text;
+
   log.appendChild(div);
-  scrollCoachLog();
+
+  // scroll doux sans forcer le focus
+  log.scrollTo({
+    top: log.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
-// --- Affichage d’un message du coach ---
+
 function appendCoachMessage(text) {
-  const log = document.getElementById("coach-log");
+  const log = document.getElementById("coach-chat-log");
+  if (!log) return;
+
   const div = document.createElement("div");
-  div.className = "msg coach";
+  div.className = "chat-msg coach";
   div.textContent = text;
   log.appendChild(div);
-  scrollCoachLog();
+  log.scrollTop = log.scrollHeight;
 }
+
 
 // --- Scroll fluide sans forcer le focus ---
 function scrollCoachLog() {
