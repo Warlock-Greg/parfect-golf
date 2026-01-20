@@ -111,16 +111,52 @@ function appendUserMessage(text) {
 }
 
 
-function appendCoachMessage(text) {
-  const log = document.getElementById("coach-chat-log");
-  if (!log) return;
+/**
+ * Append un message COACH dans le chat actif
+ * + déclenche le Zen Whisper
+ *
+ * @param {string} text
+ * @param {Object} options
+ *   - whisper (boolean) → afficher dans le whisper (default true)
+ *   - persist (boolean) → whisper persistant
+ */
+function appendCoachMessage(text, options = {}) {
+  const message = String(text || "").trim();
+  if (!message) return;
 
-  const div = document.createElement("div");
-  div.className = "chat-msg coach";
-  div.textContent = text;
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
+  const {
+    whisper = true,
+    persist = false
+  } = options;
+
+  /* =========================
+     1️⃣ CHAT ACTIF (log)
+     ========================= */
+  const log = document.getElementById("coach-log");
+
+  if (log) {
+    const div = document.createElement("div");
+    div.className = "msg coach";
+    div.textContent = message;
+    div.setAttribute("data-role", "coach");
+    div.setAttribute("aria-live", "polite");
+
+    log.appendChild(div);
+
+    // scroll doux sans voler le focus
+    requestAnimationFrame(() => {
+      log.scrollTop = log.scrollHeight;
+    });
+  }
+
+  /* =========================
+     2️⃣ ZEN WHISPER (passif)
+     ========================= */
+  if (whisper && typeof window.coachReact === "function") {
+    window.coachReact(message, { persist });
+  }
 }
+
 
 
 // --- Scroll fluide sans forcer le focus ---
