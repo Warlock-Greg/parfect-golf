@@ -235,22 +235,22 @@ body {
 
 #coach-ia.pg-coach-legacy {
   position: fixed;
-  bottom: 7%;
-  left: 0;
-  right: 0;
-
-  height: 42vh;                 /* hauteur raisonnable */
-  max-height: 15%;
-  min-height: 7%;
+  bottom: 72px;              /* au-dessus de la nav */
+  left: 50%;
+  transform: translateX(-50%);
+  
+  width: min(96%, 640px);    /* centré + lisible desktop */
+  max-height: 55vh;
 
   display: flex;
   flex-direction: column;
 
   background: var(--pg-bg-soft);
-  border-top: 1px solid var(--pg-border-soft);
-  box-shadow: 0 -8px 24px rgba(0,0,0,0.06);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: 16px;
+  box-shadow: var(--pg-shadow-soft);
 
-  z-index: 1300;
+  z-index: 1200;
 }
 
 /* =====================
