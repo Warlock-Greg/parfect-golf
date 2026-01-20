@@ -217,5 +217,67 @@ async function loadHistoryTab(type) {
       ? swings.map(s => `
         <div class="pg-card">
           <strong>${s.club || "?"}</strong><br>
-          Score ${s.scor
+          Score ${s.score_total ?? "—"}<br>
+          <small>${s.cmbvp0anzpjfsig ? new Date(s[cmbvp0anzpjfsig]).toLocaleString() : ""}</small>
+        </div>
+      `).join("")
+      : `<p class="pg-muted">Aucun swing enregistré.</p>`;
+    return;
+  }
 
+  if (type === "training") {
+    const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+    panel.innerHTML = history.length
+      ? history.reverse().map(h => `
+        <div class="pg-card">
+          <strong>${h.name}</strong><br>
+          ${h.quality} · Mental ${h.mentalScore}/5<br>
+          <small>${new Date(h.date).toLocaleDateString()}</small>
+        </div>
+      `).join("")
+      : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
+    return;
+  }
+
+  if (type === "round") {
+    const rounds = JSON.parse(localStorage.getItem("roundHistory") || "[]");
+    panel.innerHTML = rounds.length
+      ? rounds.reverse().map(r => `
+        <div class="pg-card">
+          <strong>${r.golf}</strong><br>
+          Score ${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar}
+          · ${r.parfects} Parfects<br>
+          <small>${new Date(r.date).toLocaleDateString()}</small>
+        </div>
+      `).join("")
+      : `<p class="pg-muted">Aucune partie enregistrée.</p>`;
+  }
+}
+
+// ------------------------------------------------
+// NOCODB — LOAD SWINGS (UNCHANGED)
+// ------------------------------------------------
+async function loadSwingHistoryFromNocoDB() {
+  const email = window.userLicence?.email;
+  if (!email) return [];
+
+  const url =
+    `${window.NOCODB_SWINGS_URL}?` +
+    `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
+    `&sort=-cmbvp0anzpjfsig` +
+    `&limit=20`;
+
+  const res = await fetch(url, {
+    headers: { "xc-token": window.NOCODB_TOKEN }
+  });
+
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.list || [];
+}
+
+// ------------------------------------------------
+// EXPORT
+// ------------------------------------------------
+window.injectSocialUI = injectSocialUI;
+window.refreshSwingQuotaUI = refreshSwingQuotaUI;
