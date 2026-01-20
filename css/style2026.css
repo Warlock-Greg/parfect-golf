@@ -1161,104 +1161,43 @@ position: fixed;
 
 /* === JUST SWING — TOP RIGHT CONTROLS === */
 
+/* =========================================
+   JUST SWING — ZEN PURE MODE
+   ========================================= */
+
 .jsw-top-right {
-  position: absolute;
-  top: env(safe-area-inset-top, 10px);
-  right: 12px;
-
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  z-index: 40; /* au-dessus vidéo + overlay */
-}
-
-/* Select club */
-.jsw-top-right .jsw-select {
-  background: rgba(0,0,0,0.55);
-  color: #00ff99;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
   padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid rgba(0,255,153,0.5);
-  font-size: 0.9rem;
-  backdrop-filter: blur(6px);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
-/* Bouton routine */
-.jsw-top-right .pg-btn-secondary {
-  background: rgba(0,0,0,0.55);
+/* Select ultra discret */
+.jsw-top-right select {
+  background: transparent;
+  border: none;
+  color: #00ff99;
+  font-weight: 600;
+  font-size: 0.9rem;
+  appearance: none;
+  padding-right: 12px;
+}
+
+/* Bouton routine zen */
+.jsw-top-right button {
+  background: transparent;
+  border: none;
   color: #fff;
-  border: 1px solid rgba(0,255,153,0.5);
-  padding: 6px 12px;
-  border-radius: 10px;
+  opacity: 0.7;
   font-size: 0.85rem;
 }
 
-/* =========================================
-   JUST SWING — BIG MESSAGE (Routine / Coach)
-   ========================================= */
-
-#jsw-big-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  max-width: 88vw;
-  padding: 18px 26px;
-
-  text-align: center;
-  font-size: 1.6rem;
-  font-weight: 600;
-  line-height: 1.35;
-
-  color: #ffffff;
-
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(8px);
-  border-radius: 18px;
-
-  box-shadow:
-    0 0 24px rgba(0, 0, 0, 0.6),
-    inset 0 0 12px rgba(255, 255, 255, 0.05);
-
-  text-shadow: 0 0 12px rgba(0,0,0,0.9);
-
-  z-index: 50;
-  opacity: 0;
-  pointer-events: none;
-
-  transition:
-    opacity 0.45s ease,
-    transform 0.45s ease;
-}
-
-/* --- Visible --- */
-#jsw-big-msg.show {
+.jsw-top-right button:hover {
   opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
 }
 
-/* --- Disparition douce --- */
-#jsw-big-msg.hide {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.96);
-}
 
-/* --- Variante Routine (accent vert) --- */
-#jsw-big-msg.routine {
-  border: 1px solid rgba(0, 255, 153, 0.4);
-  box-shadow:
-    0 0 18px rgba(0, 255, 153, 0.25),
-    inset 0 0 10px rgba(0, 255, 153, 0.15);
-}
-
-/* --- Variante Coach (plus douce) --- */
-#jsw-big-msg.coach {
-  font-size: 1.4rem;
-  font-weight: 500;
-  color: #e6ece9;
-}
 
 
 
