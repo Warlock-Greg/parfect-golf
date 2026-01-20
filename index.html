@@ -359,27 +359,25 @@
      Core Whisper
      ========================= */
   function showWhisper(message, options = {}) {
-    const text = String(message || "").trim();
-    if (!text) return;
+  const { persist = false, duration = 4000 } = options;
 
-    whisperText.textContent = text;
+  whisperText.textContent = message;
+  whisper.classList.remove("whisper-hidden");
+  whisper.classList.add("whisper-show");
 
-    whisper.classList.remove("whisper-hidden");
-    whisper.classList.add("whisper-show");
+  history.unshift({ t: Date.now(), m: message });
+  if (history.length > 30) history.pop();
+  renderHistory();
 
-    // Historique
-    history.unshift({
-      text,
-      ts: Date.now()
-    });
-    if (history.length > 40) history.pop();
-    renderHistory();
-
+  if (!persist) {
     if (hideTimer) clearTimeout(hideTimer);
-    if (options.persist !== true) {
-      hideTimer = setTimeout(hide, options.delay ?? 4000);
-    }
+    hideTimer = setTimeout(() => {
+      whisper.classList.add("whisper-hidden");
+      whisper.classList.remove("whisper-show");
+    }, duration);
   }
+}
+
 
   function hide() {
     whisper.classList.add("whisper-hidden");
@@ -421,7 +419,7 @@
     try {
       // ⚠️ Le chat actif est géré ailleurs
       // Ici : Whisper uniquement
-      showWhisper(msg, opts);
+      showWhisper(msg, options);
     } catch (err) {
       console.warn("coachReact error", err);
     }
