@@ -356,7 +356,7 @@ function showStartButton() {
     </div>
 
     <button id="jsw-back-btn" style="
-      background:--pg-green-main;
+      background:var(--pg-green-main);
       color:#ccc;
       border:none;
       border-radius:12px;
