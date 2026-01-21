@@ -19,28 +19,23 @@
 
 <body class="zen-theme onboarding-active">
 
-  <!-- =========================================
-       COACH WHISPER (ZEN)
-       - Discret, auto-hide
-       - Swipe down (ou click) pour ouvrir l'historique
-       ========================================= -->
-  <div id="coach-whisper" class="pg-whisper whisper-hidden" aria-live="polite">
-    <div class="pg-whisper-inner">
-      <span class="pg-whisper-icon">Coach</span>
-      <p id="whisper-text" class="pg-whisper-text">Respire, visualise ta cible...</p>
-    </div>
-  </div>
+<!-- ===============================
+     WHISPER (coach output)
+     =============================== -->
+<div id="coach-whisper" class="pg-whisper whisper-hidden" role="button" aria-label="Coach whisper">
+  <div id="whisper-text" class="pg-whisper-text">…</div>
+</div>
 
-  <!-- Historique (ouvrable) -->
-  <div id="coach-whisper-history" class="pg-whisper-history hidden">
-    <div class="pg-whisper-history-card">
-      <div class="pg-whisper-history-header">
-        <div class="pg-whisper-history-title">Historique des conseils</div>
-        <button id="whisper-history-close" class="pg-btn-secondary" type="button">Fermer</button>
-      </div>
-      <div id="whisper-history-list" class="pg-whisper-history-list"></div>
+<!-- Historique whisper -->
+<div id="coach-whisper-history" class="pg-whisper-history">
+  <div class="pg-whisper-history-card">
+    <div class="pg-whisper-history-header">
+      <div class="pg-whisper-history-title">Coach — Historique</div>
+      <button id="whisper-history-close" class="pg-btn-secondary" type="button">✕</button>
     </div>
+    <div id="whisper-history-list" class="pg-whisper-history-list"></div>
   </div>
+</div>
 
   <!-- =========================================
        HEADER (Zen)
@@ -286,22 +281,22 @@
     </button>
   </nav>
 
-  <!-- =========================================
-       LEGACY COACH (compat JS)
-       - On le garde pour éviter les crashs
-       - Mais tu peux le masquer via CSS (Zen Whisper remplace l’UI)
-       ========================================= -->
-  <section id="coach-ia" class="pg-coach-legacy">
-    <button id="coach-close-btn" type="button" aria-label="Fermer le coach">✕</button>
+<!-- ===============================
+     COACH IA (input + user log)
+     =============================== -->
+<section id="coach-ia" class="pg-coach-ia" style="display:none;">
+  <!-- Log joueur uniquement -->
+  <div id="coach-user-log" class="pg-coach-user-log"></div>
 
-    <div id="coach-chat-log"></div>
-    <div id="coach-input-zone">
-      <input id="coach-input" type="text" placeholder="Pose ta question au coach…">
-      <button id="coach-send" type="button">Envoyer</button>
+  <!-- Input en bas pleine largeur -->
+  <div id="coach-input-zone" class="pg-coach-input-zone">
+    <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
+    <button id="coach-send" type="button">Envoyer</button>
+    <button id="coach-close" type="button" aria-label="Fermer">✕</button>
   </div>
-   
+</section>
 
-  </section>
+  
 
   <!-- Helper global $ -->
   <script>
