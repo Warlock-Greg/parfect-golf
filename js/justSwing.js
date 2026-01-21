@@ -414,14 +414,14 @@ function showStartButton() {
     updateUI();
 
     let n = 5;
-    bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:#00ff99;">${n}</div>`;
+    bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:var(--jsw-text);">${n}</div>`;
 
     if (countdownInterval) clearInterval(countdownInterval);
 
     countdownInterval = setInterval(() => {
       n--;
       if (n > 0) {
-        bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:#00ff99;">${n}</div>`;
+        bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:var(--jsw-text);">${n}</div>`;
       } else {
         bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:#4ade80;">GO ! 🏌️</div>`;
         clearInterval(countdownInterval);
@@ -542,7 +542,7 @@ function isValidSwing(swing) {
       </div>
 
       <button id="jsw-retry-btn" style="
-        background:#00ff99;
+        background:var(--jsw-green);
         color:#111;
         border:none;
         border-radius:14px;
@@ -677,7 +677,7 @@ setTimeout(() => {
 function showGoButtonAfterRoutine() {
   bigMsgEl.innerHTML = `
       <button id="jsw-go-btn" style="
-        background:#00ff99; padding:20px 40px;
+        background:var(--jsw-green); padding:20px 40px;
         font-size:2rem; border-radius:14px;
         font-weight:bold; cursor:pointer; border:none;
       ">GO ! 🏌️</button>
@@ -2931,7 +2931,7 @@ if (btnParfect && isSuperAdmin) {
 
       // ✅ succès UI
       btnParfect.innerHTML = "✅ Référence PARFECT définie";
-      btnParfect.style.background = "#00ff99";
+      btnParfect.style.background = "var(--jsw-green)";
       btnParfect.style.color = "#111";
       btnParfect.style.border = "none";
       btnParfect.style.opacity = "1";
@@ -3255,7 +3255,7 @@ function stopRecording() {
           padding:10px 24px;
           border-radius:999px;
           border:none;
-          background:#00ff99;
+          background:var(--jsw-green);
           color:#111;
           font-weight:600;
           cursor:pointer;
