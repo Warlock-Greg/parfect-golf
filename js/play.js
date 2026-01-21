@@ -156,7 +156,7 @@ function showDoubleReasonModal(onReasonChosen) {
         <button class="btn reason-btn" data-reason="negociation">Coup mal négocié</button>
         <button class="btn reason-btn" data-reason="autre">Autre</button>
       </div>
-      <button id="confirm-double-reason" class="btn" style="margin-top:16px;background:#00ff99;color:#111;">Valider</button>
+      <button id="confirm-double-reason" class="btn" style="margin-top:16px;background:var(--pg-green-main);color:#111;">Valider</button>
     </div>
   `;
 
@@ -390,7 +390,7 @@ function showMoodAndStrategyModal(onConfirm) {
         <button class="btn coach" data-coach="gauthier">Gauthier</button>
       </div>
 
-      <button id="start-round" class="btn" style="margin-top:20px;background:#00ff99;color:#111;">🚀 Démarrer</button>
+      <button id="start-round" class="btn" style="margin-top:20px;background:var(--pg-green-main);color:#111;">🚀 Démarrer</button>
     </div>
   `;
   document.body.appendChild(modal);
@@ -488,7 +488,7 @@ function renderHole(number = currentHole) {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div style="text-align:left;">
           <div style="font-size:0.8rem;opacity:.75;">Trou</div>
-          <div style="font-size:1.1rem;color:#00ff99;font-weight:600;">${number}/${holes.length}</div>
+          <div style="font-size:1.1rem;color:var(--pg-green-main);font-weight:600;">${number}/${holes.length}</div>
         </div>
         <div style="text-align:center;">
           <div style="font-size:0.8rem;opacity:.75;">Par</div>
