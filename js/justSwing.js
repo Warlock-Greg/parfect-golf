@@ -328,8 +328,7 @@ function showStartButton() {
     </div>
 
     <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
-      <button id="jsw-view-face" style="
-        background:#4ade80;
+      <button id="jsw-btn jsw-btn-primary" style="
         padding:14px 18px;
         font-size:1.1rem;
         border-radius:12px;
@@ -342,8 +341,7 @@ function showStartButton() {
         </span>
       </button>
 
-      <button id="jsw-view-dtl" style="
-        background:#60a5fa;
+      <button id="jsw-btn jsw-btn-secondary" style="
         padding:14px 18px;
         font-size:1.1rem;
         border-radius:12px;
@@ -358,7 +356,7 @@ function showStartButton() {
     </div>
 
     <button id="jsw-back-btn" style="
-      background:#333;
+      background:--pg-green-main;
       color:#ccc;
       border:none;
       border-radius:12px;
