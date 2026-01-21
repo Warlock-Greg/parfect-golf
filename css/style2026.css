@@ -1342,6 +1342,171 @@ position: fixed;
 }
 
 
+/* =========================================================
+   SWING REVIEW — ZEN 2026
+   ========================================================= */
+
+#swing-review {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  background: rgba(248,249,245,0.96);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+  padding: 16px 16px 120px;
+}
+
+/* -------------------------------
+   VIDEO
+   ------------------------------- */
+
+.swing-review-video {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+#swing-video {
+  width: 100%;
+  border-radius: 18px;
+  background: #000;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+/* Controls */
+.swing-player-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  justify-content: center;
+}
+
+.swing-player-controls button,
+.swing-player-controls select {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--pg-text-main);
+}
+
+/* -------------------------------
+   SCORE & COMMENT
+   ------------------------------- */
+
+.swing-review-info {
+  max-width: 680px;
+  margin: 20px auto 0;
+  text-align: center;
+}
+
+#swing-review-score {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--pg-green-main);
+  margin-bottom: 6px;
+}
+
+#swing-review-comment {
+  font-size: 0.95rem;
+  color: var(--pg-text-muted);
+  line-height: 1.4;
+}
+
+/* -------------------------------
+   BREAKDOWN (reprend ton CSS précédent)
+   ------------------------------- */
+
+#swing-score-breakdown {
+  max-width: 720px;
+  margin: 24px auto;
+}
+
+/* -------------------------------
+   ACTIONS
+   ------------------------------- */
+
+.swing-review-actions {
+  max-width: 720px;
+  margin: 20px auto 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.swing-review-actions button {
+  flex: 1;
+  min-width: 160px;
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 12px 18px;
+  font-weight: 600;
+  color: var(--pg-text-main);
+  cursor: pointer;
+  transition: transform .15s ease, background .2s ease;
+}
+
+.swing-review-actions button:hover {
+  background: var(--pg-bg-muted);
+}
+
+.swing-review-actions button.pg-btn-primary {
+  background: var(--pg-green-main);
+  color: #fff;
+  border: none;
+}
+
+/* -------------------------------
+   HISTORIQUE (optionnel, zen)
+   ------------------------------- */
+
+.swing-review-history {
+  max-width: 720px;
+  margin: 24px auto;
+}
+
+.swing-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.swing-history-item {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: var(--pg-text-muted);
+  cursor: pointer;
+}
+
+.swing-history-item:hover {
+  background: var(--pg-bg-muted);
+}
+
+/* -------------------------------
+   BOUTON FERMER (bas)
+   ------------------------------- */
+
+#jsw-close-review {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 10px 22px;
+  font-weight: 600;
+  box-shadow: var(--pg-shadow-soft);
+  z-index: 9000;
+}
+
+
 
 
 
