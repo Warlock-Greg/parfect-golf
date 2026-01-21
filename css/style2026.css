@@ -1177,7 +1177,7 @@ position: fixed;
 /* Select club */
 .jsw-top-right .jsw-select {
   background: rgba(0,0,0,0.55);
-  color: #00ff99;
+  color: var(--pg-green-main);
   padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid rgba(0,255,153,0.5);
