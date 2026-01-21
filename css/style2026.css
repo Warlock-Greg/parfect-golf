@@ -1219,6 +1219,129 @@ position: fixed;
 }
 
 
+/* =========================================================
+   JUST SWING — PREMIUM BREAKDOWN
+   ZEN & MENTAL 2026
+   ========================================================= */
+
+/* Container global */
+#swing-score-breakdown {
+  background: var(--pg-bg-main);
+  color: var(--pg-text-main);
+  border-radius: var(--pg-radius);
+}
+
+/* Score global */
+#swing-score-breakdown > div > div:first-child {
+  color: var(--pg-green-main);
+}
+
+/* Grid */
+.jsw-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Card */
+.jsw-card {
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius);
+  padding: 12px 14px;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+/* Titre métrique */
+.jsw-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--pg-text-muted);
+}
+
+/* Score */
+.jsw-score {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Zones score */
+.jsw-score-good { color: var(--pg-green-main); }
+.jsw-score-mid  { color: #D4AF37; }
+.jsw-score-bad  { color: #C94A4A; }
+
+/* Bar */
+.jsw-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pg-bg-muted);
+  overflow: hidden;
+  margin: 6px 0 8px;
+}
+
+/* Bar fill */
+.jsw-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+
+.jsw-good { background: var(--pg-green-main); }
+.jsw-mid  { background: var(--pg-accent-gold); }
+.jsw-bad  { background: #C94A4A; }
+
+/* Details */
+.jsw-details {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--pg-text-muted);
+}
+
+/* Coach hint */
+.jsw-coach {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--pg-green-soft);
+  color: var(--pg-green-main);
+}
+
+.jsw-coach.jsw-mid {
+  background: rgba(212,175,55,0.12);
+  color: #8A6D1D;
+}
+
+.jsw-coach.jsw-bad {
+  background: rgba(201,74,74,0.12);
+  color: #8F2E2E;
+}
+
+/* Bouton retour */
+#jsw-back-btn {
+  margin-top: 16px;
+  width: 100%;
+  background: var(--pg-bg-soft);
+  color: var(--pg-text-main);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: var(--pg-radius-pill);
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease, transform .1s ease;
+}
+
+#jsw-back-btn:hover {
+  background: var(--pg-bg-muted);
+}
+
+#jsw-back-btn:active {
+  transform: scale(0.98);
+}
+
+
 
 
 
