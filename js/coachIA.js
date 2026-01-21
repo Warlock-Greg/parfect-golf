@@ -141,7 +141,6 @@ function appendCoachMessage(text) {
   if (whisper && typeof window.coachReact === "function") {
     window.coachReact(message); // ✅ UN SEUL ARGUMENT
   }
-}
 
 
 
