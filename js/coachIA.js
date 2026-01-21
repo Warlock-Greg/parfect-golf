@@ -92,22 +92,18 @@ async function respondAsCoach(message) {
 
 
 
-// --- Affichage d’un message du joueur ---
 function appendUserMessage(text) {
-  const log = document.getElementById("coach-chat-log");
+  const log = document.getElementById("coach-user-log");
   if (!log) return;
 
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
   const div = document.createElement("div");
-  div.className = "chat-msg user";
-  div.textContent = text;
-
+  div.className = "msg user";
+  div.textContent = clean;
   log.appendChild(div);
-
-  // scroll doux sans forcer le focus
-  log.scrollTo({
-    top: log.scrollHeight,
-    behavior: "smooth"
-  });
+  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
 }
 
 
@@ -120,11 +116,9 @@ function appendUserMessage(text) {
  *   - whisper (boolean) → afficher dans le whisper (default true)
  *   - persist (boolean) → whisper persistant
  */
-function appendCoachMessage(text, options = {}) {
-  const message = String(text || "").trim();
-  if (!message) return;
-
-  const { whisper = true } = options;
+function appendCoachMessage(text) {
+  window.coachReact?.(text);
+}
 
   /* =========================
      CHAT ACTIF
