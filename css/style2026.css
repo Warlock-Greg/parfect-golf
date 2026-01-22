@@ -1507,6 +1507,37 @@ position: fixed;
 }
 
 
+/* =========================================
+   JUST SWING — SCORE BREAKDOWN (ZEN LAYER)
+   ========================================= */
+
+#swing-score-breakdown {
+  position: absolute;
+  inset: 0;
+  z-index: 80; /* AU-DESSUS overlay + vidéo */
+  pointer-events: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+/* Contenu interne déjà généré par JS */
+#swing-score-breakdown > div {
+  width: min(92vw, 520px);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  background: rgba(15, 20, 18, 0.92);
+  border-radius: 18px;
+  border: 1px solid rgba(0,255,153,0.25);
+  box-shadow: 0 0 30px rgba(0,255,153,0.25);
+}
+
+
 
 
 
