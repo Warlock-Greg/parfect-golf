@@ -242,7 +242,7 @@ body {
   width: min(96%, 640px);    /* centré + lisible desktop */
   max-height: 55vh;
 
-  display: flex;
+  display: contents;
   flex-direction: column;
 
   background: var(--pg-bg-soft);
