@@ -1,4 +1,4 @@
-ti/* =========================================
+/* =========================================
    PARFECT GOLFR — ZEN & MENTAL 2026
    Palette : Nature Walk
    ========================================= */
@@ -1414,6 +1414,14 @@ position: fixed;
   line-height: 1.4;
 }
 
+/* -------------------------------
+   BREAKDOWN (reprend ton CSS précédent)
+   ------------------------------- */
+
+#swing-score-breakdown {
+  max-width: 720px;
+  margin: 24px auto;
+}
 
 /* -------------------------------
    ACTIONS
@@ -1503,6 +1511,19 @@ position: fixed;
    JUST SWING — SCORE BREAKDOWN (ZEN LAYER)
    ========================================= */
 
+#swing-score-breakdown {
+  position: absolute;
+  inset: 0;
+  z-index: 80; /* AU-DESSUS overlay + vidéo */
+  pointer-events: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+}
 
 /* Contenu interne déjà généré par JS */
 #swing-score-breakdown > div {
@@ -1515,198 +1536,3 @@ position: fixed;
   border: 1px solid rgba(0,255,153,0.25);
   box-shadow: 0 0 30px rgba(0,255,153,0.25);
 }
-
-/* =========================================================
-   SWING REVIEW — ZEN 2026 (OVERLAY PREMIUM)
-   ========================================================= */
-
-#swing-review {
-  position: fixed;
-  inset: 0;
-  z-index: 23000; /* AU-DESSUS de just-swing */
-  display: none;
-
-  background: radial-gradient(
-    circle at top,
-    rgba(15, 20, 18, 0.96),
-    rgba(5, 8, 7, 0.98)
-  );
-
-  backdrop-filter: blur(6px);
-  color: var(--pg-text-main);
-  overflow-y: auto;
-  padding-bottom: 120px; /* place pour les actions */
-}
-
-/* ---------------------------------------------------------
-   LOGO (haut discret)
-   --------------------------------------------------------- */
-
-#swing-review::before {
-  content: "";
-  position: fixed;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 44px;
-  height: 44px;
-  background: url("logo-parfect-golfr.png") center / contain no-repeat;
-  opacity: 0.85;
-  z-index: 23100;
-}
-
-/* ---------------------------------------------------------
-   VIDÉO
-   --------------------------------------------------------- */
-
-.swing-review-video {
-  max-width: 960px;
-  margin: 80px auto 12px;
-  padding: 0 16px;
-}
-
-#swing-video {
-  width: 100%;
-  border-radius: 18px;
-  background: #000;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255,255,255,0.06);
-}
-
-/* ---------------------------------------------------------
-   PLAYER CONTROLS
-   --------------------------------------------------------- */
-
-.swing-player-controls {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: 14px;
-  padding: 10px 12px;
-
-  backdrop-filter: blur(6px);
-}
-
-.swing-player-controls button,
-.swing-player-controls select {
-  background: rgba(0,0,0,0.55);
-  color: var(--pg-green-main);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-}
-
-#swing-timeline {
-  flex: 1;
-}
-
-/* ---------------------------------------------------------
-   SCORE BREAKDOWN — PREMIUM LAYER
-   --------------------------------------------------------- */
-
-#swing-score-breakdown {
-  position: relative;
-  z-index: 24000; /* 🔥 AU-DESSUS DE TOUT */
-  max-width: 960px;
-  margin: 24px auto 0;
-  padding: 0 16px;
-}
-
-/* cartes breakdown (tes .jsw-card existantes) */
-#swing-score-breakdown .jsw-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: 18px;
-  padding: 14px 16px;
-  box-shadow: var(--pg-shadow-soft);
-}
-
-#swing-score-breakdown .jsw-title {
-  color: var(--pg-text-muted);
-  font-size: 0.85rem;
-}
-
-#swing-score-breakdown .jsw-score {
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-/* ---------------------------------------------------------
-   ACTIONS — FIXÉES EN BAS (APP LIKE)
-   --------------------------------------------------------- */
-
-.swing-review-actions {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  z-index: 23500;
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-
-  padding: 14px 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
-  background: linear-gradient(
-    to top,
-    rgba(5,8,7,0.95),
-    rgba(5,8,7,0.65),
-    transparent
-  );
-
-  backdrop-filter: blur(8px);
-}
-
-.swing-review-actions button {
-  min-width: 160px;
-}
-
-/* ---------------------------------------------------------
-   HISTORIQUE
-   --------------------------------------------------------- */
-
-.swing-review-history {
-  max-width: 960px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
-
-.swing-history-item {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--pg-border-soft);
-  border-radius: 14px;
-  padding: 10px 12px;
-}
-
-/* ---------------------------------------------------------
-   BOUTON FERMER
-   --------------------------------------------------------- */
-
-#jsw-close-review {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 23600;
-
-  background: rgba(255,0,0,0.15);
-  color: #fff;
-  border: 1px solid rgba(255,0,0,0.35);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-weight: 600;
-}
-
-
-
-
-
-
-
