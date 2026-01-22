@@ -283,7 +283,7 @@ body {
   position: sticky;
   bottom: 0;
 
-  display: flex;
+  display: contents;
   align-items: center;
   gap: 10px;
 
