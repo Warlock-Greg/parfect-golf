@@ -1512,9 +1512,9 @@ position: fixed;
    ========================================= */
 
 #swing-score-breakdown {
-  position: absolute;
+  position: relative;
   inset: 0;
-  z-index: 80; /* AU-DESSUS overlay + vidéo */
+  z-index: 20000; /* AU-DESSUS overlay + vidéo */
   pointer-events: auto;
 
   display: flex;
