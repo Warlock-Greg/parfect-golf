@@ -1349,7 +1349,7 @@ position: fixed;
 #swing-review {
   position: fixed;
   inset: 0;
-  z-index: 8000;
+  z-index: 24000;
   background: rgba(248,249,245,0.96);
   backdrop-filter: blur(10px);
   overflow-y: auto;
@@ -1370,6 +1370,7 @@ position: fixed;
   border-radius: 18px;
   background: #000;
   box-shadow: var(--pg-shadow-soft);
+   height: 75%;
 }
 
 /* Controls */
