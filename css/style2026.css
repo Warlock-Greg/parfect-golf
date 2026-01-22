@@ -1,4 +1,4 @@
-/* =========================================
+ti/* =========================================
    PARFECT GOLFR — ZEN & MENTAL 2026
    Palette : Nature Walk
    ========================================= */
@@ -1414,14 +1414,6 @@ position: fixed;
   line-height: 1.4;
 }
 
-/* -------------------------------
-   BREAKDOWN (reprend ton CSS précédent)
-   ------------------------------- */
-
-#swing-score-breakdown {
-  max-width: 720px;
-  margin: 24px auto;
-}
 
 /* -------------------------------
    ACTIONS
@@ -1511,19 +1503,6 @@ position: fixed;
    JUST SWING — SCORE BREAKDOWN (ZEN LAYER)
    ========================================= */
 
-#swing-score-breakdown {
-  position: absolute;
-  inset: 0;
-  z-index: 80; /* AU-DESSUS overlay + vidéo */
-  pointer-events: auto;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(10px);
-}
 
 /* Contenu interne déjà généré par JS */
 #swing-score-breakdown > div {
