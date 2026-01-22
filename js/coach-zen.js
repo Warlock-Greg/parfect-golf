@@ -5,6 +5,28 @@
    - coach-user-log = messages joueur
    ========================================================= */
 
+// ✅ POINT D’ENTRÉE UNIQUE
+window.coachReact = function (msg, opts = {}) {
+  try {
+    const clean = String(msg || "").trim();
+    if (!clean) return;
+    showWhisper(clean, opts);
+  } catch (e) {
+    console.warn("coachReact error", e);
+  }
+};
+
+// ✅ Optionnel mais utile
+window.showCoachIA = function () {
+  if (coachSection) coachSection.style.display = "flex";
+};
+
+window.hideCoachIA = function () {
+  if (coachSection) coachSection.style.display = "none";
+};
+
+
+
 (function () {
   // ---------- DOM ----------
   const whisper = document.getElementById("coach-whisper");
