@@ -1541,6 +1541,43 @@ function scoreRotationFromReference(measure, ref) {
   return stars; // 0, 1 ou 2
 }
 
+
+
+function computeDTLPlanScore(swing) {
+  const kf = swing.keyFrames;
+  if (!kf?.backswing?.pose || !kf?.downswing?.pose) {
+    return { score: null, details: "Plan non mesuré" };
+  }
+
+  const shoulderL = kf.backswing.pose[11];
+  const shoulderR = kf.backswing.pose[12];
+  const wrist = kf.backswing.pose[15]; // poignet lead
+
+  if (!shoulderL || !shoulderR || !wrist) {
+    return { score: null, details: "Plan non mesuré" };
+  }
+
+  // ligne épaules
+  const lineX = (shoulderL.x + shoulderR.x) / 2;
+
+  // écart poignet / ligne
+  const deviation = Math.abs(wrist.x - lineX);
+
+  // mapping simple → score /20
+  let score;
+  if (deviation < 0.03) score = 18;
+  else if (deviation < 0.05) score = 14;
+  else if (deviation < 0.08) score = 9;
+  else score = 4;
+
+  return {
+    score,
+    deviation: deviation.toFixed(3)
+  };
+}
+
+
+  
 // =====================================================
 // 🔧 KEYFRAME POSE RESOLVER (SOURCE DE VÉRITÉ)
 // =====================================================
@@ -2247,6 +2284,31 @@ const METRIC_WEIGHTS = {
   balance:     10
 };
 
+// =====================================================
+// JUST SWING — PILIERS PAR VUE
+// =====================================================
+
+const JSW_PILLARS = {
+  faceOn: [
+    "rotation",
+    "tempo",
+    "triangle",
+    "weightShift",
+    "extension",
+    "balance"
+  ],
+
+  dtl: [
+    "tempo",
+    "plan",
+    "rotation",   // secondaire (plafonnée à 15)
+    "triangle",
+    "extension",
+    "balance"
+  ]
+};
+
+    
 // -----------------------------------------------------
 // 🔢 Scores sources (UNE SEULE SOURCE DE VÉRITÉ)
 // -----------------------------------------------------
@@ -2278,6 +2340,21 @@ for (const key in METRIC_WEIGHTS) {
   }
 }
 
+    function getPillarBadge(score) {
+  if (typeof score !== "number") return null;
+
+  if (score >= 18) {
+    return { label: "✔︎ Solide", tone: "good" };
+  }
+
+  if (score >= 15) {
+    return { label: "✓ Validé", tone: "mid" };
+  }
+
+  return null;
+}
+
+
 // -----------------------------------------------------
 // 🎯 Score final normalisé sur 100
 // -----------------------------------------------------
@@ -2286,6 +2363,8 @@ const total =
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 
+
+    
 // =====================================================
 // RETURN FINAL — API STABLE
 // =====================================================
@@ -2560,6 +2639,57 @@ function renderSessionHistoryInline() {
   }).join("");
 }
 
+
+  function getPriorityAxes(viewType, scores) {
+  const pillars = getOrderedPillars(viewType, scores);
+
+  // piliers NON validés (<15)
+  const notOk = pillars.filter(p => p.score < 15);
+
+  if (notOk.length === 0) {
+    return {
+      primary: null,
+      secondary: null,
+      status: "all_good"
+    };
+  }
+
+  return {
+    primary: notOk[0],
+    secondary: notOk[1] || null,
+    status: "focus"
+  };
+}
+
+  function buildGlobalCoachComment(viewType, scores) {
+  const { primary, secondary, status } =
+    getPriorityAxes(viewType, scores);
+
+  // 🟢 Tout est validé
+  if (status === "all_good") {
+    return "Très belle séance. Tous les piliers clés sont en place. Continue dans ce rythme 👍";
+  }
+
+  const label = {
+    rotation: "la rotation",
+    tempo: "le tempo",
+    plan: "le plan de swing",
+    triangle: "le triangle bras/épaules",
+    weightShift: "le transfert d’appui",
+    extension: "l’extension",
+    balance: "l’équilibre"
+  };
+
+  let msg = `Priorité : travaille ${label[primary.key]}.`;
+
+  // 👉 seulement si le 1er pilier est presque validé
+  if (primary.score >= 12 && secondary) {
+    msg += ` Ensuite, tu pourras t’attaquer à ${label[secondary.key]}.`;
+  }
+
+  return msg;
+}
+
   
 // ---------------------------------------------------------
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.breakdown)
@@ -2571,6 +2701,9 @@ function buildPremiumBreakdown(swing, scores) {
   if (!el) return;
 
   const breakdown = scores?.breakdown || {};
+  const viewType = window.jswViewType || "faceOn";
+
+  // ---------------- HELPERS ----------------
 
   const fmt = (v, d = 2) =>
     typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
@@ -2578,109 +2711,144 @@ function buildPremiumBreakdown(swing, scores) {
   const zone = (s, max) => {
     if (typeof s !== "number") return "mid";
     const r = s / max;
-    if (r >= .7) return "good";
-    if (r >= .4) return "mid";
+    if (r >= 0.7) return "good";
+    if (r >= 0.4) return "mid";
     return "bad";
   };
 
-  const coachMsg = (key, s) => {
-    if (typeof s !== "number") return "Mesure incomplète.";
-    if (s >= 14) return "Très solide 👍";
-    if (s >= 8)  return "Peut mieux faire.";
-    switch (key) {
-      case "rotation": return "Travaille la rotation au backswing.";
-      case "tempo": return "Ralentis le backswing.";
-      case "triangle": return "Stabilise le triangle bras/épaules.";
-      case "extension": return "Finis plus étendu.";
-      case "weightShift": return "Accentue le transfert.";
-      default: return "Axe à travailler.";
-    }
+  const badge = (score) => {
+    if (typeof score !== "number") return "";
+    if (score >= 18) return `<span class="jsw-badge good">✔︎ Solide</span>`;
+    if (score >= 15) return `<span class="jsw-badge mid">✓ Validé</span>`;
+    return "";
   };
 
-  const card = ({ key, title, max = 20, details }) => {
+  // ---------------- PILIERS PAR VUE ----------------
+
+  const PILLARS = {
+    faceOn: [
+      { key: "rotation", title: "Rotation", max: 20 },
+      { key: "tempo", title: "Tempo", max: 20 },
+      { key: "triangle", title: "Triangle", max: 20 },
+      { key: "weightShift", title: "Transfert", max: 10 },
+      { key: "extension", title: "Extension", max: 10 },
+      { key: "balance", title: "Balance", max: 10 }
+    ],
+    dtl: [
+      { key: "tempo", title: "Tempo", max: 20 },
+      { key: "plan", title: "Plan de swing", max: 20 },
+      { key: "rotation", title: "Rotation", max: 20 },
+      { key: "triangle", title: "Triangle", max: 20 },
+      { key: "extension", title: "Extension", max: 10 },
+      { key: "balance", title: "Balance", max: 10 }
+    ]
+  };
+
+  // ---------------- COMMENTAIRE GLOBAL ----------------
+
+  function buildGlobalComment() {
+    const order = PILLARS[viewType] || [];
+    const scored = order
+      .map(p => ({
+        key: p.key,
+        title: p.title,
+        score: breakdown[p.key]?.score ?? null
+      }))
+      .filter(p => typeof p.score === "number");
+
+    const notOk = scored.filter(p => p.score < 15);
+
+    if (!notOk.length) {
+      return "Très belle séance. Les fondamentaux sont en place. Continue dans ce rythme 👍";
+    }
+
+    const primary = notOk[0];
+    const secondary = notOk[1];
+
+    let msg = `Priorité : travaille ${primary.title.toLowerCase()}.`;
+
+    if (primary.score >= 12 && secondary) {
+      msg += ` Ensuite, tu pourras t’attaquer à ${secondary.title.toLowerCase()}.`;
+    }
+
+    return msg;
+  }
+
+  // ---------------- DETAILS (inchangés) ----------------
+
+  const rotM = breakdown.rotation?.metrics;
+  const rotationDetails = rotM?.measure
+    ? `Épaules : ${fmt(rotM.measure.shoulder)}<br>Hanches : ${fmt(rotM.measure.hip)}`
+    : `<em>Rotation non évaluée</em>`;
+
+  const tempoM = breakdown.tempo?.metrics;
+  const tempoDetails = tempoM
+    ? `Back : ${fmt(tempoM.backswingT)}s<br>Down : ${fmt(tempoM.downswingT)}s<br>Ratio : ${fmt(tempoM.ratio)}:1`
+    : `<em>Tempo non évalué</em>`;
+
+  const triM = breakdown.triangle?.metrics;
+  const triangleDetails = triM
+    ? `Top : ${fmt(triM.varTopPct)}%<br>Impact : ${fmt(triM.varImpactPct)}%`
+    : `<em>Triangle non évalué</em>`;
+
+  const extM = breakdown.extension?.metrics;
+  const extensionDetails = extM
+    ? `Impact : ${fmt(extM.impact)}<br>Finish : ${fmt(extM.finish)}`
+    : `<em>Extension non évaluée</em>`;
+
+  const wsM = breakdown.weightShift?.metrics;
+  const wsDetails = wsM
+    ? `Back : ${fmt(wsM.shiftBack)}<br>Forward : ${fmt(wsM.shiftFwd)}`
+    : `<em>Transfert non évalué</em>`;
+
+  const balM = breakdown.balance?.metrics;
+  const balanceDetails = balM
+    ? `Tête stable : ${balM.headOverHips ? "oui" : "non"}<br>Hanches : ${fmt(balM.finishMove)}`
+    : `<em>Balance non évaluée</em>`;
+
+  const DETAILS = {
+    rotation: rotationDetails,
+    tempo: tempoDetails,
+    triangle: triangleDetails,
+    weightShift: wsDetails,
+    extension: extensionDetails,
+    balance: balanceDetails,
+    plan: `<em>Plan en cours d’analyse</em>`
+  };
+
+  // ---------------- CARD BUILDER ----------------
+
+  const card = ({ key, title, max }) => {
     const score = breakdown[key]?.score ?? null;
     const z = zone(score, max);
-    const pct = score != null ? Math.min(100, Math.max(0, (score / max) * 100)) : 0;
+    const pct = score != null ? Math.min(100, (score / max) * 100) : 0;
 
     return `
       <div class="jsw-card">
-        <div style="display:flex;justify-content:space-between;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
           <div class="jsw-title">${title}</div>
           <div class="jsw-score jsw-score-${z}">
             ${score ?? "—"}/${max}
           </div>
         </div>
 
+        ${badge(score)}
+
         <div class="jsw-bar">
           <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
         </div>
 
-        <div class="jsw-details">${details}</div>
-
-        <div class="jsw-coach jsw-${z}">
-          🧠 ${coachMsg(key, score)}
-        </div>
+        <div class="jsw-details">${DETAILS[key] || ""}</div>
       </div>
     `;
   };
-
-  // ---------------- DETAILS ----------------
-
-  const rotM = breakdown.rotation?.metrics;
-  const rotationDetails = rotM?.measure
-    ? `
-      Épaules : ${fmt(rotM.measure.shoulder)}
-      <br>Hanches : ${fmt(rotM.measure.hip)}
-    `
-    : `<em>Rotation non évaluée</em>`;
-
-  const tempoM = breakdown.tempo?.metrics;
-  const tempoDetails = tempoM
-    ? `
-      Back : ${fmt(tempoM.backswingT)}s
-      <br>Down : ${fmt(tempoM.downswingT)}s
-      <br>Ratio : ${fmt(tempoM.ratio)}:1
-    `
-    : `<em>Tempo non évalué</em>`;
-
-  const triM = breakdown.triangle?.metrics;
-  const triangleDetails = triM
-    ? `
-      Top : ${fmt(triM.varTopPct)}%
-      <br>Impact : ${fmt(triM.varImpactPct)}%
-    `
-    : `<em>Triangle non évalué</em>`;
-
-  const extM = breakdown.extension?.metrics;
-  const extensionDetails = extM
-    ? `
-      Impact : ${fmt(extM.impact)}
-      <br>Finish : ${fmt(extM.finish)}
-    `
-    : `<em>Extension non évaluée</em>`;
-
-  const wsM = breakdown.weightShift?.metrics;
-  const wsDetails = wsM
-    ? `
-      Back : ${fmt(wsM.shiftBack)}
-      <br>Forward : ${fmt(wsM.shiftFwd)}
-    `
-    : `<em>Transfert non évalué</em>`;
-
-  const balM = breakdown.balance?.metrics;
-  const balanceDetails = balM
-    ? `
-      Tête stable : ${balM.headOverHips ? "oui" : "non"}
-      <br>Hanches : ${fmt(balM.finishMove)}
-    `
-    : `<em>Balance non évaluée</em>`;
 
   // ---------------- RENDER ----------------
 
   el.innerHTML = `
     <div style="padding:.6rem;">
       <div style="text-align:center;margin-bottom:.9rem;">
-        <div style="font-size:1.4rem;font-weight:900;color:#4ade80;">
+        <div style="font-size:1.6rem;font-weight:900;color:#4ade80;">
           ${scores.total ?? "—"}
         </div>
         <div style="font-size:.8rem;color:#aaa;">
@@ -2688,13 +2856,12 @@ function buildPremiumBreakdown(swing, scores) {
         </div>
       </div>
 
+      <div class="jsw-coach-global">
+        🧠 ${buildGlobalComment()}
+      </div>
+
       <div class="jsw-grid">
-        ${card({ key:"rotation", title:"Rotation", max:20, details:rotationDetails })}
-        ${card({ key:"tempo", title:"Tempo", max:20, details:tempoDetails })}
-        ${card({ key:"triangle", title:"Triangle", max:20, details:triangleDetails })}
-        ${card({ key:"weightShift", title:"Transfert", max:10, details:wsDetails })}
-        ${card({ key:"extension", title:"Extension", max:10, details:extensionDetails })}
-        ${card({ key:"balance", title:"Balance", max:10, details:balanceDetails })}
+        ${(PILLARS[viewType] || []).map(card).join("")}
       </div>
 
       <button id="jsw-back-btn" style="
@@ -2712,17 +2879,15 @@ function buildPremiumBreakdown(swing, scores) {
     </div>
   `;
 
-const backBtn = document.getElementById("jsw-back-btn");
+  // ---------------- ACTIONS ----------------
 
-if (backBtn) {
-  backBtn.onclick = () => {
+  document.getElementById("jsw-back-btn")?.addEventListener("click", () => {
     window.JustSwing?.stopSession?.();
     window.SwingEngine?.reset?.();
     document.getElementById("home-btn")?.click();
-  };
+  });
 }
 
-}
 
 
 
