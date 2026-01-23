@@ -1555,6 +1555,10 @@ position: fixed;
   opacity:.9;
 }
 
+.jsw-coach-global{
+  color:#aaa;
+}
+
 .jsw-view-badge.faceOn {
   background:rgba(74,222,128,.15);
   color:#4ade80;
