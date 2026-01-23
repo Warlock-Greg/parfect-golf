@@ -1543,3 +1543,25 @@ position: fixed;
   border: 1px solid rgba(0,255,153,0.25);
   box-shadow: 0 0 30px rgba(0,255,153,0.25);
 }
+
+.jsw-view-badge {
+  display:inline-block;
+  margin-top:4px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:600;
+  letter-spacing:.3px;
+  opacity:.9;
+}
+
+.jsw-view-badge.faceOn {
+  background:rgba(74,222,128,.15);
+  color:#4ade80;
+}
+
+.jsw-view-badge.dtl {
+  background:rgba(96,165,250,.15);
+  color:#60a5fa;
+}
+
