@@ -1545,25 +1545,36 @@ function scoreRotationFromReference(measure, ref) {
 
 function computeDTLPlanScore(swing) {
   const kf = swing.keyFrames;
-  if (!kf?.backswing?.pose || !kf?.downswing?.pose) {
-    return { score: null, details: "Plan non mesuré" };
+  const refPose = kf?.top?.pose || kf?.backswing?.pose;
+
+  if (!refPose) {
+    return {
+      score: null,
+      deviation: null,
+      status: "incomplete",
+      details: "Plan non mesuré"
+    };
   }
 
-  const shoulderL = kf.backswing.pose[11];
-  const shoulderR = kf.backswing.pose[12];
-  const wrist = kf.backswing.pose[15]; // poignet lead
+  const shoulderL = refPose[11];
+  const shoulderR = refPose[12];
+  const wrist = refPose[15]; // poignet lead
 
   if (!shoulderL || !shoulderR || !wrist) {
-    return { score: null, details: "Plan non mesuré" };
+    return {
+      score: null,
+      deviation: null,
+      status: "incomplete",
+      details: "Plan non mesuré"
+    };
   }
 
-  // ligne épaules
-  const lineX = (shoulderL.x + shoulderR.x) / 2;
+  // Ligne médiane des épaules
+  const shoulderMidX = (shoulderL.x + shoulderR.x) / 2;
 
-  // écart poignet / ligne
-  const deviation = Math.abs(wrist.x - lineX);
+  // Écart poignet / ligne épaules
+  const deviation = Math.abs(wrist.x - shoulderMidX);
 
-  // mapping simple → score /20
   let score;
   if (deviation < 0.03) score = 18;
   else if (deviation < 0.05) score = 14;
@@ -1572,9 +1583,11 @@ function computeDTLPlanScore(swing) {
 
   return {
     score,
-    deviation: deviation.toFixed(3)
+    deviation: Number(deviation.toFixed(3)),
+    status: "ok"
   };
 }
+
 
 
   
@@ -2263,6 +2276,19 @@ if (finishPose) {
 }
 
 metrics.balance.score = balanceScore;
+
+// =====================================================
+// PLAN
+// =====================================================
+    if (window.jswViewType === "dtl") {
+  const plan = computeDTLPlanScore(swing);
+
+  metrics.swingPlane = {
+    score: plan.score,
+    deviation: plan.deviation,
+    status: plan.status
+  };
+}
 
 
 // =====================================================
