@@ -381,9 +381,20 @@
     document.body.classList.remove("onboarding-active");
 
     // 👉 entrée officielle dans l'app
-    window.navigate?.("home", { silent: true });
-    window.coachReact?.("Choisis une action. Une seule intention.");
-  });
+   $("finish-onboarding")?.addEventListener("click", () => {
+  localStorage.setItem(KEY, "true");
+  onboarding.classList.add("fade-out");
+
+  setTimeout(() => onboarding.remove(), 400);
+  document.body.classList.remove("onboarding-active");
+
+  // 👉 navigation réelle
+  showView("home-area");
+
+  // 👉 coach zen
+  window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
+});
+
 
   showStep(1);
 })();
@@ -410,12 +421,7 @@
       document.getElementById("home-btn")?.click();
     }
 
-    document.getElementById("start-onboarding")?.addEventListener("click", () => {
-      document.body.classList.remove("onboarding-active");
-      document.getElementById("onboarding").style.display = "none";
-      showView("home-area");
-      window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
-    });
+ 
 
     // Home tiles
    document.getElementById("home-play")?.addEventListener("click", () => {
