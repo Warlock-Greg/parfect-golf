@@ -340,13 +340,10 @@
   <!-- =========================================
        ONBOARDING / NAV FLOW (une tâche, un esprit)
        ========================================= -->
-  <script>
-
-  
-
- (function () {
+ <script>
+(function () {
   const KEY = "parfect:onboarding:done";
-  const onboarding = $("onboarding");
+  const onboarding = document.getElementById("onboarding");
 
   if (!onboarding) return;
 
@@ -366,6 +363,7 @@
     onboarding.querySelector(`[data-step="${n}"]`)?.classList.add("active");
   }
 
+  // Boutons "Continuer"
   onboarding.querySelectorAll("[data-next]").forEach(btn => {
     btn.addEventListener("click", () => {
       step++;
@@ -373,32 +371,25 @@
     });
   });
 
-  $("finish-onboarding")?.addEventListener("click", () => {
+  // Bouton "Commencer"
+  document.getElementById("finish-onboarding")?.addEventListener("click", () => {
     localStorage.setItem(KEY, "true");
     onboarding.classList.add("fade-out");
 
     setTimeout(() => onboarding.remove(), 400);
     document.body.classList.remove("onboarding-active");
 
-    // 👉 entrée officielle dans l'app
-   $("finish-onboarding")?.addEventListener("click", () => {
-  localStorage.setItem(KEY, "true");
-  onboarding.classList.add("fade-out");
+    // 👉 navigation réelle
+    showView("home-area");
 
-  setTimeout(() => onboarding.remove(), 400);
-  document.body.classList.remove("onboarding-active");
-
-  // 👉 navigation réelle
-  showView("home-area");
-
-  // 👉 coach zen
-  window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
-});
-
+    // 👉 coach zen
+    window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
+  });
 
   showStep(1);
 })();
 </script>
+
 
 
   <script>
