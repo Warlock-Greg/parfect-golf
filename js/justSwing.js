@@ -446,37 +446,37 @@ function showStartButton() {
   }
 
 function jswGetViewMessage() {
-  const mode = window.JSW_VIEW_MODE || "auto";
+  const view = window.jswViewType || "faceOn";
 
-  if (mode === "faceon") {
+  if (view === "faceOn") {
     return `
       <div style="text-align:center;">
         <div style="font-size:2.5rem;">📸</div>
-        <b>Face-On : Place la caméra devant toi</b><br>
-        Mets-toi de plein pied dans le cadre 👣
+        <b>Face-On</b><br>
+        Caméra face à toi, corps entier visible 👣
       </div>
     `;
   }
 
-  if (mode === "dtl") {
+  if (view === "dtl") {
     return `
       <div style="text-align:center;">
         <div style="font-size:2.5rem;">📸➡️🏌️</div>
-        <b>Down-The-Line : place la caméra derrière toi</b><br>
-        Centre ton corps et ton club dans le cadre 🎯
+        <b>Down-The-Line</b><br>
+        Caméra derrière toi, dans l’axe du swing 🎯
       </div>
     `;
   }
 
-  // AUTO
+  // fallback ultra safe
   return `
     <div style="text-align:center;">
       <div style="font-size:2.5rem;">📸</div>
-      Mets-toi de plein pied dans le cadre 👣<br>
-      (Vue détectée automatiquement)
+      Place-toi entièrement dans le cadre 👣
     </div>
   `;
 }
+
 
 function computeGlobalMovement(poseA, poseB) {
   if (!poseA || !poseB) return 0;
