@@ -1292,9 +1292,8 @@ position: fixed;
 
 /* Details */
 .jsw-details {
-  font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--pg-text-muted);
+  color: white;
 }
 
 /* Coach hint */
