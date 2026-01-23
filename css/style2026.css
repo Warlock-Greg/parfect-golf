@@ -1266,9 +1266,9 @@ position: fixed;
 }
 
 /* Zones score */
-.jsw-score-good { color: var(--pg-green-main); }
-.jsw-score-mid  { color: #D4AF37; }
-.jsw-score-bad  { color: #C94A4A; }
+.jsw-score-good { color: #aaa; }
+.jsw-score-mid  { color: #aaa; }
+.jsw-score-bad  { color: #aaa; }
 
 /* Bar */
 .jsw-bar {
