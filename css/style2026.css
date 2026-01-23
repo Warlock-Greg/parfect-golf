@@ -1356,6 +1356,12 @@ position: fixed;
   padding: 16px 16px 120px;
 }
 
+
+#swing-replay-fullscreen {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
 /* -------------------------------
    VIDEO
    ------------------------------- */
