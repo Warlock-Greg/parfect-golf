@@ -2744,6 +2744,33 @@ function buildPremiumBreakdown(swing, scores) {
     ]
   };
 
+  const OBJECTIVES = {
+  tempo: {
+    faceOn: "Ratio cible ≈ 3:1 (backswing fluide, downswing engagé)",
+    dtl: "Tempo constant, sans accélération précoce"
+  },
+  rotation: {
+    faceOn: "Épaules ~ cible Parfect, hanches stables",
+    dtl: "Épaules ≥ 45° · Hanches ≥ 25° · Dissociation ≥ 10°"
+  },
+  triangle: {
+    faceOn: "Triangle bras/épaules stable du top à l’impact",
+    dtl: "Bras connectés, pas d’effondrement"
+  },
+  plan: {
+    dtl: "Club dans le plan, sans steep excessif"
+  },
+  extension: {
+    faceOn: "Extension complète après impact",
+    dtl: "Bras étendus, release libre"
+  },
+  balance: {
+    faceOn: "Tête stable, finish équilibré",
+    dtl: "Centre de gravité contrôlé"
+  }
+};
+
+
   // ---------------- COMMENTAIRE GLOBAL ----------------
 
   function buildGlobalComment() {
@@ -2819,35 +2846,53 @@ function buildPremiumBreakdown(swing, scores) {
   // ---------------- CARD BUILDER ----------------
 
   const card = ({ key, title, max }) => {
-    const score = breakdown[key]?.score ?? null;
-    const z = zone(score, max);
-    const pct = score != null ? Math.min(100, (score / max) * 100) : 0;
+  const score = breakdown[key]?.score ?? null;
+  const z = zone(score, max);
+  const pct =
+    typeof score === "number"
+      ? Math.min(100, Math.max(0, (score / max) * 100))
+      : 0;
 
-    return `
-      <div class="jsw-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="jsw-title">${title}</div>
-          <div class="jsw-score jsw-score-${z}">
-            ${score ?? "—"}/${max}
-          </div>
+  const objective =
+    OBJECTIVES[key]?.[viewType] ||
+    OBJECTIVES[key]?.faceOn ||
+    "";
+
+  return `
+    <div class="jsw-card jsw-${z}">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="jsw-title">${title}</div>
+        <div class="jsw-score jsw-score-${z}">
+          ${score ?? "—"}/${max}
         </div>
-
-        ${badge(score)}
-
-        <div class="jsw-bar">
-          <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
-        </div>
-
-        <div class="jsw-details">${DETAILS[key] || ""}</div>
       </div>
-    `;
-  };
+
+      ${badge(score)}
+
+      <div class="jsw-bar">
+        <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
+      </div>
+
+      ${
+        objective
+          ? `<div class="jsw-objective">🎯 Objectif : ${objective}</div>`
+          : ""
+      }
+
+      <div class="jsw-details">${DETAILS[key] || ""}</div>
+    </div>
+  `;
+};
+
 
   // ---------------- RENDER ----------------
 
   el.innerHTML = `
     <div style="padding:.6rem;">
       <div style="text-align:center;margin-bottom:.9rem;">
+        <div class="jsw-view-badge ${viewType}">
+        ${viewType === "dtl" ? "DTL — Down The Line" : "Face-On — Vue de face"}
+        </div>
         <div style="font-size:1.6rem;font-weight:900;color:#4ade80;">
           ${scores.total ?? "—"}
         </div>
