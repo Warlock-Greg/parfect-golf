@@ -3597,7 +3597,7 @@ function stopRecording() {
         <p style="font-size:0.95rem;margin:0 0 14px;">
           ${coachTechnicalComment(scores)}
         </p>
-        <button id="jsw-result-next" style="
+        <button id="swing-review-next" class="jsw-result-next" style="
           margin-top:10px;
           padding:10px 24px;
           border-radius:999px;
@@ -3841,40 +3841,39 @@ btnParfect.onclick = async () => {
   }
 
 // -------------------------------------------
-//  ⏭️ BOUTON "SWING SUIVANT" — ZEN FLOW
+// ⏭️ BOUTON "SWING SUIVANT" — VERSION STABLE
 // -------------------------------------------
 const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("⏭️ Swing suivant → routine directe");
+    console.log("⏭️ Swing suivant → reset propre + routine");
 
     // 1️⃣ Fermer la review
     const reviewEl = document.getElementById("swing-review");
     if (reviewEl) reviewEl.style.display = "none";
 
-    // 2️⃣ Reset moteur & états (clé 🔑)
+    // 2️⃣ Nettoyage STRICT du moteur
     window.SwingEngine?.reset?.();
     window.JustSwing?.stopSession?.();
 
-    // sécurité états globaux
-    if (typeof addressLocked !== "undefined") addressLocked = false;
-    if (typeof pendingAddress !== "undefined") pendingAddress = false;
-    if (typeof captureArmed !== "undefined") captureArmed = false;
-    if (typeof isRecordingActive !== "undefined") isRecordingActive = false;
+    // 3️⃣ Reset des flags critiques (IMPORTANT)
+    window.activeSwing = null;
+    window.lastSwingData = null;
 
-    // 3️⃣ S’assurer qu’on est bien en mode Just Swing
+    // 4️⃣ Revenir à l’état Just Swing
     document.body.classList.add("jsw-fullscreen");
-    document.getElementById("just-swing-area")?.style?.setProperty("display", "block");
+    document.getElementById("just-swing-area").style.display = "block";
 
-    // 4️⃣ Feedback zen
-    showBigMessage?.("🧍‍♂️ Reviens à l’adresse");
-
-    // 5️⃣ Relance de la routine (et pas startSession brut)
+    // 5️⃣ Relancer la routine (PAS la capture)
     setTimeout(() => {
-      hideBigMessage?.();
-      startRoutineSequence?.();
-    }, 800);
+      console.log("🔁 Relance routine (pas de capture auto)");
+      if (typeof startRoutineSequence === "function") {
+        startRoutineSequence();
+      } else if (typeof showBigMessage === "function") {
+        showBigMessage("Replace-toi à l’adresse 🧘‍♂️");
+      }
+    }, 300);
   };
 }
 
