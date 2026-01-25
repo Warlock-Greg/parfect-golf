@@ -3345,24 +3345,6 @@ function buildSwingSummaryLine(swing, scores) {
 
   el.style.display = "block";
   el.innerHTML = `
-
-   // Toggle détails
- const btn = document.getElementById("jsw-toggle-details");
-  const panel = document.getElementById("jsw-details-panel");
-
-  if (btn && panel) {
-    btn.onclick = () => {
-      const open = panel.style.display !== "none";
-
-      // 👉 on construit les cartes UNE SEULE FOIS
-      if (!open && panel.innerHTML.trim() === "") {
-        buildPremiumBreakdown(swing, scores);
-      }
-
-      panel.style.display = open ? "none" : "block";
-      btn.textContent = open ? "+ Détails" : "— Réduire";
-    };
-  }
     <div class="jsw-swing-summary">
       <div class="jsw-swing-title">
         <span class="pill">#${window.__SWING_IDX}</span>
@@ -3380,11 +3362,27 @@ function buildSwingSummaryLine(swing, scores) {
       </button>
 
       <div id="jsw-details-panel" style="display:none;">
-        <!-- ici tu remets TON HTML détaillé existant -->
+
       </div>
     </div>
   `;
+  // Toggle détails
+ const btn = document.getElementById("jsw-toggle-details");
+  const panel = document.getElementById("jsw-details-panel");
 
+  if (btn && panel) {
+    btn.onclick = () => {
+      const open = panel.style.display !== "none";
+
+      // 👉 on construit les cartes UNE SEULE FOIS
+      if (!open && panel.innerHTML.trim() === "") {
+        buildPremiumBreakdown(swing, scores);
+      }
+
+      panel.style.display = open ? "none" : "block";
+      btn.textContent = open ? "+ Détails" : "— Réduire";
+    };
+  }
  
 }
 
