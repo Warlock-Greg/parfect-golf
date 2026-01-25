@@ -421,9 +421,9 @@ function showStartButton() {
     countdownInterval = setInterval(() => {
       n--;
       if (n > 0) {
-        bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:var(--jsw-text);">${n}</div>`;
+        bigMsgEl.innerHTML = `<div class="jsw-big-msg-inner">${n}</div>`;
       } else {
-        bigMsgEl.innerHTML = `<div style="font-size:4rem;font-weight:800;color:#4ade80;">GO ! 🏌️</div>`;
+        bigMsgEl.innerHTML = `<div class="jsw-go">GO ! 🏌️</div>`;
         clearInterval(countdownInterval);
         countdownInterval = null;
 
