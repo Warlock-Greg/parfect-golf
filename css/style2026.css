@@ -1278,6 +1278,7 @@ position: fixed;
   border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.08);
   background: transparent !important;
+ border-color: var(--pg-green-main);
 
   box-shadow:
     0 12px 32px rgba(0,0,0,0.35),
