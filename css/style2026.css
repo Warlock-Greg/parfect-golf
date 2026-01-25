@@ -1218,6 +1218,12 @@ position: fixed;
   transition: opacity 0.5s ease;
 }
 
+#jsw-start-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+
 
 /* =========================================================
    JUST SWING — PREMIUM BREAKDOWN
@@ -1387,8 +1393,8 @@ position: fixed;
 #jsw-back-btn {
   margin-top: 16px;
   width: 100%;
-  background: var(--pg-bg-soft);
-  color: var(--pg-text-main);
+  background: var(--pg-green-main);
+  color: var(--pg-bg-soft);
   border: 1px solid var(--pg-border-soft);
   border-radius: var(--pg-radius-pill);
   padding: 12px;
@@ -1396,6 +1402,17 @@ position: fixed;
   font-weight: 600;
   cursor: pointer;
   transition: background .2s ease, transform .1s ease;
+}
+
+.jsw-view-face {
+    border-radius: 7px;
+    padding: 10px;
+   color: var(--pg-green-main);
+}
+
+.jsw-view-dtl {
+    border-radius: 7px;
+    padding: 10px;
 }
 
 #jsw-back-btn:hover {
