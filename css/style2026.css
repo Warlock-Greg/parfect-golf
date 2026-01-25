@@ -1193,14 +1193,15 @@ position: fixed;
    MESSAGE CENTRAL (adresse / installation)
    --------------------------------------------------------- */
 #jsw-big-msg {
-  position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+   position: relative;
+  inset: 0;
+  z-index: 20000; /* AU-DESSUS overlay + vidéo */
+  pointer-events: auto;
 
-  pointer-events: none;
 }
 
 /* Contenu central */
