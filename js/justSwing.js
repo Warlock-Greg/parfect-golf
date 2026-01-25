@@ -3357,7 +3357,7 @@ function buildSwingSummaryLine(swing, scores) {
         + Détails
       </button>
 
-      <div id="jsw-details-panel" style="display:none;">
+      <div id="jsw-details-panel" class="jsw-details-panel" style="display:none;">
 
       </div>
     </div>
@@ -3371,30 +3371,15 @@ if (btn && panel) {
     const open = panel.style.display === "block";
 
     if (!open && panel.innerHTML.trim() === "") {
-      // 🔒 conteneur temporaire (hors DOM)
-      const temp = document.createElement("div");
-
-      // ⚠️ buildPremiumBreakdown écrit dans un élément
-      const original = document.getElementById("swing-score-breakdown");
-      if (original) {
-        original.innerHTML = "";
-        buildPremiumBreakdown(swing, scores);
-
-        // 👉 on COPIE le HTML généré
-        temp.innerHTML = original.innerHTML;
-
-        // 👉 on nettoie la source
-        original.innerHTML = "";
-      }
-
-      // 👉 on injecte UNIQUEMENT dans le panel
-      panel.appendChild(temp);
+      // ✅ on injecte UNE FOIS
+      buildPremiumBreakdown(swing, scores, "jsw-details-panel");
     }
 
     panel.style.display = open ? "none" : "block";
-    btn.textContent = open ? "+ Détails" : "— Réduire";
+    btn.textContent = open ? "+ Détails" : "− Réduire";
   };
 }
+
 
  
 }
@@ -3870,20 +3855,16 @@ const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("⏭️ Swing suivant → retour routine propre");
+  // 1) fermer la review
+  document.getElementById("swing-review")?.classList.add("hidden");
 
-    // 1️⃣ Fermer la review
-    const reviewEl = document.getElementById("swing-review");
-    if (reviewEl) reviewEl.style.display = "none";
+  // 2) relancer DIRECTEMENT la routine
+  JustSwing?.stopSession?.();
 
-    // 2️⃣ Nettoyage TOTAL
-    window.SwingEngine?.reset?.();
-    window.JustSwing?.stopSession?.();
-
-    // 3️⃣ Masquer tout reste UI
-    document.getElementById("swing-score-breakdown")?.replaceChildren();
-    document.getElementById("jsw-result-panel")?.classList.add("hidden");
-
+  setTimeout(() => {
+    JustSwing?.startSession?.();
+  }, 100);
+};
     // 4️⃣ Petit délai de respiration (important)
     setTimeout(() => {
       // 5️⃣ Retour routine (PAS startSession direct)
