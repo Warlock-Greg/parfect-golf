@@ -323,50 +323,31 @@ function showStartButton() {
   updateUI();
 
   bigMsgEl.innerHTML = `
-    <div style="font-size:1.3rem;margin-bottom:14px;color:#fff;">
+ <div class="jsw-start-card">
+    <div class="jsw-start-title">
       📐 Où est placée la caméra ?
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
-      <button id="jsw-view-face" class="jsw-btn jsw-btn-primary" style="
-        padding:14px 18px;
-        font-size:1.1rem;
-        border-radius:12px;
-        cursor:pointer;
-        border:none;
-      ">
-        📸 Face-On<br>
-        <span style="font-size:.85rem; opacity:.8;">
+    <div class="jsw-start-choices">
+      <button id="jsw-view-face" class="jsw-choice jsw-choice-primary">
+        <div class="jsw-choice-label">📸 Face-On</div>
+        <div class="jsw-choice-sub">
           Caméra à hauteur de poitrine
-        </span>
+        </div>
       </button>
 
-      <button id="jsw-view-dtl" class="jsw-btn jsw-btn-secondary" style="
-        padding:14px 18px;
-        font-size:1.1rem;
-        border-radius:12px;
-        cursor:pointer;
-        border:none;
-      ">
-        🎥 Down-The-Line<br>
-        <span style="font-size:.85rem; opacity:.8;">
+      <button id="jsw-view-dtl" class="jsw-choice jsw-choice-secondary">
+        <div class="jsw-choice-label">🎥 Down-The-Line</div>
+        <div class="jsw-choice-sub">
           Derrière la ligne de jeu
-        </span>
+        </div>
       </button>
     </div>
 
-    <button id="jsw-back-btn" style="
-      background:var(--pg-green-main);
-      color:#ccc;
-      border:none;
-      border-radius:12px;
-      padding:10px 24px;
-      font-size:1rem;
-      cursor:pointer;
-      width:100%;
-    ">
+    <button id="jsw-back-btn" class="jsw-start-back">
       ← Retour
     </button>
+  </div>
   `;
 
   bigMsgEl.style.opacity = 1;
