@@ -1225,16 +1225,52 @@ position: fixed;
    ========================================================= */
 
 /* Container global */
-#swing-score-breakdown {
-  background: var(--pg-bg-main);
-  color: var(--pg-text-main);
-  border-radius: var(--pg-radius);
+#swing-score-breakdown > div {
+  width: min(92vw, 560px);
+  max-height: 88vh;
+  overflow-y: auto;
+
+  background: rgba(20, 24, 22, 0.88);
+  backdrop-filter: blur(14px);
+
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 12px 32px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+
+  padding: 14px 14px 16px;
 }
 
-/* Score global */
-#swing-score-breakdown > div > div:first-child {
-  color: var(--pg-green-main);
+.jsw-swing-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
+
+.jsw-swing-line {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #d6e6df;
+}
+
+.jsw-details-btn {
+  margin-top: 6px;
+  align-self: center;
+  background: transparent;
+  border: none;
+  color: #7fffd4;
+  font-size: 0.85rem;
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.jsw-details-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 
 /* Grid */
 .jsw-grid {
