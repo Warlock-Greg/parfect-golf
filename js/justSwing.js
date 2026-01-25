@@ -3345,6 +3345,24 @@ function buildSwingSummaryLine(swing, scores) {
 
   el.style.display = "block";
   el.innerHTML = `
+
+   // Toggle détails
+ const btn = document.getElementById("jsw-toggle-details");
+  const panel = document.getElementById("jsw-details-panel");
+
+  if (btn && panel) {
+    btn.onclick = () => {
+      const open = panel.style.display !== "none";
+
+      // 👉 on construit les cartes UNE SEULE FOIS
+      if (!open && panel.innerHTML.trim() === "") {
+        buildPremiumBreakdown(swing, scores);
+      }
+
+      panel.style.display = open ? "none" : "block";
+      btn.textContent = open ? "+ Détails" : "— Réduire";
+    };
+  }
     <div class="jsw-swing-summary">
       <div class="jsw-swing-title">
         <span class="pill">#${window.__SWING_IDX}</span>
@@ -3367,23 +3385,7 @@ function buildSwingSummaryLine(swing, scores) {
     </div>
   `;
 
-  // Toggle détails
- const btn = document.getElementById("jsw-toggle-details");
-  const panel = document.getElementById("jsw-details-panel");
-
-  if (btn && panel) {
-    btn.onclick = () => {
-      const open = panel.style.display !== "none";
-
-      // 👉 on construit les cartes UNE SEULE FOIS
-      if (!open && panel.innerHTML.trim() === "") {
-        buildPremiumBreakdown(swing, scores);
-      }
-
-      panel.style.display = open ? "none" : "block";
-      btn.textContent = open ? "+ Détails" : "— Réduire";
-    };
-  }
+ 
 }
 
   
@@ -3857,35 +3859,32 @@ const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("⏭️ Swing suivant → reset propre + routine");
+    console.log("⏭️ Swing suivant → retour routine propre");
 
     // 1️⃣ Fermer la review
     const reviewEl = document.getElementById("swing-review");
     if (reviewEl) reviewEl.style.display = "none";
 
-    // 2️⃣ Nettoyage STRICT du moteur
+    // 2️⃣ Nettoyage TOTAL
     window.SwingEngine?.reset?.();
     window.JustSwing?.stopSession?.();
 
-    // 3️⃣ Reset des flags critiques (IMPORTANT)
-    window.activeSwing = null;
-    window.lastSwingData = null;
+    // 3️⃣ Masquer tout reste UI
+    document.getElementById("swing-score-breakdown")?.replaceChildren();
+    document.getElementById("jsw-result-panel")?.classList.add("hidden");
 
-    // 4️⃣ Revenir à l’état Just Swing
-    document.body.classList.add("jsw-fullscreen");
-    document.getElementById("just-swing-area").style.display = "block";
-
-    // 5️⃣ Relancer la routine (PAS la capture)
+    // 4️⃣ Petit délai de respiration (important)
     setTimeout(() => {
-      console.log("🔁 Relance routine (pas de capture auto)");
+      // 5️⃣ Retour routine (PAS startSession direct)
       if (typeof startRoutineSequence === "function") {
         startRoutineSequence();
-      } else if (typeof showBigMessage === "function") {
-        showBigMessage("Replace-toi à l’adresse 🧘‍♂️");
+      } else {
+        console.warn("⚠️ startRoutineSequence() manquante");
       }
-    }, 300);
+    }, 250);
   };
 }
+
 
 
   
