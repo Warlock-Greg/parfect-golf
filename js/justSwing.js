@@ -3763,7 +3763,7 @@ btnParfect.onclick = async () => {
     replayCanvas = overlay;
     replayCtx = overlay.getContext("2d");
 
-   function renderFrame(index) {
+  function renderFrame(index) {
   if (!lastSwing || !replayCanvas || !replayCtx) return;
 
   const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
@@ -3877,7 +3877,7 @@ if (nextBtn) {
   };
 }
 
-
+}
 
   
   
