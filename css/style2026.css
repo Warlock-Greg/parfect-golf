@@ -1218,7 +1218,7 @@ position: fixed;
   transition: opacity 0.5s ease;
 }
 
-#jsw-start-title {
+.jsw-start-title {
   font-size: 1.4rem;
   font-weight: 700;
 }
@@ -1405,14 +1405,17 @@ position: fixed;
 }
 
 .jsw-view-face {
-    border-radius: 7px;
-    padding: 10px;
+    border-radius: 20px;
+    padding: 15px;
    color: var(--pg-green-main);
+   min-width: 90%!important;
+   
 }
 
 .jsw-view-dtl {
-    border-radius: 7px;
-    padding: 10px;
+    border-radius: 20px;
+    padding: 15px;
+   min-width: 90%!important;
 }
 
 #jsw-back-btn:hover {
