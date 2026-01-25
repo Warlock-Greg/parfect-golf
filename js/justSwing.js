@@ -2925,10 +2925,6 @@ const card = ({ key, title, max }) => {
           : ""
       }
 
-      <button class="jsw-toggle-details" data-toggle="${key}">
-        + Détails
-      </button>
-
       <div class="jsw-details" id="details-${key}">
         ${DETAILS[key] || `<em>Donnée non disponible</em>`}
       </div>
@@ -3367,22 +3363,39 @@ function buildSwingSummaryLine(swing, scores) {
     </div>
   `;
   // Toggle détails
- const btn = document.getElementById("jsw-toggle-details");
-  const panel = document.getElementById("jsw-details-panel");
+const btn = document.getElementById("jsw-toggle-details");
+const panel = document.getElementById("jsw-details-panel");
 
-  if (btn && panel) {
-    btn.onclick = () => {
-      const open = panel.style.display !== "none";
+if (btn && panel) {
+  btn.onclick = () => {
+    const open = panel.style.display === "block";
 
-      // 👉 on construit les cartes UNE SEULE FOIS
-      if (!open && panel.innerHTML.trim() === "") {
+    if (!open && panel.innerHTML.trim() === "") {
+      // 🔒 conteneur temporaire (hors DOM)
+      const temp = document.createElement("div");
+
+      // ⚠️ buildPremiumBreakdown écrit dans un élément
+      const original = document.getElementById("swing-score-breakdown");
+      if (original) {
+        original.innerHTML = "";
         buildPremiumBreakdown(swing, scores);
+
+        // 👉 on COPIE le HTML généré
+        temp.innerHTML = original.innerHTML;
+
+        // 👉 on nettoie la source
+        original.innerHTML = "";
       }
 
-      panel.style.display = open ? "none" : "block";
-      btn.textContent = open ? "+ Détails" : "— Réduire";
-    };
-  }
+      // 👉 on injecte UNIQUEMENT dans le panel
+      panel.appendChild(temp);
+    }
+
+    panel.style.display = open ? "none" : "block";
+    btn.textContent = open ? "+ Détails" : "— Réduire";
+  };
+}
+
  
 }
 
