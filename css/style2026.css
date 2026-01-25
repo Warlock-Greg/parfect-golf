@@ -1226,11 +1226,9 @@ position: fixed;
 
 /* Container global */
 #swing-score-breakdown > div {
-  width: min(92vw, 560px);
+  width: min(100vw, 560px);
   max-height: 88vh;
   overflow-y: auto;
-
-  background: rgba(20, 24, 22, 0.88);
   backdrop-filter: blur(14px);
 
   border-radius: 20px;
