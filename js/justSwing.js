@@ -573,9 +573,9 @@ function isValidSwing(swing) {
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    //"Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
+    "Vérifie grip ✋ posture 🧍‍♂️ alignement 🎯",
     //"Fais un swing d’essai 🌀",
-    "Pose Adresse… 😮‍💨",
+    "Maintien l'Adresse… 😮‍💨",
   ];
 
 
@@ -652,18 +652,37 @@ setTimeout(() => {
   showSwingMessage();
   updateUI();
 
-  // 5️⃣ Timeout de sécurité swing
-  const SWING_TIMEOUT_MS = 6000;
-  swingTimeout = setTimeout(() => {
-    if (!activeSwing?.keyFrames?.impact) {
-      console.warn("⏱️ Swing incomplet — aucun impact détecté");
+  // 5️⃣ Timeout de sécurité swing (ZEN)
+// 👉 Ne bloque JAMAIS la review
+const SWING_TIMEOUT_MS = 6000;
 
-      stopRecording();
-      showSwingRetryButton(
-        "😕 Je n’ai pas vu l’impact.<br>Reviens à l’adresse et recommence."
-      );
-    }
-  }, SWING_TIMEOUT_MS);
+swingTimeout = setTimeout(() => {
+  if (!activeSwing) return;
+
+  const impactSeen = !!activeSwing.keyFrames?.impact;
+  const finishSeen = !!activeSwing.keyFrames?.finish;
+
+  if (!impactSeen || !finishSeen) {
+    console.warn("⚠️ Swing partiel (timeout)", {
+      impactSeen,
+      finishSeen
+    });
+
+    // ⚠️ Marque le swing comme partiel
+    activeSwing.flags = {
+      ...(activeSwing.flags || {}),
+      partial: true,
+      impactSeen,
+      finishSeen,
+      reason: "timeout"
+    };
+
+    // 🔕 PAS de stopRecording ici
+    // 🔕 PAS de retry forcé
+    // 👉 Le moteur continuera jusqu’au finish ou fallback
+  }
+}, SWING_TIMEOUT_MS);
+
 
 }, 1500);
 
