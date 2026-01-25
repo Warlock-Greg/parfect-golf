@@ -3342,7 +3342,12 @@ function buildSwingSummaryLine(swing, scores) {
   el.style.display = "block";
   el.innerHTML = `
     <div class="jsw-swing-summary">
-      <div class="jsw-swing-title">
+      <div class="jsw-swing-title" style=" color: #fff; border: none; text-align: center;">
+        <span class="pill">#1</span>
+        <span class="pill">FER7</span>
+        <span class="pill">FACE</span>
+        <span class="time">19:37:20</span>
+      </div>>
         <span class="pill">#${window.__SWING_IDX}</span>
         <span class="pill">${club}</span>
         <span class="pill">${view}</span>
