@@ -3770,29 +3770,40 @@ btnParfect.onclick = async () => {
   }
 
 // -------------------------------------------
-//  ⏭️ BOUTON "SWING SUIVANT"
+//  ⏭️ BOUTON "SWING SUIVANT" — ZEN FLOW
 // -------------------------------------------
 const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("⏭️ Swing suivant → fermeture review & relance Just Swing");
+    console.log("⏭️ Swing suivant → routine directe");
 
-    // 1) Fermer la review
+    // 1️⃣ Fermer la review
     const reviewEl = document.getElementById("swing-review");
     if (reviewEl) reviewEl.style.display = "none";
 
-    // 2) Nettoyer l’écran JustSwing
-    if (window.JustSwing?.stopSession) {
-      JustSwing.stopSession();
-    }
+    // 2️⃣ Reset moteur & états (clé 🔑)
+    window.SwingEngine?.reset?.();
+    window.JustSwing?.stopSession?.();
 
-    // 3) Relancer une session propre
+    // sécurité états globaux
+    if (typeof addressLocked !== "undefined") addressLocked = false;
+    if (typeof pendingAddress !== "undefined") pendingAddress = false;
+    if (typeof captureArmed !== "undefined") captureArmed = false;
+    if (typeof isRecordingActive !== "undefined") isRecordingActive = false;
+
+    // 3️⃣ S’assurer qu’on est bien en mode Just Swing
+    document.body.classList.add("jsw-fullscreen");
+    document.getElementById("just-swing-area")?.style?.setProperty("display", "block");
+
+    // 4️⃣ Feedback zen
+    showBigMessage?.("🧍‍♂️ Reviens à l’adresse");
+
+    // 5️⃣ Relance de la routine (et pas startSession brut)
     setTimeout(() => {
-      if (window.JustSwing?.startSession) {
-        JustSwing.startSession();
-      }
-    }, 300);
+      hideBigMessage?.();
+      startRoutineSequence?.();
+    }, 800);
   };
 }
 
