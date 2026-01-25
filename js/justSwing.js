@@ -2532,7 +2532,6 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
       club: record.club ?? "?",
       view: record.view ?? "unknown",
       fps: record.fps ?? null,
-      CreatedAt: record.CreatedAt ?? new Date().toISOString(),
       scores: record.scores ?? null,
       metrics: record.metrics ?? null
     };
