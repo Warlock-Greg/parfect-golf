@@ -1296,6 +1296,36 @@ position: fixed;
   color: white;
 }
 
+
+.jsw-details {
+  display: none;
+  margin-top: .4rem;
+  font-size: .75rem;
+  line-height: 1.4;
+  color: #aaa;
+}
+
+.jsw-details.open {
+  display: block;
+}
+
+.jsw-toggle-details {
+  margin-top: .4rem;
+  background: none;
+  border: none;
+  color: #00ff99;
+  font-size: .75rem;
+  cursor: pointer;
+  padding: 0;
+  opacity: .85;
+}
+
+.jsw-toggle-details:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+
 /* Coach hint */
 .jsw-coach {
   margin-top: 8px;
