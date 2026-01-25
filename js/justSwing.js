@@ -2887,6 +2887,77 @@ function buildPremiumBreakdown(swing, scores) {
     plan: `<em>Plan en cours d’analyse</em>`
   };
 
+
+function buildSwingSummaryLine(swing, scores) {
+  const el = document.getElementById("swing-score-breakdown");
+  if (!el) return;
+
+  const b = scores?.breakdown || {};
+  const viewType = (window.jswViewType || "faceOn").toLowerCase();
+
+  const score = (k, max) =>
+    typeof b?.[k]?.score === "number"
+      ? `${b[k].score}/${max}`
+      : "—";
+
+  const club = (swing?.club || "Club").toUpperCase();
+  const view = viewType === "dtl" ? "DTL" : "FACE";
+  const time = new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  window.__SWING_IDX = (window.__SWING_IDX || 0) + 1;
+
+  // Ligne icônes + scores
+  const line = [
+    `🎯 ${score("rotation", 20)}`,
+    `⏱️ ${score("tempo", 20)}`,
+    viewType === "dtl" ? `📐 ${score("plan", 20)}` : null,
+    `🔺 ${score("triangle", 20)}`,
+    `⇄ ${score("weightShift", 10)}`,
+    `📏 ${score("extension", 10)}`,
+    `⚖️ ${score("balance", 10)}`
+  ].filter(Boolean).join(" · ");
+
+  el.style.display = "block";
+  el.innerHTML = `
+    <div class="jsw-swing-summary">
+      <div class="jsw-swing-title">
+        <span class="pill">#${window.__SWING_IDX}</span>
+        <span class="pill">${club}</span>
+        <span class="pill">${view}</span>
+        <span class="time">${time}</span>
+      </div>
+
+      <div class="jsw-swing-line">
+        ${line}
+      </div>
+
+      <button id="jsw-toggle-details" class="jsw-details-btn">
+        + Détails
+      </button>
+
+      <div id="jsw-details-panel" style="display:none;">
+        <!-- ici tu remets TON HTML détaillé existant -->
+      </div>
+    </div>
+  `;
+
+  // Toggle détails
+  const btn = document.getElementById("jsw-toggle-details");
+  const panel = document.getElementById("jsw-details-panel");
+  if (btn && panel) {
+    btn.onclick = () => {
+      const open = panel.style.display !== "none";
+      panel.style.display = open ? "none" : "block";
+      btn.textContent = open ? "+ Détails" : "— Réduire";
+    };
+  }
+}
+
+  
   // ---------------- CARD BUILDER ----------------
 
 const card = ({ key, title, max }) => {
