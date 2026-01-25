@@ -2912,13 +2912,13 @@ function buildSwingSummaryLine(swing, scores) {
 
   // Ligne icônes + scores
   const line = [
-    `🎯 ${score("rotation", 20)}`,
-    `⏱️ ${score("tempo", 20)}`,
-    viewType === "dtl" ? `📐 ${score("plan", 20)}` : null,
-    `🔺 ${score("triangle", 20)}`,
-    `⇄ ${score("weightShift", 10)}`,
-    `📏 ${score("extension", 10)}`,
-    `⚖️ ${score("balance", 10)}`
+    `Rotation ${score("rotation", 20)}`,
+    `Tempo ${score("tempo", 20)}`,
+    viewType === "dtl" ? `Plan ${score("plan", 20)}` : null,
+    `Triangle ${score("triangle", 20)}`,
+    `Transfert ${score("weightShift", 10)}`,
+    `Extension ${score("extension", 10)}`,
+    `Balance ${score("balance", 10)}`
   ].filter(Boolean).join(" · ");
 
   el.style.display = "block";
@@ -2946,11 +2946,18 @@ function buildSwingSummaryLine(swing, scores) {
   `;
 
   // Toggle détails
-  const btn = document.getElementById("jsw-toggle-details");
+ const btn = document.getElementById("jsw-toggle-details");
   const panel = document.getElementById("jsw-details-panel");
+
   if (btn && panel) {
     btn.onclick = () => {
       const open = panel.style.display !== "none";
+
+      // 👉 on construit les cartes UNE SEULE FOIS
+      if (!open && panel.innerHTML.trim() === "") {
+        buildPremiumBreakdown(swing, scores);
+      }
+
       panel.style.display = open ? "none" : "block";
       btn.textContent = open ? "+ Détails" : "— Réduire";
     };
@@ -3524,7 +3531,9 @@ async function updateQuotaUI() {
   if (breakdownEl) {
     breakdownEl.innerHTML = "";   // Reset
     breakdownEl.style.display = "block";
-    buildPremiumBreakdown(swing, scores); // ⬅️ On remplit l’élément depuis
+    // 👉 1) Résumé compact
+    buildSwingSummaryLine(swing, scores);
+    //buildPremiumBreakdown(swing, scores); // ⬅️ On remplit l’élément depuis
   }
 
   // -------------------------------------------
