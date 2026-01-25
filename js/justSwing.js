@@ -2629,7 +2629,6 @@ if (typeof window.refreshSwingQuotaUI === "function") {
   // ===============================
   const swingRecord = {
     cy88wsoi5b8bq9s: window.userLicence.email,
-    created_at: new Date().toISOString(),
     club: swing?.club || currentClub || window.currentClubType || "?",
     view: swing?.view || window.jswViewType || "faceOn",
     frames_count: swing?.frames?.length || 0,
@@ -2890,7 +2889,7 @@ function buildPremiumBreakdown(swing, scores) {
 
   // ---------------- CARD BUILDER ----------------
 
-  const card = ({ key, title, max }) => {
+const card = ({ key, title, max }) => {
   const score = breakdown[key]?.score ?? null;
   const z = zone(score, max);
   const pct =
@@ -2904,8 +2903,8 @@ function buildPremiumBreakdown(swing, scores) {
     "";
 
   return `
-    <div class="jsw-card jsw-${z}">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="jsw-card jsw-${z}" data-card="${key}">
+      <div class="jsw-card-header">
         <div class="jsw-title">${title}</div>
         <div class="jsw-score jsw-score-${z}">
           ${score ?? "—"}/${max}
@@ -2924,14 +2923,34 @@ function buildPremiumBreakdown(swing, scores) {
           : ""
       }
 
-      <div class="jsw-details">${DETAILS[key] || ""}</div>
+      <button class="jsw-toggle-details" data-toggle="${key}">
+        + Détails
+      </button>
+
+      <div class="jsw-details" id="details-${key}">
+        ${DETAILS[key] || `<em>Donnée non disponible</em>`}
+      </div>
     </div>
   `;
 };
 
 
+
   // ---------------- RENDER ----------------
 
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".jsw-toggle-details");
+  if (!btn) return;
+
+  const key = btn.dataset.toggle;
+  const details = document.getElementById(`details-${key}`);
+  if (!details) return;
+
+  const open = details.classList.toggle("open");
+  btn.textContent = open ? "− Détails" : "+ Détails";
+});
+
+  
   el.innerHTML = `
     <div style="padding:.6rem;">
       <div style="text-align:center;margin-bottom:.9rem;">
@@ -2969,6 +2988,8 @@ function buildPremiumBreakdown(swing, scores) {
     </div>
   `;
 
+
+  
   // ---------------- ACTIONS ----------------
 
   document.getElementById("jsw-back-btn")?.addEventListener("click", () => {
