@@ -3349,22 +3349,28 @@ function buildSwingSummaryLine(swing, scores) {
     </div>
   `;
   // Toggle détails
-const btn = document.getElementById("jsw-toggle-details");
+const openBtn = document.getElementById("jsw-open-details");
 const panel = document.getElementById("jsw-details-panel");
+const content = document.getElementById("jsw-details-content");
+const closeBtn = panel?.querySelector(".jsw-close-details");
 
-if (btn && panel) {
-  btn.onclick = () => {
-    const open = panel.style.display === "block";
+if (openBtn && panel && content) {
+  openBtn.onclick = () => {
+    panel.classList.remove("hidden");
 
-    if (!open && panel.innerHTML.trim() === "") {
-      // ✅ on injecte UNE FOIS
-      buildPremiumBreakdown(swing, scores, "jsw-details-panel");
+    // 🔑 injecter UNE SEULE FOIS
+    if (content.innerHTML.trim() === "") {
+      buildPremiumBreakdown(swing, scores, content);
     }
-
-    panel.style.display = open ? "none" : "block";
-    btn.textContent = open ? "+ Détails" : "− Réduire";
   };
 }
+
+if (closeBtn) {
+  closeBtn.onclick = () => {
+    panel.classList.add("hidden");
+  };
+}
+
 
 
  
