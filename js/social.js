@@ -259,22 +259,27 @@ async function loadHistoryTab(type) {
 }
 
 function buildSocialSwingItem(swing, index) {
-  const score = (k, max) =>
-    typeof swing?.[`score_${k}`] === "number"
-      ? `${swing[`score_${k}`]}/${max}`
-      : "—";
+  const s = swing?.scores?.scores || {};
 
-  const view = swing.view_type === "dtl" ? "DTL" : "FACE";
+  const score = (k, max) =>
+    typeof s[k] === "number" ? `${s[k]}/${max}` : "—";
+
+  const viewType = (swing.view || swing.view_type || "faceOn").toLowerCase();
+  const view = viewType === "dtl" ? "DTL" : "FACE";
   const club = (swing.club || "?").toUpperCase();
-  const time = swing.created_at
-    ? new Date(swing.created_at).toLocaleTimeString([], {
+
+  const time = swing.createdAt || swing.created_at
+    ? new Date(swing.createdAt || swing.created_at).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit"
       })
     : "";
 
   return `
-    <div class="history-item session-item" data-swing-id="${swing.id}">
+    <div class="history-item session-item"
+         data-swing-id="${swing.id}"
+         data-view="${viewType}">
+      
       <div class="history-main">
         <span class="history-id">#${index}</span>
         <span class="history-meta">${club} · ${view}</span>
@@ -285,16 +290,19 @@ function buildSocialSwingItem(swing, index) {
         <span title="Rotation">🎯 ${score("rotation", 20)}</span>
         <span title="Tempo">⏱️ ${score("tempo", 20)}</span>
         ${
-          swing.view_type === "dtl"
-            ? `<span title="Plan">📐 ${score("plan", 20)}</span>`
+          viewType === "dtl"
+            ? `<span title="Plan de swing">📐 ${score("plan", 20)}</span>`
             : ""
         }
         <span title="Triangle">🔺 ${score("triangle", 20)}</span>
+        <span title="Transfert">⇄ ${score("weightShift", 10)}</span>
+        <span title="Extension">📏 ${score("extension", 10)}</span>
         <span title="Balance">⚖️ ${score("balance", 10)}</span>
       </div>
     </div>
   `;
 }
+
 
 // ------------------------------------------------
 // replay swing depuis l'historique
