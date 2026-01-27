@@ -1786,3 +1786,48 @@ function buildSwingSummaryLine(swing, scores) {
   margin-bottom: 8px;
   cursor: pointer;
 }
+
+
+           .history-item {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.history-item:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-1px);
+}
+
+.history-main {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+}
+
+.history-id {
+  font-weight: 700;
+  color: var(--pg-green-main);
+}
+
+.history-meta {
+  opacity: 0.9;
+}
+
+.history-time {
+  opacity: 0.6;
+  font-size: 0.75rem;
+}
+
+.history-scores {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
