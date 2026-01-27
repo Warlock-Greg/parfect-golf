@@ -2651,14 +2651,22 @@ function renderSessionHistoryInline() {
       typeof b[k]?.score === "number" ? `${b[k].score}/${max}` : "—";
 
     return `
-      <div class="history-item session-item">
-        <b>#${swings.length - i}</b>
-        — ${new Date(s.created_at).toLocaleTimeString()}
-        — 🎯 ${score("rotation", 20)}
-        · ⏱️ ${score("tempo", 20)}
-        · 🔺 ${score("triangle", 20)}
-        · ⚖️ ${score("balance", 10)}
-      </div>
+  <div class="history-item session-item" data-swing-index="${i}">
+  <div class="history-main">
+    <span class="history-id">#${swings.length - i}</span>
+    <span class="history-time">
+      ${new Date(s.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+    </span>
+  </div>
+
+  <div class="history-scores">
+    <span title="Rotation">🎯 ${score("rotation", 20)}</span>
+    <span title="Tempo">⏱️ ${score("tempo", 20)}</span>
+    <span title="Triangle">🔺 ${score("triangle", 20)}</span>
+    <span title="Balance">⚖️ ${score("balance", 10)}</span>
+  </div>
+</div>
+
     `;
   }).join("");
 }
