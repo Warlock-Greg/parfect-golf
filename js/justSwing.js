@@ -3763,6 +3763,32 @@ btnParfect.onclick = async () => {
     replayCanvas = overlay;
     replayCtx = overlay.getContext("2d");
 
+
+function replaySwingFromHistory(swing) {
+  console.log("🎬 Replay swing", swing);
+
+  // 1️⃣ On va en mode Just Swing
+  document.body.classList.add("jsw-fullscreen");
+  document.getElementById("just-swing-area").style.display = "block";
+
+  // 2️⃣ On masque l’UI live
+  window.JustSwing?.stopSession?.();
+
+  // 3️⃣ On reconstruit l’objet swing comme un swing “terminé”
+  const parsedSwing = {
+    ...swing,
+    keyFrames: swing.keyFrames || JSON.parse(swing.keyframes_json || "{}"),
+    frames: swing.frames || JSON.parse(swing.frames_json || "[]"),
+    timestamps: swing.timestamps || JSON.parse(swing.timestamps_json || "[]"),
+    club: swing.club,
+    viewType: swing.view_type || "faceOn"
+  };
+
+  // 4️⃣ Replay EXACT comme après un swing
+  handleSwingComplete(parsedSwing);
+}
+
+    
   function renderFrame(index) {
   if (!lastSwing || !replayCanvas || !replayCtx) return;
 
