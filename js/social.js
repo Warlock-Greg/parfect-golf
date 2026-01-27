@@ -296,6 +296,48 @@ function buildSocialSwingItem(swing, index) {
   `;
 }
 
+// ------------------------------------------------
+// replay swing depuis l'historique
+// ------------------------------------------------
+
+document.addEventListener("click", async (e) => {
+  const item = e.target.closest(".history-item[data-swing-id]");
+  if (!item) return;
+
+  const swingId = item.dataset.swingId;
+  if (!swingId) return;
+
+  console.log("🔁 Replay swing depuis historique", swingId);
+
+  try {
+    const swing = await loadSingleSwingFromNocoDB(swingId);
+    if (!swing) {
+      console.warn("⚠️ Swing introuvable");
+      return;
+    }
+
+    replaySwingFromHistory(swing);
+
+  } catch (err) {
+    console.error("❌ Erreur replay swing", err);
+  }
+});
+
+async function loadSingleSwingFromNocoDB(swingId) {
+  const url = `${window.NOCODB_SWINGS_URL}/${swingId}`;
+
+  const res = await fetch(url, {
+    headers: { "xc-token": window.NOCODB_TOKEN }
+  });
+
+  if (!res.ok) {
+    console.error("❌ NocoDB swing load failed");
+    return null;
+  }
+
+  return await res.json();
+}
+
 
 // ------------------------------------------------
 // NOCODB — LOAD SWINGS (UNCHANGED)
