@@ -125,12 +125,19 @@ window.refreshSwingQuotaUI = async function () {
 
   try {
     const count = await window.getTodaySwingCount(email);
-    el.textContent = `${count}/10`;
-  } catch (e) {
-    console.error("❌ Quota refresh error", e);
+    const max = 10;
+
+    el.innerHTML = `
+      <span class="pg-quota-count">${count}</span>
+      <span class="pg-quota-sep">/</span>
+      <span class="pg-quota-max">${max}</span>
+    `;
+  } catch (err) {
+    console.error("❌ Swing quota error", err);
     el.textContent = "—";
   }
 };
+
 
 // ------------------------------------------------
 // INVITE FRIEND
@@ -212,18 +219,15 @@ async function loadHistoryTab(type) {
   if (!panel) return;
 
   if (type === "swing") {
-    const swings = await loadSwingHistoryFromNocoDB();
-    panel.innerHTML = swings.length
-      ? swings.map(s => `
-        <div class="pg-card">
-          <strong>${s.club || "?"}</strong><br>
-          Score ${s.score_total ?? "—"}<br>
-          <small>${s.cmbvp0anzpjfsig ? new Date(s[cmbvp0anzpjfsig]).toLocaleString() : ""}</small>
-        </div>
-      `).join("")
-      : `<p class="pg-muted">Aucun swing enregistré.</p>`;
-    return;
-  }
+  const swings = await loadSwingHistoryFromNocoDB();
+
+  panel.innerHTML = swings.length
+    ? swings.map((s, i) => buildSocialSwingItem(s, swings.length - i)).join("")
+    : `<p class="pg-muted">Aucun swing enregistré.</p>`;
+
+  return;
+}
+
 
   if (type === "training") {
     const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
@@ -253,6 +257,45 @@ async function loadHistoryTab(type) {
       : `<p class="pg-muted">Aucune partie enregistrée.</p>`;
   }
 }
+
+function buildSocialSwingItem(swing, index) {
+  const score = (k, max) =>
+    typeof swing?.[`score_${k}`] === "number"
+      ? `${swing[`score_${k}`]}/${max}`
+      : "—";
+
+  const view = swing.view_type === "dtl" ? "DTL" : "FACE";
+  const club = (swing.club || "?").toUpperCase();
+  const time = swing.created_at
+    ? new Date(swing.created_at).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    : "";
+
+  return `
+    <div class="history-item session-item" data-swing-id="${swing.id}">
+      <div class="history-main">
+        <span class="history-id">#${index}</span>
+        <span class="history-meta">${club} · ${view}</span>
+        <span class="history-time">${time}</span>
+      </div>
+
+      <div class="history-scores">
+        <span title="Rotation">🎯 ${score("rotation", 20)}</span>
+        <span title="Tempo">⏱️ ${score("tempo", 20)}</span>
+        ${
+          swing.view_type === "dtl"
+            ? `<span title="Plan">📐 ${score("plan", 20)}</span>`
+            : ""
+        }
+        <span title="Triangle">🔺 ${score("triangle", 20)}</span>
+        <span title="Balance">⚖️ ${score("balance", 10)}</span>
+      </div>
+    </div>
+  `;
+}
+
 
 // ------------------------------------------------
 // NOCODB — LOAD SWINGS (UNCHANGED)
