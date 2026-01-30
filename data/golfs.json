@@ -30,6 +30,21 @@
     "name": "Terre Blanche - Le Château",
     "location": "Tourrettes, France",
     "pars": [4,5,4,3,4,5,4,3,4,5,4,4,3,5,4,3,4,5]
+  },
+
+  { 
+    "id": "GOLF006", 
+    "name": "Ronchin Académique 9 TROUS", 
+    "location": "Bruz, France",
+    "pars": [3,3,4,3,3,3,3,4,5] 
+  },
+
+  { 
+    "id": "GOLF007", 
+    "name": "Ronchin Lille Métropole 18 TROUS", 
+    "location": "Bruz, France",
+    "pars": [5,5,4,4,3,4,4,4,3,4,3,4,4,5,3,5,4,4] 
   }
+  
 
 ]
