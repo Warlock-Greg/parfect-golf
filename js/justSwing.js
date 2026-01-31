@@ -2895,30 +2895,34 @@ const card = ({ key, title, max }) => {
 
   return `
     <div class="jsw-card jsw-${z}" data-card="${key}">
-      <div class="jsw-card-header">
-        <div class="jsw-title">${title}</div>
-        <div class="jsw-score jsw-score-${z}">
-          ${score ?? "—"}/${max}
-        </div>
-      </div>
-
-      ${badge(score)}
-
-      <div class="jsw-bar">
-        <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
-      </div>
-
-      ${
-        objective
-          ? `<div class="jsw-objective">🎯 Objectif : ${objective}</div>`
-          : ""
-      }
-
-      <div class="jsw-details" id="details-${key}">
-        ${DETAILS[key] || `<em>Donnée non disponible</em>`}
+    <div class="jsw-card-header">
+      <div class="jsw-title">${title}</div>
+      <div class="jsw-score jsw-score-${z}">
+        ${score ?? "—"}/${max}
       </div>
     </div>
-  `;
+
+    ${badge(score)}
+
+    <div class="jsw-bar">
+      <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
+    </div>
+
+    ${
+      objective
+        ? `<div class="jsw-objective">🎯 ${objective}</div>`
+        : ""
+    }
+
+    <button class="jsw-toggle-details" data-toggle="${key}">
+      + détails
+    </button>
+
+    <div class="jsw-details" id="details-${key}">
+      ${DETAILS[key] || `<em>Donnée non disponible</em>`}
+    </div>
+  </div>
+`;
 };
 
 
@@ -2933,9 +2937,12 @@ document.addEventListener("click", (e) => {
   const details = document.getElementById(`details-${key}`);
   if (!details) return;
 
-  const open = details.classList.toggle("open");
-  btn.textContent = open ? "− Détails" : "+ Détails";
+  details.classList.toggle("open");
+  btn.textContent = details.classList.contains("open")
+    ? "− masquer"
+    : "+ détails";
 });
+
 
   
   el.innerHTML = `
