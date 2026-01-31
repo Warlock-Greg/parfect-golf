@@ -582,6 +582,14 @@ body.jsw-fullscreen .bottom-nav {
   font-weight: 600;
 }
 
+.pg-onboarding-step {
+  display: none;
+}
+
+.pg-onboarding-step.active {
+  display: block;
+}
+
 /* ================================
    TRAINING — ZEN 2026
    ================================ */
