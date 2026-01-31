@@ -3888,26 +3888,22 @@ const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-  // 1) fermer la review
-  document.getElementById("swing-review")?.classList.add("hidden");
+    console.log("➡️ Swing suivant");
 
-  // 2) relancer DIRECTEMENT la routine
-  JustSwing?.stopSession?.();
+    // 1️⃣ RESET COMPLET
+    resetSwingFlow();
 
-  setTimeout(() => {
-    JustSwing?.startSession?.();
-  }, 100);
-};
-    // 4️⃣ Petit délai de respiration (important)
+    // 2️⃣ PETITE RESPIRATION UI
     setTimeout(() => {
-      // 5️⃣ Retour routine (PAS startSession direct)
       if (typeof startRoutineSequence === "function") {
         startRoutineSequence();
       } else {
         console.warn("⚠️ startRoutineSequence() manquante");
       }
-    }, 250);
+    }, 150);
   };
+}
+
 
 
   
