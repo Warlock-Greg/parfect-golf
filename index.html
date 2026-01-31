@@ -222,9 +222,7 @@
 
   <div class="pg-onboarding-step active" data-step="1">
     <h2>Bienvenue sur Parfect.golfr</h2>
-    <p>
-      Une méthode orientée décisions, pas pression.
-    </p>
+    <p>Une méthode orientée décisions, pas pression.</p>
     <button class="pg-btn-primary" data-next>Continuer</button>
   </div>
 
@@ -252,6 +250,56 @@
   </div>
 
 </div>
+
+<script>
+(function () {
+  const KEY = "parfect:onboarding:done";
+  const onboarding = document.getElementById("onboarding");
+  if (!onboarding) return;
+
+  if (localStorage.getItem(KEY) === "true") {
+    onboarding.remove();
+    return;
+  }
+
+  document.body.classList.add("onboarding-active");
+
+  let step = 1;
+  const steps = onboarding.querySelectorAll(".pg-onboarding-step");
+
+  function showStep(n) {
+    steps.forEach(s => s.classList.remove("active"));
+    onboarding
+      .querySelector(`[data-step="${n}"]`)
+      ?.classList.add("active");
+  }
+
+  onboarding.querySelectorAll("[data-next]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      step++;
+      showStep(step);
+    });
+  });
+
+  document
+    .getElementById("finish-onboarding")
+    ?.addEventListener("click", () => {
+      localStorage.setItem(KEY, "true");
+      onboarding.classList.add("fade-out");
+
+      setTimeout(() => onboarding.remove(), 400);
+      document.body.classList.remove("onboarding-active");
+
+      showView?.("home-area");
+      window.coachReact?.(
+        "Choisis une action. Une seule intention, un seul coup."
+      );
+    });
+
+  showStep(1);
+})();
+</script>
+
 
   <!-- =========================================
        NAV BOTTOM (Home hub)
@@ -340,14 +388,12 @@
   <!-- =========================================
        ONBOARDING / NAV FLOW (une tâche, un esprit)
        ========================================= -->
- <script>
+<script>
 (function () {
   const KEY = "parfect:onboarding:done";
   const onboarding = document.getElementById("onboarding");
-
   if (!onboarding) return;
 
-  // Déjà vu → on supprime
   if (localStorage.getItem(KEY) === "true") {
     onboarding.remove();
     return;
@@ -360,10 +406,11 @@
 
   function showStep(n) {
     steps.forEach(s => s.classList.remove("active"));
-    onboarding.querySelector(`[data-step="${n}"]`)?.classList.add("active");
+    onboarding
+      .querySelector(`[data-step="${n}"]`)
+      ?.classList.add("active");
   }
 
-  // Boutons "Continuer"
   onboarding.querySelectorAll("[data-next]").forEach(btn => {
     btn.addEventListener("click", () => {
       step++;
@@ -371,20 +418,20 @@
     });
   });
 
-  // Bouton "Commencer"
-  document.getElementById("finish-onboarding")?.addEventListener("click", () => {
-    localStorage.setItem(KEY, "true");
-    onboarding.classList.add("fade-out");
+  document
+    .getElementById("finish-onboarding")
+    ?.addEventListener("click", () => {
+      localStorage.setItem(KEY, "true");
+      onboarding.classList.add("fade-out");
 
-    setTimeout(() => onboarding.remove(), 400);
-    document.body.classList.remove("onboarding-active");
+      setTimeout(() => onboarding.remove(), 400);
+      document.body.classList.remove("onboarding-active");
 
-    // 👉 navigation réelle
-    showView("home-area");
-
-    // 👉 coach zen
-    window.coachReact?.("Choisis une action. Une seule intention, un seul coup.");
-  });
+      showView?.("home-area");
+      window.coachReact?.(
+        "Choisis une action. Une seule intention, un seul coup."
+      );
+    });
 
   showStep(1);
 })();
