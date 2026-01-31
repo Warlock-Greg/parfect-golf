@@ -1236,16 +1236,11 @@ position: fixed;
   max-height: 88vh;
   overflow-y: auto;
 
-  background: rgba(20, 24, 22, 0.88);
+  background: rgba(15, 20, 18, 0.92);
+  border: 1px solid rgba(0,255,153,0.25);
+  box-shadow: 0 0 30px rgba(0,255,153,0.25);
   backdrop-filter: blur(14px);
-
   border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.08);
-
-  box-shadow:
-    0 12px 32px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.04);
-
   padding: 14px 14px 16px;
 }
 
@@ -1335,16 +1330,15 @@ position: fixed;
 /* Details */
 .jsw-details {
   line-height: 1.4;
-  color: white;
-}
-
-
-.jsw-details {
   display: none;
   margin-top: .4rem;
   font-size: .75rem;
   line-height: 1.4;
-  color: #aaa;
+  background: #f8faf9;
+  border-radius: 12px;
+  padding: 8px 10px;
+  margin-top: 6px;
+  color: #555;
 }
 
 .jsw-details.open {
@@ -1361,6 +1355,12 @@ position: fixed;
   padding: 0;
   opacity: .85;
 }
+
+.jsw-toggle-details {
+  color: var(--pg-text-muted);
+  font-size: 0.75rem;
+}
+
 
 .jsw-toggle-details:hover {
   opacity: 1;
@@ -1506,14 +1506,6 @@ position: fixed;
   line-height: 1.4;
 }
 
-/* -------------------------------
-   BREAKDOWN (reprend ton CSS précédent)
-   ------------------------------- */
-
-#swing-score-breakdown {
-  max-width: 720px;
-  margin: 24px auto;
-}
 
 /* -------------------------------
    ACTIONS
@@ -1623,10 +1615,10 @@ position: fixed;
   max-height: 90vh;
   overflow-y: auto;
 
-  background: rgba(15, 20, 18, 0.92);
-  border-radius: 18px;
-  border: 1px solid rgba(0,255,153,0.25);
-  box-shadow: 0 0 30px rgba(0,255,153,0.25);
+background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
 .jsw-view-badge {
