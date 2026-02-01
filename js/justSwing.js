@@ -2755,8 +2755,10 @@ function buildParfectReviewCard(swing, scores) {
 
       <div class="jsw-review-header">
         <span class="jsw-pill">${viewType} · ${club}</span>
-        <div class="jsw-score-main">${total}</div>
-        <div class="jsw-score-sub">Score Parfect · JustSwing</div>
+        <div class="jsw-score-ring">
+        <div class="jsw-score-value">${total}</div>
+        <div class="jsw-score-label">Score Parfect</div>
+      </div>
       </div>
 
       <div class="jsw-coach-comment">
@@ -2777,19 +2779,32 @@ function buildParfectReviewCard(swing, scores) {
       </button>
 
       <div id="jsw-details-panel" class="jsw-details-panel hidden">
-        ${Object.keys(breakdown)
-          .map((k) => {
-            const m = breakdown[k]?.metrics;
-            if (!m) return "";
-            return `
-              <div class="jsw-detail-block">
-                <strong>${k}</strong><br>
-                <pre>${JSON.stringify(m, null, 2)}</pre>
-              </div>
-            `;
-          })
-          .join("")}
+  ${Object.entries(breakdown).map(([key, data]) => {
+    if (!data || typeof data.score !== "number") return "";
+
+    const objective = {
+      tempo: "Ratio fluide ≈ 3:1",
+      rotation: "Épaules engagées, hanches stables",
+      triangle: "Bras connectés du top à l’impact",
+      weightShift: "Transfert progressif vers l’avant",
+      extension: "Bras étendus après impact",
+      balance: "Finish stable et équilibré"
+    }[key] || "";
+
+    return `
+      <div class="jsw-detail-card">
+        <div class="jsw-detail-header">
+          <strong>${key}</strong>
+          <span>${data.score}</span>
+        </div>
+        <div class="jsw-detail-objective">
+          🎯 ${objective}
+        </div>
       </div>
+    `;
+  }).join("")}
+</div>
+
 
       <div class="jsw-review-actions">
         <button id="jsw-review-back" class="jsw-btn-secondary">
@@ -2802,6 +2817,8 @@ function buildParfectReviewCard(swing, scores) {
 
     </div>
   `;
+
+  container.style.setProperty("--score", total);
 
   // -------------------------
   // Interactions
