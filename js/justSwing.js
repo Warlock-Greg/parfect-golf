@@ -2728,6 +2728,129 @@ function renderSessionHistoryInline() {
 //   ✅ plus de "metrics.xxx" en direct dans l'UI
 //   ✅ affiche un message si un module est non mesuré
 // ---------------------------------------------------------
+
+function buildParfectReviewCard(swing, scores) {
+  const container = document.getElementById("swing-score-breakdown");
+  if (!container) return;
+
+  const breakdown = scores?.breakdown || {};
+  const total = scores?.total ?? "—";
+  const viewType = (window.jswViewType || "faceOn") === "dtl" ? "DTL" : "FACE";
+  const club = (swing?.club || "Club").toUpperCase();
+
+  // -------------------------
+  // Helpers
+  // -------------------------
+  const scoreLine = (key, label, max, icon) => {
+    const s = breakdown[key]?.score;
+    const warn = typeof s === "number" && s < max * 0.6 ? "⚠️" : "";
+    const ok = typeof s === "number" && s >= max * 0.75 ? "✔︎" : "";
+
+    return `
+      <div class="jsw-metric">
+        <span class="jsw-metric-label">${icon} ${label}</span>
+        <span class="jsw-metric-score">
+          ${typeof s === "number" ? `${s}/${max}` : "—"} ${ok || warn}
+        </span>
+      </div>
+    `;
+  };
+
+  const coachComment =
+    typeof buildGlobalCoachComment === "function"
+      ? buildGlobalCoachComment(window.jswViewType, scores)
+      : "Continue ton travail avec régularité.";
+
+  // -------------------------
+  // Render
+  // -------------------------
+  container.innerHTML = `
+    <div class="jsw-review-card">
+
+      <div class="jsw-review-header">
+        <span class="jsw-pill">${viewType} · ${club}</span>
+        <div class="jsw-score-main">${total}</div>
+        <div class="jsw-score-sub">Score Parfect · JustSwing</div>
+      </div>
+
+      <div class="jsw-coach-comment">
+        🧠 ${coachComment}
+      </div>
+
+      <div class="jsw-metrics">
+        ${scoreLine("rotation", "Rotation", 20, "🎯")}
+        ${scoreLine("tempo", "Tempo", 20, "⏱️")}
+        ${scoreLine("triangle", "Triangle", 20, "🔺")}
+        ${scoreLine("weightShift", "Transfert", 10, "👣")}
+        ${scoreLine("extension", "Extension", 10, "🦾")}
+        ${scoreLine("balance", "Balance", 10, "⚖️")}
+      </div>
+
+      <button id="jsw-toggle-details" class="jsw-details-toggle">
+        + Détails & objectifs
+      </button>
+
+      <div id="jsw-details-panel" class="jsw-details-panel hidden">
+        ${Object.keys(breakdown)
+          .map((k) => {
+            const m = breakdown[k]?.metrics;
+            if (!m) return "";
+            return `
+              <div class="jsw-detail-block">
+                <strong>${k}</strong><br>
+                <pre>${JSON.stringify(m, null, 2)}</pre>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
+
+      <div class="jsw-review-actions">
+        <button id="jsw-review-back" class="jsw-btn-secondary">
+          ← Retour
+        </button>
+        <button id="jsw-review-next" class="jsw-btn-primary">
+          Swing suivant 🏌️
+        </button>
+      </div>
+
+    </div>
+  `;
+
+  // -------------------------
+  // Interactions
+  // -------------------------
+  const toggleBtn = document.getElementById("jsw-toggle-details");
+  const detailsPanel = document.getElementById("jsw-details-panel");
+
+  if (toggleBtn && detailsPanel) {
+    toggleBtn.onclick = () => {
+      detailsPanel.classList.toggle("hidden");
+      toggleBtn.textContent = detailsPanel.classList.contains("hidden")
+        ? "+ Détails & objectifs"
+        : "− Masquer les détails";
+    };
+  }
+
+  // ← Retour
+  document.getElementById("jsw-review-back")?.addEventListener("click", () => {
+    window.JustSwing?.stopSession?.();
+    document.body.classList.remove("jsw-fullscreen");
+    document.getElementById("home-btn")?.click();
+  });
+
+  // Swing suivant
+  document.getElementById("jsw-review-next")?.addEventListener("click", () => {
+    container.innerHTML = "";
+    if (typeof startRoutineSequence === "function") {
+      startRoutineSequence();
+    } else {
+      console.warn("⚠️ startRoutineSequence introuvable");
+    }
+  });
+}
+
+  
 function buildPremiumBreakdown(swing, scores) {
   const el = document.getElementById("swing-score-breakdown");
   if (!el) return;
@@ -3302,93 +3425,17 @@ if (!addressLocked) {
     }
   }
 
-function buildSwingSummaryLine(swing, scores) {
-  const el = document.getElementById("swing-score-breakdown");
-  if (!el) return;
 
-  const b = scores?.breakdown || {};
-  const viewType = (window.jswViewType || "faceOn").toLowerCase();
-
-  const score = (k, max) =>
-    typeof b?.[k]?.score === "number"
-      ? `${b[k].score}/${max}`
-      : "—";
-
-  const club = (swing?.club || "Club").toUpperCase();
-  const view = viewType === "dtl" ? "DTL" : "FACE";
-  const time = new Date().toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-
-  window.__SWING_IDX = (window.__SWING_IDX || 0) + 1;
-
-  // Ligne icônes + scores
-  const line = [
-    `Rotation ${score("rotation", 20)}`,
-    `Tempo ${score("tempo", 20)}`,
-    viewType === "dtl" ? `Plan ${score("plan", 20)}` : null,
-    `Triangle ${score("triangle", 20)}`,
-    `Transfert ${score("weightShift", 10)}`,
-    `Extension ${score("extension", 10)}`,
-    `Balance ${score("balance", 10)}`
-  ].filter(Boolean).join(" · ");
-
-  el.style.display = "block";
-  el.innerHTML = `
-    <div class="jsw-swing-summary">
-      <div class="jsw-swing-title" style="text-align: center;">
-        <span class="pill">#${window.__SWING_IDX} ${club} ${view} ${time}</span>
-
-          <div class="jsw-swing-line">
-          ${line}
-          </div>
-  
-          <button id="jsw-toggle-details" class="jsw-details-btn">
-          + Détails
-          </button>
-
-          <div id="jsw-details-panel" class="jsw-details-panel" style="display:none;">
-         </div>
-      </div>
-    </div>
-  `;
-  // Toggle détails
-const openBtn = document.getElementById("jsw-open-details");
-const panel = document.getElementById("jsw-details-panel");
-const content = document.getElementById("jsw-details-content");
-const closeBtn = panel?.querySelector(".jsw-close-details");
-
-if (openBtn && panel && content) {
-  openBtn.onclick = () => {
-    panel.classList.remove("hidden");
-
-    // 🔑 injecter UNE SEULE FOIS
-    if (content.innerHTML.trim() === "") {
-      buildPremiumBreakdown(swing, scores, content);
-    }
-  };
-}
-
-if (closeBtn) {
-  closeBtn.onclick = () => {
-    panel.classList.add("hidden");
-  };
-}
-
-
-
- 
-}
 
   
   // ======================================================
   // 6️⃣ SCORING PREMIUM (inchangé)
   // ======================================================
   const scores = computeSwingScorePremium(swing);
-  buildPremiumBreakdown(swing, scores);
+  //buildPremiumBreakdown(swing, scores);
+  buildParfectReviewCard(swing, scores);
 
+  
   onSwingValidated({
   scores,
   currentClub: swing.club || currentClubType,
@@ -3397,7 +3444,7 @@ if (closeBtn) {
 
   // 🔒 Brancher les actions APRÈS le render
   bindSwingReviewActions(swing, scores);
-
+  initSwingReplay(swing, scores);
 
   // -------------------------------------------
   // 1️⃣ — Sélection des éléments du Replay (index.html)
