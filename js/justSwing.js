@@ -2844,12 +2844,32 @@ function buildParfectReviewCard(swing, scores) {
 
   // Swing suivant
   document.getElementById("jsw-review-next")?.addEventListener("click", () => {
-    container.innerHTML = "";
-    if (typeof startRoutineSequence === "function") {
-      startRoutineSequence();
-    } else {
-      console.warn("⚠️ startRoutineSequence introuvable");
-    }
+   console.log("➡️ Retour à la routine");
+
+  // 1️⃣ Nettoyer la review
+  const reviewPanel = document.getElementById("swing-review");
+  if (reviewPanel) {
+    reviewPanel.style.display = "none";
+  }
+
+  container.innerHTML = "";
+
+  // 2️⃣ Reset états critiques
+  state = JSW_STATE.WAITING_START;
+  captureArmed = false;
+  isRecordingActive = false;
+
+  // 3️⃣ Rafraîchir l’UI
+  if (typeof updateUI === "function") {
+    updateUI();
+  }
+
+  // 4️⃣ Relancer la routine (SANS caméra)
+  if (typeof startRoutineSequence === "function") {
+    startRoutineSequence();
+  } else {
+    console.warn("⚠️ startRoutineSequence introuvable");
+  }
   });
 }
 
