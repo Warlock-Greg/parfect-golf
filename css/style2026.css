@@ -1250,6 +1250,7 @@ position: fixed;
   backdrop-filter: blur(14px);
   border-radius: 20px;
   padding: 14px 14px 16px;
+   color: var(--pg-green-main);
 }
 
 .jsw-swing-summary {
@@ -1615,6 +1616,7 @@ position: fixed;
 
   background: transparent;
   backdrop-filter: none;
+   color: var(--pg-green-main);
 }
 
 /* Contenu interne déjà généré par JS */
