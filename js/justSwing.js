@@ -2672,55 +2672,41 @@ function renderSessionHistoryInline() {
 }
 
 
-  function getPriorityAxes(viewType, scores) {
-  const pillars = getOrderedPillars(viewType, scores);
+  
 
-  // piliers NON validés (<15)
-  const notOk = pillars.filter(p => p.score < 15);
+ function buildGlobalCoachComment(viewType, scores) {
+  const breakdown = scores?.breakdown || {};
 
-  if (notOk.length === 0) {
-    return {
-      primary: null,
-      secondary: null,
-      status: "all_good"
-    };
-  }
+  // Ordre de priorité Parfect (simple & lisible)
+  const ORDER =
+    viewType === "dtl"
+      ? ["tempo", "plan", "rotation", "triangle", "extension", "balance"]
+      : ["tempo", "rotation", "triangle", "weightShift", "extension", "balance"];
 
-  return {
-    primary: notOk[0],
-    secondary: notOk[1] || null,
-    status: "focus"
-  };
-}
-
-  function buildGlobalCoachComment(viewType, scores) {
-  const { primary, secondary, status } =
-    getPriorityAxes(viewType, scores);
-
-  // 🟢 Tout est validé
-  if (status === "all_good") {
-    return "Très belle séance. Tous les piliers clés sont en place. Continue dans ce rythme 👍";
-  }
-
-  const label = {
-    rotation: "la rotation",
+  const LABEL = {
     tempo: "le tempo",
-    plan: "le plan de swing",
+    rotation: "la rotation",
     triangle: "le triangle bras/épaules",
     weightShift: "le transfert d’appui",
     extension: "l’extension",
-    balance: "l’équilibre"
+    balance: "l’équilibre",
+    plan: "le plan de swing"
   };
 
-  let msg = `Priorité : travaille ${label[primary.key]}.`;
+  // Cherche le premier pilier sous le seuil
+  const weak = ORDER.find((k) => {
+    const s = breakdown[k]?.score;
+    return typeof s === "number" && s < 15;
+  });
 
-  // 👉 seulement si le 1er pilier est presque validé
-  if (primary.score >= 12 && secondary) {
-    msg += ` Ensuite, tu pourras t’attaquer à ${label[secondary.key]}.`;
+  // 🟢 Tout est OK
+  if (!weak) {
+    return "Très belle séance. Les fondamentaux sont en place. Continue comme ça 👍";
   }
 
-  return msg;
+  return `Priorité : travaille ${LABEL[weak]}.`;
 }
+
 
   
 // ---------------------------------------------------------
