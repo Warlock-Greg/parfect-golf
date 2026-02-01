@@ -416,8 +416,8 @@ function showStartButton() {
             //updateUI();
             // On laisse le joueur se replacer, puis il pourra relancer Start
             //setTimeout(() => showStartButton(), 2500);
-            return;
-          }
+            //return;
+          //}
 
           // Sinon on lance la routine guidée
           startRoutineSequence();
