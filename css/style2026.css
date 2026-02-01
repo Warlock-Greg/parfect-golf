@@ -1259,11 +1259,6 @@ position: fixed;
   gap: 10px;
 }
 
-.jsw-swing-line {
-  font-size: 0.9rem;
-  line-height: 1.45;
-  color: #d6e6df;
-}
 
 .jsw-details-btn {
   margin-top: 6px;
@@ -1417,7 +1412,7 @@ position: fixed;
     border-radius: 20px;
     padding: 15px;
    color: var(--pg-green-main);
-   min-width: 90%!important;
+   min-width: 100%!important;
    
 }
 
