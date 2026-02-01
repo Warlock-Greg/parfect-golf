@@ -3555,16 +3555,7 @@ async function updateQuotaUI() {
     commentEl.textContent = coachTechnicalComment(scores);
   }
 
-  // -------------------------------------------
-  // 5️⃣ — Score Card Premium
-  // -------------------------------------------
-  if (breakdownEl) {
-    breakdownEl.innerHTML = "";   // Reset
-    breakdownEl.style.display = "block";
-    // 👉 1) Résumé compact
-    buildSwingSummaryLine(swing, scores);
-    //buildPremiumBreakdown(swing, scores); // ⬅️ On remplit l’élément depuis
-  }
+
 
   // -------------------------------------------
   // 6️⃣ — On masque totalement l’ancien panneau JustSwing
