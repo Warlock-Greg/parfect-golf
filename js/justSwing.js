@@ -3879,19 +3879,18 @@ const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("➡️ Swing suivant");
+    console.log("➡️ Retour à la routine");
 
-    // 1️⃣ RESET COMPLET
-    resetSwingFlow();
+    // 1️⃣ Fermer la review
+    document.getElementById("swing-review")?.classList.add("hidden");
 
-    // 2️⃣ PETITE RESPIRATION UI
-    setTimeout(() => {
-      if (typeof startRoutineSequence === "function") {
-        startRoutineSequence();
-      } else {
-        console.warn("⚠️ startRoutineSequence() manquante");
-      }
-    }, 150);
+    // 2️⃣ Nettoyer le breakdown (sécurité)
+    const breakdown = document.getElementById("swing-score-breakdown");
+    if (breakdown) breakdown.innerHTML = "";
+
+    // 3️⃣ Revenir à la vue routine
+    showView?.("routine-area"); 
+    // ⚠️ remplace "routine-area" par l’ID exact si différent
   };
 }
 
