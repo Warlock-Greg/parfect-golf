@@ -499,13 +499,6 @@ body.jsw-fullscreen .bottom-nav {
   height: 100%;
 }
 
-#jsw-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
 
 .jsw-logo {
   height: 28px;
@@ -1123,6 +1116,7 @@ position: fixed;
   height: 100%;
   object-fit: contain;
   z-index: 1;
+   background: none!important;
 }
 
 /* === OVERLAY SQUELETTE === */
