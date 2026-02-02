@@ -2742,6 +2742,47 @@ function buildParfectReviewCard(swing, scores) {
     `;
   };
 
+const METRIC_MAX = {
+  rotation: 20,
+  tempo: 20,
+  triangle: 20,
+  plan: 20,        // uniquement DTL
+  weightShift: 10,
+  extension: 10,
+  balance: 10
+};
+
+function getVisibleMetricKeys(viewType) {
+  return viewType === "dtl"
+    ? ["rotation", "tempo", "plan", "triangle", "weightShift", "extension", "balance"]
+    : ["rotation", "tempo", "triangle", "weightShift", "extension", "balance"];
+}
+
+function computeVisibleScore(breakdown, viewType) {
+  const keys = getVisibleMetricKeys(viewType);
+
+  return keys.reduce(
+    (sum, k) => sum + (typeof breakdown?.[k]?.score === "number" ? breakdown[k].score : 0),
+    0
+  );
+}
+
+function computeVisibleMax(viewType) {
+  return getVisibleMetricKeys(viewType).reduce(
+    (sum, k) => sum + (METRIC_MAX[k] || 0),
+    0
+  );
+}
+
+  const visibleScore = computeVisibleScore(breakdown, viewType);
+const visibleMax = computeVisibleMax(viewType);
+
+// 🎯 PRODUIT EN CROIX
+const displayScore = visibleMax > 0
+  ? Math.round((visibleScore / visibleMax) * 100)
+  : 0;
+
+  
   const coachComment =
     typeof buildGlobalCoachComment === "function"
       ? buildGlobalCoachComment(window.jswViewType, scores)
@@ -2757,13 +2798,13 @@ function buildParfectReviewCard(swing, scores) {
         <span class="jsw-pill">${viewType} · ${club}</span>
         <div class="jsw-score-ring">
         <div class="jsw-score-value">${total}</div>
+        <div class="jsw-score-value">${displayScore}</div>
         <div class="jsw-score-label">Score Parfect</div>
+        <div class="jsw-coach-comment"> ${coachComment} </div>
       </div>
       </div>
 
-      <div class="jsw-coach-comment">
-        🧠 ${coachComment}
-      </div>
+      
 
       <div class="jsw-metrics">
         ${scoreLine("rotation", "Rotation", 20, "🎯")}
