@@ -2854,22 +2854,20 @@ function buildParfectReviewCard(swing, scores) {
 
   container.innerHTML = "";
 
-  // 2️⃣ Reset états critiques
-  state = JSW_STATE.WAITING_START;
+ // 3️⃣ Reset flags critiques
+  addressLocked = false;
+  pendingAddress = false;
   captureArmed = false;
   isRecordingActive = false;
 
-  // 3️⃣ Rafraîchir l’UI
-  if (typeof updateUI === "function") {
-    updateUI();
-  }
+  // 4️⃣ Reset state machine
+  state = JSW_STATE.WAITING_START;
+  updateUI();
 
-  // 4️⃣ Relancer la routine (SANS caméra)
-  if (typeof startRoutineSequence === "function") {
-    startRoutineSequence();
-  } else {
-    console.warn("⚠️ startRoutineSequence introuvable");
-  }
+  // 5️⃣ Relancer le flow NORMAL
+  setTimeout(() => {
+    startCountdown();
+  }, 120);
   });
 }
 
