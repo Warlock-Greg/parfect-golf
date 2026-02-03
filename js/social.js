@@ -44,7 +44,7 @@ function injectSocialUI() {
     `;
 
     $$("create-account-btn")?.addEventListener("click", () => {
-      window.showEmailModal?.();
+      window.showAuthModal?.();
     });
 
     return;
@@ -83,6 +83,10 @@ function injectSocialUI() {
         </p>
         `
       }
+      <button class="pg-btn-secondary" onclick="logoutParfect()">
+      🚪 Se déconnecter
+    </button>
+
     </div>
 
     <div class="pg-card">
