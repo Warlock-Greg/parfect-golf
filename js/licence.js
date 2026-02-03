@@ -141,11 +141,25 @@
         }
       }
 
-      saveUser({ email });
+      // 🔑 Source immédiate de vérité après auth
+      const licenceUser = {
+      email,
+      licence: "free",
+      synced: false
+      };
+
+    saveUser(licenceUser);
+    window.userLicence = licenceUser;
+
+      // Sync NocoDB (best effort)
       await ensureUserInNocoDB(email);
+
+      // 🔁 Re-sync licence depuis NocoDB si possible
       await initLicence();
 
+      // Notify app
       window.dispatchEvent(new Event("parfect:licence:activated"));
+
       modal.remove();
     };
 
@@ -169,15 +183,20 @@
   // INIT LICENCE (BOOT)
   // ------------------------------
   async function initLicence() {
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+    const local = JSON.parse(localStorage.getItem("parfect_user") || "null");
 
-    if (!user) {
-      window.PARFECT_LICENCE_OK = false;
-      window.PARFECT_USER = null;
-      return;
-    }
+const {
+  data: { user }
+} = await supabase.auth.getUser();
+
+// fallback email
+const email = user?.email || local?.email;
+
+if (!email) {
+  window.PARFECT_LICENCE_OK = false;
+  return;
+}
+
 
     const remote = await readLicenceFromNocoDB(user.email);
 
