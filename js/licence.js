@@ -103,7 +103,7 @@
 
         <button id="pg-login"
           style="width:100%;padding:10px;border-radius:8px;
-          background:#00ff99;border:none;font-weight:bold;">
+          background:var(-pg-green-main);border:none;font-weight:bold;">
           Se connecter / Créer un compte
         </button>
 
