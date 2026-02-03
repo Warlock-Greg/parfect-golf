@@ -519,16 +519,41 @@
     );
   </script>
 
+   <script src="js/config.js"></script>
   <script src="js/coachIA.js"></script>
   <script src="js/coach-zen.js"></script>
   
   <script src="js/play.js"></script>
   <script src="js/training.js"></script>
   <script src="js/HistoryHub.js"></script>
-  <script src="js/social.js"></script>
 
-  <script src="js/config.js"></script>
+ 
   <script src="js/licence.js"></script>
+    <script src="js/social.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    console.log("🚀 Parfect boot");
+
+    if (!window.initLicence) {
+      console.error("❌ initLicence manquant");
+      return;
+    }
+
+    await window.initLicence();
+
+    if (!window.PARFECT_LICENCE_OK) {
+      console.log("🔐 Pas de session → auth requise");
+      window.showAuthModal?.();
+    } else {
+      console.log("✅ Session active");
+      window.injectSocialUI?.();
+    }
+  });
+</script>
+
+
+  
   <script src="js/main.js"></script>
 
   <!-- MediaPipe -->
