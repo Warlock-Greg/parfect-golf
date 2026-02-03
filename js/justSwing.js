@@ -2797,7 +2797,6 @@ const displayScore = visibleMax > 0
       <div class="jsw-review-header">
         <span class="jsw-pill">${viewType} · ${club}</span>
         <div class="jsw-score-ring">
-        <div class="jsw-score-value">${total}</div>
         <div class="jsw-score-value">${displayScore}</div>
         <div class="jsw-score-label">Score Parfect</div>
         <div class="jsw-coach-comment"> ${coachComment} </div>
