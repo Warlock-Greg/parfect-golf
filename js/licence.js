@@ -89,9 +89,7 @@
         text-align:center;
         box-shadow:0 0 0 1px #222;
       ">
-        <h3 style="color:#00ff99;margin-top:0;">
-          ⛳ Parfect.golfr
-        </h3>
+        <img src="logo-parfect-golfr.png" alt="Logo Parfect.golfr" class="pg-header-logo">>
 
         <input id="pg-email" type="email"
           placeholder="email@email.com"
