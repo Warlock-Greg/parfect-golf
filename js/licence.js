@@ -204,6 +204,26 @@
     console.log("✅ Licence boot", licenceUser);
   }
 
+  async function logoutParfect() {
+  await window.supabase.auth.signOut();
+
+  localStorage.removeItem("parfect_user");
+
+  window.PARFECT_LICENCE_OK = false;
+  window.PARFECT_USER = null;
+  window.userLicence = null;
+
+  console.log("👋 Déconnecté");
+
+  // Option UX
+  location.reload();
+}
+
+// Expose
+window.logoutParfect = logoutParfect;
+
+
+  
   // ------------------------------
   // PUBLIC API
   // ------------------------------
