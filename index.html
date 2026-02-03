@@ -511,6 +511,13 @@
        ========================================= -->
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  window.supabase = supabase.createClient(
+    "https://jsisebmdjihfmelyymon.supabase.co",
+    "TON_PUBLISHABLE_ANON_KEY"
+    );
+  </script>
 
   <script src="js/coachIA.js"></script>
   <script src="js/coach-zen.js"></script>
