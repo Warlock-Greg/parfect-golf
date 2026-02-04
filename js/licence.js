@@ -1,6 +1,8 @@
 // =====================================================
-// Parfect.golfr — licence.js (Supabase Auth + NocoDB)
-// Web mobile only — Vanilla JS — MVP < 400 users
+// Parfect.golfr — licence.js
+// Auth: Supabase (email + password)
+// Licence: NocoDB
+// Web mobile only — MVP < 400 users
 // =====================================================
 
 (() => {
@@ -93,10 +95,12 @@
   }
 
   // ------------------------------
-  // MODAL AUTH (Email + Password)
+  // MODAL AUTH
   // ------------------------------
   function showAuthModal() {
     if (document.getElementById("parfect-auth-modal")) return;
+
+    let resetCooldown = false;
 
     const modal = document.createElement("div");
     modal.id = "parfect-auth-modal";
@@ -148,10 +152,15 @@
           color:#888;font-size:.8rem;">
           Mot de passe oublié ?
         </button>
+
+        <p id="pg-auth-msg"
+           style="margin-top:8px;font-size:.75rem;color:#777;"></p>
       </div>
     `;
 
     document.body.appendChild(modal);
+
+    const msg = document.getElementById("pg-auth-msg");
 
     // ---------------- LOGIN ----------------
     document.getElementById("pg-login").onclick = async () => {
@@ -159,7 +168,7 @@
       const password = document.getElementById("pg-password").value;
 
       if (!email || !password) {
-        alert("Email et mot de passe requis");
+        msg.textContent = "Email et mot de passe requis";
         return;
       }
 
@@ -167,7 +176,7 @@
         await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        alert("Email ou mot de passe incorrect");
+        msg.textContent = "Email ou mot de passe incorrect";
         return;
       }
 
@@ -180,7 +189,7 @@
       const password = document.getElementById("pg-password").value;
 
       if (!email || !password) {
-        alert("Email et mot de passe requis");
+        msg.textContent = "Email et mot de passe requis";
         return;
       }
 
@@ -188,26 +197,41 @@
         await supabase.auth.signUp({ email, password });
 
       if (error) {
-        alert(error.message);
+        msg.textContent = error.message;
         return;
       }
 
       await afterAuthSuccess(email);
     };
 
-    // ---------------- RESET PASSWORD ----------------
+    // ---------------- RESET PASSWORD (ANTI-SPAM) ----------------
     document.getElementById("pg-forgot").onclick = async () => {
-      const email = document.getElementById("pg-email").value.trim();
-      if (!email) {
-        alert("Entre ton email");
+      if (resetCooldown) {
+        msg.textContent = "Merci d’attendre avant de réessayer";
         return;
       }
 
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: location.origin + "/reset-password.html"
-      });
+      const email = document.getElementById("pg-email").value.trim();
+      if (!email) {
+        msg.textContent = "Entre ton email";
+        return;
+      }
 
-      alert("📩 Email de réinitialisation envoyé");
+      resetCooldown = true;
+      msg.textContent = "📩 Si cet email existe, un message va être envoyé";
+
+      try {
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: location.origin + "/reset-password.html"
+        });
+      } catch {
+        // silence volontaire (anti-enum)
+      }
+
+      setTimeout(() => {
+        resetCooldown = false;
+        msg.textContent = "";
+      }, 60_000); // 1 minute
     };
   }
 
