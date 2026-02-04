@@ -182,44 +182,45 @@
   // ------------------------------
   // INIT LICENCE (BOOT)
   // ------------------------------
-  async function initLicence() {
-    const local = JSON.parse(localStorage.getItem("parfect_user") || "null");
+ async function initLicence() {
+  const local = JSON.parse(localStorage.getItem("parfect_user") || "null");
 
-const {
-  data: { user }
-} = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
 
-// fallback email
-const email = user?.email || local?.email;
+  const email = user?.email || local?.email;
 
-if (!email) {
-  window.PARFECT_LICENCE_OK = false;
-  return;
+  if (!email) {
+    window.PARFECT_LICENCE_OK = false;
+    window.PARFECT_USER = null;
+    window.userLicence = null;
+    return;
+  }
+
+  const remote = await readLicenceFromNocoDB(email);
+
+  const licenceUser = remote
+    ? {
+        email,
+        licence: remote[NOCODB_FIELDS.LICENCE] || "free",
+        synced: true
+      }
+    : {
+        email,
+        licence: "free",
+        synced: false
+      };
+
+  localStorage.setItem("parfect_user", JSON.stringify(licenceUser));
+
+  window.PARFECT_USER = licenceUser;
+  window.userLicence = licenceUser;
+  window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
+
+  console.log("✅ Licence boot", licenceUser);
 }
 
-
-    const remote = await readLicenceFromNocoDB(user.email);
-
-    const licenceUser = remote
-      ? {
-          email: user.email,
-          licence: remote[NOCODB_FIELDS.LICENCE] || "free",
-          synced: true
-        }
-      : {
-          email: user.email,
-          licence: "free",
-          synced: false
-        };
-
-    saveUser(licenceUser);
-
-    window.PARFECT_USER = licenceUser;
-    window.userLicence = licenceUser;
-    window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
-
-    console.log("✅ Licence boot", licenceUser);
-  }
 
   async function logoutParfect() {
   await window.supabase.auth.signOut();
