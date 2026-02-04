@@ -15,12 +15,19 @@
     SOURCE: "source"
   };
 
-  // Supabase client MUST be loaded before this file
   const supabase = window.supabase;
 
   // ------------------------------
   // Local helpers
   // ------------------------------
+  function getLocalUser() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_USER_KEY));
+    } catch {
+      return null;
+    }
+  }
+
   function saveUser(user) {
     localStorage.setItem(LS_USER_KEY, JSON.stringify(user));
   }
@@ -35,12 +42,12 @@
   async function readLicenceFromNocoDB(email) {
     try {
       const res = await fetch(
-        `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${email})`,
+        `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${encodeURIComponent(email)})`,
         { headers: { "xc-token": window.NOCODB_TOKEN } }
       ).then(r => r.json());
 
       return res.list?.[0] || null;
-    } catch (e) {
+    } catch {
       console.warn("⚠️ Licence read failed (offline)");
       return null;
     }
@@ -61,8 +68,28 @@
         })
       });
     } catch {
-      // OK offline
+      // offline / already exists → OK
     }
+  }
+
+  // ------------------------------
+  // AUTH SUCCESS PIPELINE
+  // ------------------------------
+  async function afterAuthSuccess(email) {
+    const baseUser = {
+      email,
+      licence: "free",
+      synced: false
+    };
+
+    saveUser(baseUser);
+    window.userLicence = baseUser;
+
+    await ensureUserInNocoDB(email);
+    await initLicence();
+
+    window.dispatchEvent(new Event("parfect:licence:activated"));
+    document.getElementById("parfect-auth-modal")?.remove();
   }
 
   // ------------------------------
@@ -89,7 +116,9 @@
         text-align:center;
         box-shadow:0 0 0 1px #222;
       ">
-        <img src="logo-parfect-golfr.png" alt="Logo Parfect.golfr" class="pg-header-logo">>
+        <img src="logo-parfect-golfr.png"
+             alt="Logo Parfect.golfr"
+             class="pg-header-logo" />
 
         <input id="pg-email" type="email"
           placeholder="email@email.com"
@@ -103,8 +132,15 @@
 
         <button id="pg-login"
           style="width:100%;padding:10px;border-radius:8px;
-          background:var(-pg-green-main);border:none;font-weight:bold;">
-          Se connecter / Créer un compte
+          background:var(--pg-green-main);border:none;font-weight:bold;">
+          Se connecter
+        </button>
+
+        <button id="pg-signup"
+          style="margin-top:8px;width:100%;
+          padding:10px;border-radius:8px;
+          background:#222;color:#fff;border:none;">
+          Créer un compte
         </button>
 
         <button id="pg-forgot"
@@ -117,7 +153,7 @@
 
     document.body.appendChild(modal);
 
-    // LOGIN / SIGNUP
+    // ---------------- LOGIN ----------------
     document.getElementById("pg-login").onclick = async () => {
       const email = document.getElementById("pg-email").value.trim();
       const password = document.getElementById("pg-password").value;
@@ -127,43 +163,39 @@
         return;
       }
 
-      // Try login first
-      let { data, error } =
+      const { error } =
         await supabase.auth.signInWithPassword({ email, password });
 
-      // If user does not exist → signup
       if (error) {
-        ({ data, error } =
-          await supabase.auth.signUp({ email, password }));
-        if (error) {
-          alert(error.message);
-          return;
-        }
+        alert("Email ou mot de passe incorrect");
+        return;
       }
 
-      // 🔑 Source immédiate de vérité après auth
-      const licenceUser = {
-      email,
-      licence: "free",
-      synced: false
-      };
-
-    saveUser(licenceUser);
-    window.userLicence = licenceUser;
-
-      // Sync NocoDB (best effort)
-      await ensureUserInNocoDB(email);
-
-      // 🔁 Re-sync licence depuis NocoDB si possible
-      await initLicence();
-
-      // Notify app
-      window.dispatchEvent(new Event("parfect:licence:activated"));
-
-      modal.remove();
+      await afterAuthSuccess(email);
     };
 
-    // RESET PASSWORD
+    // ---------------- SIGNUP ----------------
+    document.getElementById("pg-signup").onclick = async () => {
+      const email = document.getElementById("pg-email").value.trim();
+      const password = document.getElementById("pg-password").value;
+
+      if (!email || !password) {
+        alert("Email et mot de passe requis");
+        return;
+      }
+
+      const { error } =
+        await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      await afterAuthSuccess(email);
+    };
+
+    // ---------------- RESET PASSWORD ----------------
     document.getElementById("pg-forgot").onclick = async () => {
       const email = document.getElementById("pg-email").value.trim();
       if (!email) {
@@ -182,70 +214,64 @@
   // ------------------------------
   // INIT LICENCE (BOOT)
   // ------------------------------
- async function initLicence() {
-  const local = JSON.parse(localStorage.getItem("parfect_user") || "null");
+  async function initLicence() {
+    const local = getLocalUser();
 
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
 
-  const email = user?.email || local?.email;
+    const email = user?.email || local?.email;
 
-  if (!email) {
+    if (!email) {
+      window.PARFECT_LICENCE_OK = false;
+      window.PARFECT_USER = null;
+      window.userLicence = null;
+      return;
+    }
+
+    const remote = await readLicenceFromNocoDB(email);
+
+    const licenceUser = remote
+      ? {
+          email,
+          licence: remote[NOCODB_FIELDS.LICENCE] || "free",
+          synced: true
+        }
+      : {
+          email,
+          licence: "free",
+          synced: false
+        };
+
+    saveUser(licenceUser);
+
+    window.PARFECT_USER = licenceUser;
+    window.userLicence = licenceUser;
+    window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
+
+    console.log("✅ Licence boot", licenceUser);
+  }
+
+  // ------------------------------
+  // LOGOUT
+  // ------------------------------
+  async function logoutParfect() {
+    await supabase.auth.signOut();
+    clearUser();
+
     window.PARFECT_LICENCE_OK = false;
     window.PARFECT_USER = null;
     window.userLicence = null;
-    return;
+
+    location.reload();
   }
 
-  const remote = await readLicenceFromNocoDB(email);
-
-  const licenceUser = remote
-    ? {
-        email,
-        licence: remote[NOCODB_FIELDS.LICENCE] || "free",
-        synced: true
-      }
-    : {
-        email,
-        licence: "free",
-        synced: false
-      };
-
-  localStorage.setItem("parfect_user", JSON.stringify(licenceUser));
-
-  window.PARFECT_USER = licenceUser;
-  window.userLicence = licenceUser;
-  window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
-
-  console.log("✅ Licence boot", licenceUser);
-}
-
-
-  async function logoutParfect() {
-  await window.supabase.auth.signOut();
-
-  localStorage.removeItem("parfect_user");
-
-  window.PARFECT_LICENCE_OK = false;
-  window.PARFECT_USER = null;
-  window.userLicence = null;
-
-  console.log("👋 Déconnecté");
-
-  // Option UX
-  location.reload();
-}
-
-// Expose
-window.logoutParfect = logoutParfect;
-
-
-  
   // ------------------------------
   // PUBLIC API
   // ------------------------------
   window.initLicence = initLicence;
   window.showAuthModal = showAuthModal;
+  window.logoutParfect = logoutParfect;
 
 })();
