@@ -1,4 +1,4 @@
-// === SOCIAL.JS — Account / Social Hub (ZEN 2026) ===
+// === SOCIAL.JS — Account / Social Hub (Parfect ZEN 2026) ===
 console.log("👥 Parfect.golfr Social.js chargé");
 
 // ------------------------------------------------
@@ -9,8 +9,24 @@ if (typeof window.$$ !== "function") {
 }
 
 function getCurrentUser() {
-  return window.userLicence || {};
+  return window.userLicence || null;
 }
+
+// ------------------------------------------------
+// 🔄 REFRESH GLOBAL SOCIAL DATA (SOURCE UNIQUE)
+// ------------------------------------------------
+window.refreshSocialData = async function () {
+  console.log("🔄 Refresh Social Data");
+
+  if (typeof window.refreshSwingQuotaUI === "function") {
+    await window.refreshSwingQuotaUI();
+  }
+
+  const activeTab = document.querySelector(".pg-tab-btn.active");
+  if (activeTab) {
+    loadHistoryTab(activeTab.dataset.tab);
+  }
+};
 
 // ------------------------------------------------
 // MAIN UI
@@ -78,15 +94,13 @@ function injectSocialUI() {
         </div>
         `
           : `
-        <p class="pg-highlight">
-          Accès illimité activé
-        </p>
+        <p class="pg-highlight">Accès illimité activé</p>
         `
       }
-      <button class="pg-btn-secondary" onclick="logoutParfect()">
-      🚪 Se déconnecter
-    </button>
 
+      <button class="pg-btn-secondary" onclick="logoutParfect()">
+        🚪 Se déconnecter
+      </button>
     </div>
 
     <div class="pg-card">
@@ -111,7 +125,9 @@ function injectSocialUI() {
     window.showCoachToast?.("Paiement bientôt disponible", "#D4AF37");
   });
 
-  refreshSwingQuotaUI();
+  setTimeout(() => {
+    window.refreshSocialData?.();
+  }, 100);
 }
 
 // ------------------------------------------------
@@ -128,11 +144,11 @@ window.refreshSwingQuotaUI = async function () {
   }
 
   try {
-    const count = await window.getTodaySwingCount(email);
+    const used = await window.getTodaySwingCount(email);
     const max = 10;
 
     el.innerHTML = `
-      <span class="pg-quota-count">${count}</span>
+      <span class="pg-quota-count">${used}</span>
       <span class="pg-quota-sep">/</span>
       <span class="pg-quota-max">${max}</span>
     `;
@@ -142,6 +158,39 @@ window.refreshSwingQuotaUI = async function () {
   }
 };
 
+// ------------------------------------------------
+// COACH COMMENT — FEED V1
+// ------------------------------------------------
+function buildCoachFeedComment(scores) {
+  const breakdown = scores?.breakdown || {};
+
+  const PRIORITY = [
+    "tempo",
+    "rotation",
+    "triangle",
+    "weightShift",
+    "extension",
+    "balance"
+  ];
+
+  const LABELS = {
+    tempo: "Tempo à réguler",
+    rotation: "Rotation à engager",
+    triangle: "Triangle bras/épaules à stabiliser",
+    weightShift: "Transfert d’appui à améliorer",
+    extension: "Extension après impact",
+    balance: "Équilibre en finish"
+  };
+
+  const weak = PRIORITY.find(k => {
+    const s = breakdown[k]?.score;
+    return typeof s === "number" && s < 15;
+  });
+
+  return weak
+    ? `🎯 Priorité : ${LABELS[weak]}`
+    : "🔥 Swing solide, fondamentaux en place";
+}
 
 // ------------------------------------------------
 // INVITE FRIEND
@@ -156,15 +205,8 @@ function handleInviteFriend() {
       <p class="pg-muted">Partage ton voyage Parfect.golfr.</p>
 
       <div class="pg-inline-form">
-        <input
-          id="friend-name"
-          type="text"
-          class="pg-input"
-          placeholder="Nom de ton ami"
-        />
-        <button id="send-invite-btn" class="pg-btn-primary">
-          Envoyer
-        </button>
+        <input id="friend-name" class="pg-input" placeholder="Nom de ton ami" />
+        <button id="send-invite-btn" class="pg-btn-primary">Envoyer</button>
       </div>
 
       <div id="invite-feedback" class="pg-feedback"></div>
@@ -176,13 +218,10 @@ function handleInviteFriend() {
     const fb = $$("invite-feedback");
     if (!fb) return;
 
-    if (name) {
-      fb.className = "pg-feedback success";
-      fb.innerHTML = `Invitation envoyée à <strong>${name}</strong>`;
-    } else {
-      fb.className = "pg-feedback error";
-      fb.textContent = "Entre un nom valide.";
-    }
+    fb.className = name ? "pg-feedback success" : "pg-feedback error";
+    fb.innerHTML = name
+      ? `Invitation envoyée à <strong>${name}</strong>`
+      : "Entre un nom valide.";
   });
 }
 
@@ -195,11 +234,11 @@ function showHistoryTabs() {
 
   content.innerHTML = `
     <div class="pg-tabs">
+      <button class="pg-tab-btn" data-tab="feed">Communauté</button>
       <button class="pg-tab-btn" data-tab="swing">Swings</button>
       <button class="pg-tab-btn" data-tab="training">Training</button>
       <button class="pg-tab-btn" data-tab="round">Parties</button>
     </div>
-
     <div id="history-panel" class="pg-history-panel"></div>
   `;
 
@@ -211,27 +250,88 @@ function showHistoryTabs() {
     });
   });
 
-  content.querySelector("[data-tab='swing']")?.classList.add("active");
-  loadHistoryTab("swing");
+  content.querySelector("[data-tab='feed']")?.classList.add("active");
+  loadHistoryTab("feed");
 }
 
 // ------------------------------------------------
-// LOAD HISTORY (UNCHANGED LOGIC)
+// COMMUNITY FEED CARD — V1
+// ------------------------------------------------
+function buildCommunityFeedCard(swing) {
+  const scores = swing.scores || {};
+  const breakdown = scores.breakdown || {};
+  const total = scores.total ?? "—";
+
+  const club = (swing.club || "?").toUpperCase();
+  const view = (swing.view || swing.view_type || "faceOn").toLowerCase() === "dtl"
+    ? "DTL"
+    : "FACE";
+
+  const time = swing.created_at
+    ? new Date(swing.created_at).toLocaleString([], {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    : "";
+
+  const mini = (k, max) =>
+    typeof breakdown[k]?.score === "number"
+      ? `${breakdown[k].score}/${max}`
+      : "—";
+
+  return `
+    <div class="pg-feed-card">
+      <div class="pg-feed-header">
+        <span class="pg-feed-pill">${club} · ${view}</span>
+        <span class="pg-feed-time">${time}</span>
+      </div>
+
+      <div class="pg-feed-score">
+        <span class="pg-feed-score-value">${total}</span>
+        <span class="pg-feed-score-label">Score Parfect</span>
+      </div>
+
+      <div class="pg-feed-coach">
+        ${buildCoachFeedComment(scores)}
+      </div>
+
+      <div class="pg-feed-metrics">
+        <span>🎯 ${mini("rotation", 20)}</span>
+        <span>⏱️ ${mini("tempo", 20)}</span>
+        <span>🔺 ${mini("triangle", 20)}</span>
+      </div>
+
+      <button class="pg-feed-action" data-swing-id="${swing.id}">
+        Revoir le swing →
+      </button>
+    </div>
+  `;
+}
+
+// ------------------------------------------------
+// LOAD HISTORY
 // ------------------------------------------------
 async function loadHistoryTab(type) {
   const panel = $$("history-panel");
   if (!panel) return;
 
+  if (type === "feed") {
+    const swings = await loadSwingHistoryFromNocoDB();
+    panel.innerHTML = swings.length
+      ? swings.map(buildCommunityFeedCard).join("")
+      : `<p class="pg-muted">Aucune activité récente.</p>`;
+    return;
+  }
+
   if (type === "swing") {
-  const swings = await loadSwingHistoryFromNocoDB();
-
-  panel.innerHTML = swings.length
-    ? swings.map((s, i) => buildSocialSwingItem(s, swings.length - i)).join("")
-    : `<p class="pg-muted">Aucun swing enregistré.</p>`;
-
-  return;
-}
-
+    const swings = await loadSwingHistoryFromNocoDB();
+    panel.innerHTML = swings.length
+      ? swings.map((s, i) => buildSocialSwingItem(s, swings.length - i)).join("")
+      : `<p class="pg-muted">Aucun swing enregistré.</p>`;
+    return;
+  }
 
   if (type === "training") {
     const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
@@ -262,97 +362,8 @@ async function loadHistoryTab(type) {
   }
 }
 
-function buildSocialSwingItem(swing, index) {
-  const s = swing?.scores?.scores || {};
-
-  const score = (k, max) =>
-    typeof s[k] === "number" ? `${s[k]}/${max}` : "—";
-
-  const viewType = (swing.view || swing.view_type || "faceOn").toLowerCase();
-  const view = viewType === "dtl" ? "DTL" : "FACE";
-  const club = (swing.club || "?").toUpperCase();
-
-  const time = swing.createdAt || swing.created_at
-    ? new Date(swing.createdAt || swing.created_at).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      })
-    : "";
-
-  return `
-    <div class="history-item session-item"
-         data-swing-id="${swing.id}"
-         data-view="${viewType}">
-      
-      <div class="history-main">
-        <span class="history-id">#${index}</span>
-        <span class="history-meta">${club} · ${view}</span>
-        <span class="history-time">${time}</span>
-      </div>
-
-      <div class="history-scores">
-        <span title="Rotation">🎯 ${score("rotation", 20)}</span>
-        <span title="Tempo">⏱️ ${score("tempo", 20)}</span>
-        ${
-          viewType === "dtl"
-            ? `<span title="Plan de swing">📐 ${score("plan", 20)}</span>`
-            : ""
-        }
-        <span title="Triangle">🔺 ${score("triangle", 20)}</span>
-        <span title="Transfert">⇄ ${score("weightShift", 10)}</span>
-        <span title="Extension">📏 ${score("extension", 10)}</span>
-        <span title="Balance">⚖️ ${score("balance", 10)}</span>
-      </div>
-    </div>
-  `;
-}
-
-
 // ------------------------------------------------
-// replay swing depuis l'historique
-// ------------------------------------------------
-
-document.addEventListener("click", async (e) => {
-  const item = e.target.closest(".history-item[data-swing-id]");
-  if (!item) return;
-
-  const swingId = item.dataset.swingId;
-  if (!swingId) return;
-
-  console.log("🔁 Replay swing depuis historique", swingId);
-
-  try {
-    const swing = await loadSingleSwingFromNocoDB(swingId);
-    if (!swing) {
-      console.warn("⚠️ Swing introuvable");
-      return;
-    }
-
-    replaySwingFromHistory(swing);
-
-  } catch (err) {
-    console.error("❌ Erreur replay swing", err);
-  }
-});
-
-async function loadSingleSwingFromNocoDB(swingId) {
-  const url = `${window.NOCODB_SWINGS_URL}/${swingId}`;
-
-  const res = await fetch(url, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
-  });
-
-  if (!res.ok) {
-    console.error("❌ NocoDB swing load failed");
-    return null;
-  }
-
-  return await res.json();
-}
-
-
-// ------------------------------------------------
-// NOCODB — LOAD SWINGS (UNCHANGED)
+// NOCODB — LOAD SWINGS
 // ------------------------------------------------
 async function loadSwingHistoryFromNocoDB() {
   const email = window.userLicence?.email;
@@ -361,8 +372,7 @@ async function loadSwingHistoryFromNocoDB() {
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-cmbvp0anzpjfsig` +
-    `&limit=20`;
+    `&sort=-created_at&limit=20`;
 
   const res = await fetch(url, {
     headers: { "xc-token": window.NOCODB_TOKEN }
