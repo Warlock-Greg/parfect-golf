@@ -2642,7 +2642,7 @@ function onSwingValidated({ scores, currentClub, swing }) {
   if (typeof window.refreshSwingQuotaUI === "function") {
     window.refreshSwingQuotaUI();
   }
-}
+
 
 
 // ===============================
