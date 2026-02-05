@@ -277,6 +277,52 @@
     console.log("✅ Licence boot", licenceUser);
   }
 
+// ================================
+// SWING QUOTA — CORE
+// ================================
+
+function canAnalyzeSwing() {
+  // Accès libre → toujours OK
+  if (window.PARFECT_FLAGS?.OPEN_ACCESS) return true;
+
+  const u = window.userLicence;
+  if (!u) return false;
+
+  // PRO → toujours OK (pour l’instant)
+  if (u.licence === "pro") return true;
+
+  // FREE → quota max = 15
+  const used = Number(u.swing_quota_used || 0);
+  return used < 15;
+}
+
+function incrementSwingQuota(count = 1) {
+  if (window.PARFECT_FLAGS?.OPEN_ACCESS) return;
+
+  const u = window.userLicence;
+  if (!u || u.licence === "pro") return;
+
+  u.swing_quota_used = Number(u.swing_quota_used || 0) + count;
+
+  // Persist local
+  localStorage.setItem("parfect_user", JSON.stringify(u));
+
+  // 🔁 Sync NocoDB (best effort, non bloquant)
+  try {
+    fetch(window.NOCODB_REFERENCES_URL, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN
+      },
+      body: JSON.stringify({
+        swing_quota_used: u.swing_quota_used
+      })
+    });
+  } catch {}
+}
+
+  
   // ------------------------------
   // LOGOUT
   // ------------------------------
