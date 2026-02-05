@@ -2800,10 +2800,9 @@ function getVisibleMetricKeys(viewType) {
 }
 
 function computeVisibleScore(breakdown, viewType) {
-  const keys = getVisibleMetricKeys(viewType);
-
-  return keys.reduce(
-    (sum, k) => sum + (typeof breakdown?.[k]?.score === "number" ? breakdown[k].score : 0),
+  return getVisibleMetricKeys(viewType).reduce(
+    (sum, k) =>
+      sum + (typeof breakdown?.[k]?.score === "number" ? breakdown[k].score : 0),
     0
   );
 }
@@ -2899,7 +2898,7 @@ const displayScore = visibleMax > 0
     </div>
   `;
 
-  container.style.setProperty("--score", total);
+  container.style.setProperty("--score", displayScore);
 
   // -------------------------
   // Interactions
@@ -2940,6 +2939,7 @@ const displayScore = visibleMax > 0
   pendingAddress = false;
   captureArmed = false;
   isRecordingActive = false;
+  swingCompleted = false;
 
   // 4️⃣ Reset state machine
   state = JSW_STATE.WAITING_START;
