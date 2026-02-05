@@ -535,7 +535,30 @@
   document.addEventListener("DOMContentLoaded", async () => {
     console.log("🚀 Parfect boot");
 
-    if (!window.initLicence) {
+    // ---------------------------------
+    // MODE ACCÈS LIBRE (LANCEMENT)
+    // ---------------------------------
+    if (window.PARFECT_FLAGS?.OPEN_ACCESS) {
+      console.log("🟢 OPEN ACCESS MODE");
+
+      window.PARFECT_LICENCE_OK = true;
+      window.userLicence = {
+        licence: "open",
+        swing_quota_used: 0
+      };
+
+      // Notify app
+      window.dispatchEvent(new Event("parfect:licence:activated"));
+
+      // UI directe
+      window.injectSocialUI?.();
+      return;
+    }
+
+    // ---------------------------------
+    // MODE NORMAL (AUTH + LICENCE)
+    // ---------------------------------
+    if (typeof window.initLicence !== "function") {
       console.error("❌ initLicence manquant");
       return;
     }
@@ -545,12 +568,14 @@
     if (!window.PARFECT_LICENCE_OK) {
       console.log("🔐 Pas de session → auth requise");
       window.showAuthModal?.();
-    } else {
-      console.log("✅ Session active");
-      window.injectSocialUI?.();
+      return;
     }
+
+    console.log("✅ Session active");
+    window.injectSocialUI?.();
   });
 </script>
+
 
 
   
