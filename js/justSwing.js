@@ -1748,7 +1748,7 @@ function scoreVsReference(value, target, tol) {
 
 
   // -------------------------------------
-  // Vue caméra (driver par l’UI)
+  // Vue caméra (driver par l UI)
   // -------------------------------------
   const rawView =
     (window.jswViewType || window.jswViewOverride || "faceOn")
@@ -2752,7 +2752,7 @@ function renderSessionHistoryInline() {
   
 // ---------------------------------------------------------
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.breakdown)
-//   ✅ plus de "metrics.xxx" en direct dans l'UI
+//   ✅ plus de "metrics.xxx" en direct dans l UI
 //   ✅ affiche un message si un module est non mesuré
 // ---------------------------------------------------------
 
