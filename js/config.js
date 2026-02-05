@@ -38,6 +38,11 @@ window.NC_PROJECT = "parfect";
 // =====================================================
 // PARFECT — CONFIG MVP
 // =====================================================
+// config.js
+window.PARFECT_FLAGS = {
+  OPEN_ACCESS: true // ← LANCEMENT
+};
+
 
 // Superadmin MVP (temporaire)
 window.PARFECT_ADMIN_EMAILS = [
