@@ -290,27 +290,45 @@ window.jswGoHome = function () {
   }
 
 async function canStartSwing() {
-  const email = window.userLicence?.email;
-  if (!email) return true; // sécurité
+  // ---------------------------------
+  // MODE ACCÈS LIBRE
+  // ---------------------------------
+  if (window.PARFECT_FLAGS?.OPEN_ACCESS) {
+    return true;
+  }
 
-  const isPro =
-    window.userLicence?.role === "superadmin" ||
-    window.userLicence?.plan === "pro";
+  const user = window.userLicence;
 
-  if (isPro) return true;
+  // Sécurité : pas de user → on autorise (évite blocage dur)
+  if (!user) return true;
 
-  const count = await getTodaySwingCount(email);
+  // ---------------------------------
+  // PRO → toujours OK
+  // ---------------------------------
+  if (user.licence === "pro") {
+    return true;
+  }
 
-  if (count >= 10) {
+  // ---------------------------------
+  // FREE → quota total 15 swings
+  // ---------------------------------
+  const used = Number(user.swing_quota_used || 0);
+  const limit = 15;
+
+  if (used >= limit) {
     showBigMessage(`
-      🚫 Quota atteint<br>
-      <span style="opacity:.8;">10 swings par jour (version gratuite)</span>
+      🚫 Analyse bloquée<br>
+      <span style="opacity:.85;">
+        Tu as analysé ${limit} swings.<br>
+        Passe PRO pour continuer avec l’analyse IA.
+      </span>
     `);
     return false;
   }
 
   return true;
 }
+
 
   
 // ---------------------------------------------------------
@@ -323,64 +341,69 @@ function showStartButton() {
   updateUI();
 
   bigMsgEl.innerHTML = `
- <div class="jsw-start-card">
-    <div class="jsw-start-title">
-      📐 Où est placée la caméra ?
-    </div>
+    <div class="jsw-start-card">
+      <div class="jsw-start-title">
+        📐 Où est placée la caméra ?
+      </div>
 
-    <div class="jsw-start-choices">
-      <button id="jsw-view-face" class="jsw-choice jsw-choice-primary">
-        <div class="jsw-choice-label">📸 Face-On</div>
-        <div class="jsw-choice-sub">
-          Caméra à hauteur de poitrine
-        </div>
+      <div class="jsw-start-choices">
+        <button id="jsw-view-face" class="jsw-choice jsw-choice-primary">
+          <div class="jsw-choice-label">📸 Face-On</div>
+          <div class="jsw-choice-sub">
+            Caméra à hauteur de poitrine
+          </div>
+        </button>
+
+        <button id="jsw-view-dtl" class="jsw-choice jsw-choice-secondary">
+          <div class="jsw-choice-label">🎥 Down-The-Line</div>
+          <div class="jsw-choice-sub">
+            Derrière la ligne de jeu
+          </div>
+        </button>
+      </div>
+
+      <button id="jsw-back-btn" class="jsw-start-back">
+        ← Retour
       </button>
-
-      <button id="jsw-view-dtl" class="jsw-choice jsw-choice-secondary">
-        <div class="jsw-choice-label">🎥 Down-The-Line</div>
-        <div class="jsw-choice-sub">
-          Derrière la ligne de jeu
-        </div>
-      </button>
     </div>
-
-    <button id="jsw-back-btn" class="jsw-start-back">
-      ← Retour
-    </button>
-  </div>
   `;
 
   bigMsgEl.style.opacity = 1;
 
-  // -------------------------
-  // Choix de la vue caméra
-  // -------------------------
-  const setViewAndStart = async (view) => {
-    window.jswViewType = view; // 🔑 utilisé partout (scoring, ref, etc.)
+  // ---------------------------------
+  // Choix de la vue caméra + QUOTA
+  // ---------------------------------
+  const setViewAndStart = (view) => {
+    // 🔑 Vue caméra = contexte de la session
+    window.jswViewType = view;
     console.log("📐 Vue sélectionnée :", view);
-   if (await canStartSwing()) {
-  startCountdown();
-}
+
+    // ⛔ Blocage quota AVANT lancement
+    if (!canStartSwing()) return;
+
+    // ✅ OK → on lance la session
+    startCountdown();
   };
 
   const btnFace = document.getElementById("jsw-view-face");
   if (btnFace) {
-  btnFace.onclick = () => setViewAndStart("faceOn");
+    btnFace.onclick = () => setViewAndStart("faceOn");
   }
 
   const btnDtl = document.getElementById("jsw-view-dtl");
   if (btnDtl) {
-  btnDtl.onclick = () => setViewAndStart("dtl");
+    btnDtl.onclick = () => setViewAndStart("dtl");
   }
-  // -------------------------
-  // Bouton retour
-  // -------------------------
+
+  // ---------------------------------
+  // Bouton retour (navigation only)
+  // ---------------------------------
   const backBtn = document.getElementById("jsw-back-btn");
   if (backBtn) {
     backBtn.onclick = () => {
       window.JustSwing?.stopSession?.();
       document.body.classList.remove("jsw-fullscreen");
-        document.getElementById("home-btn")?.click();
+      document.getElementById("home-btn")?.click();
     };
   }
 }
@@ -2561,7 +2584,9 @@ function onSwingValidated({ scores, currentClub, swing }) {
 
   const breakdown = scores.breakdown;
 
-  // 1️⃣ Session locale (5 derniers swings)
+  // =================================================
+  // 1️⃣ SESSION LOCALE (5 derniers swings)
+  // =================================================
   if (window.TrainingSession) {
     TrainingSession.swings.unshift({
       created_at: Date.now(),
@@ -2576,33 +2601,49 @@ function onSwingValidated({ scores, currentClub, swing }) {
     }
   }
 
-  // après saveSwingToNocoDB(...)
-if (typeof window.refreshSwingQuotaUI === "function") {
-  window.refreshSwingQuotaUI();
-}
-
-
-  // ✅ DÉCLARATION DE 'user' (cette ligne manquait !)
+  // =================================================
+  // 2️⃣ LICENCE & USER (SOURCE DE VÉRITÉ)
+  // =================================================
   const user = window.userLicence;
-  
- 
- // ===============================
-  // 2️⃣ LICENCE — SOURCE DE VÉRITÉ
-  // ===============================
-  const licence = getUserLicence(); // 🔑 OBLIGATOIRE
-  const PLAYER_EMAIL = licence?.email;
+  const email = user?.email;
 
-  console.log("🔍 Debug email", {
-    licence,
-    email: PLAYER_EMAIL
-  });
-  
-  if (!PLAYER_EMAIL) {
-    console.warn("⚠️ Email utilisateur introuvable, sauvegarde ignorée");
-    console.log("userLicence complet:", window.userLicence);
+  if (!email) {
+    console.warn("⚠️ Email utilisateur introuvable, swing non persisté");
     return;
   }
-  
+
+  // =================================================
+  // 3️⃣ QUOTA SWING (1 swing analysé = 1 quota)
+  // =================================================
+  if (!window.PARFECT_FLAGS?.OPEN_ACCESS && user.licence === "free") {
+    user.swing_quota_used = Number(user.swing_quota_used || 0) + 1;
+
+    // Persist local
+    localStorage.setItem("parfect_user", JSON.stringify(user));
+
+    // Sync NocoDB (best effort)
+    try {
+      fetch(window.NOCODB_REFERENCES_URL, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "xc-token": window.NOCODB_TOKEN
+        },
+        body: JSON.stringify({
+          swing_quota_used: user.swing_quota_used
+        })
+      });
+    } catch {}
+  }
+
+  // =================================================
+  // 4️⃣ UI — rafraîchissement quota
+  // =================================================
+  if (typeof window.refreshSwingQuotaUI === "function") {
+    window.refreshSwingQuotaUI();
+  }
+}
+
 
 // ===============================
   // 3️⃣ SAUVEGARDE NOCODB - FORMAT COMPLET
