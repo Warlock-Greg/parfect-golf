@@ -169,6 +169,41 @@ fetch("/data/parfect_reference.json")
     console.warn("⚠️ Parfect reference not loaded", err);
   });
 
+// ← Retour
+  function nextSwing() {
+  console.log("➡️ JustSwing.nextSwing()");
+
+  // 1) Cacher la review si elle existe
+  document.getElementById("swing-review")?.classList.add("hidden");
+  const bd = document.getElementById("swing-score-breakdown");
+  if (bd) bd.innerHTML = "";
+
+  // 2) Reset flags
+  captureArmed = false;
+  isRecordingActive = false;
+  addressLocked = false;
+  pendingAddress = false;
+  swingCompleted = false;
+  addressCaptured = false;
+  addressStabilityBuffer = [];
+
+  // 3) Reset swingTimeout
+  if (swingTimeout) {
+    clearTimeout(swingTimeout);
+    swingTimeout = null;
+  }
+
+  // 4) Reset state machine + relance flow
+  state = JSW_STATE.WAITING_START;
+  updateUI();
+
+  // 🔥 relance directe
+  setTimeout(() => {
+    startCountdown();
+  }, 150);
+}
+
+  
 function getUserLicence() {
   return window.userLicence || null;
 }
@@ -2914,44 +2949,14 @@ const displayScore = visibleMax > 0
         : "− Masquer les détails";
     };
   }
-
-  // ← Retour
-  document.getElementById("jsw-review-back")?.addEventListener("click", () => {
-    window.JustSwing?.stopSession?.();
-    document.body.classList.remove("jsw-fullscreen");
-    document.getElementById("home-btn")?.click();
-  });
-
-  // Swing suivant
+   
   document.getElementById("jsw-review-next")?.addEventListener("click", () => {
-   console.log("➡️ Swing suivant → restart flow"");
+      console.log("➡️ Swing suivant (UI)");
+    window.JustSwing?.nextSwing?.();
+    });
 
-  // 1️⃣ Nettoyer la review
-  const reviewPanel = document.getElementById("swing-review");
-  if (reviewPanel) {
-    reviewPanel.style.display = "none";
-  }
-
-  container.innerHTML = "";
-
- // 3️⃣ Reset flags critiques
-  addressLocked = false;
-  pendingAddress = false;
-  captureArmed = false;
-  isRecordingActive = false;
-  swingCompleted = false;
-
-  // 4️⃣ Reset state machine
-  state = JSW_STATE.WAITING_START;
-  updateUI();
-
-  // 5️⃣ Relancer le flow NORMAL
-  setTimeout(() => {
-    startCountdown();
-  }, 150);
-  });
-}
-
+  
+  
   
 function buildPremiumBreakdown(swing, scores) {
   const el = document.getElementById("swing-score-breakdown");
@@ -4089,6 +4094,7 @@ if (nextBtn) {
     startSession,
     stopSession,
     onPoseFrame,
+    nextSwing,
     _debug: debug
   };
 })();
