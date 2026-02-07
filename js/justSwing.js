@@ -1556,11 +1556,10 @@ function scoreRotationFromReference(measure, ref) {
 
   const s = jswClamp(1 - Math.abs(measure.shoulder - ref.shoulder.target) / ref.shoulder.tol, 0, 1);
   const h = jswClamp(1 - Math.abs(measure.hip      - ref.hip.target)      / ref.hip.tol,      0, 1);
- // const x = jswClamp(1 - Math.abs(measure.xFactor  - ref.xFactor.target)  / ref.xFactor.tol,  0, 1);
 
   return {
     score: Math.round((s * 0.4 + h * 0.4 + x * 0.2) * 20),
-    details: { s, h, x }
+    details: { s, h}
   };
 }
 
@@ -2015,6 +2014,8 @@ if (!basePoseRot || !topPoseRot) {
 // =====================================================
 // 3) TRIANGLE — stabilité bras / buste (robuste mobile)
 // =====================================================
+let triangleScore = 10;
+    
 if (topPose && impactPose) {
 
   // 👉 base fiable : address → backswing → top
@@ -2955,7 +2956,7 @@ const displayScore = visibleMax > 0
     window.JustSwing?.nextSwing?.();
     });
 
-  
+   }
   
   
 function buildPremiumBreakdown(swing, scores) {
@@ -4086,18 +4087,6 @@ if (nextBtn) {
     console.log("🔍 engine =", engine);
   }
 
-  // ---------------------------------------------------------
-  //   EXPORT
-  // ---------------------------------------------------------
-  return {
-    initJustSwing,
-    startSession,
-    stopSession,
-    onPoseFrame,
-    nextSwing
-  };
-})();
-
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("#jsw-close-review, #jsw-back-btn");
   if (!btn) return;
@@ -4110,3 +4099,17 @@ document.addEventListener("click", (e) => {
 
 
 window.JustSwing = JustSwing;
+    
+  // ---------------------------------------------------------
+  //   EXPORT
+  // ---------------------------------------------------------
+  return {
+    initJustSwing,
+    startSession,
+    stopSession,
+    onPoseFrame,
+    nextSwing
+  };
+})();
+
+
