@@ -3859,10 +3859,19 @@ btnParfect.onclick = async () => {
 
     const reviewEl = document.getElementById("swing-review");
     const videoEl = document.getElementById("swing-video");
-    const playBtn = document.getElementById("swing-play-pause");
-    const speedSel = document.getElementById("swing-speed");
-    const timeline = document.getElementById("swing-timeline");
+    //const playBtn = document.getElementById("swing-play-pause");
+    //const speedSel = document.getElementById("swing-speed");
+    //const timeline = document.getElementById("swing-timeline");
     const timeLabel = document.getElementById("swing-time-label");
+    replayPlayBtn = document.getElementById("swing-play-pause");
+    replaySpeedSel = document.getElementById("swing-speed");
+    replayTimeline = document.getElementById("swing-timeline");
+
+      if (!replayPlayBtn || !replaySpeedSel || !replayTimeline) {
+      console.warn("⏪ Replay UI manquante");
+      return;
+      }
+
 
     if (!reviewEl || !playBtn || !speedSel || !timeline || !timeLabel) {
       console.warn("⏪ Elements replay swing manquants dans le DOM");
@@ -3960,63 +3969,60 @@ function replaySwingFromHistory(swing) {
 }
 
 
-    function startReplay() {
-      if (!lastSwing) return;
-      if (replayPlaying) return;
-      replayPlaying = true;
-      playBtn.textContent = "⏸️";
+ function startReplay() {
+  if (!lastSwing) return;
+  if (replayPlaying) return;
 
-      const fps = lastSwing.fps || 30;
-      const baseDt = 1000 / fps;
+  replayPlaying = true;
+  if (replayPlayBtn) replayPlayBtn.textContent = "⏸️";
 
-      const getSpeed = () => parseFloat(speedSel.value || "1") || 1;
+  const fps = lastSwing.fps || 30;
+  const baseDt = 1000 / fps;
 
-      replayTimer = setInterval(() => {
-        if (!replayPlaying) return;
-        let next = replayFrameIndex + 1;
-        if (next >= lastSwing.frames.length) {
-          // Fin du swing → on arrête
-          replayPlaying = false;
-          clearInterval(replayTimer);
-          replayTimer = null;
-          playBtn.textContent = "▶️";
-          return;
-        }
-        renderFrame(next);
-      }, baseDt / getSpeed());
+  const getSpeed = () =>
+    parseFloat(replaySpeedSel?.value || "1") || 1;
+
+  replayTimer = setInterval(() => {
+    if (!replayPlaying) return;
+
+    const next = replayFrameIndex + 1;
+    if (next >= lastSwing.frames.length) {
+      stopReplay();
+      return;
     }
 
-    function stopReplay() {
-      replayPlaying = false;
-      playBtn.textContent = "▶️";
-      if (replayTimer) {
-        clearInterval(replayTimer);
-        replayTimer = null;
-      }
-    }
+    renderFrame(next);
+  }, baseDt / getSpeed());
+}
 
-    // Listeners
-    playBtn.onclick = () => {
-      if (replayPlaying) {
-        stopReplay();
-      } else {
-        startReplay();
-      }
-    };
+function stopReplay() {
+  replayPlaying = false;
 
-    speedSel.onchange = () => {
-      // On relance le timer avec le nouveau speed
-      if (replayPlaying) {
-        stopReplay();
-        // petit timeout pour éviter un conflit de timer
-        setTimeout(startReplay, 50);
-      }
-    };
+  if (replayPlayBtn) replayPlayBtn.textContent = "▶️";
 
-    timeline.oninput = (e) => {
-      const idx = parseInt(e.target.value, 10) || 0;
-      renderFrame(idx);
-    };
+  if (replayTimer) {
+    clearInterval(replayTimer);
+    replayTimer = null;
+  }
+}
+
+
+    replayPlayBtn.onclick = () => {
+  replayPlaying ? stopReplay() : startReplay();
+};
+
+replaySpeedSel.onchange = () => {
+  if (replayPlaying) {
+    stopReplay();
+    setTimeout(startReplay, 50);
+  }
+};
+
+replayTimeline.oninput = (e) => {
+  const idx = parseInt(e.target.value, 10) || 0;
+  renderFrame(idx);
+};
+
 
     // Première frame affichée
     renderFrame(0);
