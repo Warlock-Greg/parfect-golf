@@ -3906,7 +3906,7 @@ btnParfect.onclick = async () => {
 
     replayCanvas = overlay;
     replayCtx = overlay.getContext("2d");
-
+   }
 
 function replaySwingFromHistory(swing) {
   console.log("🎬 Replay swing", swing);
