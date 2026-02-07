@@ -4094,8 +4094,7 @@ if (nextBtn) {
     startSession,
     stopSession,
     onPoseFrame,
-    nextSwing,
-    _debug: debug
+    nextSwing
   };
 })();
 
