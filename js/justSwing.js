@@ -612,9 +612,9 @@ function isValidSwing(swing) {
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
   const routineStepsAuto = [
-    "Vérifie (3sec) grip ✋ posture 🧍‍♂️ alignement 🎯",
+    "Vérifie (3sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignement 🎯",
     //"Fais un swing d’essai 🌀",
-    "Maintien l'Adresse… (3sec) Respire 😮‍💨",
+    "Maintien l'Adresse… (3sec) \nRespire \n😮‍💨",
   ];
 
 
