@@ -2924,7 +2924,7 @@ const displayScore = visibleMax > 0
 
   // Swing suivant
   document.getElementById("jsw-review-next")?.addEventListener("click", () => {
-   console.log("➡️ Retour à la routine");
+   console.log("➡️ Swing suivant → restart flow"");
 
   // 1️⃣ Nettoyer la review
   const reviewPanel = document.getElementById("swing-review");
@@ -2948,7 +2948,7 @@ const displayScore = visibleMax > 0
   // 5️⃣ Relancer le flow NORMAL
   setTimeout(() => {
     startCountdown();
-  }, 120);
+  }, 150);
   });
 }
 
