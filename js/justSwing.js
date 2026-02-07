@@ -121,6 +121,10 @@ let captureArmed = false;
   let replayTimer = null;
   let replayCanvas = null;
   let replayCtx = null;
+  let replayPlayBtn = null;
+  let replaySpeedSel = null;
+  let replayTimeline = null;
+
 
   // ---------------------------------------------------------
   //   INIT DOM
