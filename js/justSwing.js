@@ -4015,7 +4015,7 @@ function replaySwingFromHistory(swing) {
 
     // Première frame affichée
     renderFrame(0);
-  }
+  
 
 // -------------------------------------------
 // ⏭️ BOUTON "SWING SUIVANT" — VERSION STABLE
