@@ -217,6 +217,7 @@ body {
   background: transparent;
   font-size: 0.9rem;
   color: var(--pg-text-main);
+   min-width: 71%!important;
 }
 
 #coach-send {
@@ -428,6 +429,10 @@ body.coach-hidden #coach-ia {
 /* Animation normale */
 #coach-ia {
   transition: transform 0.35s ease;
+   display: block;
+    position: sticky;
+    bottom: 57px;
+    min-width: 100% !important;
 }
 
 /* Bouton flottant pour rouvrir */
