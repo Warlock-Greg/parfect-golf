@@ -2961,6 +2961,8 @@ const displayScore = visibleMax > 0
     });
 
    }
+
+
   
   
 function buildPremiumBreakdown(swing, scores) {
@@ -4007,21 +4009,30 @@ function stopReplay() {
 }
 
 
-    replayPlayBtn.onclick = () => {
-  replayPlaying ? stopReplay() : startReplay();
-};
+  if (replayPlayBtn) {
+  replayPlayBtn.onclick = () => {
+    replayPlaying ? stopReplay() : startReplay();
+  };
+} else {
+  console.warn("⏪ replayPlayBtn absent du DOM");
+}
 
-replaySpeedSel.onchange = () => {
-  if (replayPlaying) {
-    stopReplay();
-    setTimeout(startReplay, 50);
-  }
-};
+if (replaySpeedSel) {
+  replaySpeedSel.onchange = () => {
+    if (replayPlaying) {
+      stopReplay();
+      setTimeout(startReplay, 50);
+    }
+  };
+}
 
-replayTimeline.oninput = (e) => {
-  const idx = parseInt(e.target.value, 10) || 0;
-  renderFrame(idx);
-};
+if (replayTimeline) {
+  replayTimeline.oninput = (e) => {
+    const idx = parseInt(e.target.value, 10) || 0;
+    renderFrame(idx);
+  };
+}
+
 
 
     // Première frame affichée
