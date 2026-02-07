@@ -4119,7 +4119,6 @@ document.addEventListener("click", (e) => {
 });
 
 
-window.JustSwing = JustSwing;
     
   // ---------------------------------------------------------
   //   EXPORT
@@ -4132,5 +4131,8 @@ window.JustSwing = JustSwing;
     nextSwing
   };
 })();
+
+window.JustSwing = JustSwing;
+
 
 
