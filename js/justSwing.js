@@ -3880,9 +3880,9 @@ btnParfect.onclick = async () => {
     reviewEl.style.display = "block";
 
     // Timeline configurée sur le nombre de frames
-    timeline.min = 0;
-    timeline.max = swing.frames.length - 1;
-    timeline.value = 0;
+    replayTimeline.min = 0;
+    replayTimeline.max = swing.frames.length - 1;
+    replayTimeline.value = 0;
 
     // Durée totale estimée
     const fps = swing.fps || 30;
@@ -3953,7 +3953,7 @@ function replaySwingFromHistory(swing) {
   const pose = lastSwing.frames[idx];
   drawPoseOnCanvas(pose, replayCanvas, replayCtx);
 
-  if (timeline) timeline.value = idx;
+  if (replayTimeline) replayTimeline.value = idx;
 
   const fps = lastSwing.fps || 30;
   const t = (idx / fps).toFixed(2);
