@@ -1,0 +1,510 @@
+<!-- =========================================================
+  LEGAL PAGE — ZEN 2026 (Parfect.golfr)
+  ✅ prêt à coller dans /legal.html (ou une view)
+  ✅ responsive, lisible mobile, style "zen"
+  ========================================================= -->
+
+<style>
+  :root{
+    --pg-bg:#070A09;
+    --pg-surface:rgba(255,255,255,.06);
+    --pg-surface-2:rgba(255,255,255,.04);
+    --pg-border:rgba(255,255,255,.10);
+    --pg-text:rgba(255,255,255,.92);
+    --pg-muted:rgba(255,255,255,.72);
+    --pg-dim:rgba(255,255,255,.55);
+    --pg-green:#00ff99;
+    --pg-green-soft:rgba(0,255,153,.16);
+    --pg-shadow:0 18px 50px rgba(0,0,0,.55);
+    --pg-radius:18px;
+    --pg-radius-lg:22px;
+    --pg-max:920px;
+    --pg-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+
+  /* Page wrapper */
+  .pg-legal-page{
+    min-height:100vh;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(0,255,153,.14), transparent 55%),
+      radial-gradient(900px 450px at 85% 0%, rgba(0,255,153,.10), transparent 60%),
+      var(--pg-bg);
+    color:var(--pg-text);
+    font-family:var(--pg-font);
+    padding: clamp(18px, 3vw, 36px);
+  }
+
+  .pg-legal-wrap{
+    max-width: var(--pg-max);
+    margin: 0 auto;
+  }
+
+  .pg-legal-topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom: 16px;
+  }
+
+  .pg-legal-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .pg-legal-logo{
+    width:34px;
+    height:34px;
+    border-radius:12px;
+    object-fit:contain;
+    background: rgba(0,0,0,.35);
+    border: 1px solid var(--pg-border);
+    padding:6px;
+  }
+  .pg-legal-brand h1{
+    margin:0;
+    font-size: 1.05rem;
+    letter-spacing:.2px;
+    font-weight: 750;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .pg-legal-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .pg-btn{
+    appearance:none;
+    border:none;
+    cursor:pointer;
+    font-weight:650;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size:.92rem;
+    line-height:1;
+    transition: transform .06s ease, background .2s ease, border-color .2s ease, opacity .2s ease;
+    user-select:none;
+  }
+  .pg-btn:active{ transform: translateY(1px); }
+  .pg-btn-primary{
+    background: var(--pg-green);
+    color:#08100C;
+  }
+  .pg-btn-secondary{
+    background: rgba(0,0,0,.35);
+    color: var(--pg-text);
+    border: 1px solid var(--pg-border);
+    backdrop-filter: blur(10px);
+  }
+
+  .pg-legal-hero{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035));
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius-lg);
+    box-shadow: var(--pg-shadow);
+    padding: clamp(16px, 3vw, 24px);
+    margin-bottom: 14px;
+  }
+
+  .pg-legal-hero h2{
+    margin:0 0 6px 0;
+    font-size: 1.35rem;
+    font-weight: 820;
+    letter-spacing:.2px;
+  }
+  .pg-legal-hero p{
+    margin:0;
+    color: var(--pg-muted);
+    line-height:1.55;
+    font-size: .98rem;
+  }
+  .pg-legal-pillrow{
+    margin-top: 12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .pg-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,255,153,.22);
+    background: rgba(0,255,153,.10);
+    color: rgba(255,255,255,.92);
+    font-size: .85rem;
+    letter-spacing:.1px;
+  }
+  .pg-pill strong{ color: var(--pg-green); font-weight: 800; }
+
+  /* Cards / sections */
+  .pg-legal-grid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .pg-card{
+    background: var(--pg-surface);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--pg-radius);
+    padding: clamp(14px, 2.4vw, 18px);
+    box-shadow: 0 10px 35px rgba(0,0,0,.35);
+    backdrop-filter: blur(12px);
+  }
+  .pg-card h3{
+    margin:0 0 10px 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: rgba(255,255,255,.95);
+    letter-spacing:.2px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .pg-card h3 .dot{
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    background: var(--pg-green);
+    box-shadow: 0 0 18px rgba(0,255,153,.35);
+    flex:0 0 auto;
+  }
+  .pg-card p, .pg-card li{
+    color: var(--pg-muted);
+    line-height: 1.6;
+    font-size: .96rem;
+  }
+  .pg-card p{ margin: 0 0 10px 0; }
+  .pg-card p:last-child{ margin-bottom:0; }
+  .pg-card ul{
+    margin: 8px 0 0 18px;
+    padding:0;
+  }
+  .pg-card li{ margin: 6px 0; }
+
+  .pg-legal-kv{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .pg-kv{
+    background: var(--pg-surface-2);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .pg-kv .k{
+    color: var(--pg-dim);
+    font-size: .82rem;
+    margin-bottom:4px;
+  }
+  .pg-kv .v{
+    color: var(--pg-text);
+    font-size: .98rem;
+    font-weight: 650;
+    overflow-wrap:anywhere;
+  }
+
+  /* Accordions */
+  details.pg-acc{
+    background: rgba(0,0,0,.20);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 16px;
+    padding: 12px 12px;
+  }
+  details.pg-acc + details.pg-acc{ margin-top:10px; }
+  details.pg-acc summary{
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    color: rgba(255,255,255,.92);
+    font-weight: 750;
+    font-size: .98rem;
+  }
+  details.pg-acc summary::-webkit-details-marker{ display:none; }
+  .pg-acc-chevron{
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(0,255,153,.25);
+    background: rgba(0,255,153,.10);
+    color: var(--pg-green);
+    flex:0 0 auto;
+    transition: transform .18s ease;
+  }
+  details[open] .pg-acc-chevron{ transform: rotate(180deg); }
+  .pg-acc-body{
+    padding-top: 10px;
+    color: var(--pg-muted);
+    font-size: .95rem;
+    line-height:1.6;
+  }
+
+  .pg-legal-footer{
+    margin-top: 16px;
+    padding: 14px 2px 6px;
+    color: var(--pg-dim);
+    font-size: .85rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .pg-legal-footer a{
+    color: rgba(255,255,255,.82);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,.18);
+  }
+  .pg-legal-footer a:hover{ border-bottom-color: rgba(0,255,153,.45); }
+
+  @media (min-width: 820px){
+    .pg-legal-grid{
+      grid-template-columns: 1.1fr .9fr;
+      align-items:start;
+    }
+    .pg-legal-kv{
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="pg-legal-page">
+  <div class="pg-legal-wrap">
+
+    <!-- Topbar -->
+    <div class="pg-legal-topbar">
+      <div class="pg-legal-brand">
+        <!-- Remplace par ton logo -->
+        <img class="pg-legal-logo" src="logo-parfect-golfr.png" alt="Parfect.golfr">
+        <h1>Parfect.golfr</h1>
+      </div>
+
+      <div class="pg-legal-actions">
+        <!-- Si tu as un bouton home -->
+        <button class="pg-btn pg-btn-secondary" type="button" onclick="document.getElementById('home-btn')?.click?.()">
+          ← Retour
+        </button>
+        <button class="pg-btn pg-btn-primary" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+          Haut ↑
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="pg-legal-hero">
+      <h2>Mentions légales & RGPD</h2>
+      <p>
+      Parfect-Golfr est une solution qui appartient à la société GR8GWARE (https://gr8gware.com)
+      </p>
+
+      <div class="pg-legal-pillrow">
+        <span class="pg-pill">🔒 <strong>Données</strong> minimales</span>
+        <span class="pg-pill">🧠 <strong>IA</strong> = feedback</span>
+        <span class="pg-pill">🚫 <strong>Pas</strong> de revente</span>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="pg-legal-grid">
+
+      <!-- Left: Privacy -->
+      <div class="pg-card">
+        <h3><span class="dot"></span> Politique de confidentialité (RGPD)</h3>
+
+        <details class="pg-acc" open>
+          <summary>
+            Données collectées
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <ul>
+              <li><strong>Email</strong> (création de compte / accès).</li>
+              <li><strong>Données de swing</strong> (métriques, scores, historique, éventuellement vidéo si tu l’actives).</li>
+              <li><strong>Données d’usage</strong> (techniques, anonymisées) pour fiabilité et amélioration.</li>
+            </ul>
+            <p style="margin-top:10px;">
+              Parfect.golfr ne collecte pas de données sensibles (santé, opinions, etc.).
+            </p>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            Finalités (à quoi ça sert)
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <ul>
+              <li>Afficher tes scores, ton replay, et ton historique.</li>
+              <li>Gérer les quotas et/ou l’abonnement.</li>
+              <li>Améliorer la qualité du produit (bugfix, performance).</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            IA (coach / feedback)
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <p>
+              Certaines fonctionnalités utilisent l’IA pour générer des feedbacks.
+              Les données ne sont pas revendues.
+            </p>
+            <p>
+              Si tu veux ajouter une phrase “opt-in” pour l’entraînement de modèles,
+              mets-la ici (sinon laisse simple).
+            </p>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            Durée de conservation
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <p>
+              Les données sont conservées tant que ton compte est actif.
+              Tu peux demander la suppression à tout moment.
+            </p>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            Tes droits
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <ul>
+              <li>Accès / rectification</li>
+              <li>Suppression</li>
+              <li>Opposition</li>
+              <li>Portabilité</li>
+            </ul>
+            <p style="margin-top:10px;">
+              Contact : <strong>contact@parfect.golfr</strong>
+            </p>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            Cookies
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <p>
+              Cookies strictement nécessaires (session, navigation, sécurité).
+              Pas de cookies publicitaires.
+            </p>
+          </div>
+        </details>
+      </div>
+
+      <!-- Right: Legal -->
+      <div class="pg-card">
+        <h3><span class="dot"></span> Mentions légales</h3>
+
+        <div class="pg-legal-kv">
+          <div class="pg-kv">
+            <div class="k">Éditeur</div>
+            <div class="v">Parfect.golfr — <em>[Ton nom / Société]</em></div>
+          </div>
+
+          <div class="pg-kv">
+            <div class="k">Statut</div>
+            <div class="v"><em>[Auto-entrepreneur / SAS / …]</em></div>
+          </div>
+
+          <div class="pg-kv">
+            <div class="k">Adresse</div>
+            <div class="v"><em>[Adresse pro]</em></div>
+          </div>
+
+          <div class="pg-kv">
+            <div class="k">Contact</div>
+            <div class="v">contact@parfect.golfr</div>
+          </div>
+
+          <div class="pg-kv">
+            <div class="k">Hébergement</div>
+            <div class="v"><em>[Vercel / Netlify / OVH / Supabase / … + adresse]</em></div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <details class="pg-acc" open>
+          <summary>
+            Propriété intellectuelle
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <p>
+              Le contenu (UI, textes, logos, scores, logique de coaching) est protégé.
+              Reproduction ou diffusion interdite sans autorisation.
+            </p>
+          </div>
+        </details>
+
+        <details class="pg-acc">
+          <summary>
+            Responsabilité
+            <span class="pg-acc-chevron">⌄</span>
+          </summary>
+          <div class="pg-acc-body">
+            <p>
+              Parfect.golfr fournit des analyses et recommandations à titre indicatif.
+              Ce n’est ni un dispositif médical, ni un avis médical.
+              Tu restes responsable de ta pratique sportive.
+            </p>
+          </div>
+        </details>
+
+        <div style="height:12px"></div>
+
+        <div class="pg-kv">
+          <div class="k">Dernière mise à jour</div>
+          <div class="v"><span id="pg-legal-updated">2026-02-08</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="pg-legal-footer">
+      <div>© <span id="pg-legal-year">2026</span> Parfect.golfr</div>
+      <div>
+        <a href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Retour en haut</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // petit confort : année auto
+  (function(){
+    const y = new Date().getFullYear();
+    const el = document.getElementById("pg-legal-year");
+    if (el) el.textContent = String(y);
+  })();
+</script>
