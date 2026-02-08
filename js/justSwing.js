@@ -3875,10 +3875,6 @@ btnParfect.onclick = async () => {
       }
 
 
-    if (!reviewEl || !playBtn || !speedSel || !timeline || !timeLabel) {
-      console.warn("⏪ Elements replay swing manquants dans le DOM");
-      return;
-    }
 
     // Affiche le panneau review (au cas où)
     reviewEl.style.display = "block";
