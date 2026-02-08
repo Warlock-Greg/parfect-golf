@@ -1448,8 +1448,17 @@ position: fixed;
    ------------------------------- */
 
 .swing-review-video {
-  max-width: 720px;
-  margin: 0 auto;
+ position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  background: #000;
+  overflow: hidden; /* 🔑 CRITIQUE */
+}
+
+#swing-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 #swing-video {
