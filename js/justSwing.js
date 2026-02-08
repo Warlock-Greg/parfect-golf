@@ -427,18 +427,12 @@ function showStartButton() {
     // 🔑 Vue caméra = contexte de la session
     window.jswViewType = view;
     console.log("📐 Vue sélectionnée :", view);
+    cameraViewLocked = true; // 🔒 verrouillage
 
     // ⛔ Blocage quota AVANT lancement
     if (!canStartSwing()) return;
 
-    // ✅ OK → on lance la session
-    startCountdown();
-  };
-
-  const setViewAndStart = (view) => {
-  window.jswViewType = view;
-  cameraViewLocked = true; // 🔒 verrouillage
-
+  
   console.log("📐 Vue sélectionnée :", view);
 
   if (!canStartSwing()) return;
@@ -446,6 +440,7 @@ function showStartButton() {
   startCountdown();
 };
 
+  
 
   const btnFace = document.getElementById("jsw-view-face");
   if (btnFace) {
