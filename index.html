@@ -481,18 +481,23 @@
   document.getElementById("friends-btn")?.click();
   });
 
-    document.getElementById("swing-replay-fullscreen")?.addEventListener("click", () => {
-  const video = document.getElementById("swing-video");
-  if (!video) return;
+ document.getElementById("swing-replay-fullscreen")?.addEventListener("click", () => {
+  console.log("🔁 Replay fullscreen");
 
-  // Fullscreen natif (desktop + mobile)
-  if (video.requestFullscreen) {
-    video.requestFullscreen();
-  } else if (video.webkitRequestFullscreen) {
-    video.webkitRequestFullscreen(); // iOS
-  } else if (video.msRequestFullscreen) {
-    video.msRequestFullscreen(); // vieux Edge
-  }
+  document.body.classList.add("jsw-replay-fullscreen");
+
+  // 🔁 Recalculer la taille du canvas APRÈS le layout
+  setTimeout(() => {
+    const videoEl = document.getElementById("swing-video");
+    const overlay = document.getElementById("swing-overlay-canvas");
+    if (!videoEl || !overlay) return;
+
+    const rect = videoEl.getBoundingClientRect();
+    overlay.width = Math.floor(rect.width);
+    overlay.height = Math.floor(rect.height);
+
+    renderFrame(replayFrameIndex);
+  }, 50);
 });
 
     // Just Swing exit
