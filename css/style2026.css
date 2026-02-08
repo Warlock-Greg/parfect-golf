@@ -1469,6 +1469,29 @@ position: fixed;
    height: 75%;
 }
 
+body.jsw-replay-fullscreen {
+  overflow: hidden;
+}
+
+body.jsw-replay-fullscreen #swing-review {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+}
+
+body.jsw-replay-fullscreen .swing-review-video {
+  flex: 1;
+}
+
+body.jsw-replay-fullscreen .swing-player-controls {
+  padding: 12px;
+  background: rgba(0,0,0,0.8);
+}
+
+
 /* Controls */
 .swing-player-controls {
   display: flex;
