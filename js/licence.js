@@ -155,6 +155,8 @@
 
         <p id="pg-auth-msg"
            style="margin-top:8px;font-size:.75rem;color:#777;"></p>
+         <a id="pg-legal" href"/legal">j'accepte les conditions générales
+           </a>
       </div>
     `;
 
