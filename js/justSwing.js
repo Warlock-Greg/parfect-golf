@@ -4069,9 +4069,29 @@ if (nextBtn) {
     const breakdown = document.getElementById("swing-score-breakdown");
     if (breakdown) breakdown.innerHTML = "";
 
-    // 3️⃣ Revenir à la vue routine
-    showView?.("routine-area"); 
-    // ⚠️ remplace "routine-area" par l’ID exact si différent
+ // 3️⃣ Reset FLAGS critiques
+    captureArmed = false;
+    isRecordingActive = false;
+    addressLocked = false;
+    pendingAddress = false;
+    swingCompleted = false;
+    addressCaptured = false;
+    addressStabilityBuffer = [];
+
+    // 4️⃣ Reset timeout swing
+    if (swingTimeout) {
+      clearTimeout(swingTimeout);
+      swingTimeout = null;
+    }
+
+    // 5️⃣ Revenir au DÉBUT DU FLOW JustSwing
+    state = JSW_STATE.WAITING_START;
+    updateUI();
+
+    // 6️⃣ Relancer le flow normal
+    setTimeout(() => {
+      startCountdown();
+    }, 150);
   };
 }
 
