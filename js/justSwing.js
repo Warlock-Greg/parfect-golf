@@ -489,12 +489,12 @@ function showStartButton() {
         countdownInterval = null;
 
         setTimeout(() => {
-          Si on ne voit pas le corps entier → on prévient
+          //Si on ne voit pas le corps entier → on prévient
           if (!lastFullBodyOk) {
             showBigMessage("Je ne te vois pas entièrement 👀 Reviens bien dans le cadre.");
             state = JSW_STATE.POSITIONING;
             updateUI();
-            On laisse le joueur se replacer, puis il pourra relancer Start
+           // On laisse le joueur se replacer, puis il pourra relancer Start
             setTimeout(() => startRoutineSequenc(), 2500);
             return;
           //}
