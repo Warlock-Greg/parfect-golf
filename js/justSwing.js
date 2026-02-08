@@ -178,15 +178,27 @@ fetch("/data/parfect_reference.json")
   //   FONCTION NEXT SWING
   // ---------------------------------------------------------
   
-  function nextSwing() {
+  // =========================================================
+// ⏭️ JUST SWING — NEXT SWING (SOURCE UNIQUE)
+// =========================================================
+function nextSwing() {
   console.log("➡️ JustSwing.nextSwing()");
 
-  // 1) Cacher la review si elle existe
-  document.getElementById("swing-review")?.classList.add("hidden");
-  const bd = document.getElementById("swing-score-breakdown");
-  if (bd) bd.innerHTML = "";
+  // -----------------------------------------------------
+  // 1️⃣ UI — fermer la review
+  // -----------------------------------------------------
+  const review = document.getElementById("swing-review");
+  if (review) {
+    review.style.display = "none";
+    review.classList.add("hidden");
+  }
 
-  // 2) Reset flags
+  const breakdown = document.getElementById("swing-score-breakdown");
+  if (breakdown) breakdown.innerHTML = "";
+
+  // -----------------------------------------------------
+  // 2️⃣ RESET FLAGS CRITIQUES
+  // -----------------------------------------------------
   captureArmed = false;
   isRecordingActive = false;
   addressLocked = false;
@@ -195,21 +207,28 @@ fetch("/data/parfect_reference.json")
   addressCaptured = false;
   addressStabilityBuffer = [];
 
-  // 3) Reset swingTimeout
+  // -----------------------------------------------------
+  // 3️⃣ RESET TIMEOUT
+  // -----------------------------------------------------
   if (swingTimeout) {
     clearTimeout(swingTimeout);
     swingTimeout = null;
   }
 
-  // 4) Reset state machine + relance flow
+  // -----------------------------------------------------
+  // 4️⃣ RESET STATE MACHINE
+  // -----------------------------------------------------
   state = JSW_STATE.WAITING_START;
   updateUI();
 
-  // 🔥 relance directe
+  // -----------------------------------------------------
+  // 5️⃣ RELANCE FLOW (SANS CAMÉRA)
+  // -----------------------------------------------------
   setTimeout(() => {
-    startRoutineSequence();
+    startRoutineSequence(); // 🔥 clé de stabilité
   }, 150);
 }
+
 
   
 function getUserLicence() {
@@ -4107,40 +4126,11 @@ const nextBtn = document.getElementById("swing-review-next");
 
 if (nextBtn) {
   nextBtn.onclick = () => {
-    console.log("➡️ Retour à la routine");
-
-    // 1️⃣ Fermer la review
-    document.getElementById("swing-review")?.classList.add("hidden");
-
-    // 2️⃣ Nettoyer le breakdown (sécurité)
-    const breakdown = document.getElementById("swing-score-breakdown");
-    if (breakdown) breakdown.innerHTML = "";
-
- // 3️⃣ Reset FLAGS critiques
-    captureArmed = false;
-    isRecordingActive = false;
-    addressLocked = false;
-    pendingAddress = false;
-    swingCompleted = false;
-    addressCaptured = false;
-    addressStabilityBuffer = [];
-
-    // 4️⃣ Reset timeout swing
-    if (swingTimeout) {
-      clearTimeout(swingTimeout);
-      swingTimeout = null;
-    }
-
-    // 5️⃣ Revenir au DÉBUT DU FLOW JustSwing
-    state = JSW_STATE.WAITING_START;
-    updateUI();
-
-    // 6️⃣ Relancer le flow normal
-    setTimeout(() => {
-      showStartButton();
-    }, 150);
+    console.log("➡️ Swing suivant (UI)");
+    window.JustSwing?.nextSwing?.();
   };
 }
+
 
 
 
