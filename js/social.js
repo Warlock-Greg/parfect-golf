@@ -146,17 +146,18 @@ window.refreshSwingQuotaUI = async function () {
   try {
     const used = await window.getTodaySwingCount(email);
     const max = 10;
+    const left = Math.max(0, max - used);
 
     el.innerHTML = `
-      <span class="pg-quota-count">${used}</span>
-      <span class="pg-quota-sep">/</span>
-      <span class="pg-quota-max">${max}</span>
+      <strong>${used}</strong> / ${max}
+      <span class="pg-muted"> (${left} restants)</span>
     `;
   } catch (err) {
     console.error("❌ Swing quota error", err);
     el.textContent = "—";
   }
 };
+
 
 // ------------------------------------------------
 // COACH COMMENT — FEED V1
@@ -370,18 +371,25 @@ async function loadSwingHistoryFromNocoDB() {
   if (!email) return [];
 
   const url =
-    `${window.NOCODB_SWINGS_URL}?` +
-    `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-created_at&limit=20`;
+    "https://app.nocodb.com/api/v2/db/data/v1/parfect/swings-swings" +
+    `?where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
+    "&sort=-created_at&limit=20";
 
   const res = await fetch(url, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
+    headers: {
+      "xc-token": window.NOCODB_TOKEN
+    }
   });
 
-  if (!res.ok) return [];
+  if (!res.ok) {
+    console.error("❌ NocoDB DATA fetch failed", res.status);
+    return [];
+  }
+
   const data = await res.json();
   return data.list || [];
 }
+
 
 // ------------------------------------------------
 // EXPORT
