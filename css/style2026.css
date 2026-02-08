@@ -1199,10 +1199,10 @@ position: fixed;
    MESSAGE CENTRAL (adresse / installation)
    --------------------------------------------------------- */
 #jsw-big-msg {
-  position: absolute;
-  top: 10%;
-  left: 0%;
-  transform: translate(0%, 0%);
+  position: absolute!important;
+  top: 10%!important;
+  left: 0%!important;
+  transform: translate(0%, 0%)!important;
   z-index: 50;
   min-width: 95vw;
   padding: 22px 28px;
