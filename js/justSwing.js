@@ -207,7 +207,7 @@ fetch("/data/parfect_reference.json")
 
   // 🔥 relance directe
   setTimeout(() => {
-    startRoutineSequenc();
+    startRoutineSequence();
   }, 150);
 }
 
@@ -495,7 +495,7 @@ function showStartButton() {
             state = JSW_STATE.POSITIONING;
             updateUI();
            // On laisse le joueur se replacer, puis il pourra relancer Start
-            setTimeout(() => startRoutineSequenc(), 2500);
+            setTimeout(() => startRoutineSequence(), 2500);
             return;
           }
 
@@ -4090,7 +4090,7 @@ if (nextBtn) {
 
     // 6️⃣ Relancer le flow normal
     setTimeout(() => {
-      startCountdown();
+      showStartButton();
     }, 150);
   };
 }
