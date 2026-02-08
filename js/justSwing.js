@@ -98,6 +98,7 @@ let captureArmed = false;
 
   let lastPose = null;
   let lastFullBodyOk = false;
+  let cameraViewLocked = false;
 
   let loopId = null;
   let countdownInterval = null;
@@ -172,8 +173,11 @@ fetch("/data/parfect_reference.json")
   .catch(err => {
     console.warn("⚠️ Parfect reference not loaded", err);
   });
-
-// ← Retour
+  
+   // ---------------------------------------------------------
+  //   FONCTION NEXT SWING
+  // ---------------------------------------------------------
+  
   function nextSwing() {
   console.log("➡️ JustSwing.nextSwing()");
 
@@ -203,7 +207,7 @@ fetch("/data/parfect_reference.json")
 
   // 🔥 relance directe
   setTimeout(() => {
-    startCountdown();
+    showStartButton();
   }, 150);
 }
 
@@ -379,6 +383,13 @@ function showStartButton() {
   state = JSW_STATE.WAITING_START;
   updateUI();
 
+  // 🎯 SI caméra déjà choisie → on skip le choix
+  if (cameraViewLocked && window.jswViewType) {
+    console.log("🎬 Camera déjà définie → skip sélection");
+    startCountdown();
+    return;
+  }
+  
   bigMsgEl.innerHTML = `
     <div class="jsw-start-card">
       <div class="jsw-start-title">
@@ -423,6 +434,18 @@ function showStartButton() {
     // ✅ OK → on lance la session
     startCountdown();
   };
+
+  const setViewAndStart = (view) => {
+  window.jswViewType = view;
+  cameraViewLocked = true; // 🔒 verrouillage
+
+  console.log("📐 Vue sélectionnée :", view);
+
+  if (!canStartSwing()) return;
+
+  startCountdown();
+};
+
 
   const btnFace = document.getElementById("jsw-view-face");
   if (btnFace) {
