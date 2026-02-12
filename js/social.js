@@ -122,7 +122,7 @@ function injectSocialUI() {
   $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
   $$("show-history-btn")?.addEventListener("click", showHistoryTabs);
   $$("upgrade-btn")?.addEventListener("click", () => {
-    window.showCoachToast?.("Paiement bientôt disponible", "#D4AF37");
+    startStripeCheckout();
   });
 
   setTimeout(() => {
@@ -390,6 +390,56 @@ async function loadSwingHistoryFromNocoDB() {
   const data = await res.json();
   return data.list || [];
 }
+
+// ======================================
+// STRIPE CHECKOUT — PASSER PRO
+// ======================================
+
+async function startStripeCheckout() {
+  const email = window.userLicence?.email;
+
+  if (!email) {
+    window.showCoachToast?.(
+      "Connecte-toi pour passer PRO",
+      "#ff4444"
+    );
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      "https://jsisebmdjihfmelyymon.supabase.co/functions/v1/create-checkout",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      console.error(data);
+      window.showCoachToast?.(
+        "Erreur lors du paiement",
+        "#ff4444"
+      );
+    }
+  } catch (err) {
+    console.error(err);
+    window.showCoachToast?.(
+      "Erreur réseau",
+      "#ff4444"
+    );
+  }
+}
+
+// Expose si besoin
+window.startStripeCheckout = startStripeCheckout;
 
 
 // ------------------------------------------------
