@@ -370,16 +370,16 @@ async function loadSwingHistoryFromNocoDB() {
   const email = window.userLicence?.email;
   if (!email) return [];
   
-  // Option 1 : Utiliser l'ID de la table
+  // Utilise la même URL que getTodaySwingCount
   const url =
-    "https://app.nocodb.com/api/v2/db/data/v1/parfect/mh0dt1rbylry99e" + // ← ID de la table
-    `?where=(email,eq,${encodeURIComponent(email)})` + // ← Nom de colonne
-    "&sort=-created_at&limit=20";
+    `${window.NOCODB_SWINGS_URL}?` +
+    `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
+    `&sort=-created_at&limit=20`; // Ajout du tri et limite
+  
+  console.log("📊 Loading swing history from:", url);
   
   const res = await fetch(url, {
-    headers: {
-      "xc-token": window.NOCODB_TOKEN
-    }
+    headers: { "xc-token": window.NOCODB_TOKEN }
   });
   
   if (!res.ok) {
