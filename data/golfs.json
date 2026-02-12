@@ -32,6 +32,13 @@
     "pars": [4,5,4,3,4,5,4,3,4,5,4,4,3,5,4,3,4,5]
   },
 
+{ 
+    "id": "GOLF008", 
+    "name": "Saint Cast le Guildo", 
+    "location": "Saint-Cast-le-Guildo, France",
+    "pars": [5,3,4,3,5,4,4,4,4,3,4,3,4,4,4,4,4,3] 
+  },
+  
   { 
     "id": "GOLF006", 
     "name": "Ronchin Académique 9 TROUS", 
