@@ -366,29 +366,47 @@ async function loadHistoryTab(type) {
 // ------------------------------------------------
 // NOCODB — LOAD SWINGS
 // ------------------------------------------------
+// ------------------------------------------------
+// NOCODB — LOAD SWINGS
+// ------------------------------------------------
 async function loadSwingHistoryFromNocoDB() {
   const email = window.userLicence?.email;
-  if (!email) return [];
-  
-  // Utilise la même URL que getTodaySwingCount
+  if (!email) {
+    console.warn("🚫 User email not found, cannot load swing history.");
+    return [];
+  }
+
+  // Column 'cy88wsoi5b8bq9s' is assumed to be the email column in NocoDB.
+  // The 'where' clause filters records by email, 'sort' orders by creation date descending, and 'limit' restricts to 20 records.
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-created_at&limit=20`; // Ajout du tri et limite
-  
+    `&sort=-created_at&limit=20`;
+
   console.log("📊 Loading swing history from:", url);
-  
-  const res = await fetch(url, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
-  });
-  
-  if (!res.ok) {
-    console.error("❌ NocoDB DATA fetch failed", res.status);
+
+  try {
+    const res = await fetch(url, {
+      headers: { "xc-token": window.NOCODB_TOKEN }
+    });
+
+    if (!res.ok) {
+      // Log more details in case of a non-OK response
+      console.error(
+        `❌ NocoDB DATA fetch failed: Status ${res.status} - ${res.statusText}`,
+        await res.text() // Attempt to read response body for more context
+      );
+      return [];
+    }
+
+    const data = await res.json();
+
+    // NocoDB API typically returns data in a 'list' property
+    return data.list || [];
+  } catch (error) {
+    console.error(" gravely❌ Error fetching swing history from NocoDB:", error);
     return [];
   }
-  
-  const data = await res.json();
-  return data.list || [];
 }
 
 // ======================================
