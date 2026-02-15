@@ -381,7 +381,7 @@ async function loadSwingHistoryFromNocoDB() {
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-    `&sort=-created_at&limit=20`;
+    `&sort=-CreatedAt&limit=20`;
 
   console.log("📊 Loading swing history from:", url);
 
