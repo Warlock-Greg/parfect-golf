@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Parfect PRO activé</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #0f0f0f;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    .card {
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 16px;
+      max-width: 400px;
+      margin: auto;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #00ff99;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🎉 Paiement réussi !</h2>
+    <p>Merci pour ton abonnement PRO.</p>
+    <p>Activation en cours...</p>
+
+    <button onclick="goHome()">Retour à Parfect</button>
+  </div>
+
+  <script>
+    async function goHome() {
+      window.location.href = "/";
+    }
+
+    // 🔄 Rafraîchit la licence
+    async function activate() {
+      if (window.initLicence) {
+        await window.initLicence();
+      }
+    }
+
+    activate();
+  </script>
+
+</body>
+</html>
