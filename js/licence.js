@@ -279,7 +279,7 @@
     const licenceUser = remote
       ? {
           email,
-          licence: remote.licence || "free"
+          licence: remote.licence || "free",
           synced: true
         }
       : {
