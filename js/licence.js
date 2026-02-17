@@ -55,24 +55,42 @@
     }
   }
 
-  async function ensureUserInNocoDB(email) {
-    try {
-      await fetch(window.NOCODB_REFERENCES_URL, {
-        method: "POST",
+ async function ensureUserInNocoDB(email) {
+  try {
+    // 1️⃣ Vérifie si l'utilisateur existe déjà
+    const res = await fetch(
+      `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${email})`,
+      {
         headers: {
-          "Content-Type": "application/json",
           "xc-token": window.NOCODB_TOKEN
-        },
-        body: JSON.stringify({
-          [NOCODB_FIELDS.EMAIL]: email,
-          [NOCODB_FIELDS.LICENCE]: "free",
-          [NOCODB_FIELDS.SOURCE]: "supabase-auth"
-        })
-      });
-    } catch {
-      // offline / already exists → OK
-    }
+        }
+      }
+    ).then(r => r.json());
+
+    const existing = res.list?.[0];
+
+    // 2️⃣ S'il existe → NE RIEN FAIRE
+    if (existing) return;
+
+    // 3️⃣ Sinon créer en FREE
+    await fetch(window.NOCODB_REFERENCES_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN
+      },
+      body: JSON.stringify({
+        [NOCODB_FIELDS.EMAIL]: email,
+        [NOCODB_FIELDS.LICENCE]: "free",
+        [NOCODB_FIELDS.SOURCE]: "supabase-auth"
+      })
+    });
+
+  } catch (err) {
+    console.warn("NocoDB ensure error", err);
   }
+}
+
 
   // ------------------------------
   // AUTH SUCCESS PIPELINE
