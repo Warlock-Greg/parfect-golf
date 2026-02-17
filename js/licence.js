@@ -293,7 +293,6 @@
     window.PARFECT_USER = licenceUser;
     window.userLicence = licenceUser;
     window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
-console.log("REMOTE FROM NOCODB", remote);
 
     console.log("✅ Licence boot.", licenceUser);
   }
