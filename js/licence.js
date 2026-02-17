@@ -279,12 +279,12 @@
     const licenceUser = remote
       ? {
           email,
-          licence: remote[NOCODB_FIELDS.LICENCE] || "free",
+          licence: remote.licence || "free"
           synced: true
         }
       : {
           email,
-          licence: "free",
+          licence: "free1",
           synced: false
         };
 
@@ -295,7 +295,7 @@
     window.PARFECT_LICENCE_OK = licenceUser.licence !== "expired";
 console.log("REMOTE FROM NOCODB", remote);
 
-    console.log("✅ Licence boot", licenceUser);
+    console.log("✅ Licence boot.", licenceUser);
   }
 
 // ================================
