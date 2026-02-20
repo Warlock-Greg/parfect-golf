@@ -349,23 +349,48 @@ async function loadHistoryTab(type) {
   }
 
   if (type === "round") {
-    const rounds = JSON.parse(localStorage.getItem("roundHistory") || "[]");
-    panel.innerHTML = rounds.length
-      ? rounds.reverse().map(r => `
-        <div class="pg-card">
-          <strong>${r.golf}</strong><br>
-          Score ${r.totalVsPar > 0 ? "+" : ""}${r.totalVsPar}
-          · ${r.parfects} Parfects<br>
-          <small>${new Date(r.date).toLocaleDateString()}</small>
-        </div>
-      `).join("")
-      : `<p class="pg-muted">Aucune partie enregistrée.</p>`;
-  }
+  const rounds = await loadRoundsFromNocoDB();
+
+  panel.innerHTML = rounds.length
+    ? rounds.map(buildRoundCard).join("")
+    : `<p class="pg-muted">Aucune partie enregistrée.</p>`;
+}
 }
 
 // ------------------------------------------------
-// NOCODB — LOAD SWINGS
+// NOCODB — LOAD ROUNDS
 // ------------------------------------------------
+
+async function loadRoundsFromNocoDB() {
+  const email = window.userLicence?.email;
+  if (!email) return [];
+
+  const res = await fetch(window.NOCODB_ROUNDS_URL, {
+    headers: { "xc-token": window.NOCODB_TOKEN }
+  });
+
+  if (!res.ok) return [];
+
+  const data = await res.json();
+  const list = data.list || [];
+
+  return list
+    .filter(r => r.player_email === email)
+    .sort((a, b) => new Date(b.date_played) - new Date(a.date_played));
+}
+
+function buildRoundCard(round) {
+  return `
+    <div class="pg-card">
+      <strong>${round.golf_name}</strong><br>
+      Score ${round.total_vs_par > 0 ? "+" : ""}${round.total_vs_par}
+      · ${round.parfects} Parfects<br>
+      Mental ${round.mental_score}/5<br>
+      <small>${new Date(round.date_played).toLocaleDateString()}</small>
+    </div>
+  `;
+}
+
 // ------------------------------------------------
 // NOCODB — LOAD SWINGS
 // ------------------------------------------------
