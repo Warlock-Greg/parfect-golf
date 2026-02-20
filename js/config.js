@@ -32,6 +32,9 @@ window.NOCODB_SWINGS_URL =
 window.NOCODB_TOKEN =
   "gJkWlHE4qzbs-JC5L5l2o0T1_UldcEYOIAHXpPtl";
 
+window.NOCODB_ROUNDS_URL =
+  "https://app.nocodb.com/api/v2/tables/TON_ID_ROUNDS/records";
+
 // Nom logique du projet
 window.NC_PROJECT = "parfect";
 
