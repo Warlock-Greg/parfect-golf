@@ -666,7 +666,7 @@ function analyzeHole(holeData) {
       }
     });
   } else {
-    message = "👌 respecte la règle du n'importe ou : sur le farway, sur le green proche du trou. Pense à ta routein et à ton geste.";
+    message = "👌 respecte la règle du n'importe où : sur le farway, sur le green proche du trou. Pense à ta routine, ta rotation et ton tempo.";
   }
 
   if (message && diff < 2) {
@@ -756,6 +756,38 @@ function summarizeRound() {
   );
 
   showShareBadge(totalVsPar, parfects);
+}
+
+async function saveRoundToNocoDB(roundSummary) {
+  if (!window.NOCODB_ROUNDS_URL) return;
+
+  const payload = {
+    player_email: window.userLicence?.email,
+    golf_name: roundSummary.golfName,
+    date_played: new Date().toISOString(),
+    total_score: roundSummary.totalScore,
+    total_vs_par: roundSummary.totalVsPar,
+    parfects: roundSummary.parfects,
+    mental_score: roundSummary.mentalScore,
+    summary_json: JSON.stringify(roundSummary)
+  };
+
+  try {
+    const res = await fetch(window.NOCODB_ROUNDS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("Round save failed");
+
+    console.log("✅ Partie sauvegardée");
+  } catch (err) {
+    console.error("❌ Save round error", err);
+  }
 }
 
 // === 🏆 BADGE INSTAGRAM DELUXE ===
