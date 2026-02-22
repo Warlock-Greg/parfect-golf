@@ -840,12 +840,27 @@ function showShareBadge(totalVsPar, parfects) {
         <p>🧑‍🏫 Coach : <strong>${coach}</strong></p>
       </div>
 
-      <div style="margin-top:16px;display:flex;justify-content:center;gap:10px;">
-        <button id="download-badge" class="btn" 
-          style="background:#111;color:#00ff99;border-radius:10px;padding:8px 16px;">📸 Télécharger</button>
-        <button id="close-badge" class="btn" 
-          style="background:#ff3366;color:#fff;border-radius:10px;padding:8px 16px;">❌ Fermer</button>
-      </div>
+      <div style="margin-top:16px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+  <button id="download-badge" class="btn"
+    style="background:#111;color:#00ff99;border-radius:10px;padding:8px 16px;">
+    📸 Télécharger
+  </button>
+
+  <button id="share-badge-btn" class="btn"
+    style="background:rgba(17,17,17,0.85);color:#fff;border-radius:10px;padding:8px 16px;border:1px solid rgba(255,255,255,0.18);">
+    📤 Partager
+  </button>
+
+  <button id="go-social-btn" class="btn"
+    style="background:var(--pg-green-main,#00ff99);color:#111;border-radius:10px;padding:8px 16px;">
+    👥 Voir dans Social
+  </button>
+
+  <button id="close-badge" class="btn"
+    style="background:transparent;color:#fff;border-radius:10px;padding:8px 16px;border:1px solid rgba(255,255,255,0.22);">
+    Fermer
+  </button>
+</div>
 
       <p style="font-size:0.85rem;margin-top:10px;opacity:0.8;">#parfectgolfr #mindset #golfjourney</p>
     </div>
@@ -866,7 +881,46 @@ function showShareBadge(totalVsPar, parfects) {
     }
   });
 
+  // PATCH: fermer
   badge.querySelector("#close-badge").addEventListener("click", () => badge.remove());
+
+  // PATCH: share (Web Share si dispo, sinon copie)
+  badge.querySelector("#share-badge-btn")?.addEventListener("click", async () => {
+    const golfName = currentGolf?.name || "Mon parcours";
+    const text = `🏌️ ${golfName} — Score ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar} — 💚 ${parfects} Parfect(s)\n#parfectgolfr #mindset #golfjourney`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+        return;
+      }
+    } catch (e) {
+      // user canceled -> ignore
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showCoachIA?.("✅ Texte copié. Colle-le dans Instagram / WhatsApp.");
+    } catch (e) {
+      alert(text);
+    }
+  });
+
+  // PATCH: go social
+  badge.querySelector("#go-social-btn")?.addEventListener("click", () => {
+    badge.remove();
+
+    // 1) Si tu as un routeur / showView
+    if (typeof window.showView === "function") {
+      window.showView("friends-area");
+      window.injectSocialUI?.();
+      window.refreshSocialData?.();
+      return;
+    }
+
+    // 2) Fallback: anchor hash
+    location.hash = "#social";
+  });
 }
 
 // === Sauvegarde trou ===
