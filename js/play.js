@@ -763,6 +763,8 @@ async function saveRoundToNocoDB(roundSummary) {
 
 // === Fin de partie ===
 async function summarizeRound() {
+  console.log("summarizeRound fired");
+  
   const valid = holes.filter((h) => h && typeof h.score === "number");
   const totalVsPar = valid.reduce((sum, h) => sum + (h.score - h.par), 0);
   const parfects = valid.filter((h) => {
@@ -772,14 +774,17 @@ async function summarizeRound() {
     return diff <= 0 && hasFairway && h.gir && goodPutting;
   }).length;
 
-  const history = JSON.parse(localStorage.getItem("history") || "[]");
-  history.push({
-    date: new Date().toLocaleDateString(),
-    golf: currentGolf?.name ?? "Inconnu",
+ // ✅ roundSummary défini DANS la fonction
+  const roundSummary = {
+    golfName: currentGolf?.name ?? "Inconnu",
+    totalScore,
     totalVsPar,
     parfects,
-  });
-  localStorage.setItem("history", JSON.stringify(history));
+    mentalScore: null,
+    holesCount: valid.length
+  };
+
+  console.log("[Round] roundSummary built", roundSummary);
 
   const badge = document.createElement("div");
   badge.style = `
@@ -812,6 +817,7 @@ async function summarizeRound() {
   try {
     console.log("[Round] calling saveRoundToNocoDB", roundSummary);
     await saveRoundToNocoDB(roundSummary);
+    console.log("✅ Round envoyé à NocoDB");
   } catch (e) {
     console.error("[Round] saveRoundToNocoDB failed", e);
   }
