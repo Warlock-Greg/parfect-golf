@@ -365,28 +365,59 @@ async function loadRoundsFromNocoDB() {
   const email = window.userLicence?.email;
   if (!email) return [];
 
-  const res = await fetch(window.NOCODB_ROUNDS_URL, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
-  });
+  try {
+    const res = await fetch(window.NOCODB_ROUNDS_URL, {
+      headers: { "xc-token": window.NOCODB_TOKEN }
+    });
 
-  if (!res.ok) return [];
+    if (!res.ok) {
+      console.error("NocoDB fetch failed", res.status);
+      return [];
+    }
 
-  const data = await res.json();
-  const list = data.list || [];
+    const data = await res.json();
+    const list = data.list || data.records || [];
 
-  return list
-    .filter(r => r.player_email === email)
-    .sort((a, b) => new Date(b.date_played) - new Date(a.date_played));
+    return list
+      .filter(r => r.player_email === email)
+      .sort((a, b) => {
+        const da = new Date(a.date_played || 0);
+        const db = new Date(b.date_played || 0);
+        return db - da;
+      });
+
+  } catch (err) {
+    console.error("loadRoundsFromNocoDB error", err);
+    return [];
+  }
 }
 
 function buildRoundCard(round) {
+  const golfName = round.golf_name ?? "Parcours";
+  const score = round.total_vs_par ?? 0;
+  const parfects = round.parfects ?? 0;
+
+  const mental =
+    typeof round.mental_score === "number"
+      ? `${round.mental_score}/5`
+      : "—/5";
+
+  const dateObj = round.date_played
+    ? new Date(round.date_played)
+    : null;
+
+  const dateLabel =
+    dateObj && !isNaN(dateObj.getTime())
+      ? dateObj.toLocaleDateString()
+      : "—";
+
   return `
     <div class="pg-card">
-      <strong>${round.golf_name}</strong><br>
-      Score ${round.total_vs_par > 0 ? "+" : ""}${round.total_vs_par}
-      · ${round.parfects} Parfects<br>
-      Mental ${round.mental_score}/5<br>
-      <small>${new Date(round.date_played).toLocaleDateString()}</small>
+      <strong>${golfName}</strong><br>
+      Score ${score > 0 ? "+" : ""}${score}
+      · ${parfects} Parfects<br>
+      Mental ${mental}<br>
+      <small>${dateLabel}</small>
     </div>
   `;
 }
