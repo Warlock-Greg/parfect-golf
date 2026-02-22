@@ -775,6 +775,14 @@ function summarizeRound() {
   );
 
   showShareBadge(totalVsPar, parfects);
+
+  // ---- SAVE TO NOCODB (NEW) ----
+  try {
+    console.log("[Round] calling saveRoundToNocoDB", roundSummary);
+    await saveRoundToNocoDB(roundSummary);
+  } catch (e) {
+    console.error("[Round] saveRoundToNocoDB failed", e);
+  }
 }
 
 async function saveRoundToNocoDB(roundSummary) {
