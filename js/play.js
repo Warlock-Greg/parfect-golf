@@ -763,56 +763,66 @@ async function saveRoundToNocoDB(roundSummary) {
 
 // === Fin de partie ===
 async function summarizeRound() {
-  console.log("STEP 1 - summarizeRound fired");
+  const valid = (holes || []).filter((h) => h && typeof h.score === "number");
 
-  if (!holes) {
-    console.error("❌ holes undefined");
-    return;
-  }
-
-  console.log("STEP 2 - holes length:", holes.length);
-
-  const valid = holes.filter((h) => h && typeof h.score === "number");
-  console.log("STEP 3 - valid holes:", valid.length);
-
-  const totalVsPar = valid.reduce(
-    (sum, h) => sum + (h.score - h.par),
-    0
-  );
-  console.log("STEP 4 - totalVsPar:", totalVsPar);
-
-  const totalScore = valid.reduce(
-    (sum, h) => sum + (h.score ?? 0),
-    0
-  );
-  console.log("STEP 5 - totalScore:", totalScore);
+  const totalVsPar = valid.reduce((sum, h) => sum + ((h.score ?? 0) - (h.par ?? 0)), 0);
+  const totalScore = valid.reduce((sum, h) => sum + (h.score ?? 0), 0);
 
   const parfects = valid.filter((h) => {
-    const diff = h.score - h.par;
-    const hasFairway = h.par === 3 ? true : !!h.fairway;
-    const goodPutting = ["1", "2", "3", "4", "5"].includes(h.dist2);
-    return diff <= 0 && hasFairway && h.gir && goodPutting;
-  }).length;
+    const par = h.par ?? 0;
+    const score = h.score ?? 999;
+    const diff = score - par;
 
-  console.log("STEP 6 - parfects:", parfects);
+    const hasFairway = par === 3 ? true : !!h.fairway;
+    const goodPutting = ["1", "2", "3", "4", "5"].includes(String(h.dist2 ?? ""));
+    return diff <= 0 && hasFairway && !!h.gir && goodPutting;
+  }).length;
 
   const roundSummary = {
     golfName: currentGolf?.name ?? "Inconnu",
     totalScore,
     totalVsPar,
     parfects,
-    mentalScore: null
+    mentalScore: window.TrainingSession?.mental_score ?? null,
+    holesCount: valid.length
   };
 
-  console.log("STEP 7 - roundSummary built:", roundSummary);
+  // ✅ UI badge (revient)
+  const badge = document.createElement("div");
+  badge.style = `
+    position:fixed;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    background:#00ff99;
+    color:#111;
+    padding:20px 30px;
+    border-radius:20px;
+    font-weight:bold;
+    font-size:1.2rem;
+    box-shadow:0 0 20px #00ff99aa;
+    z-index:12000;
+  `;
+  badge.textContent = `🏅 ${parfects} Parfect${parfects > 1 ? "s" : ""} collecté${parfects > 1 ? "s" : ""} !`;
+  document.body.appendChild(badge);
+  setTimeout(() => badge.remove(), 3000);
 
+  showCoachIA?.(
+    `🏁 Fin de partie ! Score total ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}, ${parfects} Parfect${
+      parfects > 1 ? "s" : ""
+    } collecté${parfects > 1 ? "s" : ""} !`
+  );
+
+  showShareBadge?.(totalVsPar, parfects);
+
+  // ✅ Sauvegarde NocoDB (après UI pour éviter impression “rien ne se passe”)
   try {
-    console.log("STEP 8 - calling saveRoundToNocoDB");
     await saveRoundToNocoDB(roundSummary);
-    console.log("STEP 9 - NocoDB success");
   } catch (e) {
-    console.error("❌ STEP 9 - NocoDB error:", e);
+    console.error("[Round] NocoDB save failed", e);
   }
+
+  return roundSummary;
 }
 
 
