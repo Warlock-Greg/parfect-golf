@@ -200,6 +200,20 @@ function showResumeOrNewModal() {
 
   modal.innerHTML = `
     <div class="modal-card" id="resume-modal-card" style="text-align:center;padding:20px;">
+      <!-- Header: Retour -->
+      <div style="display:flex;justify-content:flex-start;align-items:center;margin-bottom:8px;">
+        <button id="resume-back" class="btn" type="button"
+          style="
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.20);
+            color: var(--pg-green-main, #00ff99);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+          "
+        >← Retour</button>
+      </div>
+      
       <h3>🎮 Partie en cours ?</h3>
       ${
         roundInProgress
@@ -218,6 +232,11 @@ function showResumeOrNewModal() {
 
   modal.querySelector("#resume-modal-card").addEventListener("click", (e) => e.stopPropagation());
 
+   // ✅ Bouton RETOUR (ferme juste la modale)
+  modal.querySelector("#resume-back")?.addEventListener("click", () => {
+    modal.remove();
+  });
+  
   modal.querySelector("#resume-round")?.addEventListener("click", () => {
     modal.remove();
 
