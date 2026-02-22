@@ -225,8 +225,9 @@ function nextSwing() {
   // 5️⃣ RELANCE FLOW (SANS CAMÉRA)
   // -----------------------------------------------------
   setTimeout(() => {
+    console.log("🔄 Nouvelle routine (nouvelle session logique)");
     startRoutineSequence(); // 🔥 clé de stabilité
-  }, 150);
+  }, 300);
 }
 
 
