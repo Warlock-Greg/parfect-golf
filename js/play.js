@@ -729,6 +729,38 @@ function showConfetti() {
   }
 }
 
+async function saveRoundToNocoDB(roundSummary) {
+  if (!window.NOCODB_ROUNDS_URL) return;
+
+  const payload = {
+    player_email: window.userLicence?.email,
+    golf_name: roundSummary.golfName,
+    date_played: new Date().toISOString(),
+    total_score: roundSummary.totalScore,
+    total_vs_par: roundSummary.totalVsPar,
+    parfects: roundSummary.parfects,
+    mental_score: roundSummary.mentalScore,
+    summary_json: JSON.stringify(roundSummary)
+  };
+
+  try {
+    const res = await fetch(window.NOCODB_ROUNDS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xc-token": window.NOCODB_TOKEN
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("Round save failed");
+
+    console.log("✅ Partie sauvegardée");
+  } catch (err) {
+    console.error("❌ Save round error", err);
+  }
+}
+
 // === Fin de partie ===
 async function summarizeRound() {
   const valid = holes.filter((h) => h && typeof h.score === "number");
@@ -785,37 +817,7 @@ async function summarizeRound() {
   }
 }
 
-async function saveRoundToNocoDB(roundSummary) {
-  if (!window.NOCODB_ROUNDS_URL) return;
 
-  const payload = {
-    player_email: window.userLicence?.email,
-    golf_name: roundSummary.golfName,
-    date_played: new Date().toISOString(),
-    total_score: roundSummary.totalScore,
-    total_vs_par: roundSummary.totalVsPar,
-    parfects: roundSummary.parfects,
-    mental_score: roundSummary.mentalScore,
-    summary_json: JSON.stringify(roundSummary)
-  };
-
-  try {
-    const res = await fetch(window.NOCODB_ROUNDS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "xc-token": window.NOCODB_TOKEN
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error("Round save failed");
-
-    console.log("✅ Partie sauvegardée");
-  } catch (err) {
-    console.error("❌ Save round error", err);
-  }
-}
 
 // === 🏆 BADGE INSTAGRAM DELUXE ===
 function showShareBadge(totalVsPar, parfects) {
