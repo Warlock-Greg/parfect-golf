@@ -730,7 +730,7 @@ function showConfetti() {
 }
 
 // === Fin de partie ===
-function summarizeRound() {
+async function summarizeRound() {
   const valid = holes.filter((h) => h && typeof h.score === "number");
   const totalVsPar = valid.reduce((sum, h) => sum + (h.score - h.par), 0);
   const parfects = valid.filter((h) => {
