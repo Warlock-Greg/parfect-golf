@@ -349,12 +349,28 @@ async function loadHistoryTab(type) {
   }
 
   if (type === "swing") {
-    const swings = await loadSwingHistoryFromNocoDB();
-    panel.innerHTML = swings.length
-      ? swings.map((s, i) => buildSocialSwingItem(s, swings.length - i)).join("")
-      : `<p class="pg-muted">Aucun swing enregistré.</p>`;
+  const swings = await loadSwingHistoryFromNocoDB();
+
+  if (!swings.length) {
+    panel.innerHTML = `<p class="pg-muted">Aucun swing enregistré.</p>`;
     return;
   }
+
+  panel.innerHTML = swings
+    .map((s, i) => buildSocialSwingItem(s, swings.length - i))
+    .join("");
+
+  // 🔥 Binder les boutons Replay APRÈS render
+  document.querySelectorAll(".pg-btn-replay").forEach(btn => {
+    btn.onclick = () => {
+      const id = btn.dataset.swingId;
+      console.log("🎬 Replay swing:", id);
+      replaySwingFromNocoDB(id);
+    };
+  });
+
+  return;
+}
 
   if (type === "training") {
     const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
@@ -454,7 +470,7 @@ async function loadSwingHistoryFromNocoDB() {
     return [];
   }
 
-  // Column 'cy88wsoi5b8bq9s' is assumed to be the email column in NocoDB.
+ 
   // The 'where' clause filters records by email, 'sort' orders by creation date descending, and 'limit' restricts to 20 records.
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
@@ -487,6 +503,51 @@ async function loadSwingHistoryFromNocoDB() {
   }
 }
 
+function buildSocialSwingItem(swing, index) {
+  const id = swing?.Id || swing?.id;
+  const club = swing?.club ?? "Club ?";
+  const view = swing?.view ?? "?";
+  const score = swing?.scores?.total ?? swing?.total_score ?? "—";
+  const dateRaw = swing?.created_at ?? swing?.date ?? null;
+
+  const dateObj = dateRaw ? new Date(dateRaw) : null;
+  const dateLabel =
+    dateObj && !isNaN(dateObj.getTime())
+      ? dateObj.toLocaleDateString()
+      : "—";
+
+  return `
+    <div class="pg-card">
+      <div style="display:flex;justify-content:space-between;">
+        <strong>#${index}</strong>
+        <span style="opacity:.6;">${dateLabel}</span>
+      </div>
+
+      <div style="margin-top:6px;">
+        ${club} · ${view}
+      </div>
+
+      <div style="margin-top:6px;font-weight:600;">
+        Score ${score}
+      </div>
+
+      <button 
+        class="pg-btn-replay" 
+        data-swing-id="${id}"
+        style="
+          margin-top:10px;
+          padding:6px 14px;
+          border-radius:999px;
+          border:none;
+          background:#4ade80;
+          color:#111;
+          cursor:pointer;
+        ">
+        ▶️ Replay
+      </button>
+    </div>
+  `;
+}
 
 // ------------------------------------------------
 // 🎬 REPLAY SWING FROM NOCODB (SOCIAL)
