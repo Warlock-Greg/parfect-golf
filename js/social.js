@@ -242,6 +242,7 @@ function showHistoryTabs() {
     </div>
     <div id="history-panel" class="pg-history-panel"></div>
   `;
+  bindHistoryPanelActions();
 
   content.querySelectorAll("[data-tab]").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -253,6 +254,27 @@ function showHistoryTabs() {
 
   content.querySelector("[data-tab='feed']")?.classList.add("active");
   loadHistoryTab("feed");
+}
+
+function bindHistoryPanelActions() {
+  const panel = document.getElementById("history-panel");
+  if (!panel || panel.dataset.bound === "1") return;
+  panel.dataset.bound = "1";
+
+  panel.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-swing-id]");
+    if (!btn) return;
+
+    const swingId = btn.dataset.swingId;
+    console.log("🎬 Revoir swing", swingId);
+
+    // appelle ta fonction existante
+    if (typeof replaySwingFromNocoDB === "function") {
+      replaySwingFromNocoDB(swingId);
+    } else {
+      console.warn("⚠️ replaySwingFromNocoDB introuvable");
+    }
+  });
 }
 
 // ------------------------------------------------
@@ -462,6 +484,68 @@ async function loadSwingHistoryFromNocoDB() {
   } catch (error) {
     console.error(" gravely❌ Error fetching swing history from NocoDB:", error);
     return [];
+  }
+}
+
+
+// ------------------------------------------------
+// 🎬 REPLAY SWING FROM NOCODB (SOCIAL)
+// ------------------------------------------------
+async function replaySwingFromNocoDB(swingId) {
+  try {
+    if (!swingId) return;
+
+    const url = `${window.NOCODB_SWINGS_URL}/${swingId}`;
+
+    const res = await fetch(url, {
+      headers: { "xc-token": window.NOCODB_TOKEN }
+    });
+
+    if (!res.ok) throw new Error("Fetch swing failed");
+
+    const data = await res.json();
+    const record = data;
+
+    if (!record.swing_json) {
+      console.warn("⚠️ Aucun swing_json dans ce record");
+      return;
+    }
+
+    const parsed = JSON.parse(record.swing_json);
+
+    const reconstructedSwing = {
+      frames: parsed.frames?.map(f =>
+        f.landmarks?.map(l => ({
+          x: l.x,
+          y: l.y,
+          z: l.z,
+          visibility: l.visibility
+        }))
+      ) || [],
+      timestamps: parsed.frames?.map(f => f.timestamp) || [],
+      keyFrames: parsed.meta?.keyframes || {},
+      club: record.club,
+      viewType: record.view,
+      fps: record.fps || 30
+    };
+
+    console.log("🎬 Replay reconstructed swing:", reconstructedSwing);
+
+    // 🔥 Passe en mode JustSwing
+    document.body.classList.add("jsw-fullscreen");
+    document.getElementById("just-swing-area")?.style.setProperty("display", "block");
+
+    window.JustSwing?.stopSession?.();
+
+    // Appelle ton système existant
+    if (typeof window.replaySwingFromHistory === "function") {
+      window.replaySwingFromHistory(reconstructedSwing);
+    } else if (typeof window.handleSwingComplete === "function") {
+      window.handleSwingComplete(reconstructedSwing);
+    }
+
+  } catch (err) {
+    console.error("❌ Replay error:", err);
   }
 }
 
