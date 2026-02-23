@@ -2528,8 +2528,7 @@ return {
 };
 
 
- function jswDumpLandmarksJSON(swing, payload = {}) {
-  const { scores, currentClub } = payload;
+ function jswBuildLandmarksJSON(swing) {
   const frames = swing.frames || [];
   const ts = swing.timestamps || [];
   const KF = swing.keyFrames || {};
@@ -2577,20 +2576,7 @@ return {
     dump.frames.push(frameObj);
   }
 
-  // DOWNLOAD
-  const blob = new Blob([JSON.stringify(dump, null, 2)], {
-    type: "application/json"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "swing_dump.json";
-  a.click();
-  URL.revokeObjectURL(url);
-
-  console.log("📦 Swing JSON dump saved:", dump);
-
+  return dump;
 }
 
 
@@ -2599,7 +2585,6 @@ return {
 // =====================================================
 window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   try {
-    // 🔐 Guards essentiels
     if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
       throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
     }
@@ -2608,19 +2593,27 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
       throw new Error("Record swing invalide");
     }
 
-    // 🧠 Normalisation minimale (sécurité)
+    if (!record.email && !window.userLicence?.email) {
+      throw new Error("Email utilisateur manquant — swing non sauvegardé");
+    }
+
+    // 🔥 Build swing JSON complet
+    const swingDump = jswBuildLandmarksJSON(record);
+
     const payload = {
-      email: record.email ?? window.userLicence?.email ?? null,
+      email: record.email ?? window.userLicence?.email,
       club: record.club ?? "?",
       view: record.view ?? "unknown",
       fps: record.fps ?? null,
-      scores: record.scores ?? null,
-      metrics: record.metrics ?? null
-    };
+      frames_count: record.frames?.length ?? 0,
 
-    if (!payload.email) {
-      throw new Error("Email utilisateur manquant — swing non sauvegardé");
-    }
+      // 🔥 JSON complet
+      swing_json: JSON.stringify(swingDump),
+
+      // Optionnel mais propre
+      scores_json: record.scores ? JSON.stringify(record.scores) : null,
+      metrics_json: record.metrics ? JSON.stringify(record.metrics) : null
+    };
 
     console.log("📤 Sauvegarde swing NocoDB →", payload);
 
