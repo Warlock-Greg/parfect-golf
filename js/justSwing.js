@@ -3793,7 +3793,7 @@ function stopRecording() {
         <p style="font-size:0.95rem;margin:0 0 14px;">
           ${coachTechnicalComment(scores)}
         </p>
-        <button id="swing-review-next" class="jsw-result-next" style="
+        <button id="jsw-review-next" class="jsw-result-next" style="
           margin-top:10px;
           padding:10px 24px;
           border-radius:999px;
@@ -3811,15 +3811,14 @@ function stopRecording() {
     modal.style.display = "flex";
 
     const btn = document.getElementById("jsw-result-next");
-    if (btn) {
-      btn.onclick = () => {
-        modal.style.display = "none";
-        state = JSW_STATE.WAITING_START;
-        updateUI();
-        showStartButton();
-      };
-    }
+  if (btn) {
+    btn.onclick = async () => {
+      console.log("➡️ Swing suivant (UI)");
+      modal.style.display = "none";
+      await nextSwing(); // relance la routine + quota (si tu as patché nextSwing)
+    };
   }
+}
 
   const btnUserRef = document.getElementById("swing-save-reference");
 
@@ -3883,6 +3882,7 @@ btnParfect.onclick = async () => {
   console.log("🟪 Frames disponibles :", swing?.frames?.length);
   console.log("🟪 Keyframes:", swing?.keyFrames);
   console.log("🟪 Scores:", scores);
+    console.trace("TRACE initSwingReplay");
 
   // -----------------------------
   // Guard
