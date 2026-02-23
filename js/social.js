@@ -491,19 +491,21 @@ async function loadSwingHistoryFromNocoDB() {
 // ------------------------------------------------
 // 🎬 REPLAY SWING FROM NOCODB (SOCIAL)
 // ------------------------------------------------
-async function replaySwingFromNocoDB(swingId) {
-  try {
-    if (!swingId) return;
+async function replaySwingFromNocoDB(swing) {
+  const id = swing?.Id || swing?.id;
 
-    const url = `${window.NOCODB_SWINGS_URL}/${swingId}`;
+  if (!id) {
+    console.error("❌ Missing swing id", swing);
+    return;
+  }
 
-    const res = await fetch(url, {
-      headers: { "xc-token": window.NOCODB_TOKEN }
-    });
+  const res = await fetch(`${URL}/records/${id}`, {
+    headers: { "xc-token": TOKEN }
+  });
 
-    if (!res.ok) throw new Error("Fetch swing failed");
+  if (!res.ok) throw new Error("Fetch swing failed");
 
-    const data = await res.json();
+  const data = await res.json();
     const record = data;
 
     if (!record.swing_json) {
