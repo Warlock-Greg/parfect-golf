@@ -3729,7 +3729,7 @@ async function updateQuotaUI() {
     // 7️⃣ — 💥 INIT REPLAY PRO (overlay squelette)
     // -------------------------------------------
     initSwingReplay(swing, scores);
-  jswDumpLandmarksJSON(swing);
+ // jswDumpLandmarksJSON(swing);
 
 }
 
