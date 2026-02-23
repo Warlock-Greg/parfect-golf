@@ -277,6 +277,20 @@ function bindHistoryPanelActions() {
   });
 }
 
+function buildTrainingCard(t) {
+  const date = new Date(t.created_at).toLocaleDateString();
+
+  return `
+    <div class="pg-card">
+      <strong>${t.exercise_name}</strong><br>
+      🎯 ${t.type}<br>
+      📈 ${t.quality}<br>
+      🧠 Mental ${t.mental_score}/5<br>
+      <small>${date}</small>
+    </div>
+  `;
+}
+
 // ------------------------------------------------
 // COMMUNITY FEED CARD — V1
 // ------------------------------------------------
@@ -372,19 +386,59 @@ async function loadHistoryTab(type) {
   return;
 }
 
-  if (type === "training") {
-    const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-    panel.innerHTML = history.length
-      ? history.reverse().map(h => `
-        <div class="pg-card">
-          <strong>${h.name}</strong><br>
-          ${h.quality} · Mental ${h.mentalScore}/5<br>
-          <small>${new Date(h.date).toLocaleDateString()}</small>
-        </div>
-      `).join("")
-      : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
-    return;
+ if (type === "training") {
+
+  let trainings = [];
+
+  // 🔹 1️⃣ Essai NocoDB
+  if (window.NOCODB_TRAININGS_URL && window.NOCODB_TOKEN) {
+    try {
+      const res = await fetch(window.NOCODB_TRAININGS_URL, {
+        headers: { "xc-token": window.NOCODB_TOKEN }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.list || [];
+
+        const email = window.userLicence?.email;
+        trainings = list
+          .filter(t => t.player_email === email)
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+
+    } catch (e) {
+      console.warn("Training NocoDB load error", e);
+    }
   }
+
+  // 🔹 2️⃣ Fallback local si vide
+  if (!trainings.length) {
+    const local = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+    trainings = local.reverse().map(h => ({
+      exercise_name: h.name,
+      quality: h.quality,
+      mental_score: h.mentalScore,
+      created_at: h.date
+    }));
+  }
+
+  // 🔹 3️⃣ Render
+  panel.innerHTML = trainings.length
+    ? trainings.map(t => {
+        const date = new Date(t.created_at).toLocaleDateString();
+        return `
+          <div class="pg-card">
+            <strong>${t.exercise_name}</strong><br>
+            ${t.quality} · Mental ${t.mental_score}/5<br>
+            <small>${date}</small>
+          </div>
+        `;
+      }).join("")
+    : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
+
+  return;
+}
 
   if (type === "round") {
   const rounds = await loadRoundsFromNocoDB();
