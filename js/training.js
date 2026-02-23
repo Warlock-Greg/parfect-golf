@@ -192,15 +192,55 @@ async function startTrainingSession(id) {
 // -----------------------------
 // Step 4 : Save
 // -----------------------------
-function recordTraining(exo, quality, mentalScore) {
-  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-  history.push({
-    ...exo,
+async function recordTraining(exo, quality, mentalScore) {
+  const user = window.userLicence;
+
+  const entry = {
+    exercise_id: exo.id,
+    exercise_name: exo.name,
+    type: exo.type,
     quality,
-    mentalScore,
-    date: new Date().toISOString()
-  });
+    mental_score: mentalScore,
+    coach: localStorage.getItem("coach"),
+    player_email: user?.email ?? null,
+    licence_type: user?.licence ?? "free",
+    created_at: new Date().toISOString()
+  };
+
+  // -----------------------------
+  // 1️⃣ Local backup (toujours)
+  // -----------------------------
+  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+  history.push(entry);
   localStorage.setItem("trainingHistory", JSON.stringify(history));
+
+  // -----------------------------
+  // 2️⃣ Save NocoDB (safe)
+  // -----------------------------
+  if (window.NOCODB_TRAININGS_URL && window.NOCODB_TOKEN) {
+    try {
+      const res = await fetch(window.NOCODB_TRAININGS_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "xc-token": window.NOCODB_TOKEN
+        },
+        body: JSON.stringify({
+          ...entry,
+          summary_json: JSON.stringify(entry)
+        })
+      });
+
+      if (!res.ok) {
+        console.warn("⚠️ Training NocoDB save failed", await res.text());
+      } else {
+        console.log("✅ Training sauvegardé NocoDB");
+      }
+
+    } catch (e) {
+      console.warn("⚠️ Training NocoDB error", e);
+    }
+  }
 
   coachReact?.(`Séance "${exo.name}" enregistrée. Ressenti ${mentalScore}/5.`);
   showTrainingTypes();
