@@ -601,20 +601,21 @@ function buildSocialSwingItem(swing, index) {
 }
 
 // ------------------------------------------------
-// 🎬 REPLAY SWING FROM NOCODB (SOCIAL)
-// ------------------------------------------------
-// ------------------------------------------------
 // 🎬 REPLAY SWING FROM NOCODB (SOCIAL) — VERSION SAFE
 // ------------------------------------------------
-async function replaySwingFromNocoDB(swing) {
+async function replaySwingFromNocoDB(swingOrId) {
   try {
-    const id = swing?.Id ?? swing?.id ?? swing?.ID;
+    const id =
+      typeof swingOrId === "object"
+        ? (swingOrId?.Id ?? swingOrId?.id)
+        : swingOrId;
+
     if (!id) {
-      console.error("❌ Missing swing id", swing);
+      console.error("❌ Missing swing id", swingOrId);
       return;
     }
 
-    const URL = window.NOCODB_SWINGS_URL;
+    const URL = window.NOCODB_SWINGS_URL;   // ex: https://app.nocodb.com/api/v2/tables/XXXX/records
     const TOKEN = window.NOCODB_TOKEN;
 
     if (!URL || !TOKEN) {
@@ -622,70 +623,73 @@ async function replaySwingFromNocoDB(swing) {
       return;
     }
 
-    // ✅ NocoDB v2 : GET record by id
+    // ✅ endpoint record v2 tables
     const res = await fetch(`${URL}/${id}`, {
       headers: { "xc-token": TOKEN }
     });
 
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
-      throw new Error(`Fetch swing failed (${res.status}) ${txt}`);
+      throw new Error(`Fetch swing failed ${res.status} ${txt}`);
     }
 
     const record = await res.json();
 
-    if (!record?.swing_json) {
+    // ✅ swing_json peut être string OU object
+    const raw = record.swing_json;
+
+    if (!raw) {
       console.warn("⚠️ Aucun swing_json dans ce record", record);
       return;
     }
 
-    const parsed = JSON.parse(record.swing_json);
+    const parsed =
+      typeof raw === "string"
+        ? JSON.parse(raw)
+        : raw; // déjà un objet
 
-    // ✅ keyframes : on normalise (si ton dump stocke juste des index)
-    const rawKF = parsed?.meta?.keyframes || {};
-    const keyFrames = {};
-    Object.keys(rawKF).forEach((k) => {
-      const idx = rawKF[k];
-      keyFrames[k] = (typeof idx === "number") ? { index: idx } : null;
-    });
-
+    // 🔁 Reconstruit frames -> pose[33]
     const frames =
-      parsed?.frames?.map(f =>
+      parsed.frames?.map(f =>
         (f.landmarks || []).map(l => ({
-          x: l.x, y: l.y,
-          z: l.z ?? null,
-          visibility: l.visibility ?? null
+          x: l.x, y: l.y, z: l.z ?? null, visibility: l.visibility ?? null
         }))
       ) || [];
 
+    const timestamps =
+      parsed.frames?.map(f => f.timestamp ?? null) || [];
+
+    // ⚠️ ton dump met meta.keyframes = { address: idx, top: idx, ... } (des index)
+    // ton replay attend souvent keyFrames.{address:{index}, ...}
+    const kfRaw = parsed.meta?.keyframes || {};
+    const keyFrames = Object.fromEntries(
+      Object.entries(kfRaw).map(([k, idx]) => [k, { index: idx }])
+    );
+
     const reconstructedSwing = {
       frames,
-      timestamps: parsed?.frames?.map(f => f.timestamp ?? null) || [],
+      timestamps,
       keyFrames,
-      club: record.club ?? parsed?.meta?.club ?? "?",
-      viewType: record.view ?? record.view_type ?? "faceOn",
-      fps: record.fps ?? 30
+      club: record.club,
+      viewType: record.view || record.view_type || "faceOn",
+      fps: record.fps || 30
     };
 
     console.log("🎬 Replay reconstructed swing:", reconstructedSwing);
 
-    // 🔥 Passe en mode JustSwing (si c’est ton flow)
+    // 🔥 Passe en mode JustSwing
     document.body.classList.add("jsw-fullscreen");
     document.getElementById("just-swing-area")?.style.setProperty("display", "block");
 
-    // Stop live session si besoin
     window.JustSwing?.stopSession?.();
 
-    // ✅ Lance le replay via ton système existant
+    // ✅ Appelle ton système existant
     if (typeof window.replaySwingFromHistory === "function") {
       window.replaySwingFromHistory(reconstructedSwing);
     } else if (typeof window.handleSwingComplete === "function") {
       window.handleSwingComplete(reconstructedSwing);
-    } else if (typeof window.initSwingReplay === "function") {
-      // fallback minimal : juste initialiser le player
-      window.initSwingReplay(reconstructedSwing, record.scores || record.scores_json || {});
     } else {
-      console.warn("⚠️ Aucun handler replay trouvé (replaySwingFromHistory/handleSwingComplete/initSwingReplay)");
+      console.warn("⚠️ Aucun handler replay trouvé (replaySwingFromHistory / handleSwingComplete)");
     }
 
   } catch (err) {
