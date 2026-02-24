@@ -214,7 +214,7 @@ async function recordTraining(exo, quality, mentalScore) {
     coach: localStorage.getItem("coach"),
     player_email: user?.email ?? null,
     licence_type: user?.licence ?? "free",
-    created_at: new Date().toISOString()
+    CreatedAt: new Date().toISOString()
   };
 
   // -----------------------------
