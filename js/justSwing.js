@@ -2586,36 +2586,42 @@ return {
 window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
   try {
     if (!window.NOCODB_SWINGS_URL || !window.NOCODB_TOKEN) {
-      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
+      throw new Error("Variables NocoDB manquantes");
     }
 
-    if (!record || typeof record !== "object") {
-      throw new Error("Record swing invalide");
+    const email = record?.email ?? window.userLicence?.email;
+    if (!email) {
+      throw new Error("Email utilisateur manquant");
     }
 
-    if (!record.email && !window.userLicence?.email) {
-      throw new Error("Email utilisateur manquant — swing non sauvegardé");
-    }
+    // 🔥 Sécurise les objets
+    const scores =
+      typeof record.scores === "object" && record.scores !== null
+        ? record.scores
+        : {};
 
-    // 🔥 Build swing JSON complet
+    const metrics =
+      typeof record.metrics === "object" && record.metrics !== null
+        ? record.metrics
+        : {};
+
     const swingDump = jswBuildLandmarksJSON(record);
 
     const payload = {
-      email: record.email ?? window.userLicence?.email,
+      email,
       club: record.club ?? "?",
       view: record.view ?? "unknown",
       fps: record.fps ?? null,
       frames_count: record.frames?.length ?? 0,
 
-      // 🔥 JSON complet
-      swing_json: JSON.stringify(swingDump),
-
-      // Optionnel mais propre
-      scores_json: record.scores ? JSON.stringify(record.scores) : null,
-      metrics_json: record.metrics ? JSON.stringify(record.metrics) : null
+      swing_json: swingDump,
+      scores,
+      metrics
     };
 
-    console.log("📤 Sauvegarde swing NocoDB →", payload);
+    console.log("📤 SAVING SWING:");
+    console.log("scores →", scores);
+    console.log("metrics →", metrics);
 
     const res = await fetch(window.NOCODB_SWINGS_URL, {
       method: "POST",
@@ -2632,16 +2638,15 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
     }
 
     const data = await res.json();
-    console.log("✅ Swing sauvegardé dans NocoDB", data);
+    console.log("✅ Swing sauvegardé", data);
 
     return data;
 
   } catch (err) {
-    console.error("❌ Erreur saveSwingToNocoDB:", err);
+    console.error("❌ saveSwingToNocoDB error:", err);
     throw err;
   }
 };
-
 
   
 // ========================================
