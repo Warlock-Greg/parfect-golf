@@ -182,11 +182,21 @@ async function startTrainingSession(id) {
     };
   });
 
-  $$("back").onclick = showTrainingTypes;
-  $$("save").onclick = () => {
-    if (!quality) return;
-    recordTraining(exo, quality, +$$("mental").value);
-  };
+ $$("save").onclick = async () => {
+  console.log("🔥 SAVE CLICKED");
+
+  if (!quality) {
+    console.log("❌ No quality");
+    return;
+  }
+
+  try {
+    await recordTraining(exo, quality, +$$("mental").value);
+    console.log("✅ recordTraining finished");
+  } catch (e) {
+    console.error("❌ recordTraining error", e);
+  }
+};
 }
 
 // -----------------------------
