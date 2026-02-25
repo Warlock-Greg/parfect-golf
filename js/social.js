@@ -558,24 +558,33 @@ async function loadHistoryTab(type) {
     return;
   }
 
-  if (type === "training") {
-    const trainings = await SocialAPI.loadTrainingsByEmail(email);
-    panel.innerHTML = trainings.length
-      ? trainings
-          .map((t) => {
-            const dateLabel = formatDate(t.created_at);
-            return `
-              <div class="pg-card">
-                <strong>${t.exercise_name}</strong><br>
-                ${t.quality} · Mental ${t.mental_score}/5<br>
-                <small>${dateLabel}</small>
-              </div>
-            `;
-          })
-          .join("")
-      : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
-    return;
-  }
+ if (type === "training") {
+  const trainings = await SocialAPI.loadTrainingsByEmail(email);
+
+  panel.innerHTML = trainings.length
+    ? trainings.map((t) => {
+
+        const name = t.exercise_name || "Séance";
+        const quality = t.quality || "—";
+        const mental = t.mental_score ?? "—";
+
+        const dateLabel =
+          t.CreatedAt && !isNaN(new Date(t.CreatedAt))
+            ? formatDate(t.CreatedAt)
+            : "—";
+
+        return `
+          <div class="pg-card">
+            <strong>${name}</strong><br>
+            ${quality} · Mental ${mental}/5<br>
+            <small>${dateLabel}</small>
+          </div>
+        `;
+      }).join("")
+    : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
+
+  return;
+}
 
   if (type === "round") {
     const rounds = await SocialAPI.loadRoundsByEmail(email);
