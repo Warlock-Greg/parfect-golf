@@ -160,11 +160,12 @@ const SocialAPI = {
 
     // 2) fallback local
     const local = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-    return local.reverse().map((h) => ({
-      exercise_name: h.name,
-      quality: h.quality,
-      mental_score: h.mentalScore,
-      created_at: h.date
+    return local.reverse().map((t) => ({
+     exercise_name: t.exercise_name ?? t.name ?? "Exercice",
+    type: t.type ?? "—",
+    quality: t.quality ?? "—",
+    mental_score: t.mental_score ?? t.mentalScore ?? 0,
+    created_at: t.CreatedAt ?? t.created_at ?? t.date ?? null
     }));
   }
 };
