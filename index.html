@@ -456,7 +456,11 @@
 
     function enterJustSwing() {
       document.body.classList.add("jsw-fullscreen");
-      document.getElementById("just-swing-area").style.display = "block";
+      const area = document.getElementById("just-swing-area");
+      area.style.display = "block";
+
+    // 🔥 Initialisation header (camera + quit)
+    initSwingHeaderControls();
     }
 
     function exitJustSwing() {
