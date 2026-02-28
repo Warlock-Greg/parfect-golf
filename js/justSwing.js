@@ -394,10 +394,15 @@ async function canStartSwing() {
 
 function initSwingHeaderControls() {
 
+  // 🔒 évite double initialisation
+  if (window._jswHeaderInit) return;
+  window._jswHeaderInit = true;
+
   const cameraSelect = document.getElementById("jsw-camera-select");
 
   if (cameraSelect) {
-    // Valeur par défaut au chargement
+
+    // valeur par défaut
     window.jswViewType = cameraSelect.value;
 
     cameraSelect.addEventListener("change", (e) => {
@@ -407,11 +412,7 @@ function initSwingHeaderControls() {
   }
 
   document.getElementById("jsw-quit-btn")?.addEventListener("click", () => {
-    console.log("🚪 Quitter Swing");
-
-    window.JustSwing?.stopSession?.();
-    document.body.classList.remove("jsw-fullscreen");
-    document.getElementById("home-btn")?.click();
+    exitJustSwing(); // 👈 on utilise ta fonction propre
   });
 }
   
