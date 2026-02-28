@@ -3287,7 +3287,8 @@ function jswNormalizeKeyFrames(keyFrames, frames) {
 
   return out;
 }
-// ---------------------------------------------------------
+
+  // ---------------------------------------------------------
 //   SWING COMPLETE → SCORE + UI
 // ---------------------------------------------------------
 async function handleSwingComplete(swing) {
@@ -3295,132 +3296,114 @@ async function handleSwingComplete(swing) {
   console.log("🏁 handle SWING COMPLETE", swing);
 
   // ======================================================
-  // 0️⃣ Guards bas niveau
+  // 1️⃣ Guards
   // ======================================================
-  if (!swing || !swing.frames || !swing.frames.length) {
-    console.warn("❌ Swing invalide ou vide");
+  if (!swing || !swing.frames?.length) {
+    console.warn("❌ Swing invalide");
     return;
   }
 
-  // ======================================================
-  // 1️⃣ Normalisation keyframes (sécurité scoring)
-  // ======================================================
   swing.keyFrames = jswNormalizeKeyFrames(
     swing.keyFrames,
     swing.frames
   );
 
   // ======================================================
-  // 2️⃣ Sync keyframes → metrics (source unique)
+  // 2️⃣ Validation UX
   // ======================================================
-  const metrics = {};
-  metrics.keyframes = {};
+  if (!isValidSwing(swing) || !hasRealMotion(swing)) {
+    stopRecording();
+    showBigMessage("😕 Aucun swing détecté.\nRecommence calmement.");
+    startRoutineSequence();
+    return;
+  }
 
-  for (const k in swing.keyFrames) {
-    if (swing.keyFrames[k]?.pose) {
-      metrics.keyframes[k] = {
-        index: swing.keyFrames[k].index,
-        pose: swing.keyFrames[k].pose
-      };
-    }
+  if (!addressLocked) {
+    stopRecording();
+    showBigMessage("🧍‍♂️ Stabilise-toi à l’adresse");
+
+    setTimeout(() => {
+      hideBigMessage();
+      startRoutineSequence();
+    }, 1500);
+
+    return;
   }
 
   // ======================================================
-  // 3️⃣ Scoring
+  // 3️⃣ Fin capture
   // ======================================================
-  const scores = computeSwingScores
-    ? computeSwingScores(swing)
-    : swing.scores || {};
+  captureArmed = false;
+  isRecordingActive = false;
 
+  // ======================================================
+  // 4️⃣ Scoring Premium
+  // ======================================================
+  const scores = computeSwingScorePremium(swing);
   swing.scores = scores;
 
   // ======================================================
-  // 4️⃣ Sauvegarde
+  // 5️⃣ Sauvegarde swing
   // ======================================================
-  const PLAYER_EMAIL = window.userLicence?.email || "unknown";
-
-  const swingRecord = {
-    player_email: PLAYER_EMAIL,
-    created_at: new Date().toISOString(),
-    club: swing.club || currentClubType,
-    view: swing.view || window.jswViewType || "faceOn",
-    frames_count: swing.frames.length,
-    keyframes: swing.keyFrames || {},
-    metrics: scores?.metrics || {},
-    scores: scores || {},
-    is_valid: isValidSwing(swing),
-    quality: swing.quality || {}
-  };
-
   try {
-    await window.saveSwingToNocoDB?.(swingRecord);
+    await window.saveSwingToNocoDB?.({
+      player_email: window.userLicence?.email,
+      created_at: new Date().toISOString(),
+      club: swing.club,
+      view: window.jswViewType,
+      frames_count: swing.frames.length,
+      keyframes: swing.keyFrames,
+      metrics: scores.metrics,
+      scores
+    });
+
     console.log("✅ Swing sauvegardé");
   } catch (err) {
-    console.warn("⚠️ Erreur sauvegarde swing", err);
+    console.warn("⚠️ Erreur sauvegarde", err);
   }
 
   // ======================================================
-  // 5️⃣ UI — Affichage du panel review (CRITIQUE)
+  // 6️⃣ Rendu UI Review
   // ======================================================
-  const review = document.getElementById("swing-review");
+  buildParfectReviewCard(swing, scores);
+  bindSwingReviewActions(swing, scores);
 
-  if (review) {
-    review.style.display = "block";
-    review.classList.remove("hidden");
-    review.style.opacity = "1";
-    review.style.zIndex = "1000";
+  const reviewEl = document.getElementById("swing-review");
+  if (reviewEl) {
+    reviewEl.style.display = "block";
+    reviewEl.classList.remove("hidden");
   }
 
-  // Nettoyage message central
-  if (bigMsgEl) {
-    bigMsgEl.innerHTML = "";
-    bigMsgEl.style.opacity = 0;
-  }
+  // Replay
+  initSwingReplay(swing, scores);
 
-  // ======================================================
-  // 6️⃣ Initialisation REPLAY
-  // ======================================================
-  if (typeof initSwingReplay === "function") {
-    console.log("🟪 initSwingReplay CALLED");
-    initSwingReplay(swing, scores);
-  } else {
-    console.warn("⚠️ initSwingReplay indisponible");
-  }
-
-  // ======================================================
-  // 7️⃣ État machine
-  // ======================================================
   state = JSW_STATE.REVIEW;
   updateUI();
 
   console.log("📊 Review affichée");
 }
-  
- 
-// ===============================
+
+
+// ======================================================
 // RÉFÉRENCES (USER / PARFECT)
-// ===============================
+// ======================================================
+
 function saveUserReference(swing, scores) {
-  if (!swing || !scores?.metrics) {
-    console.warn("⚠️ Référence user non sauvegardée (données manquantes)");
-    return;
-  }
+  if (!swing || !scores?.metrics) return;
 
   const refRecord = {
-    owner: swing.player_email || "unknown",
+    owner: window.userLicence?.email || "unknown",
     scope: "user",
-    club: swing.club || currentClubType,
-    view: window.jswViewType || "faceOn",
+    club: swing.club,
+    view: window.jswViewType,
     metrics: scores.metrics,
     created_at: new Date().toISOString()
   };
 
   saveReferenceToDB(refRecord);
-
-  console.log("⭐ Référence USER sauvegardée", refRecord);
 }
 
-  function saveParfectReference(swing, scores) {
+function saveParfectReference(swing, scores) {
   const ref = {
     owner: "PARFECT",
     scope: "global",
@@ -3431,241 +3414,80 @@ function saveUserReference(swing, scores) {
     version: "v1"
   };
 
-  saveReferenceToDB(ref);
+  return saveReferenceToDB(ref);
 }
 
-  function bindSwingReviewActions(swing, scores) {
-  // --- USER REFERENCE ---
+
+// ======================================================
+// ACTIONS REVIEW
+// ======================================================
+
+function bindSwingReviewActions(swing, scores) {
+
   const btnUserRef = document.getElementById("swing-save-reference");
-
-  if (!btnUserRef) {
-    console.warn("❌ USER REF BUTTON NOT FOUND");
-  } else {
-    console.log("✅ USER REF BUTTON READY");
-
+  if (btnUserRef) {
     btnUserRef.onclick = () => {
-      console.log("⭐ USER REF CLICKED");
-
-      if (!swing || !scores) {
-        console.warn("❌ Missing swing or scores");
-        return;
-      }
-
       saveUserReference(swing, scores);
-
       btnUserRef.textContent = "✅ Référence enregistrée";
       btnUserRef.disabled = true;
-      btnUserRef.style.opacity = 0.6;
     };
   }
 
-  // --- SUPERADMIN PARFECT (optionnel, prêt pour après) ---
- function isSuperAdmin() {
-  return (
-    window.userLicence?.is_superadmin === true ||
-    window.userLicence?.role === "superadmin"
-  );
-}
-
   const btnParfect = document.getElementById("swing-save-parfect-reference");
-if (btnParfect && isSuperAdmin) {
-  btnParfect.style.display = "block";
 
-  btnParfect.onclick = async () => {
-    try {
-      // 🔒 éviter double clic
+  if (btnParfect && window.userLicence?.role === "superadmin") {
+    btnParfect.style.display = "block";
+
+    btnParfect.onclick = async () => {
       btnParfect.disabled = true;
-
-      // 🔄 feedback immédiat
       btnParfect.innerHTML = "⏳ Enregistrement…";
-      btnParfect.style.opacity = "0.6";
-      btnParfect.style.cursor = "default";
 
-      console.log("👑 PARFECT REF CLICKED");
-
-      // ⏱️ attendre la sauvegarde réelle
-      await saveParfectReference(swing, scores);
-
-      // ✅ succès UI
-      btnParfect.innerHTML = "✅ Référence PARFECT définie";
-      btnParfect.style.background = "var(--jsw-green)";
-      btnParfect.style.color = "#111";
-      btnParfect.style.border = "none";
-      btnParfect.style.opacity = "1";
-
-      showBigMessage("⭐⭐ Référence PARFECT enregistrée");
-
-    } catch (err) {
-      console.error("❌ Échec sauvegarde référence PARFECT", err);
-
-      // 🔁 rollback UI
-      btnParfect.disabled = false;
-      btnParfect.innerHTML = "⭐ Définir comme référence PARFECT";
-      btnParfect.style.opacity = "1";
-      btnParfect.style.cursor = "pointer";
-
-      showBigMessage("❌ Erreur lors de l’enregistrement");
-    }
-  };
-}
-}
-
-  
-  // ======================================================
-  // 2️⃣ Validation swing (UX first)
-  // ======================================================
-  if (!isValidSwing(swing) || !hasRealMotion(swing)) {
-    console.warn("❌ Faux swing détecté");
-
-    stopRecording();
-    showBigMessage("😕 Oups… aucun swing détecté.\nRecommence calmement.");
-    // 🔁 Routine directe, sans bouton
-    startRoutineSequence();
-    return; // ⛔ STOP ICI
+      try {
+        await saveParfectReference(swing, scores);
+        btnParfect.innerHTML = "✅ Référence PARFECT définie";
+      } catch (e) {
+        btnParfect.disabled = false;
+        btnParfect.innerHTML = "⭐ Définir comme référence PARFECT";
+      }
+    };
   }
+}
 
-  // ======================================================
-// ❌ Adresse NON lockée → on relance la routine
+
 // ======================================================
-if (!addressLocked) {
-  console.warn("❌ Adresse non verrouillée — restart routine");
+// NOCODB — SAVE REFERENCE
+// ======================================================
 
-  stopRecording();
+async function saveReferenceToDB(ref) {
 
-  showBigMessage(`
-    🧍‍♂️ Reviens à l’adresse<br>
-    Stabilise-toi une seconde
-  `);
-
-  // 🔁 Relance automatique de la routine
-  setTimeout(() => {
-    hideBigMessage();
-
-    // reset minimal
-    addressLocked = false;
-    pendingAddress = false;
-
-    // 🔁 Routine directe, sans bouton
-    startRoutineSequence();
-  }, 1800);
-
-  return; // ⛔ STOP scoring
-}
-
-  // ======================================================
-  // 3️⃣ Fin capture / passage en REVIEW
-  // ======================================================
-  captureArmed = false;
-  isRecordingActive = false;
-  state = JSW_STATE.REVIEW;
-  updateUI();
-
-  // ======================================================
-  // 4️⃣ Sélection de la référence ACTIVE (clé)
-  // ======================================================
-  const club = swing.club || currentClubType;
-  const view = window.jswViewType || "faceOn";
-
-  window.REF = getActiveReference({ club, view });
-  window.REF_META = {
-    club,
-    view,
-    key: `${club}_${view}`
-  };
-
-  console.log("🎯 Active Reference:", window.REF_META, window.REF);
-
-  // ======================================================
-  // 5️⃣ FACE-ON RESULT (tolérances + zones) — NOUVEAU
-  // ======================================================
-  let faceOnResult = null;
-
-  if (view.includes("face")) {
-    try {
-      faceOnResult = computeFaceOnResult(swing, window.REF);
-      console.log("🟢 FaceOnResult:", faceOnResult);
-    } catch (e) {
-      console.warn("⚠️ FaceOnResult failed", e);
-    }
-  }
-
-
-
-  
-  // ======================================================
-  // 6️⃣ SCORING PREMIUM (inchangé)
-  // ======================================================
-  const scores = computeSwingScorePremium(swing);
-  //buildPremiumBreakdown(swing, scores);
-  buildParfectReviewCard(swing, scores);
-
-  
-  onSwingValidated({
-  scores,
-  currentClub: swing.club || currentClubType,
-    swing // 👈 LA LIGNE QUI MANQUAIT
-  });
-
-  // 🔒 Brancher les actions APRÈS le render
-  bindSwingReviewActions(swing, scores);
-  initSwingReplay(swing, scores);
-
-  // -------------------------------------------
-  // 1️⃣ — Sélection des éléments du Replay (index.html)
-  // -------------------------------------------
-  const reviewEl = document.getElementById("swing-review");
-  const scoreEl = document.getElementById("swing-review-score");
-  const commentEl = document.getElementById("swing-review-comment");
-  const breakdownEl = document.getElementById("swing-score-breakdown");
-
-  if (!reviewEl) {
-    console.error("❌ swing-review panel not found in DOM !");
+  if (!window.NOCODB_REFERENCES_URL || !window.NOCODB_TOKEN) {
+    console.warn("⚠️ Config NocoDB manquante");
     return;
   }
 
-// =====================================================
-// SAUVEGARDE RÉFÉRENCE DANS NOCODB
-// =====================================================
+  const res = await fetch(window.NOCODB_REFERENCES_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "xc-token": window.NOCODB_TOKEN
+    },
+    body: JSON.stringify(ref)
+  });
 
-async function saveReferenceToDB(ref) {
-  try {
-    // 🔑 Vérifier que les variables d'environnement existent
-    if (!window.NOCODB_REFERENCES_URL || !window.NOCODB_TOKEN) {
-      throw new Error("Variables NocoDB manquantes (URL ou TOKEN)");
-    }
-
-    console.log("📤 Sauvegarde référence...", ref);
-
-    const res = await fetch(window.NOCODB_REFERENCES_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "xc-token": window.NOCODB_TOKEN
-      },
-      body: JSON.stringify(ref)
-    });
-
-    // ✅ Vérification statut HTTP
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`NocoDB ${res.status} — ${txt}`); // ✅ Parenthèses corrigées
-    }
-
-    const data = await res.json();
-    console.log("✅ Référence sauvegardée", data);
-    return data;
-
-  } catch (err) {
-    console.error("❌ Erreur saveReferenceToDB:", err.message);
-    throw err; // ✅ Propager l'erreur pour gestion en amont
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`NocoDB ${res.status} — ${txt}`);
   }
+
+  return res.json();
 }
 
 
+// ======================================================
+// HISTORIQUE
+// ======================================================
 
-
-  
-  async function loadSwingHistory(email) {
+async function loadSwingHistory(email) {
   const url =
     `${window.NOCODB_SWINGS_URL}?` +
     `where=(player_email,eq,${email})&sort=-created_at&limit=50`;
@@ -3685,22 +3507,24 @@ async function showSwingHistory() {
   if (!email) return;
 
   const swings = await loadSwingHistory(email);
-
   const el = document.getElementById("swing-history");
   if (!el) return;
 
   el.innerHTML = swings
-    .map(
-      (s) => `
+    .map(s => `
       <div class="history-item">
         <b>${new Date(s.created_at).toLocaleTimeString()}</b>
         — ${s.club}
         — ${s.scores?.total ?? "—"}/100
       </div>
-    `
-    )
+    `)
     .join("");
 }
+
+
+// ======================================================
+// QUOTA UI
+// ======================================================
 
 async function updateQuotaUI() {
   const email = window.userLicence?.email;
@@ -3710,49 +3534,29 @@ async function updateQuotaUI() {
   const left = Math.max(0, 10 - count);
 
   const el = document.getElementById("swing-quota");
-  if (el) el.textContent = `🎯 ${left} swings restants aujourd’hui`;
+  if (el) {
+    el.textContent = `🎯 ${left} swings restants aujourd’hui`;
+  }
 }
 
-  
-  // -------------------------------------------
-  // 2️⃣ — Afficher le panneau Replay
-  // -------------------------------------------
-  reviewEl.style.display = "block";
 
-  // -------------------------------------------
-  // 3️⃣ — Score Global
-  // -------------------------------------------
-  if (scoreEl) {
-    scoreEl.textContent = `Score : ${scores.total}/100`;
-  }
+// ======================================================
+// COACH COMMENT
+// ======================================================
 
-  // -------------------------------------------
-  // 4️⃣ — Commentaire Coach
-  // -------------------------------------------
-  if (commentEl) {
-    commentEl.textContent = coachTechnicalComment(scores);
-  }
+function coachTechnicalComment(scores) {
+  const msgs = [];
 
+  if (scores.triangleScore < 70) msgs.push("Garde ton triangle stable.");
+  if (scores.lagScore < 70) msgs.push("Garde les poignets armés plus longtemps.");
+  if (scores.planeScore < 70) msgs.push("Descends plus dans le plan.");
 
+  if (!msgs.length) return "Super swing 👌 Continue comme ça.";
 
-  // -------------------------------------------
-  // 6️⃣ — On masque totalement l’ancien panneau JustSwing
-  // -------------------------------------------
-  if (resultPanelEl) {
-    resultPanelEl.classList.add("hidden");
-  }
-  console.log("📊 Replay panel updated with Premium Scoring.");
-
-
-  // -------------------------------------------
-    // 7️⃣ — 💥 INIT REPLAY PRO (overlay squelette)
-    // -------------------------------------------
-    initSwingReplay(swing, scores);
- // jswDumpLandmarksJSON(swing);
-
+  return msgs.slice(0, 2).join(" ");
 }
 
-  function coachTechnicalComment(scores) {
+function coachTechnicalComment(scores) {
     const msgs = [];
     if (scores.triangleScore < 70) msgs.push("Garde ton triangle stable.");
     if (scores.lagScore < 70) msgs.push("Garde les poignets armés plus longtemps.");
