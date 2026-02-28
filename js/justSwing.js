@@ -392,7 +392,28 @@ async function canStartSwing() {
   return true;
 }
 
+function initSwingHeaderControls() {
 
+  const cameraSelect = document.getElementById("jsw-camera-select");
+
+  if (cameraSelect) {
+    // Valeur par défaut au chargement
+    window.jswViewType = cameraSelect.value;
+
+    cameraSelect.addEventListener("change", (e) => {
+      window.jswViewType = e.target.value;
+      console.log("📐 Vue changée :", window.jswViewType);
+    });
+  }
+
+  document.getElementById("jsw-quit-btn")?.addEventListener("click", () => {
+    console.log("🚪 Quitter Swing");
+
+    window.JustSwing?.stopSession?.();
+    document.body.classList.remove("jsw-fullscreen");
+    document.getElementById("home-btn")?.click();
+  });
+}
   
 // ---------------------------------------------------------
 //   BOUTON START + CHOIX VUE (Face-On / Mobile FO / DTL)
