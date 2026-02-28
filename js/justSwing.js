@@ -98,7 +98,7 @@ let captureArmed = false;
 
   let lastPose = null;
   let lastFullBodyOk = false;
-  let cameraViewLocked = false;
+ 
 
   let loopId = null;
   let countdownInterval = null;
@@ -224,10 +224,10 @@ function nextSwing() {
   // -----------------------------------------------------
   // 5️⃣ RELANCE FLOW (SANS CAMÉRA)
   // -----------------------------------------------------
-  setTimeout(() => {
-    console.log("🔄 Nouvelle routine (nouvelle session logique)");
-    startRoutineSequence(); // 🔥 clé de stabilité
-  }, 300);
+setTimeout(() => {
+  console.log("🔄 Retour écran start");
+  showStartButton(); // 🔥 retour propre au début
+}, 300);
 }
 
 
@@ -403,86 +403,24 @@ function showStartButton() {
   state = JSW_STATE.WAITING_START;
   updateUI();
 
-  // 🎯 SI caméra déjà choisie → on skip le choix
-  if (cameraViewLocked && window.jswViewType) {
-    console.log("🎬 Camera déjà définie → skip sélection");
-    startCountdown();
-    return;
-  }
-  
   bigMsgEl.innerHTML = `
     <div class="jsw-start-card">
-      <div class="jsw-start-title">
-        📐 Où est placée la caméra ?
-      </div>
-
-      <div class="jsw-start-choices">
-        <button id="jsw-view-face" class="jsw-choice jsw-choice-primary">
-          <div class="jsw-choice-label">📸 Face-On</div>
-          <div class="jsw-choice-sub">
-            Caméra à hauteur de poitrine
-          </div>
-        </button>
-
-        <button id="jsw-view-dtl" class="jsw-choice jsw-choice-secondary">
-          <div class="jsw-choice-label">🎥 Down-The-Line</div>
-          <div class="jsw-choice-sub">
-            Derrière la ligne de jeu
-          </div>
-        </button>
-      </div>
-
-      <button id="jsw-back-btn" class="jsw-start-back">
-        ← Retour
+      <button id="jsw-start-btn" class="jsw-btn-primary">
+        Démarrer le swing 🏌️
       </button>
     </div>
   `;
 
   bigMsgEl.style.opacity = 1;
 
-  // ---------------------------------
-  // Choix de la vue caméra + QUOTA
-  // ---------------------------------
-  const setViewAndStart = (view) => {
-    // 🔑 Vue caméra = contexte de la session
-    window.jswViewType = view;
-    console.log("📐 Vue sélectionnée :", view);
-    cameraViewLocked = true; // 🔒 verrouillage
+  document.getElementById("jsw-start-btn")?.addEventListener("click", () => {
 
-    // ⛔ Blocage quota AVANT lancement
+    // ✅ Vérification quota
     if (!canStartSwing()) return;
 
-  
-  console.log("📐 Vue sélectionnée :", view);
-
-  if (!canStartSwing()) return;
-
-  startCountdown();
-};
-
-  
-
-  const btnFace = document.getElementById("jsw-view-face");
-  if (btnFace) {
-    btnFace.onclick = () => setViewAndStart("faceOn");
-  }
-
-  const btnDtl = document.getElementById("jsw-view-dtl");
-  if (btnDtl) {
-    btnDtl.onclick = () => setViewAndStart("dtl");
-  }
-
-  // ---------------------------------
-  // Bouton retour (navigation only)
-  // ---------------------------------
-  const backBtn = document.getElementById("jsw-back-btn");
-  if (backBtn) {
-    backBtn.onclick = () => {
-      window.JustSwing?.stopSession?.();
-      document.body.classList.remove("jsw-fullscreen");
-      document.getElementById("home-btn")?.click();
-    };
-  }
+    console.log("🚀 Lancement routine");
+    startRoutineSequence(); // on lance direct la routine
+  });
 }
 
 
