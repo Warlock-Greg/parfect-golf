@@ -126,37 +126,41 @@
       <video id="jsw-video" autoplay playsinline style="background: none!important;"></video>
       <canvas id="jsw-overlay"></canvas>
       <div id="jsw-big-msg" class="jsw-big-msg"></div>
+<div class="jsw-header">
 
-      <!-- Top minimal : logo discret + whisper déjà au-dessus (global) -->
-      <div class="jsw-top-minimal">
-        <img src="logo-parfect-golfr.png" alt="Parfect.golfr" class="jsw-logo" />
-      </div>
+  <!-- Logo -->
+  <div class="jsw-header-left">
+    <img src="logo-parfect-golfr.png" 
+         alt="Parfect.golfr" 
+         class="jsw-logo" />
+  </div>
 
-    
+  <!-- Controls -->
+  <div class="jsw-header-right">
 
-    <!-- Sélecteur club (si tes scripts l’attendent) -->
-    <div class="jsw-top-right">
-      <select id="jsw-club-select" class="jsw-select">
-        <option value="fer7">Fer 7</option>
-        <option value="fer8">Fer 8</option>
-        <option value="fer9">Fer 9</option>
-        <option value="pw">PW</option>
-        <option value="sw">SW</option>
-        <option value="driver">Driver</option>
-        <option value="bois3">Bois 3</option>
-      </select>
+    <select id="jsw-club-select" class="jsw-select">
+      <option value="fer7">Fer 7</option>
+      <option value="fer8">Fer 8</option>
+      <option value="fer9">Fer 9</option>
+      <option value="pw">PW</option>
+      <option value="sw">SW</option>
+      <option value="driver">Driver</option>
+      <option value="bois3">Bois 3</option>
+    </select>
 
-      <!-- Sélecteur caméra -->
-  <select id="jsw-camera-select" class="jsw-select">
-    <option value="faceOn">📸 Face-On</option>
-    <option value="dtl">🎥 Down-The-Line</option>
-  </select>
+    <select id="jsw-camera-select" class="jsw-select">
+      <option value="faceOn">📸 Face-On</option>
+      <option value="dtl">🎥 DTL</option>
+    </select>
 
-  <!-- Bouton quitter -->
-  <button id="jsw-quit-btn" class="jsw-btn-ghost">
-    Quitter
-  </button>
-    </div>
+    <button id="jsw-quit-btn" class="jsw-btn-ghost">
+      Quitter
+    </button>
+
+  </div>
+
+</div>
+  
     </div>
   </section>
 
