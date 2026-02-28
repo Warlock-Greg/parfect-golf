@@ -3287,62 +3287,116 @@ function jswNormalizeKeyFrames(keyFrames, frames) {
 
   return out;
 }
-
-  
-  // ---------------------------------------------------------
-  //   SWING COMPLETE → SCORE + UI
-  // ---------------------------------------------------------
+// ---------------------------------------------------------
+//   SWING COMPLETE → SCORE + UI
+// ---------------------------------------------------------
 async function handleSwingComplete(swing) {
+
   console.log("🏁 handle SWING COMPLETE", swing);
 
-// ======================================================
+  // ======================================================
   // 0️⃣ Guards bas niveau
   // ======================================================
-  if (!swing) {
-    console.warn("❌ Swing vide");
+  if (!swing || !swing.frames || !swing.frames.length) {
+    console.warn("❌ Swing invalide ou vide");
     return;
   }
-  
-  // ✅ Normalisation KEYFRAMES (sinon posture/tempo/rotation pètent)
-  swing.keyFrames = jswNormalizeKeyFrames(swing.keyFrames, swing.frames);
 
-  // =====================================================
-// 🔁 SYNC KEYFRAMES → METRICS (SOURCE UNIQUE)
-// =====================================================
-const metrics = {};
-  
+  // ======================================================
+  // 1️⃣ Normalisation keyframes (sécurité scoring)
+  // ======================================================
+  swing.keyFrames = jswNormalizeKeyFrames(
+    swing.keyFrames,
+    swing.frames
+  );
+
+  // ======================================================
+  // 2️⃣ Sync keyframes → metrics (source unique)
+  // ======================================================
+  const metrics = {};
   metrics.keyframes = {};
 
-for (const k in swing.keyFrames) {
-  if (swing.keyFrames[k]?.pose) {
-    metrics.keyframes[k] = {
-      index: swing.keyFrames[k].index,
-      pose: swing.keyFrames[k].pose
-    };
+  for (const k in swing.keyFrames) {
+    if (swing.keyFrames[k]?.pose) {
+      metrics.keyframes[k] = {
+        index: swing.keyFrames[k].index,
+        pose: swing.keyFrames[k].pose
+      };
+    }
   }
-}
 
-  
   // ======================================================
-  // 1️⃣ Sauvegarde brute (même si swing invalide)
+  // 3️⃣ Scoring
   // ======================================================
-  const PLAYER_EMAIL = "gregoiremm@gmail.com";
+  const scores = computeSwingScores
+    ? computeSwingScores(swing)
+    : swing.scores || {};
+
+  swing.scores = scores;
+
+  // ======================================================
+  // 4️⃣ Sauvegarde
+  // ======================================================
+  const PLAYER_EMAIL = window.userLicence?.email || "unknown";
 
   const swingRecord = {
     player_email: PLAYER_EMAIL,
     created_at: new Date().toISOString(),
     club: swing.club || currentClubType,
     view: swing.view || window.jswViewType || "faceOn",
-    frames_count: swing.frames?.length || 0,
+    frames_count: swing.frames.length,
     keyframes: swing.keyFrames || {},
-    metrics: swing.scores?.metrics || {},
-    scores: swing.scores || {},
+    metrics: scores?.metrics || {},
+    scores: scores || {},
     is_valid: isValidSwing(swing),
     quality: swing.quality || {}
   };
 
-  (swingRecord);
+  try {
+    await window.saveSwingToNocoDB?.(swingRecord);
+    console.log("✅ Swing sauvegardé");
+  } catch (err) {
+    console.warn("⚠️ Erreur sauvegarde swing", err);
+  }
 
+  // ======================================================
+  // 5️⃣ UI — Affichage du panel review (CRITIQUE)
+  // ======================================================
+  const review = document.getElementById("swing-review");
+
+  if (review) {
+    review.style.display = "block";
+    review.classList.remove("hidden");
+    review.style.opacity = "1";
+    review.style.zIndex = "1000";
+  }
+
+  // Nettoyage message central
+  if (bigMsgEl) {
+    bigMsgEl.innerHTML = "";
+    bigMsgEl.style.opacity = 0;
+  }
+
+  // ======================================================
+  // 6️⃣ Initialisation REPLAY
+  // ======================================================
+  if (typeof initSwingReplay === "function") {
+    console.log("🟪 initSwingReplay CALLED");
+    initSwingReplay(swing, scores);
+  } else {
+    console.warn("⚠️ initSwingReplay indisponible");
+  }
+
+  // ======================================================
+  // 7️⃣ État machine
+  // ======================================================
+  state = JSW_STATE.REVIEW;
+  updateUI();
+
+  console.log("📊 Review affichée");
+}
+  
+ 
 // ===============================
 // RÉFÉRENCES (USER / PARFECT)
 // ===============================
