@@ -304,21 +304,30 @@ function injectSocialUI() {
       </button>
     </div>
 
-    <div class="pg-card">
-      <h3 class="pg-subtitle">Communauté</h3>
+  <div class="pg-card pg-community-card">
 
-      <div class="pg-actions-row">
-        <button id="invite-friend-btn" class="pg-btn-secondary">
-          Inviter un ami
-        </button>
-        <button id="show-history-btn" class="pg-btn-secondary">
-          Historique
-        </button>
+      <div class="pg-card-header">
+        <h3 class="pg-subtitle">Communauté</h3>
       </div>
 
-      <div id="social-content" class="pg-social-content"></div>
+      <div id="community-summary" class="pg-community-summary">
+        <div id="latest-swing"></div>
+        <div id="latest-round"></div>
+        <div id="latest-training"></div>
+      </div>
+
+      <div class="pg-community-links">
+        <button data-view="swings" class="pg-btn-secondary">Voir tous les swings</button>
+        <button data-view="rounds" class="pg-btn-secondary">Voir toutes les parties</button>
+        <button data-view="trainings" class="pg-btn-secondary">Voir tous les entraînements</button>
+      </div>
+
     </div>
   `;
+
+  attachCommunityEvents(container);
+
+  loadCommunitySummary(); // 🔥 chargement auto
 
   $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
   $$("show-history-btn")?.addEventListener("click", showHistoryTabs);
@@ -355,6 +364,58 @@ window.refreshSwingQuotaUI = async function () {
     el.textContent = "—";
   }
 };
+
+async function loadCommunitySummary() {
+  const email = window.userLicence?.email;
+  if (!email) return;
+
+  const api = window.api; // adapte si besoin
+
+  try {
+    const [swings, rounds, trainings] = await Promise.all([
+      api.loadSwingsByEmail(email, 1),
+      api.loadRoundsByEmail(email),
+      api.loadTrainingsByEmail?.(email, 1) || []
+    ]);
+
+    if (swings?.length) {
+      document.getElementById("latest-swing").innerHTML = `
+        <h4 class="pg-section-title">Dernier Swing</h4>
+        ${buildSocialSwingItem(swings[0], 1)}
+      `;
+    }
+
+    if (rounds?.length) {
+      document.getElementById("latest-round").innerHTML = `
+        <h4 class="pg-section-title">Dernière Partie</h4>
+        ${buildRoundCard(rounds[0])}
+      `;
+    }
+
+    if (trainings?.length) {
+      document.getElementById("latest-training").innerHTML = `
+        <h4 class="pg-section-title">Dernier Entraînement</h4>
+        ${buildTrainingCard(trainings[0])}
+      `;
+    }
+
+  } catch (err) {
+    console.error("❌ loadCommunitySummary error", err);
+  }
+}
+
+function attachCommunityEvents(container) {
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-view]");
+    if (!btn) return;
+
+    const view = btn.dataset.view;
+
+    if (view === "swings") showHistoryTab("swings");
+    if (view === "rounds") showHistoryTab("rounds");
+    if (view === "trainings") showHistoryTab("trainings");
+  });
+}
 
 // ------------------------------------------------
 // COACH COMMENT — FEED V1
