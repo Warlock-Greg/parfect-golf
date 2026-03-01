@@ -378,10 +378,21 @@ function attachCommunityEvents(container) {
     if (!btn) return;
 
     const view = btn.dataset.view;
+    console.log("COMMUNITY CLICK:", view);
 
-    if (view === "swings") loadHistoryTab("swings");
-    if (view === "rounds") loadHistoryTab("rounds");
-    if (view === "trainings") loadHistoryTab("trainings");
+    // 1️⃣ Ouvre l’UI historique
+    if (typeof showHistoryTabs === "function") {
+      showHistoryTabs();
+    }
+
+    // 2️⃣ Laisse le temps au DOM de se créer
+    setTimeout(() => {
+      if (typeof loadHistoryTab === "function") {
+        loadHistoryTab(view);
+      } else {
+        console.warn("loadHistoryTab not defined");
+      }
+    }, 50);
   });
 }
 
