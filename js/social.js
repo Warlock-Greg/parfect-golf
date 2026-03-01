@@ -348,9 +348,9 @@ async function loadCommunitySummary() {
 
   try {
     const [swings, rounds, trainings] = await Promise.all([
-      api.loadSwingsByEmail(email, 1),
-      api.loadRoundsByEmail(email),
-      api.loadTrainingsByEmail?.(email, 1) || []
+      SocialAPI.loadSwingsByEmail(email, 1),
+      SocialAPI.loadRoundsByEmail(email),
+      SocialAPI.loadTrainingsByEmail(email)
     ]);
 
     if (swings?.length) {
