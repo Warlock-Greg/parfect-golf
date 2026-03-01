@@ -285,7 +285,7 @@ function injectSocialUI() {
 
       <div class="pg-community-links">
         <button data-view="swings" class="pg-btn-secondary">Voir tous les swings</button>
-        <button data-view="round" class="pg-btn-secondary">Voir toutes les parties</button>
+        <button data-view="rounds" class="pg-btn-secondary">Voir toutes les parties</button>
         <button data-view="training" class="pg-btn-secondary">Voir tous les entraînements</button>
       </div>
 
