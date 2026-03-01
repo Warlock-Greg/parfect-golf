@@ -288,6 +288,7 @@ function injectSocialUI() {
         <button data-view="rounds" class="pg-btn-secondary">Voir toutes les parties</button>
         <button data-view="training" class="pg-btn-secondary">Voir tous les entraînements</button>
       </div>
+      <div id="history-panel" class="pg-history-panel"></div>
 
     </div>
   `;
