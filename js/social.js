@@ -110,7 +110,7 @@ const SocialAPI = {
     }
     return res.json();
   },
-
+}
   async loadSwingsByEmail(email, limit = 20) {
     if (!email || !this.swingsUrl || !this.token) return [];
 
@@ -211,7 +211,7 @@ const SocialAPI = {
         console.warn("⚠️ loadTrainingsByEmail NocoDB failed, fallback local", err);
       }
     }
-
+  
     // 2) fallback local
     const local = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
     return local.reverse().map((t) => ({
@@ -222,7 +222,7 @@ const SocialAPI = {
     created_at: t.CreatedAt ?? t.created_at ?? t.date ?? null
     }));
   }
-};
+
 
 // ------------------------------------------------
 // 🔄 REFRESH GLOBAL SOCIAL DATA (SOURCE UNIQUE)
