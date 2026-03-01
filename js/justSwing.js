@@ -2896,29 +2896,65 @@ const displayScore = visibleMax > 0
 
       <div id="jsw-details-panel" class="jsw-details-panel hidden">
   ${Object.entries(breakdown).map(([key, data]) => {
-    if (!data || typeof data.score !== "number") return "";
+  if (!data || typeof data.score !== "number") return "";
 
-    const objective = {
-      tempo: "Ratio fluide ≈ 3:1",
-      rotation: "Épaules engagées, hanches stables",
-      triangle: "Bras connectés du top à l’impact",
-      weightShift: "Transfert progressif vers l’avant",
-      extension: "Bras étendus après impact",
-      balance: "Finish stable et équilibré"
-    }[key] || "";
+  const max = METRIC_MAX[key] || 20;
+  const percent = Math.round((data.score / max) * 100);
 
-    return `
-      <div class="jsw-detail-card">
-        <div class="jsw-detail-header">
-          <strong>${key}</strong>
-          <span>${data.score}</span>
-        </div>
-        <div class="jsw-detail-objective">
-          🎯 ${objective}
-        </div>
+  const objectiveMap = {
+    tempo: "Ratio idéal ≈ 3:1 (backswing 3x plus lent que downswing)",
+    rotation: "Rotation épaules > 70° au top",
+    triangle: "Connexion bras/torse constante",
+    weightShift: "70% poids jambe avant à l’impact",
+    extension: "Bras tendus après impact",
+    balance: "Finish stable 2 secondes"
+  };
+
+  const correctionMap = {
+    tempo: percent < 50
+      ? "⚠️ Ton tempo est trop rapide. Ralentis le backswing."
+      : "Bon rythme global.",
+    rotation: percent < 50
+      ? "Manque d’engagement des épaules."
+      : "Bonne rotation.",
+    triangle: percent < 50
+      ? "Les bras se déconnectent du corps."
+      : "Connexion solide.",
+    weightShift: percent < 50
+      ? "Transfert insuffisant vers l’avant."
+      : "Bon transfert.",
+    extension: percent < 50
+      ? "Manque d’extension post-impact."
+      : "Extension correcte.",
+    balance: percent < 50
+      ? "Finish instable."
+      : "Bonne stabilité."
+  };
+
+  const measuredValue =
+    typeof data.value !== "undefined"
+      ? `<div class="jsw-detail-measure">📊 Mesure : ${data.value}</div>`
+      : "";
+
+  return `
+    <div class="jsw-detail-card ${percent < 50 ? "weak" : "good"}">
+      <div class="jsw-detail-header">
+        <strong>${key.toUpperCase()}</strong>
+        <span>${data.score} / ${max}</span>
       </div>
-    `;
-  }).join("")}
+
+      ${measuredValue}
+
+      <div class="jsw-detail-objective">
+        🎯 ${objectiveMap[key] || ""}
+      </div>
+
+      <div class="jsw-detail-correction">
+        ${correctionMap[key] || ""}
+      </div>
+    </div>
+  `;
+}).join("")}
 </div>
 
 
