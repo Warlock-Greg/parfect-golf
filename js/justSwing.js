@@ -2580,8 +2580,8 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
 
     const payload = {
       email,
-      club: record.club ?? currentClubType ?? "unknown",
-      view: record.view ?? window.jswViewType ?? "unknown",
+      club: document.getElementById("jsw-club-select")?.value ?? "unknown",
+      view: record.view ?? window.ViewType ?? "unknown",
       fps: record.fps ?? null,
       frames_count: record.frames?.length ?? 0,
 
