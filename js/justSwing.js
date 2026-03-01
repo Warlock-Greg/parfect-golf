@@ -159,6 +159,17 @@ let captureArmed = false;
     console.log("✅ JustSwing initialisé");
   }
 
+   const clubSelect = document.getElementById("jsw-club-select");
+
+  if (clubSelect) {
+    clubSelect.addEventListener("change", e => {
+      currentClubType = e.target.value;
+      console.log("🏌️ Club changé :", currentClubType);
+    });
+
+    // 🔥 important : sync au chargement
+    currentClubType = clubSelect.value;
+  }
   window.REF = null;
 
 fetch("/data/parfect_reference.json")
@@ -2569,8 +2580,8 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
 
     const payload = {
       email,
-      club: record.club ?? "?",
-      view: record.view ?? "unknown",
+      club: record.club ?? currentClubType ?? "unknown",
+      view: record.view ?? window.jswViewType ?? "unknown",
       fps: record.fps ?? null,
       frames_count: record.frames?.length ?? 0,
 
@@ -2864,6 +2875,7 @@ const displayScore = visibleMax > 0
       ? buildGlobalCoachComment(window.jswViewType, scores)
       : "Continue ton travail avec régularité.";
 
+  const club = (currentClubType ?? record?.club ?? "unknown").toUpperCase();
   // -------------------------
   // Render
   // -------------------------
