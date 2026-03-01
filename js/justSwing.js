@@ -1684,7 +1684,7 @@ function getKeyframePose(type, metrics, activeSwing) {
  // =====================================================
   // 🔑 RÉFÉRENCE ACTIVE — club + view (SOURCE UNIQUE)
   // =====================================================
-  const club = swing.club || "default";
+  club = swing.club || "default";
   const view = window.jswViewType || "faceOn";
 
   const refKey = `${club}_${view}`;
@@ -2810,7 +2810,6 @@ function buildParfectReviewCard(swing, scores) {
   const breakdown = scores?.breakdown || {};
   const total = scores?.total ?? "—";
   const viewType = (window.jswViewType || "faceOn") === "dtl" ? "DTL" : "FACE";
-  const club = (swing?.club || "Club").toUpperCase();
 
   // -------------------------
   // Helpers
@@ -2875,7 +2874,7 @@ const displayScore = visibleMax > 0
       ? buildGlobalCoachComment(window.jswViewType, scores)
       : "Continue ton travail avec régularité.";
 
-  const club = (currentClubType ?? record?.club ?? "unknown").toUpperCase();
+  //const club = (currentClubType ?? record?.club ?? "unknown").toUpperCase();
   // -------------------------
   // Render
   // -------------------------
