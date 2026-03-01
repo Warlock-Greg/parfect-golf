@@ -366,6 +366,7 @@ async function loadCommunitySummary() {
         ${buildRoundCard(rounds[0])}
       `;
     }
+    console.log("ROUNDS:", rounds);
 console.log("SWINGS FULL", swings);
     if (trainings?.length) {
       document.getElementById("latest-training").innerHTML = `
