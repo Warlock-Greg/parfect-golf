@@ -150,35 +150,48 @@ const SocialAPI = {
   },
 
   async loadRoundsByEmail(email) {
-    if (!email) return [];
+  if (!email) return [];
 
-    // 1) NocoDB si dispo
-    if (this.roundsUrl && this.token) {
-      try {
-        const data = await this.fetchJSON(this.roundsUrl, {
-          headers: { "xc-token": this.token }
-        });
+  // 1) NocoDB si dispo
+  if (this.roundsUrl && this.token) {
+    try {
+      // ✅ IMPORTANT : filtre directement côté NocoDB (mieux que tout récupérer)
+      const url =
+        `${this.roundsUrl}?` +
+        `where=(mail,eq,${encodeURIComponent(email)})` +
+        `&sort=-CreatedAt&limit=50`;
 
-        const list = data.list || data.records || [];
-        return list
-          .filter((r) => r.mail === email)
-          .sort((a, b) => new Date(b.CreatedAt || 0) - new Date(a.CreatedAt || 0));  } catch (err) {
-        console.warn("⚠️ loadRoundsByEmail NocoDB failed, fallback local", err);
-      }
+      const data = await this.fetchJSON(url, {
+        headers: { "xc-token": this.token }
+      });
+
+      return data.list || [];
+    } catch (err) {
+      console.warn("⚠️ loadRoundsByEmail NocoDB failed, fallback local", err);
     }
+  }
 
-    // 2) fallback local
-    const local = JSON.parse(localStorage.getItem("roundHistory") || localStorage.getItem("history") || "[]");
-    return local
-      .map((r) => ({
-        golf_name: r.golf,
-        total_vs_par: r.totalVsPar,
-        parfects: r.parfects,
-        mental_score: r.mentalScore,
-        date_played: r.date
-      }))
-      .sort((a, b) => new Date(b.date_played || 0) - new Date(a.date_played || 0));
-  },
+  // 2) fallback local
+  const local = JSON.parse(
+    localStorage.getItem("roundHistory") ||
+    localStorage.getItem("history") ||
+    "[]"
+  );
+
+  return local
+    .map((r) => ({
+      golf_name: r.golf,
+      total_vs_par: r.totalVsPar,
+      parfects: r.parfects,
+      mental_score: r.mentalScore,
+      putts: r.putts,
+      fairways_hit: r.fairwaysHit,
+      greens_in_reg: r.greensInReg,
+      CreatedAt: r.date,
+      mail: email
+    }))
+    .sort((a, b) => new Date(b.CreatedAt || 0) - new Date(a.CreatedAt || 0));
+}
 
   async loadTrainingsByEmail(email) {
     if (!email) return [];
@@ -511,56 +524,70 @@ function buildCommunityFeedCard(swing) {
 
 function buildSocialSwingItem(swing, index) {
   const id = getRecordId(swing);
-  const data = extractSwingData(swing);
 
-  const mini = (k, max) =>
-    typeof data.breakdown[k]?.score === "number"
-      ? `${data.breakdown[k].score}/${max}`
-      : "—";
+  // 1) Parse du swing_json (source de vérité)
+  const parsed =
+    typeof swing?.swing_json === "string"
+      ? safeJSON(swing.swing_json)
+      : swing?.swing_json || {};
 
-  const dateLabel = data.createdAt
-    ? new Date(data.createdAt).toLocaleDateString()
-    : "";
+  const breakdown = parsed?.breakdown || {};
+  const total = parsed?.total ?? parsed?.scores?.total ?? swing?.total_score ?? "—";
+
+  const club = (swing?.club || "?").toUpperCase();
+
+  // view: priorise metrics.viewType si dispo, sinon anciens champs
+  const viewRaw =
+    parsed?.metrics?.viewType ||
+    swing?.view ||
+    swing?.view_type ||
+    "faceOn";
+
+  const view =
+    (String(viewRaw).toLowerCase() === "dtl") ? "DTL" : "FACE";
+
+  const dateLabel = formatDate(swing?.CreatedAt ?? swing?.created_at ?? swing?.date);
+
+  // ✅ helper local comme avant (pas de scoreOf)
+  const mini = (k, max = 20) =>
+    typeof breakdown?.[k]?.score === "number" ? `${breakdown[k].score}/${max}` : "—";
 
   return `
     <div class="pg-card">
-
       <div style="display:flex;justify-content:space-between;">
         <strong>#${index}</strong>
         <span style="opacity:.6;">${dateLabel}</span>
       </div>
 
       <div style="margin-top:6px;">
-        ${data.club} · ${data.view}
+        ${club} · ${view}
       </div>
 
-      <div style="margin-top:6px;font-weight:600;font-size:18px;">
-        ${data.total} Score
+      <div style="margin-top:6px;font-weight:700;font-size:20px;">
+        ${total} Score
       </div>
 
-      <div>🔄 Rotation : ${scoreOf("rotation")}</div>
-        <div>⏱ Tempo : ${scoreOf("tempo")}</div>
-        <div>🔺 Triangle : ${scoreOf("triangle")}</div>
-        <div>⚖️ WeightShift : ${scoreOf("weightShift")}</div>
-        <div>📏 Extension : ${scoreOf("extension")}</div>
-        <div>🧘 Balance : ${scoreOf("balance")}</div>
-        <div>📐 Plan : ${scoreOf("plan")}</div>
+      <div style="
+        margin-top:10px;
+        font-size:13px;
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:6px;
+        opacity:.85;
+      ">
+        <div>🔄 Rotation : ${mini("rotation")}</div>
+        <div>⏱ Tempo : ${mini("tempo")}</div>
+        <div>🔺 Triangle : ${mini("triangle")}</div>
+        <div>⚖️ WeightShift : ${mini("weightShift")}</div>
+        <div>📏 Extension : ${mini("extension")}</div>
+        <div>🧘 Balance : ${mini("balance")}</div>
+        <div>📐 Plan : ${mini("plan")}</div>
+      </div>
 
-      <button
-        class="pg-btn-replay"
-        data-swing-id="${id}"
-        style="
-          margin-top:10px;
-          padding:6px 14px;
-          border-radius:999px;
-          border:none;
-          background: var(--pg-green-main, #4ade80);
-          color:#111;
-          cursor:pointer;
-        ">
+      <button class="pg-btn-replay" data-swing-id="${id}"
+        style="margin-top:12px;padding:6px 14px;border-radius:999px;border:none;background:var(--pg-green-main,#4ade80);color:#111;cursor:pointer;">
         ▶️ Replay
       </button>
-
     </div>
   `;
 }
@@ -591,6 +618,9 @@ function buildRoundCard(round) {
       <div style="font-weight:700;font-size:16px;">
         ${golfName}
       </div>
+       <div style="margin-top:10px;font-size:12px;opacity:.5;">
+        ${dateLabel}
+      </div>
 
       <div style="margin-top:6px;font-size:15px;">
         Score ${score > 0 ? "+" : ""}${score}
@@ -606,7 +636,7 @@ function buildRoundCard(round) {
         opacity:.9;
       ">
 
-        <div>🏌️ Total coups : <strong>${totalScore}</strong></div>
+        <div>🏌️ Score vs par : <strong>${totalScore}</strong></div>
         <div>🎯 Fairways : <strong>${fairways}</strong></div>
         <div>🟢 GIR : <strong>${gir}</strong></div>
         <div>⛳ Putts : <strong>${putts}</strong></div>
@@ -615,9 +645,7 @@ function buildRoundCard(round) {
 
       </div>
 
-      <div style="margin-top:10px;font-size:12px;opacity:.5;">
-        ${dateLabel}
-      </div>
+     
 
     </div>
   `;
