@@ -686,6 +686,26 @@ function buildRoundCard(round) {
     </div>
   `;
 }
+
+function buildTrainingCard(training) {
+  const name = training.exercise_name ?? "Entraînement";
+  const quality = training.quality ?? "—";
+  const mental = training.mental_score ?? "—";
+
+  const dateLabel =
+    training.CreatedAt && !isNaN(new Date(training.CreatedAt))
+      ? formatDate(training.CreatedAt)
+      : "—";
+
+  return `
+    <div class="pg-card">
+      <strong>${name}</strong><br>
+      ${quality} · Mental ${mental}/5<br>
+      <small>${dateLabel}</small>
+    </div>
+  `;
+}
+
 // ------------------------------------------------
 // LOAD HISTORY
 // ------------------------------------------------
