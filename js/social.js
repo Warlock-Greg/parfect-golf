@@ -101,7 +101,7 @@ const SocialAPI = {
   get trainingsUrl() {
     return window.NOCODB_TRAININGS_URL;
   },
-}
+
 
   async fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
@@ -110,7 +110,7 @@ const SocialAPI = {
       throw new Error(`HTTP ${res.status} ${res.statusText} ${txt}`);
     }
     return res.json();
-  }
+  },
 
 
   async loadSwingsByEmail(email, limit = 20) {
@@ -172,58 +172,32 @@ const SocialAPI = {
       console.warn("⚠️ loadRoundsByEmail NocoDB failed, fallback local", err);
     }
   }
+    return [];
+  ),
 
-  // 2) fallback local
-  const local = JSON.parse(
-    localStorage.getItem("roundHistory") ||
-    localStorage.getItem("history") ||
-    "[]"
-  );
 
-  return local
-    .map((r) => ({
-      golf_name: r.golf,
-      total_vs_par: r.totalVsPar,
-      parfects: r.parfects,
-      mental_score: r.mentalScore,
-      putts: r.putts,
-      fairways_hit: r.fairwaysHit,
-      greens_in_reg: r.greensInReg,
-      CreatedAt: r.date,
-      mail: email
-    }))
-    .sort((a, b) => new Date(b.CreatedAt || 0) - new Date(a.CreatedAt || 0));
-}
 
-  async loadTrainingsByEmail(email) {
-    if (!email) return [];
+ async loadTrainingsByEmail(email) {
+    if (!email || !this.trainingsUrl || !this.token) return [];
 
-    // 1) NocoDB si dispo
-    if (this.trainingsUrl && this.token) {
-      try {
-        const data = await this.fetchJSON(this.trainingsUrl, {
-          headers: { "xc-token": this.token }
-        });
+    try {
+      const url =
+        `${this.trainingsUrl}?` +
+        `where=(player_email,eq,${encodeURIComponent(email)})` +
+        `&sort=-CreatedAt&limit=20`;
 
-        const list = data.list || data.records || [];
-        return list
-          .filter((t) => (t.player_email || t.email) === email)
-          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-      } catch (err) {
-        console.warn("⚠️ loadTrainingsByEmail NocoDB failed, fallback local", err);
-      }
+      const data = await this.fetchJSON(url, {
+        headers: { "xc-token": this.token }
+      });
+
+      return data.list || [];
+    } catch (err) {
+      console.warn("⚠️ loadTrainingsByEmail failed", err);
+      return [];
     }
-  
-    // 2) fallback local
-    const local = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
-    return local.reverse().map((t) => ({
-     exercise_name: t.exercise_name ?? t.name ?? "Exercice",
-    type: t.type ?? "—",
-    quality: t.quality ?? "—",
-    mental_score: t.mental_score ?? t.mentalScore ?? 0,
-    created_at: t.CreatedAt ?? t.created_at ?? t.date ?? null
-    }));
   }
+
+};
 
 
 // ------------------------------------------------
