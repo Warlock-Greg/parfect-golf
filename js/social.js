@@ -112,27 +112,29 @@ const SocialAPI = {
   },
 
 
-  async loadSwingsByEmail(email, limit = 20) {
-    if (!email || !this.swingsUrl || !this.token) return [];
+async loadSwingsByEmail(email, limit = 50) {
+  if (!email || !this.swingsUrl || !this.token) return [];
 
-    // IMPORTANT: tes colonnes NocoDB.
-    // Tu utilises "cy88wsoi5b8bq9s" comme colonne email.
-    // Tu utilises "CreatedAt" (ou created_at). On garde ton choix.
-    const url =
-      `${this.swingsUrl}?` +
-      `where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})` +
-      `&sort=-CreatedAt&limit=${limit}`;
+  const url =
+    `${this.swingsUrl}?` +
+    `where=(email,eq,${encodeURIComponent(email)})` +
+    `&sort=-CreatedAt` +
+    `&limit=${limit}` +
+    `&fields=*`;
 
-    try {
-      const data = await this.fetchJSON(url, {
-        headers: { "xc-token": this.token }
-      });
-      return data.list || [];
-    } catch (err) {
-      console.error("❌ loadSwingsByEmail error", err);
-      return [];
-    }
-  },
+  try {
+    const data = await this.fetchJSON(url, {
+      headers: { "xc-token": this.token }
+    });
+
+    console.log("SWINGS API:", data.list); // 🔍 debug temporaire
+
+    return data.list || [];
+  } catch (err) {
+    console.error("❌ loadSwingsByEmail error", err);
+    return [];
+  }
+},
 
   async loadSwingById(id) {
     if (!id || !this.swingsUrl || !this.token) return null;
@@ -151,50 +153,40 @@ const SocialAPI = {
   },
 
   async loadRoundsByEmail(email) {
-  if (!email) return [];
+  if (!email || !this.roundsUrl || !this.token) return [];
 
-  // 1) NocoDB si dispo
-  if (this.roundsUrl && this.token) {
-    try {
-      // ✅ IMPORTANT : filtre directement côté NocoDB (mieux que tout récupérer)
-    const url =
-      `${this.roundsUrl}?` +
-      `where=(player_email,eq,${encodeURIComponent(email)})` +
-      `&sort=-CreatedAt&limit=50&fields=*`;
+  const url =
+    `${this.roundsUrl}?` +
+    `where=(player_email,eq,${encodeURIComponent(email)})` +
+    `&sort=-CreatedAt` +
+    `&limit=50` +
+    `&fields=*`;
 
-      const data = await this.fetchJSON(url, {
-        headers: { "xc-token": this.token }
-      });
+  const data = await this.fetchJSON(url, {
+    headers: { "xc-token": this.token }
+  });
 
-      return data.list || [];
-    } catch (err) {
-      console.warn("⚠️ loadRoundsByEmail NocoDB failed, fallback local", err);
-    }
-  }
-    return [];
+  return data.list || [];
   },
 
 
 
- async loadTrainingsByEmail(email) {
-    if (!email || !this.trainingsUrl || !this.token) return [];
+ async loadTrainingsByEmail(email, limit = 50) {
+  if (!email || !this.trainingsUrl || !this.token) return [];
 
-    try {
-      const url =
-        `${this.trainingsUrl}?` +
-        `where=(player_email,eq,${encodeURIComponent(email)})` +
-        `&sort=-CreatedAt&limit=20`;
+  const url =
+    `${this.trainingsUrl}?` +
+    `where=(player_email,eq,${encodeURIComponent(email)})` +
+    `&sort=-CreatedAt` +
+    `&limit=${limit}` +
+    `&fields=*`;
 
-      const data = await this.fetchJSON(url, {
-        headers: { "xc-token": this.token }
-      });
+  const data = await this.fetchJSON(url, {
+    headers: { "xc-token": this.token }
+  });
 
-      return data.list || [];
-    } catch (err) {
-      console.warn("⚠️ loadTrainingsByEmail failed", err);
-      return [];
-    }
-  }
+  return data.list || [];
+}
 
 };
 
