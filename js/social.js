@@ -366,7 +366,7 @@ async function loadCommunitySummary() {
         ${buildRoundCard(rounds[0])}
       `;
     }
-
+console.log("LATEST SWING RAW", swings[0]);
     if (trainings?.length) {
       document.getElementById("latest-training").innerHTML = `
         <h4 class="pg-section-title">Dernier Entraînement</h4>
