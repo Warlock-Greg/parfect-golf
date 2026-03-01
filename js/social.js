@@ -539,12 +539,13 @@ function buildSocialSwingItem(swing, index) {
         ${data.total} Score
       </div>
 
-      <div style="margin-top:6px;font-size:14px;opacity:.8;">
-        🎯 ${mini("rotation", 20)}
-        ⏱️ ${mini("tempo", 20)}
-        🔺 ${mini("triangle", 20)}
-        ⚖️ ${mini("balance", 10)}
-      </div>
+      <div>🔄 Rotation : ${scoreOf("rotation")}</div>
+        <div>⏱ Tempo : ${scoreOf("tempo")}</div>
+        <div>🔺 Triangle : ${scoreOf("triangle")}</div>
+        <div>⚖️ WeightShift : ${scoreOf("weightShift")}</div>
+        <div>📏 Extension : ${scoreOf("extension")}</div>
+        <div>🧘 Balance : ${scoreOf("balance")}</div>
+        <div>📐 Plan : ${scoreOf("plan")}</div>
 
       <button
         class="pg-btn-replay"
@@ -567,6 +568,7 @@ function buildSocialSwingItem(swing, index) {
 
 function buildRoundCard(round) {
   const golfName = round.golf_name ?? round.golf ?? "Parcours";
+
   const score = round.total_vs_par ?? round.totalVsPar ?? 0;
   const parfects = round.parfects ?? 0;
 
@@ -575,12 +577,18 @@ function buildRoundCard(round) {
       ? `${round.mental_score}/5`
       : "—/5";
 
+  const pars = round.pars ?? "—";
+  const birdies = round.birdies ?? "—";
+  const putts = round.putts ?? "—";
+  const fairways = round.fairways ?? "—";
+  const gir = round.gir ?? "—";
+
   const dateLabel = formatDate(round.date_played ?? round.date);
 
   return `
     <div class="pg-card">
 
-      <div style="font-weight:600;font-size:16px;">
+      <div style="font-weight:700;font-size:16px;">
         ${golfName}
       </div>
 
@@ -589,11 +597,25 @@ function buildRoundCard(round) {
         · ${parfects} Parfects
       </div>
 
-      <div style="margin-top:4px;opacity:.8;">
-        🧠 Mental ${mental}
+      <div style="
+        margin-top:10px;
+        font-size:13px;
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:6px;
+        opacity:.85;
+      ">
+
+        <div>🎯 Fairways : ${fairways}</div>
+        <div>🟢 GIR : ${gir}</div>
+        <div>⛳ Putts : ${putts}</div>
+        <div>🧠 Mental : ${mental}</div>
+        <div>🏌️ Pars : ${pars}</div>
+        <div>🐦 Birdies : ${birdies}</div>
+
       </div>
 
-      <div style="margin-top:6px;font-size:12px;opacity:.5;">
+      <div style="margin-top:8px;font-size:12px;opacity:.5;">
         ${dateLabel}
       </div>
 
