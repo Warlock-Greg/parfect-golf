@@ -755,7 +755,7 @@ async function loadHistoryTab(type) {
   return;
 }
 
-  if (type === "round") {
+  if (type === "rounds") {
     const rounds = await SocialAPI.loadRoundsByEmail(email);
     panel.innerHTML = rounds.length
       ? rounds.map(buildRoundCard).join("")
