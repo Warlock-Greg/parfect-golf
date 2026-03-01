@@ -39,6 +39,48 @@ function isProUser(user) {
   return user?.licence === "pro";
 }
 
+function extractSwingData(swing) {
+  const parsed =
+    typeof swing?.swing_json === "string"
+      ? safeJSON(swing.swing_json)
+      : swing?.swing_json || {};
+
+  const total =
+    parsed?.total ??
+    parsed?.scores?.total ??
+    swing?.total_score ??
+    "—";
+
+  const breakdown = parsed?.breakdown || {};
+  const scores = parsed?.scores || {};
+
+  const metrics = parsed?.metrics || {};
+
+  const club = (swing?.club || "??").toUpperCase();
+
+  const viewRaw =
+    metrics?.viewType ||
+    swing?.view ||
+    swing?.view_type ||
+    "faceOn";
+
+  const view =
+    viewRaw === "dtl" ? "DTL" :
+    viewRaw === "faceOn" ? "FACE" :
+    viewRaw?.toUpperCase() || "FACE";
+
+  return {
+    total,
+    breakdown,
+    scores,
+    club,
+    view,
+    email: swing?.player_email || swing?.email || "unknown",
+    createdAt: swing?.CreatedAt || swing?.created_at || swing?.date
+  };
+}
+
+
 // ------------------------------------------------
 // Data Layer (mini “data service” inline)
 // ------------------------------------------------
@@ -419,16 +461,16 @@ function bindHistoryPanelActions() {
 // UI cards
 // ------------------------------------------------
 function buildCommunityFeedCard(swing) {
-  const scores = safeJSON(swing?.scores) || swing?.scores || {};
-  const breakdown = scores.breakdown || {};
-  const total = scores.total ?? swing?.total_score ?? "—";
+  const id = getRecordId(swing);
+  const data = extractSwingData(swing);
 
-  const club = (swing.club || "?").toUpperCase();
-  const viewRaw = (swing.view || swing.view_type || "faceOn").toLowerCase();
-  const view = viewRaw === "dtl" ? "DTL" : "FACE";
+  const mini = (k, max) =>
+    typeof data.breakdown[k]?.score === "number"
+      ? `${data.breakdown[k].score}/${max}`
+      : "—";
 
-  const time = swing.created_at
-    ? new Date(swing.created_at).toLocaleString([], {
+  const time = data.createdAt
+    ? new Date(data.createdAt).toLocaleString([], {
         day: "2-digit",
         month: "short",
         hour: "2-digit",
@@ -436,63 +478,72 @@ function buildCommunityFeedCard(swing) {
       })
     : "";
 
-  const mini = (k, max) =>
-    typeof breakdown[k]?.score === "number" ? `${breakdown[k].score}/${max}` : "—";
-
-  const id = getRecordId(swing);
-
   return `
     <div class="pg-feed-card">
+
       <div class="pg-feed-header">
-        <span class="pg-feed-pill">${club} · ${view}</span>
+        <span class="pg-feed-user">${data.email}</span>
         <span class="pg-feed-time">${time}</span>
       </div>
 
-      <div class="pg-feed-score">
-        <span class="pg-feed-score-value">${total}</span>
-        <span class="pg-feed-score-label">Score Parfect</span>
+      <div class="pg-feed-meta">
+        ${data.club} · ${data.view}
       </div>
 
-      <div class="pg-feed-coach">
-        ${buildCoachFeedComment(scores)}
+      <div class="pg-feed-score">
+        <span class="pg-feed-score-value">${data.total}</span>
+        <span class="pg-feed-score-label">Score Parfect</span>
       </div>
 
       <div class="pg-feed-metrics">
         <span>🎯 ${mini("rotation", 20)}</span>
         <span>⏱️ ${mini("tempo", 20)}</span>
         <span>🔺 ${mini("triangle", 20)}</span>
+        <span>⚖️ ${mini("balance", 10)}</span>
       </div>
 
       <button class="pg-feed-action" data-swing-id="${id}">
         Revoir le swing →
       </button>
+
     </div>
   `;
 }
 
 function buildSocialSwingItem(swing, index) {
   const id = getRecordId(swing);
-  const club = swing?.club ?? "Club ?";
-  const view = swing?.view ?? swing?.view_type ?? "?";
+  const data = extractSwingData(swing);
 
-  const scores = safeJSON(swing?.scores) || swing?.scores || {};
-  const score = scores?.total ?? swing?.total_score ?? "—";
+  const mini = (k, max) =>
+    typeof data.breakdown[k]?.score === "number"
+      ? `${data.breakdown[k].score}/${max}`
+      : "—";
 
-  const dateLabel = formatDate(swing?.created_at ?? swing?.date);
+  const dateLabel = data.createdAt
+    ? new Date(data.createdAt).toLocaleDateString()
+    : "";
 
   return `
     <div class="pg-card">
+
       <div style="display:flex;justify-content:space-between;">
         <strong>#${index}</strong>
         <span style="opacity:.6;">${dateLabel}</span>
       </div>
 
       <div style="margin-top:6px;">
-        ${club} · ${view}
+        ${data.club} · ${data.view}
       </div>
 
-      <div style="margin-top:6px;font-weight:600;">
-        Score ${score}
+      <div style="margin-top:6px;font-weight:600;font-size:18px;">
+        ${data.total} Score
+      </div>
+
+      <div style="margin-top:6px;font-size:14px;opacity:.8;">
+        🎯 ${mini("rotation", 20)}
+        ⏱️ ${mini("tempo", 20)}
+        🔺 ${mini("triangle", 20)}
+        ⚖️ ${mini("balance", 10)}
       </div>
 
       <button
@@ -509,6 +560,7 @@ function buildSocialSwingItem(swing, index) {
         ">
         ▶️ Replay
       </button>
+
     </div>
   `;
 }
@@ -519,16 +571,32 @@ function buildRoundCard(round) {
   const parfects = round.parfects ?? 0;
 
   const mental =
-    typeof round.mental_score === "number" ? `${round.mental_score}/5` : "—/5";
+    typeof round.mental_score === "number"
+      ? `${round.mental_score}/5`
+      : "—/5";
 
   const dateLabel = formatDate(round.date_played ?? round.date);
 
   return `
     <div class="pg-card">
-      <strong>${golfName}</strong><br>
-      Score ${score > 0 ? "+" : ""}${score} · ${parfects} Parfects<br>
-      Mental ${mental}<br>
-      <small>${dateLabel}</small>
+
+      <div style="font-weight:600;font-size:16px;">
+        ${golfName}
+      </div>
+
+      <div style="margin-top:6px;">
+        Score ${score > 0 ? "+" : ""}${score}
+        · ${parfects} Parfects
+      </div>
+
+      <div style="margin-top:4px;opacity:.8;">
+        🧠 Mental ${mental}
+      </div>
+
+      <div style="margin-top:6px;font-size:12px;opacity:.5;">
+        ${dateLabel}
+      </div>
+
     </div>
   `;
 }
