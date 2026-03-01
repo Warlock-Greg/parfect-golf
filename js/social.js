@@ -561,33 +561,25 @@ function buildCommunityFeedCard(swing) {
 function buildSocialSwingItem(swing, index) {
   const id = getRecordId(swing);
 
-  // 1) Parse du swing_json (source de vérité)
-  const parsed =
-    typeof swing?.swing_json === "string"
-      ? safeJSON(swing.swing_json)
-      : swing?.swing_json || {};
-
+  const parsed = swing?.scores || {};
   const breakdown = parsed?.breakdown || {};
-  const total = parsed?.total ?? parsed?.scores?.total ?? swing?.total_score ?? "—";
+  const total = parsed?.total ?? "—";
 
   const club = (swing?.club || "?").toUpperCase();
 
-  // view: priorise metrics.viewType si dispo, sinon anciens champs
-  const viewRaw =
-    parsed?.metrics?.viewType ||
-    swing?.view ||
-    swing?.view_type ||
-    "faceOn";
-
   const view =
-    (String(viewRaw).toLowerCase() === "dtl") ? "DTL" : "FACE";
+    swing?.view === "dtl"
+      ? "DTL"
+      : swing?.view === "faceOn"
+      ? "FACE"
+      : "FACE";
 
-  const dateLabel = formatDate(swing?.CreatedAt ?? swing?.created_at ?? swing?.date);
+  const dateLabel = formatDate(swing?.CreatedAt);
 
-  // ✅ helper local comme avant (pas de scoreOf)
-  const mini = (k, max = 20) =>
-    typeof breakdown?.[k]?.score === "number" ? `${breakdown[k].score}/${max}` : "—";
-
+  const mini = (k) =>
+    typeof breakdown?.[k]?.score === "number"
+      ? `${breakdown[k].score}/20`
+      : "—";
   return `
     <div class="pg-card">
       <div style="display:flex;justify-content:space-between;">
