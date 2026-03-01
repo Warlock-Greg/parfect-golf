@@ -730,17 +730,32 @@ function showConfetti() {
 }
 
 async function saveRoundToNocoDB(roundSummary) {
-  if (!window.NOCODB_ROUNDS_URL) return;
+  if (!window.NOCODB_ROUNDS_URL || !window.NOCODB_TOKEN) {
+    console.warn("NocoDB config manquante");
+    return;
+  }
+
+  const user = window.userLicence;
+
+  const now = new Date().toISOString();
 
   const payload = {
-    player_email: window.userLicence?.email,
-    golf_name: roundSummary.golfName,
-    date_played: new Date().toISOString(),
-    total_score: roundSummary.totalScore,
-    total_vs_par: roundSummary.totalVsPar,
-    parfects: roundSummary.parfects,
-    mental_score: roundSummary.mentalScore,
-    summary_json: JSON.stringify(roundSummary)
+    mail: user?.email ?? null,               // ⚠️ colonne = mail
+    golf_name: roundSummary.golfName ?? "",
+    source: "parfect_app",                   // utile pour analytics
+    last_seen: now,
+
+    total_score: roundSummary.totalScore ?? 0,
+    total_vs_par: roundSummary.totalVsPar ?? 0,
+    parfects: roundSummary.parfects ?? 0,
+    fairways_hit: roundSummary.fairwaysHit ?? 0,
+    greens_in_reg: roundSummary.greensInReg ?? 0,
+    putts: roundSummary.putts ?? 0,
+    mental_score: roundSummary.mentalScore ?? 0,
+
+    summary_json: JSON.stringify(roundSummary),
+
+    CreatedAt: now
   };
 
   try {
@@ -753,9 +768,12 @@ async function saveRoundToNocoDB(roundSummary) {
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error("Round save failed");
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText);
+    }
 
-    console.log("✅ Partie sauvegardée");
+    console.log("✅ Partie sauvegardée (optimisée)");
   } catch (err) {
     console.error("❌ Save round error", err);
   }
