@@ -90,7 +90,6 @@ const SocialAPI = {
   },
 
   get swingsUrl() {
-    // ex: https://app.nocodb.com/api/v2/tables/mh0dt1rbylry99e/records
     return window.NOCODB_SWINGS_URL;
   },
 
@@ -173,7 +172,7 @@ const SocialAPI = {
     }
   }
     return [];
-  ),
+  },
 
 
 
