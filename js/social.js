@@ -161,9 +161,8 @@ const SocialAPI = {
 
         const list = data.list || data.records || [];
         return list
-          .filter((r) => (r.player_email || r.email) === email)
-          .sort((a, b) => new Date(b.date_played || 0) - new Date(a.date_played || 0));
-      } catch (err) {
+          .filter((r) => r.mail === email)
+          .sort((a, b) => new Date(b.CreatedAt || 0) - new Date(a.CreatedAt || 0));  } catch (err) {
         console.warn("⚠️ loadRoundsByEmail NocoDB failed, fallback local", err);
       }
     }
@@ -567,23 +566,24 @@ function buildSocialSwingItem(swing, index) {
 }
 
 function buildRoundCard(round) {
-  const golfName = round.golf_name ?? round.golf ?? "Parcours";
+  const golfName = round.golf_name ?? "Parcours";
 
-  const score = round.total_vs_par ?? round.totalVsPar ?? 0;
+  const score = round.total_vs_par ?? 0;
+  const totalScore = round.total_score ?? "—";
   const parfects = round.parfects ?? 0;
+
+  const fairways = round.fairways_hit ?? "—";
+  const gir = round.greens_in_reg ?? "—";
+  const putts = round.putts ?? "—";
 
   const mental =
     typeof round.mental_score === "number"
       ? `${round.mental_score}/5`
       : "—/5";
 
-  const pars = round.pars ?? "—";
-  const birdies = round.birdies ?? "—";
-  const putts = round.putts ?? "—";
-  const fairways = round.fairways ?? "—";
-  const gir = round.gir ?? "—";
-
-  const dateLabel = formatDate(round.date_played ?? round.date);
+  const dateLabel = round.CreatedAt
+    ? new Date(round.CreatedAt).toLocaleDateString()
+    : "";
 
   return `
     <div class="pg-card">
@@ -592,37 +592,36 @@ function buildRoundCard(round) {
         ${golfName}
       </div>
 
-      <div style="margin-top:6px;">
+      <div style="margin-top:6px;font-size:15px;">
         Score ${score > 0 ? "+" : ""}${score}
         · ${parfects} Parfects
       </div>
 
       <div style="
-        margin-top:10px;
+        margin-top:12px;
         font-size:13px;
         display:grid;
         grid-template-columns: 1fr 1fr;
-        gap:6px;
-        opacity:.85;
+        gap:8px;
+        opacity:.9;
       ">
 
-        <div>🎯 Fairways : ${fairways}</div>
-        <div>🟢 GIR : ${gir}</div>
-        <div>⛳ Putts : ${putts}</div>
-        <div>🧠 Mental : ${mental}</div>
-        <div>🏌️ Pars : ${pars}</div>
-        <div>🐦 Birdies : ${birdies}</div>
+        <div>🏌️ Total coups : <strong>${totalScore}</strong></div>
+        <div>🎯 Fairways : <strong>${fairways}</strong></div>
+        <div>🟢 GIR : <strong>${gir}</strong></div>
+        <div>⛳ Putts : <strong>${putts}</strong></div>
+        <div>⭐ Parfects : <strong>${parfects}</strong></div>
+        <div>🧠 Mental : <strong>${mental}</strong></div>
 
       </div>
 
-      <div style="margin-top:8px;font-size:12px;opacity:.5;">
+      <div style="margin-top:10px;font-size:12px;opacity:.5;">
         ${dateLabel}
       </div>
 
     </div>
   `;
 }
-
 // ------------------------------------------------
 // LOAD HISTORY
 // ------------------------------------------------
