@@ -386,9 +386,9 @@ function attachCommunityEvents(container) {
 
     const view = btn.dataset.view;
 
-    if (view === "swings") showHistoryTab("swings");
-    if (view === "rounds") showHistoryTab("rounds");
-    if (view === "trainings") showHistoryTab("trainings");
+    if (view === "swings") loadHistoryTab("swings");
+    if (view === "rounds") loadHistoryTab("rounds");
+    if (view === "trainings") loadHistoryTab("trainings");
   });
 }
 
