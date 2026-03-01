@@ -101,7 +101,7 @@ const SocialAPI = {
   get trainingsUrl() {
     return window.NOCODB_TRAININGS_URL;
   },
-
+}
   async fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
     if (!res.ok) {
@@ -110,7 +110,8 @@ const SocialAPI = {
     }
     return res.json();
   },
-}
+
+
   async loadSwingsByEmail(email, limit = 20) {
     if (!email || !this.swingsUrl || !this.token) return [];
 
