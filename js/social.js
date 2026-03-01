@@ -102,6 +102,7 @@ const SocialAPI = {
     return window.NOCODB_TRAININGS_URL;
   },
 }
+
   async fetchJSON(url, opts = {}) {
     const res = await fetch(url, opts);
     if (!res.ok) {
@@ -109,7 +110,7 @@ const SocialAPI = {
       throw new Error(`HTTP ${res.status} ${res.statusText} ${txt}`);
     }
     return res.json();
-  },
+  }
 
 
   async loadSwingsByEmail(email, limit = 20) {
