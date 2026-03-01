@@ -274,7 +274,7 @@ function injectSocialUI() {
   <div class="pg-card pg-community-card">
 
       <div class="pg-card-header">
-        <h3 class="pg-subtitle">Communauté</h3>
+        <h3 class="pg-subtitle">Activités</h3>
       </div>
 
       <div id="community-summary" class="pg-community-summary">
