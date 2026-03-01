@@ -157,10 +157,10 @@ const SocialAPI = {
   if (this.roundsUrl && this.token) {
     try {
       // ✅ IMPORTANT : filtre directement côté NocoDB (mieux que tout récupérer)
-      const url =
-        `${this.roundsUrl}?` +
-        `where=(mail,eq,${encodeURIComponent(email)})` +
-        `&sort=-CreatedAt&limit=50`;
+    const url =
+      `${this.roundsUrl}?` +
+      `where=(player_email,eq,${encodeURIComponent(email)})` +
+      `&sort=-CreatedAt&limit=50&fields=*`;
 
       const data = await this.fetchJSON(url, {
         headers: { "xc-token": this.token }
