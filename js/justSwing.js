@@ -3308,12 +3308,9 @@ function buildPremiumBreakdown(swing, scores) {
     window.SwingEngine?.reset?.();
     document.getElementById("home-btn")?.click();
   });
-}
+
   
   
-
-
-
 
 
   
