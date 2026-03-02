@@ -2808,99 +2808,124 @@ function buildParfectReviewCard(swing, scores) {
   if (!container) return;
 
   const breakdown = scores?.breakdown || {};
-  const total = scores?.total ?? "—";
-  const viewType = (window.jswViewType || "faceOn") === "dtl" ? "DTL" : "FACE";
+  const viewTypeRaw = window.jswViewType || "faceOn";
+  const viewLabel = viewTypeRaw === "dtl" ? "DTL" : "FACE";
 
-  // -------------------------
-  // Helpers
-  // -------------------------
+  const METRIC_MAX = {
+    rotation: 20,
+    tempo: 20,
+    triangle: 20,
+    plan: 20,
+    weightShift: 10,
+    extension: 10,
+    balance: 10
+  };
+
+  // ===============================
+  // SCORE FLOOR (UX uniquement)
+  // ===============================
+
+  function applyScoreFloor(score, max) {
+    if (typeof score !== "number") return null;
+    if (max === 20) return Math.max(score, 4);
+    if (max === 10) return Math.max(score, 2);
+    return score;
+  }
+
+  // ===============================
+  // VISIBLE SCORE (inchangé moteur)
+  // ===============================
+
+  function getVisibleMetricKeys(viewType) {
+    return viewType === "dtl"
+      ? ["rotation","tempo","plan","triangle","weightShift","extension","balance"]
+      : ["rotation","tempo","triangle","weightShift","extension","balance"];
+  }
+
+  function computeVisibleScore() {
+    return getVisibleMetricKeys(viewTypeRaw).reduce(
+      (sum, k) =>
+        sum + (typeof breakdown?.[k]?.score === "number"
+          ? breakdown[k].score
+          : 0),
+      0
+    );
+  }
+
+  function computeVisibleMax() {
+    return getVisibleMetricKeys(viewTypeRaw).reduce(
+      (sum, k) => sum + (METRIC_MAX[k] || 0),
+      0
+    );
+  }
+
+  const visibleScore = computeVisibleScore();
+  const visibleMax = computeVisibleMax();
+
+  const displayScore =
+    visibleMax > 0
+      ? Math.round((visibleScore / visibleMax) * 100)
+      : 0;
+
+  const coachComment =
+    typeof buildGlobalCoachComment === "function"
+      ? buildGlobalCoachComment(viewTypeRaw, scores)
+      : "Continue ton travail avec régularité.";
+
+  const club = (
+    swing?.club ??
+    window.currentClubType ??
+    document.getElementById("jsw-club-select")?.value ??
+    "unknown"
+  ).toUpperCase();
+
+  // ===============================
+  // BEST METRIC (focus positif)
+  // ===============================
+
+  const bestMetric = Object.entries(breakdown)
+    .filter(([_, d]) => typeof d?.score === "number")
+    .sort((a, b) => b[1].score - a[1].score)[0];
+
+  // ===============================
+  // SCORE LINE
+  // ===============================
+
   const scoreLine = (key, label, max, icon) => {
-    const s = breakdown[key]?.score;
-    const warn = typeof s === "number" && s < max * 0.6 ? "⚠️" : "";
-    const ok = typeof s === "number" && s >= max * 0.75 ? "✔︎" : "";
+    const raw = breakdown[key]?.score;
+    const floored = applyScoreFloor(raw, max);
+
+    const highlight =
+      bestMetric && bestMetric[0] === key
+        ? "jsw-metric-highlight"
+        : "";
 
     return `
-      <div class="jsw-metric">
+      <div class="jsw-metric ${highlight}">
         <span class="jsw-metric-label">${icon} ${label}</span>
         <span class="jsw-metric-score">
-          ${typeof s === "number" ? `${s}/${max}` : "—"} ${ok || warn}
+          ${floored !== null ? `${floored}/${max}` : "—"}
         </span>
       </div>
     `;
   };
 
-const METRIC_MAX = {
-  rotation: 20,
-  tempo: 20,
-  triangle: 20,
-  plan: 20,        // uniquement DTL
-  weightShift: 10,
-  extension: 10,
-  balance: 10
-};
+  // ===============================
+  // RENDER
+  // ===============================
 
-function getVisibleMetricKeys(viewType) {
-  return viewType === "dtl"
-    ? ["rotation", "tempo", "plan", "triangle", "weightShift", "extension", "balance"]
-    : ["rotation", "tempo", "triangle", "weightShift", "extension", "balance"];
-}
-
-function computeVisibleScore(breakdown, viewType) {
-  return getVisibleMetricKeys(viewType).reduce(
-    (sum, k) =>
-      sum + (typeof breakdown?.[k]?.score === "number" ? breakdown[k].score : 0),
-    0
-  );
-}
-
-function computeVisibleMax(viewType) {
-  return getVisibleMetricKeys(viewType).reduce(
-    (sum, k) => sum + (METRIC_MAX[k] || 0),
-    0
-  );
-}
-
-  const visibleScore = computeVisibleScore(breakdown, viewType);
-const visibleMax = computeVisibleMax(viewType);
-
-// 🎯 PRODUIT EN CROIX
-const displayScore = visibleMax > 0
-  ? Math.round((visibleScore / visibleMax) * 100)
-  : 0;
-
-  
-  const coachComment =
-    typeof buildGlobalCoachComment === "function"
-      ? buildGlobalCoachComment(window.jswViewType, scores)
-      : "Continue ton travail avec régularité.";
-
- const club = (
-  record?.club ??
-  swing?.club ??
-  window.currentClubType ??
-  "unknown"
-).toUpperCase();
-
-const viewLabel =
-  viewType === "faceOn" ? "FACE" :
-  viewType === "dtl" ? "DTL" :
-  viewType.toUpperCase();
-  // -------------------------
-  // Render
-  // -------------------------
   container.innerHTML = `
     <div class="jsw-review-card">
 
       <div class="jsw-review-header">
         <span class="jsw-pill">${viewLabel} · ${club}</span>
-        <div class="jsw-score-ring">
-        <div class="jsw-score-value">${displayScore}</div>
-        <div class="jsw-score-label">Score Parfect</div>
-        <div class="jsw-coach-comment"> ${coachComment} </div>
-      </div>
-      </div>
 
-      
+        <div class="jsw-score-ring">
+          <div class="jsw-score-value">0</div>
+          <div class="jsw-score-label">Score Parfect</div>
+          <div class="jsw-coach-comment">${coachComment}</div>
+        </div>
+      </div>
 
       <div class="jsw-metrics">
         ${scoreLine("rotation", "Rotation", 20, "🎯")}
@@ -2916,71 +2941,28 @@ const viewLabel =
       </button>
 
       <div id="jsw-details-panel" class="jsw-details-panel hidden">
-console.log("BREAKDOWN DEBUG", breakdown);
-console.log("SCORES DEBUG", scores);
-      
-  ${Object.entries(breakdown).map(([key, data]) => {
-  if (!data || typeof data.score !== "number") return "";
+        ${Object.entries(breakdown).map(([key, data]) => {
+          if (!data || typeof data.score !== "number") return "";
 
-  const max = METRIC_MAX[key] || 20;
-  const percent = Math.round((data.score / max) * 100);
+          const max = METRIC_MAX[key] || 20;
+          const floored = applyScoreFloor(data.score, max);
 
-  const objectiveMap = {
-    tempo: "Ratio idéal ≈ 3:1 (backswing 3x plus lent que downswing)",
-    rotation: "Rotation épaules > 70° au top",
-    triangle: "Connexion bras/torse constante",
-    weightShift: "70% poids jambe avant à l’impact",
-    extension: "Bras tendus après impact",
-    balance: "Finish stable 2 secondes"
-  };
+          const measuredValue =
+            typeof data.value !== "undefined"
+              ? `<div class="jsw-detail-measure">📊 Mesure : ${data.value}</div>`
+              : "";
 
-  const correctionMap = {
-    tempo: percent < 50
-      ? "⚠️ Ton tempo est trop rapide. Ralentis le backswing."
-      : "Bon rythme global.",
-    rotation: percent < 50
-      ? "Manque d’engagement des épaules."
-      : "Bonne rotation.",
-    triangle: percent < 50
-      ? "Les bras se déconnectent du corps."
-      : "Connexion solide.",
-    weightShift: percent < 50
-      ? "Transfert insuffisant vers l’avant."
-      : "Bon transfert.",
-    extension: percent < 50
-      ? "Manque d’extension post-impact."
-      : "Extension correcte.",
-    balance: percent < 50
-      ? "Finish instable."
-      : "Bonne stabilité."
-  };
-
-  const measuredValue =
-    typeof data.value !== "undefined"
-      ? `<div class="jsw-detail-measure">📊 Mesure : ${data.value}</div>`
-      : "";
-
-  return `
-    <div class="jsw-detail-card ${percent < 50 ? "weak" : "good"}">
-      <div class="jsw-detail-header">
-        <strong>${key.toUpperCase()}</strong>
-        <span>${data.score} / ${max}</span>
+          return `
+            <div class="jsw-detail-card">
+              <div class="jsw-detail-header">
+                <strong>${key.toUpperCase()}</strong>
+                <span>${floored}/${max}</span>
+              </div>
+              ${measuredValue}
+            </div>
+          `;
+        }).join("")}
       </div>
-
-      ${measuredValue}
-
-      <div class="jsw-detail-objective">
-        🎯 ${objectiveMap[key] || ""}
-      </div>
-
-      <div class="jsw-detail-correction">
-        ${correctionMap[key] || ""}
-      </div>
-    </div>
-  `;
-}).join("")}
-</div>
-
 
       <div class="jsw-review-actions">
         <button id="jsw-review-back" class="jsw-btn-secondary">
@@ -2994,11 +2976,41 @@ console.log("SCORES DEBUG", scores);
     </div>
   `;
 
+  // ===============================
+  // SIGNATURE PARFECT
+  // ===============================
+
+  const card = container.querySelector(".jsw-review-card");
+  requestAnimationFrame(() => {
+    card.classList.add("reveal");
+  });
+
+  const scoreEl = container.querySelector(".jsw-score-value");
+
+  function animateScore(target) {
+    let current = 0;
+    const duration = 700;
+    const stepTime = 16;
+    const increment = target / (duration / stepTime);
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        current = target;
+        clearInterval(timer);
+      }
+      scoreEl.textContent = Math.round(current);
+    }, stepTime);
+  }
+
+  animateScore(displayScore);
+
   container.style.setProperty("--score", displayScore);
 
-  // -------------------------
-  // Interactions
-  // -------------------------
+  // ===============================
+  // INTERACTIONS
+  // ===============================
+
   const toggleBtn = document.getElementById("jsw-toggle-details");
   const detailsPanel = document.getElementById("jsw-details-panel");
 
@@ -3010,17 +3022,13 @@ console.log("SCORES DEBUG", scores);
         : "− Masquer les détails";
     };
   }
-   
-  document.getElementById("jsw-review-next")?.addEventListener("click", () => {
-      console.log("➡️ Swing suivant (UI)");
-    window.JustSwing?.nextSwing?.();
+
+  document.getElementById("jsw-review-next")
+    ?.addEventListener("click", () => {
+      window.JustSwing?.nextSwing?.();
     });
+}
 
-   }
-
-
-  
-  
 function buildPremiumBreakdown(swing, scores) {
   const el = document.getElementById("swing-score-breakdown");
   if (!el) return;
@@ -3028,14 +3036,16 @@ function buildPremiumBreakdown(swing, scores) {
   const breakdown = scores?.breakdown || {};
   const viewType = window.jswViewType || "faceOn";
 
-  // ---------------- HELPERS ----------------
+  // =====================================================
+  // HELPERS
+  // =====================================================
 
   const fmt = (v, d = 2) =>
     typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
 
-  const zone = (s, max) => {
-    if (typeof s !== "number") return "mid";
-    const r = s / max;
+  const zone = (score, max) => {
+    if (typeof score !== "number") return "mid";
+    const r = score / max;
     if (r >= 0.7) return "good";
     if (r >= 0.4) return "mid";
     return "bad";
@@ -3048,74 +3058,79 @@ function buildPremiumBreakdown(swing, scores) {
     return "";
   };
 
-  // ---------------- PILIERS PAR VUE ----------------
+  // =====================================================
+  // CONFIGURATION
+  // =====================================================
 
-  const PILLARS = {
-    faceOn: [
-      { key: "rotation", title: "Rotation", max: 20 },
-      { key: "tempo", title: "Tempo", max: 20 },
-      { key: "triangle", title: "Triangle", max: 20 },
-      { key: "weightShift", title: "Transfert", max: 10 },
-      { key: "extension", title: "Extension", max: 10 },
-      { key: "balance", title: "Balance", max: 10 }
-    ],
-    dtl: [
-      { key: "tempo", title: "Tempo", max: 20 },
-      { key: "plan", title: "Plan de swing", max: 20 },
-      { key: "rotation", title: "Rotation", max: 20 },
-      { key: "triangle", title: "Triangle", max: 20 },
-      { key: "extension", title: "Extension", max: 10 },
-      { key: "balance", title: "Balance", max: 10 }
-    ]
+  const CONFIG = {
+    pillars: {
+      faceOn: [
+        { key: "rotation", title: "Rotation", max: 20 },
+        { key: "tempo", title: "Tempo", max: 20 },
+        { key: "triangle", title: "Triangle", max: 20 },
+        { key: "weightShift", title: "Transfert", max: 10 },
+        { key: "extension", title: "Extension", max: 10 },
+        { key: "balance", title: "Balance", max: 10 }
+      ],
+      dtl: [
+        { key: "tempo", title: "Tempo", max: 20 },
+        { key: "plan", title: "Plan de swing", max: 20 },
+        { key: "rotation", title: "Rotation", max: 20 },
+        { key: "triangle", title: "Triangle", max: 20 },
+        { key: "extension", title: "Extension", max: 10 },
+        { key: "balance", title: "Balance", max: 10 }
+      ]
+    },
+
+    objectives: {
+      tempo: {
+        faceOn: "Ratio cible ≈ 3:1 (backswing fluide, downswing engagé)",
+        dtl: "Tempo constant, sans accélération précoce"
+      },
+      rotation: {
+        faceOn: "Épaules ~ cible Parfect, hanches stables",
+        dtl: "Épaules ≥ 45° · Hanches ≥ 25° · Dissociation ≥ 10°"
+      },
+      triangle: {
+        faceOn: "Triangle bras/épaules stable du top à l’impact",
+        dtl: "Bras connectés, pas d’effondrement"
+      },
+      plan: {
+        dtl: "Club dans le plan, sans steep excessif"
+      },
+      extension: {
+        faceOn: "Extension complète après impact",
+        dtl: "Bras étendus, release libre"
+      },
+      balance: {
+        faceOn: "Tête stable, finish équilibré",
+        dtl: "Centre de gravité contrôlé"
+      }
+    }
   };
 
-  const OBJECTIVES = {
-  tempo: {
-    faceOn: "Ratio cible ≈ 3:1 (backswing fluide, downswing engagé)",
-    dtl: "Tempo constant, sans accélération précoce"
-  },
-  rotation: {
-    faceOn: "Épaules ~ cible Parfect, hanches stables",
-    dtl: "Épaules ≥ 45° · Hanches ≥ 25° · Dissociation ≥ 10°"
-  },
-  triangle: {
-    faceOn: "Triangle bras/épaules stable du top à l’impact",
-    dtl: "Bras connectés, pas d’effondrement"
-  },
-  plan: {
-    dtl: "Club dans le plan, sans steep excessif"
-  },
-  extension: {
-    faceOn: "Extension complète après impact",
-    dtl: "Bras étendus, release libre"
-  },
-  balance: {
-    faceOn: "Tête stable, finish équilibré",
-    dtl: "Centre de gravité contrôlé"
-  }
-};
+  const PILLARS = CONFIG.pillars[viewType] || [];
 
-
-  // ---------------- COMMENTAIRE GLOBAL ----------------
+  // =====================================================
+  // GLOBAL COMMENT
+  // =====================================================
 
   function buildGlobalComment() {
-    const order = PILLARS[viewType] || [];
-    const scored = order
+    const scored = PILLARS
       .map(p => ({
-        key: p.key,
         title: p.title,
         score: breakdown[p.key]?.score ?? null
       }))
       .filter(p => typeof p.score === "number");
 
-    const notOk = scored.filter(p => p.score < 15);
+    const weak = scored.filter(p => p.score < 15);
 
-    if (!notOk.length) {
+    if (!weak.length) {
       return "Très belle séance. Les fondamentaux sont en place. Continue dans ce rythme 👍";
     }
 
-    const primary = notOk[0];
-    const secondary = notOk[1];
+    const primary = weak[0];
+    const secondary = weak[1];
 
     let msg = `Priorité : travaille ${primary.title.toLowerCase()}.`;
 
@@ -3126,98 +3141,176 @@ function buildPremiumBreakdown(swing, scores) {
     return msg;
   }
 
-  // ---------------- DETAILS (inchangés) ----------------
+  // =====================================================
+  // DETAILS BUILDER
+  // =====================================================
 
-  const rotM = breakdown.rotation?.metrics;
-  const rotationDetails = rotM?.measure
-    ? `Épaules : ${fmt(rotM.measure.shoulder)}<br>Hanches : ${fmt(rotM.measure.hip)}`
-    : `<em>Rotation non évaluée</em>`;
+  function buildDetails() {
+    return {
+      rotation: (() => {
+        const m = breakdown.rotation?.metrics;
+        return m?.measure
+          ? `Épaules : ${fmt(m.measure.shoulder)}<br>Hanches : ${fmt(m.measure.hip)}`
+          : `<em>Rotation non évaluée</em>`;
+      })(),
 
-  const tempoM = breakdown.tempo?.metrics;
-  const tempoDetails = tempoM
-    ? `Back : ${fmt(tempoM.backswingT)}s<br>Down : ${fmt(tempoM.downswingT)}s<br>Ratio : ${fmt(tempoM.ratio)}:1`
-    : `<em>Tempo non évalué</em>`;
+      tempo: (() => {
+        const m = breakdown.tempo?.metrics;
+        return m
+          ? `Back : ${fmt(m.backswingT)}s<br>Down : ${fmt(m.downswingT)}s<br>Ratio : ${fmt(m.ratio)}:1`
+          : `<em>Tempo non évalué</em>`;
+      })(),
 
-  const triM = breakdown.triangle?.metrics;
-  const triangleDetails = triM
-    ? `Top : ${fmt(triM.varTopPct)}%<br>Impact : ${fmt(triM.varImpactPct)}%`
-    : `<em>Triangle non évalué</em>`;
+      triangle: (() => {
+        const m = breakdown.triangle?.metrics;
+        return m
+          ? `Top : ${fmt(m.varTopPct)}%<br>Impact : ${fmt(m.varImpactPct)}%`
+          : `<em>Triangle non évalué</em>`;
+      })(),
 
-  const extM = breakdown.extension?.metrics;
-  const extensionDetails = extM
-    ? `Impact : ${fmt(extM.impact)}<br>Finish : ${fmt(extM.finish)}`
-    : `<em>Extension non évaluée</em>`;
+      extension: (() => {
+        const m = breakdown.extension?.metrics;
+        return m
+          ? `Impact : ${fmt(m.impact)}<br>Finish : ${fmt(m.finish)}`
+          : `<em>Extension non évaluée</em>`;
+      })(),
 
-  const wsM = breakdown.weightShift?.metrics;
-  const wsDetails = wsM
-    ? `Back : ${fmt(wsM.shiftBack)}<br>Forward : ${fmt(wsM.shiftFwd)}`
-    : `<em>Transfert non évalué</em>`;
+      weightShift: (() => {
+        const m = breakdown.weightShift?.metrics;
+        return m
+          ? `Back : ${fmt(m.shiftBack)}<br>Forward : ${fmt(m.shiftFwd)}`
+          : `<em>Transfert non évalué</em>`;
+      })(),
 
-  const balM = breakdown.balance?.metrics;
-  const balanceDetails = balM
-    ? `Tête stable : ${balM.headOverHips ? "oui" : "non"}<br>Hanches : ${fmt(balM.finishMove)}`
-    : `<em>Balance non évaluée</em>`;
+      balance: (() => {
+        const m = breakdown.balance?.metrics;
+        return m
+          ? `Tête stable : ${m.headOverHips ? "oui" : "non"}<br>Hanches : ${fmt(m.finishMove)}`
+          : `<em>Balance non évaluée</em>`;
+      })(),
 
-  const DETAILS = {
-    rotation: rotationDetails,
-    tempo: tempoDetails,
-    triangle: triangleDetails,
-    weightShift: wsDetails,
-    extension: extensionDetails,
-    balance: balanceDetails,
-    plan: `<em>Plan en cours d’analyse</em>`
+      plan: `<em>Plan en cours d’analyse</em>`
+    };
+  }
+
+  const DETAILS = buildDetails();
+
+  // =====================================================
+  // CARD BUILDER
+  // =====================================================
+
+  const card = ({ key, title, max }) => {
+    const score = breakdown[key]?.score ?? null;
+    const z = zone(score, max);
+    const pct =
+      typeof score === "number"
+        ? Math.min(100, Math.max(0, (score / max) * 100))
+        : 0;
+
+    const objective =
+      CONFIG.objectives[key]?.[viewType] ||
+      CONFIG.objectives[key]?.faceOn ||
+      "";
+
+    return `
+      <div class="jsw-card jsw-${z}" data-card="${key}">
+        <div class="jsw-card-header">
+          <div class="jsw-title">${title}</div>
+          <div class="jsw-score jsw-score-${z}">
+            ${score ?? "—"}/${max}
+          </div>
+        </div>
+
+        ${badge(score)}
+
+        <div class="jsw-bar">
+          <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
+        </div>
+
+        ${
+          objective
+            ? `<div class="jsw-objective">🎯 ${objective}</div>`
+            : ""
+        }
+
+        <button class="jsw-toggle-details" data-toggle="${key}">
+          + détails
+        </button>
+
+        <div class="jsw-details" id="details-${key}">
+          ${DETAILS[key] || `<em>Donnée non disponible</em>`}
+        </div>
+      </div>
+    `;
   };
 
+  // =====================================================
+  // RENDER
+  // =====================================================
 
-
-  
-  // ---------------- CARD BUILDER ----------------
-
-const card = ({ key, title, max }) => {
-  const score = breakdown[key]?.score ?? null;
-  const z = zone(score, max);
-  const pct =
-    typeof score === "number"
-      ? Math.min(100, Math.max(0, (score / max) * 100))
-      : 0;
-
-  const objective =
-    OBJECTIVES[key]?.[viewType] ||
-    OBJECTIVES[key]?.faceOn ||
-    "";
-
-  return `
-    <div class="jsw-card jsw-${z}" data-card="${key}">
-    <div class="jsw-card-header">
-      <div class="jsw-title">${title}</div>
-      <div class="jsw-score jsw-score-${z}">
-        ${score ?? "—"}/${max}
+  el.innerHTML = `
+    <div style="padding:.6rem;">
+      <div style="text-align:center;margin-bottom:.9rem;">
+        <div class="jsw-view-badge ${viewType}">
+          ${viewType === "dtl" ? "DTL — Down The Line" : "Face-On — Vue de face"}
+        </div>
+        <div style="font-size:1.6rem;font-weight:900;color:#4ade80;">
+          ${scores.total ?? "—"}
+        </div>
+        <div style="font-size:.8rem;color:#aaa;">
+          Score Parfect Premium
+        </div>
       </div>
+
+      <div class="jsw-coach-global">
+        🧠 ${buildGlobalComment()}
+      </div>
+
+      <div class="jsw-grid">
+        ${PILLARS.map(card).join("")}
+      </div>
+
+      <button id="jsw-back-btn" style="
+        margin-top:1rem;
+        width:100%;
+        background:#333;
+        color:#ccc;
+        border:none;
+        border-radius:14px;
+        padding:.8rem;
+        font-size:1rem;
+      ">
+        ← Home
+      </button>
     </div>
+  `;
 
-    ${badge(score)}
+  // =====================================================
+  // EVENTS
+  // =====================================================
 
-    <div class="jsw-bar">
-      <div class="jsw-bar-fill jsw-${z}" style="width:${pct}%"></div>
-    </div>
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".jsw-toggle-details");
+    if (!btn) return;
 
-    ${
-      objective
-        ? `<div class="jsw-objective">🎯 ${objective}</div>`
-        : ""
-    }
+    const key = btn.dataset.toggle;
+    const details = document.getElementById(`details-${key}`);
+    if (!details) return;
 
-    <button class="jsw-toggle-details" data-toggle="${key}">
-      + détails
-    </button>
+    details.classList.toggle("open");
+    btn.textContent = details.classList.contains("open")
+      ? "− masquer"
+      : "+ détails";
+  });
 
-    <div class="jsw-details" id="details-${key}">
-      ${DETAILS[key] || `<em>Donnée non disponible</em>`}
-    </div>
-  </div>
-`;
-};
-
+  document.getElementById("jsw-back-btn")?.addEventListener("click", () => {
+    window.JustSwing?.stopSession?.();
+    window.SwingEngine?.reset?.();
+    document.getElementById("home-btn")?.click();
+  });
+}
+  
+  
 
 
   // ---------------- RENDER ----------------
