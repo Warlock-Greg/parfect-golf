@@ -1138,7 +1138,17 @@ position: fixed;
   pointer-events: none;
 }
 
+#swing-video,
+#jsw-overlay {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* 👈 important */
+}
 
+#jsw-overlay canvas,
+#jsw-overlay {
+  image-rendering: optimizeQuality;
+}
 
 /* === TOP BAR (CLUB / ROUTINE / TIMER) === */
 .jsw-topbar {
@@ -1555,11 +1565,13 @@ position: fixed;
    ------------------------------- */
 
 .swing-review-video {
- position: relative;
+  position: relative;
   width: 100%;
-  aspect-ratio: 9 / 16;
+  max-height: 50vh; /* 👈 réduit un peu */
   background: #000;
-  overflow: hidden; /* 🔑 CRITIQUE */
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
 #swing-overlay-canvas {
@@ -1601,11 +1613,17 @@ body.jsw-replay-fullscreen .swing-player-controls {
 
 /* Controls */
 .swing-player-controls {
+position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.35);
+  border-radius: 12px;
 }
 
 .swing-player-controls button,
