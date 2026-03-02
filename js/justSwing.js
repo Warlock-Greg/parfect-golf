@@ -2916,6 +2916,9 @@ const viewLabel =
       </button>
 
       <div id="jsw-details-panel" class="jsw-details-panel hidden">
+console.log("BREAKDOWN DEBUG", breakdown);
+console.log("SCORES DEBUG", scores);
+      
   ${Object.entries(breakdown).map(([key, data]) => {
   if (!data || typeof data.score !== "number") return "";
 
