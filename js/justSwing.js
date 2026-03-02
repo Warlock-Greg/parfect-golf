@@ -3501,7 +3501,7 @@ async function handleSwingComplete(swing) {
   // ======================================================
   // 6️⃣ Rendu UI Review
   // ======================================================
-  buildParfectReviewCard(swing, scores);
+  buildPremiumBreakdown(swing, scores);
   bindSwingReviewActions(swing, scores);
 
   const reviewEl = document.getElementById("swing-review");
