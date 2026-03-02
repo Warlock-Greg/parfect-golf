@@ -3333,7 +3333,7 @@ function buildPremiumBreakdown(swing, scores) {
       </div>
 
       <div class="jsw-grid">
-        ${(PILLARS[viewType] || []).map(card).join("")}
+        ${PILLARS.map(card).join("")}
       </div>
 
       <button id="jsw-back-btn" style="
