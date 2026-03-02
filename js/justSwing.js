@@ -3313,21 +3313,7 @@ function buildPremiumBreakdown(swing, scores) {
   
 
 
-  // ---------------- RENDER ----------------
 
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".jsw-toggle-details");
-  if (!btn) return;
-
-  const key = btn.dataset.toggle;
-  const details = document.getElementById(`details-${key}`);
-  if (!details) return;
-
-  details.classList.toggle("open");
-  btn.textContent = details.classList.contains("open")
-    ? "− masquer"
-    : "+ détails";
-});
 
 
   
