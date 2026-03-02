@@ -2874,7 +2874,17 @@ const displayScore = visibleMax > 0
       ? buildGlobalCoachComment(window.jswViewType, scores)
       : "Continue ton travail avec régularité.";
 
-  //const club = (currentClubType ?? record?.club ?? "unknown").toUpperCase();
+ const viewClub = (
+  record?.club ??
+  swing?.club ??
+  window.currentClubType ??
+  "unknown"
+).toUpperCase();
+
+const viewLabel =
+  viewType === "faceOn" ? "FACE" :
+  viewType === "dtl" ? "DTL" :
+  viewType.toUpperCase();
   // -------------------------
   // Render
   // -------------------------
@@ -2882,7 +2892,7 @@ const displayScore = visibleMax > 0
     <div class="jsw-review-card">
 
       <div class="jsw-review-header">
-        <span class="jsw-pill">${viewType} · ${club}</span>
+        <span class="jsw-pill">${viewLabel} · ${viewClub}</span>
         <div class="jsw-score-ring">
         <div class="jsw-score-value">${displayScore}</div>
         <div class="jsw-score-label">Score Parfect</div>
