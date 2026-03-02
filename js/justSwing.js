@@ -950,8 +950,8 @@ async function getTodaySwingCount(email) {
     if (!lastPose) return;
 
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.7)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.lineWidth = 3;
 
     const w = overlayEl.width;
     const h = overlayEl.height;
