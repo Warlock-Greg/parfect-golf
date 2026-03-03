@@ -2927,51 +2927,64 @@ function buildParfectReviewCard(swing, scores) {
       </div>
 
       <div class="jsw-metrics">
-      <span class="jsw-pill">${viewLabel} · ${club}</span>
-        ${scoreLine("rotation", "Rotation", 20, "🎯")}
-        ${scoreLine("tempo", "Tempo", 20, "⏱️")}
-        ${scoreLine("triangle", "Triangle", 20, "🔺")}
-        ${scoreLine("weightShift", "Transfert", 10, "👣")}
-        ${scoreLine("extension", "Extension", 10, "🦾")}
-        ${scoreLine("balance", "Balance", 10, "⚖️")}
+    <div class="jsw-review-header">
+  <span class="jsw-pill">${viewLabel} · ${club}</span>
+
+  <div class="jsw-big-score" id="jsw-animated-score">0</div>
+  <div class="jsw-score-label">Score Parfect</div>
+</div>
+
+<div class="jsw-grid">
+  ${Object.entries(breakdown).map(([key, data]) => {
+
+    if (!data || typeof data.score !== "number") return "";
+
+    const max = METRIC_MAX[key] || 20;
+    const floored = applyScoreFloor(data.score, max);
+    const percent = Math.round((floored / max) * 100);
+
+    const objective =
+      objectiveMap?.[key] ||
+      "";
+
+    const measuredValue =
+      typeof data.value !== "undefined"
+        ? `<div class="jsw-detail-inline">${data.value}</div>`
+        : "";
+
+    return `
+      <div class="jsw-card">
+        <div class="jsw-card-header">
+          <span>${key.toUpperCase()}</span>
+          <strong>${floored}/${max}</strong>
+        </div>
+
+        <div class="jsw-bar">
+          <div class="jsw-bar-fill" style="width:${percent}%"></div>
+        </div>
+
+        ${
+          objective
+            ? `<div class="jsw-objective">${objective}</div>`
+            : ""
+        }
+
+        ${measuredValue}
       </div>
+    `;
 
-      <button id="jsw-toggle-details" class="jsw-details-toggle">
-        + Détails & objectifs
-      </button>
+  }).join("")}
+</div>
 
-      <div id="jsw-details-panel" class="jsw-details-panel hidden">
-        ${Object.entries(breakdown).map(([key, data]) => {
-          if (!data || typeof data.score !== "number") return "";
+<div class="jsw-review-actions">
+  <button id="jsw-review-back" class="jsw-btn-secondary">
+    ← Retour
+  </button>
 
-          const max = METRIC_MAX[key] || 20;
-          const floored = applyScoreFloor(data.score, max);
-
-          const measuredValue =
-            typeof data.value !== "undefined"
-              ? `<div class="jsw-detail-measure">📊 Mesure : ${data.value}</div>`
-              : "";
-
-          return `
-            <div class="jsw-detail-card">
-              <div class="jsw-detail-header">
-                <strong>${key.toUpperCase()}</strong>
-                <span>${floored}/${max}</span>
-              </div>
-              ${measuredValue}
-            </div>
-          `;
-        }).join("")}
-      </div>
-
-      <div class="jsw-review-actions">
-        <button id="jsw-review-back" class="jsw-btn-secondary">
-          ← Retour
-        </button>
-        <button id="jsw-review-next" class="jsw-btn-primary">
-          Swing suivant 🏌️
-        </button>
-      </div>
+  <button id="jsw-review-next" class="jsw-btn-primary">
+    Swing suivant 🏌️
+  </button>
+</div>
 
     </div>
   `;
@@ -2985,7 +2998,7 @@ function buildParfectReviewCard(swing, scores) {
     card.classList.add("reveal");
   });
 
-  const scoreEl = container.querySelector(".jsw-score-value");
+  const scoreEl = container.querySelector("jsw-animated-score");
 
   function animateScore(target) {
     let current = 0;
@@ -3513,8 +3526,11 @@ async function handleSwingComplete(swing) {
 
   const reviewEl = document.getElementById("swing-review");
   if (reviewEl) {
-    reviewEl.style.display = "block";
-    reviewEl.classList.remove("hidden");
+reviewEl.style.display = "block";
+
+requestAnimationFrame(() => {
+  reviewEl.classList.add("active");
+});
   }
 
   // Replay
@@ -4091,7 +4107,28 @@ if (nextBtn) {
   };
 }
 
+// -------------------------------------------
+// 🎬 REVIEW SLIDE CLOSE
+// -------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
 
+  const closeBtn = document.getElementById("jsw-close-review");
+
+  if (!closeBtn) return;
+
+  closeBtn.addEventListener("click", () => {
+    const review = document.getElementById("swing-review");
+
+    if (!review) return;
+
+    review.classList.remove("active");
+
+    setTimeout(() => {
+      review.style.display = "none";
+    }, 400);
+  });
+
+});
 
 
   
