@@ -3034,7 +3034,10 @@ function buildPremiumBreakdown(swing, scores) {
   if (!el) return;
 
   const breakdown = scores?.breakdown || {};
-  const viewType = window.jswViewType || "faceOn";
+  const viewType =
+  window.jswViewType === "dtl"
+    ? "dtl"
+    : "faceOn";
 
   // =====================================================
   // HELPERS
@@ -3244,6 +3247,10 @@ function buildPremiumBreakdown(swing, scores) {
     `;
   };
 
+
+  console.log("viewType:", viewType);
+console.log("CONFIG.pillars:", CONFIG.pillars);
+console.log("PILLARS resolved:", CONFIG.pillars[viewType]);
   // =====================================================
   // RENDER
   // =====================================================
