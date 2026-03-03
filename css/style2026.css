@@ -1878,6 +1878,58 @@ background: #ffffff;
   cursor: pointer;
 }
 
+.jsw-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.jsw-card {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 14px;
+  color: #eee;
+}
+
+.jsw-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.jsw-bar {
+  height: 6px;
+  background: #2a2a2a;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.jsw-bar-fill {
+  height: 100%;
+  background: #22c55e;
+  transition: width .5s ease;
+}
+
+.jsw-big-score {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #22c55e;
+  margin-top: 10px;
+}
+
+.jsw-objective {
+  font-size: .85rem;
+  opacity: .8;
+  margin-top: 6px;
+}
+
+.jsw-detail-inline {
+  font-size: .75rem;
+  opacity: .5;
+}
+
 
            .history-item {
   padding: 12px 14px;
