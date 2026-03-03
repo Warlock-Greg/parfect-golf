@@ -60,6 +60,8 @@ window.TrainingSession = {
   swings: [] // max 5
 };
 
+window.jswReferenceMode = "system"; 
+// "system" | "user"
 
 
 // --- ADDRESS DETECTION ---
@@ -1680,28 +1682,26 @@ function getKeyframePose(type, metrics, activeSwing) {
 // ---------------------------------------------------------
 
   
-  function computeSwingScorePremium(swing) {
- // =====================================================
-  // 🔑 RÉFÉRENCE ACTIVE — club + view (SOURCE UNIQUE)
-  // =====================================================
-  club = swing.club || "default";
-  const view = window.jswViewType || "faceOn";
+ async function computeSwingScorePremium(swing) {
+// =====================================================
+// 🔑 RÉFÉRENCES ACTIVES — DOUBLE MODE
+// =====================================================
 
-  const refKey = `${club}_${view}`;
+const club = swing.club || "default";
+const view = window.jswViewType || "faceOn";
 
-  if (window.ParfectReference) {
-    window.REF =
-      window.ParfectReference[refKey] ||
-      window.ParfectReference.default ||
-      null;
-  } else {
-    window.REF = null;
-  }
+// 🔵 Référence Parfect
+const refSystem = await window.getSystemReference(club, view);
 
-  console.log("🎯 Active Reference", {
-    refKey,
-    ref: window.REF
-  });
+// 🟢 Référence User
+const refUser = await window.getUserReference(club, view);
+
+console.log("🎯 Références chargées", {
+  club,
+  view,
+  system: !!refSystem,
+  user: !!refUser
+});
     
     
     
@@ -2117,7 +2117,7 @@ if (topPose && impactPose) {
       metrics.weightShift.shiftFwd  = shiftFwd;
 
       // ✅ référence active (club+vue) si tu l’as dans window.REF
-      const REF = window.REF?.weightShift || window.ParfectReference?.weightShift || null;
+      const REF = window.REF?.weightShift || null;
 
       let backScore = 0.5;
       let fwdScore  = 0.5;
@@ -2461,14 +2461,62 @@ const total =
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 
+// =====================================================
+// 🎯 DOUBLE SCORE (Parfect + Moi)
+// =====================================================
 
+function computeTotalWithReference(ref) {
+
+  if (!ref) return null;
+
+  window.REF = ref;
+
+  const metricScores = {
+    posture:     metrics.posture?.score ?? null,
+    rotation:    metrics.rotation?.score ?? null,
+    triangle:    metrics.triangle?.score ?? null,
+    weightShift: metrics.weightShift?.score ?? null,
+    extension:   metrics.extension?.score ?? null,
+    tempo:       metrics.tempo?.score ?? null,
+    balance:     metrics.balance?.score ?? null
+  };
+
+  let weightedSum = 0;
+  let maxPossible = 0;
+
+  for (const key in METRIC_WEIGHTS) {
+    const score  = metricScores[key];
+    const weight = METRIC_WEIGHTS[key];
+
+    if (typeof score === "number") {
+      const normalized = score / 20;
+      weightedSum += normalized * weight;
+      maxPossible += weight;
+    }
+  }
+
+  return maxPossible > 0
+    ? Math.round((weightedSum / maxPossible) * 100)
+    : 0;
+}
+
+// 🔵 vs Parfect
+const totalSystem = computeTotalWithReference(refSystem);
+
+// 🟢 vs Ma référence
+const totalUser = computeTotalWithReference(refUser);
     
 // =====================================================
 // RETURN FINAL — API STABLE
 // =====================================================
 return {
-  total,
-  totalDynamic: total,
+ total: totalSystem ?? totalUser ?? total,
+  totalDynamic: totalSystem ?? totalUser ?? total,
+
+  totals: {
+    system: totalSystem,
+    user: totalUser
+  },
 
   // ✅ Scores lisibles directement depuis metrics
   scores: {
@@ -3495,7 +3543,7 @@ async function handleSwingComplete(swing) {
   // ======================================================
   // 4️⃣ Scoring Premium
   // ======================================================
-  const scores = computeSwingScorePremium(swing);
+  const scores = await computeSwingScorePremium(swing);
   swing.scores = scores;
 
   // ======================================================
@@ -3543,66 +3591,47 @@ requestAnimationFrame(() => {
 }
 
 
-// ======================================================
-// RÉFÉRENCES (USER / PARFECT)
-// ======================================================
-
-function saveUserReference(swing, scores) {
-  if (!swing || !scores?.metrics) return;
-
-  const refRecord = {
-    owner: window.userLicence?.email || "unknown",
-    scope: "user",
-    club: swing.club,
-    view: window.jswViewType,
-    metrics: scores.metrics,
-    created_at: new Date().toISOString()
-  };
-
-  saveReferenceToDB(refRecord);
-}
-
-function saveParfectReference(swing, scores) {
-  const ref = {
-    owner: "PARFECT",
-    scope: "global",
-    club: swing.club,
-    view: window.jswViewType,
-    metrics: scores.metrics,
-    created_at: new Date().toISOString(),
-    version: "v1"
-  };
-
-  return saveReferenceToDB(ref);
-}
-
 
 // ======================================================
-// ACTIONS REVIEW
+// ACTIONS REVIEW REFERENCES
 // ======================================================
 
 function bindSwingReviewActions(swing, scores) {
 
+  const club = swing.club;
+  const camera = window.jswViewType;
+
   const btnUserRef = document.getElementById("swing-save-reference");
+
   if (btnUserRef) {
-    btnUserRef.onclick = () => {
-      saveUserReference(swing, scores);
-      btnUserRef.textContent = "✅ Référence enregistrée";
+    btnUserRef.onclick = async () => {
+
       btnUserRef.disabled = true;
+      btnUserRef.textContent = "⏳ Enregistrement…";
+
+      try {
+        await window.saveUserReference(club, camera, scores.metrics);
+        btnUserRef.textContent = "✅ Référence enregistrée";
+      } catch (e) {
+        btnUserRef.disabled = false;
+        btnUserRef.textContent = "⭐ Sauvegarder comme ma référence";
+      }
     };
   }
 
   const btnParfect = document.getElementById("swing-save-parfect-reference");
 
-  if (btnParfect && window.userLicence?.role === "superadmin") {
+  if (btnParfect && window.isAdmin?.()) {
+
     btnParfect.style.display = "block";
 
     btnParfect.onclick = async () => {
+
       btnParfect.disabled = true;
       btnParfect.innerHTML = "⏳ Enregistrement…";
 
       try {
-        await saveParfectReference(swing, scores);
+        await window.saveSystemReference(club, camera, scores.metrics);
         btnParfect.innerHTML = "✅ Référence PARFECT définie";
       } catch (e) {
         btnParfect.disabled = false;
@@ -3613,33 +3642,6 @@ function bindSwingReviewActions(swing, scores) {
 }
 
 
-// ======================================================
-// NOCODB — SAVE REFERENCE
-// ======================================================
-
-async function saveReferenceToDB(ref) {
-
-  if (!window.NOCODB_REFERENCES_URL || !window.NOCODB_TOKEN) {
-    console.warn("⚠️ Config NocoDB manquante");
-    return;
-  }
-
-  const res = await fetch(window.NOCODB_REFERENCES_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "xc-token": window.NOCODB_TOKEN
-    },
-    body: JSON.stringify(ref)
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`NocoDB ${res.status} — ${txt}`);
-  }
-
-  return res.json();
-}
 
 
 // ======================================================
