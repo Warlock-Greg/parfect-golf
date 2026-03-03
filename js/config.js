@@ -50,9 +50,9 @@ window.PARFECT_FLAGS = {
 };
 
 
-// Superadmin MVP (temporaire)
-window.PARFECT_ADMIN_EMAILS = [
-  "gregoiremm@gmail.com"
+window.ADMIN_EMAILS = [
+  "gregoiremm@gmail.com",
+  "admin@parfect.app"
 ];
 
 // Optionnel : flag explicite
@@ -71,4 +71,9 @@ window.LS_KEYS = {
 };
 
 console.log("✅ config.js loaded");
+
+window.isAdmin = function () {
+  const email = window.userLicence?.email;
+  return window.ADMIN_EMAILS.includes(email);
+};
 
