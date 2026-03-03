@@ -2918,8 +2918,7 @@ function buildParfectReviewCard(swing, scores) {
     <div class="jsw-review-card">
 
       <div class="jsw-review-header">
-        <span class="jsw-pill">${viewLabel} · ${club}</span>
-
+        
         <div class="jsw-score-ring">
           <div class="jsw-score-value">0</div>
           <div class="jsw-score-label">Score Parfect</div>
@@ -2928,6 +2927,7 @@ function buildParfectReviewCard(swing, scores) {
       </div>
 
       <div class="jsw-metrics">
+      <span class="jsw-pill">${viewLabel} · ${club}</span>
         ${scoreLine("rotation", "Rotation", 20, "🎯")}
         ${scoreLine("tempo", "Tempo", 20, "⏱️")}
         ${scoreLine("triangle", "Triangle", 20, "🔺")}
