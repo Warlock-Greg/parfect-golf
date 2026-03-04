@@ -20,17 +20,14 @@
   
 async function fetchReference(whereObj) {
 
-  const res = await fetch(
-    `${window.NOCODB_REFERENCES_URL}/list`,
-    {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({
-        where: whereObj,
-        limit: 1
-      })
-    }
-  );
+  const whereParam = encodeURIComponent(JSON.stringify(whereObj));
+
+  const url =
+    `${window.NOCODB_REFERENCES_URL}?where=${whereParam}&limit=1`;
+
+  const res = await fetch(url, {
+    headers: headers()
+  });
 
   if (!res.ok) {
     const txt = await res.text();
@@ -39,6 +36,7 @@ async function fetchReference(whereObj) {
   }
 
   const data = await res.json();
+
   return data?.list?.[0] || null;
 }
 
