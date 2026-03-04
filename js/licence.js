@@ -44,7 +44,7 @@
   async function readLicenceFromNocoDB(email) {
     try {
       const res = await fetch(
-        `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${encodeURIComponent(email)})`,
+        `${window.NOCODB_USERS_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${encodeURIComponent(email)})`,
         { headers: { "xc-token": window.NOCODB_TOKEN } }
       ).then(r => r.json());
 
@@ -59,7 +59,7 @@
   try {
     // 1️⃣ Vérifie si l'utilisateur existe déjà
     const res = await fetch(
-      `${window.NOCODB_REFERENCES_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${email})`,
+      `${window.NOCODB_USERS_URL}?where=(${NOCODB_FIELDS.EMAIL},eq,${email})`,
       {
         headers: {
           "xc-token": window.NOCODB_TOKEN
@@ -73,7 +73,7 @@
     if (existing) return;
 
     // 3️⃣ Sinon créer en FREE
-    await fetch(window.NOCODB_REFERENCES_URL, {
+    await fetch(window.NOCODB_USERS_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -329,7 +329,7 @@ function incrementSwingQuota(count = 1) {
 
   // 🔁 Sync NocoDB (best effort, non bloquant)
   try {
-    fetch(window.NOCODB_REFERENCES_URL, {
+    fetch(window.NOCODB_USERS_URL, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
