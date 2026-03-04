@@ -17,12 +17,24 @@
     };
   }
 
-  async function fetchReference(filter) {
-    const url = `${window.NOCODB_REFERENCES_URL}?where=${filter}`;
-    const res = await fetch(url, { headers: headers() });
-    const data = await res.json();
-    return data?.list?.[0] || null;
+  
+async function fetchReference(filter) {
+
+  const encodedFilter = encodeURIComponent(filter);
+  const url = `${window.NOCODB_REFERENCES_URL}?where=${encodedFilter}`;
+  const res = await fetch(url, { headers: headers() });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error("❌ NocoDB WHERE ERROR:", txt);
+    return null;
   }
+
+  const data = await res.json();
+  return data?.list?.[0] || null;
+}
+
+  
 
   async function deactivateOld(type, club, camera, email = null) {
     let filter = `type,eq,${type}~and~club,eq,${club}~and~camera,eq,${camera}~and~is_active,eq,true`;
