@@ -67,20 +67,31 @@ window.getSystemReference = async function (club, camera) {
   const cacheKey = buildKey("system", club, camera);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const whereClause =
-    `(type,eq,system)~and~` +
-    `(club,eq,${club})~and~` +
-    `(camera,eq,${camera})~and~` +
-    `(is_active,eq,true)`;
+  try {
+    const res = await fetch(
+      `${window.NOCODB_REFERENCES_URL}?where=(type,eq,system)&limit=50`,
+      { headers: { "xc-token": window.NOCODB_TOKEN } }
+    ).then(r => r.json());
 
-  const ref = await fetchReference(whereClause);
+    const rows = res.list || [];
 
-  if (!ref) return null;
+    const match = rows.find(r =>
+      r.club === club &&
+      r.camera === camera &&
+      r.is_active === true
+    );
 
-  const parsed = JSON.parse(ref.reference_json);
-  CACHE[cacheKey] = parsed;
+    if (!match) return null;
 
-  return parsed;
+    const parsed = JSON.parse(match.referece_json); // ton champ typo
+    CACHE[cacheKey] = parsed;
+
+    return parsed;
+
+  } catch (err) {
+    console.warn("Reference fetch failed", err);
+    return null;
+  }
 };
 
 
@@ -95,21 +106,32 @@ window.getUserReference = async function (club, camera) {
   const cacheKey = buildKey("user", club, camera, email);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const whereClause =
-    `(type,eq,user)~and~` +
-    `(club,eq,${club})~and~` +
-    `(camera,eq,${camera})~and~` +
-    `(created_by,eq,${email})~and~` +
-    `(is_active,eq,true)`;
+  try {
+    const res = await fetch(
+      `${window.NOCODB_REFERENCES_URL}?where=(type,eq,user)&limit=50`,
+      { headers: { "xc-token": window.NOCODB_TOKEN } }
+    ).then(r => r.json());
 
-  const ref = await fetchReference(whereClause);
+    const rows = res.list || [];
 
-  if (!ref) return null;
+    const match = rows.find(r =>
+      r.club === club &&
+      r.camera === camera &&
+      r.created_by === email &&
+      r.is_active === true
+    );
 
-  const parsed = JSON.parse(ref.reference_json);
-  CACHE[cacheKey] = parsed;
+    if (!match) return null;
 
-  return parsed;
+    const parsed = JSON.parse(match.referece_json);
+    CACHE[cacheKey] = parsed;
+
+    return parsed;
+
+  } catch (err) {
+    console.warn("User reference fetch failed", err);
+    return null;
+  }
 };
 
   // ===============================
