@@ -22,7 +22,7 @@ window.EXERCISE_JSON_URL = `${window.GH_RAW_BASE}/exercises.json`;
 
 // ⚠️ URL API NocoDB (table users/licences)
 window.NOCODB_REFERENCES_URL =
-  "https://app.nocodb.com/api/v2/tables/mfbnbl5kk5zmu73/records";
+  "https://app.nocodb.com/api/v2/tables/mgsq39h302pu463/records";
 
 // ⚠️ URL API NocoDB (table swing)
 window.NOCODB_SWINGS_URL =
