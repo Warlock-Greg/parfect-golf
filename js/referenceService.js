@@ -18,26 +18,21 @@
   }
 
   
-async function fetchReference(whereObj) {
+async function fetchReference(whereClause) {
+  try {
+    const res = await fetch(
+      `${window.NOCODB_REFERENCES_URL}?where=${whereClause}&limit=1`,
+      {
+        headers: { "xc-token": window.NOCODB_TOKEN }
+      }
+    ).then(r => r.json());
 
-  const whereParam = encodeURIComponent(JSON.stringify(whereObj));
+    return res.list?.[0] || null;
 
-  const url =
-    `${window.NOCODB_REFERENCES_URL}?where=${whereParam}&limit=1`;
-
-  const res = await fetch(url, {
-    headers: headers()
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("❌ NocoDB ERROR:", txt);
+  } catch (err) {
+    console.warn("⚠️ Reference fetch failed", err);
     return null;
   }
-
-  const data = await res.json();
-
-  return data?.list?.[0] || null;
 }
 
   
@@ -72,14 +67,13 @@ window.getSystemReference = async function (club, camera) {
   const cacheKey = buildKey("system", club, camera);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const whereObj = {
-    type: { eq: "system" },
-    club: { eq: club },
-    camera: { eq: camera },
-    is_active: { eq: true }
-  };
+  const whereClause =
+    `(type,eq,system)~and~` +
+    `(club,eq,${club})~and~` +
+    `(camera,eq,${camera})~and~` +
+    `(is_active,eq,true)`;
 
-  const ref = await fetchReference(whereObj);
+  const ref = await fetchReference(whereClause);
 
   if (!ref) return null;
 
@@ -101,15 +95,14 @@ window.getUserReference = async function (club, camera) {
   const cacheKey = buildKey("user", club, camera, email);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const whereObj = {
-    type: { eq: "user" },
-    club: { eq: club },
-    camera: { eq: camera },
-    created_by: { eq: email },
-    is_active: { eq: true }
-  };
+  const whereClause =
+    `(type,eq,user)~and~` +
+    `(club,eq,${club})~and~` +
+    `(camera,eq,${camera})~and~` +
+    `(created_by,eq,${email})~and~` +
+    `(is_active,eq,true)`;
 
-  const ref = await fetchReference(whereObj);
+  const ref = await fetchReference(whereClause);
 
   if (!ref) return null;
 
