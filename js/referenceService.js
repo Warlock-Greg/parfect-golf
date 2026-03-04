@@ -78,7 +78,7 @@ window.getSystemReference = async function (club, camera) {
     const match = rows.find(r =>
       r.club === club &&
       r.camera === camera &&
-      r.is_active === true
+      Number(r.is_active) === 1
     );
 
     if (!match) return null;
@@ -118,7 +118,7 @@ window.getUserReference = async function (club, camera) {
       r.club === club &&
       r.camera === camera &&
       r.created_by === email &&
-      r.is_active === true
+      Number(r.is_active) === 1
     );
 
     if (!match) return null;
