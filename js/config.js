@@ -38,6 +38,10 @@ window.NOCODB_ROUNDS_URL =
 window.NOCODB_TRAININGS_URL =
   "https://app.nocodb.com/api/v2/tables/mss9fqipje0l1l3/records";
 
+// ⚠️ URL API NocoDB (swing references)
+window.NOCODB_REFERENCES_URL =
+  "https://app.nocodb.com/api/v2/tables/mgsq39h302pu463/records";
+
 // Nom logique du projet
 window.NC_PROJECT = "parfect";
 
