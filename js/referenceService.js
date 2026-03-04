@@ -46,52 +46,60 @@
     }
   }
 
-  // ===============================
-  // 🎯 GET SYSTEM REFERENCE
-  // ===============================
+ // ===============================
+// 🔵 GET SYSTEM REFERENCE
+// ===============================
+window.getSystemReference = async function (club, camera) {
 
-  window.getSystemReference = async function (club, camera) {
+  const cacheKey = buildKey("system", club, camera);
+  if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-    const cacheKey = buildKey("system", club, camera);
-    if (CACHE[cacheKey]) return CACHE[cacheKey];
+  const filter =
+    `(type,eq,system)~and~` +
+    `(club,eq,${club})~and~` +
+    `(camera,eq,${camera})~and~` +
+    `(is_active,eq,true)`;
 
-    const filter =
-      `type,eq,system~and~club,eq,${club}~and~camera,eq,${camera}~and~is_active,eq,true`;
+  const ref = await fetchReference(filter);
 
-    const ref = await fetchReference(filter);
+  if (!ref) return null;
 
-    if (!ref) return null;
+  const parsed = JSON.parse(ref.reference_json);
+  CACHE[cacheKey] = parsed;
 
-    const parsed = JSON.parse(ref.reference_json);
-    CACHE[cacheKey] = parsed;
+  return parsed;
+};
 
-    return parsed;
-  };
 
-  // ===============================
-  // 👤 GET USER REFERENCE
-  // ===============================
+// ===============================
+// 🟢 GET USER REFERENCE
+// ===============================
+window.getUserReference = async function (club, camera) {
 
-  window.getUserReference = async function (club, camera) {
+  const email = window.userLicence?.email;
+  if (!email) return null;
 
-    const email = window.userLicence?.email;
-    if (!email) return null;
+  const cacheKey = buildKey("user", club, camera, email);
+  if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-    const cacheKey = buildKey("user", club, camera, email);
-    if (CACHE[cacheKey]) return CACHE[cacheKey];
+  const safeEmail = encodeURIComponent(email);
 
-    const filter =
-      `type,eq,user~and~club,eq,${club}~and~camera,eq,${camera}~and~created_by,eq,${email}~and~is_active,eq,true`;
+  const filter =
+    `(type,eq,user)~and~` +
+    `(club,eq,${club})~and~` +
+    `(camera,eq,${camera})~and~` +
+    `(created_by,eq,${safeEmail})~and~` +
+    `(is_active,eq,true)`;
 
-    const ref = await fetchReference(filter);
+  const ref = await fetchReference(filter);
 
-    if (!ref) return null;
+  if (!ref) return null;
 
-    const parsed = JSON.parse(ref.reference_json);
-    CACHE[cacheKey] = parsed;
+  const parsed = JSON.parse(ref.reference_json);
+  CACHE[cacheKey] = parsed;
 
-    return parsed;
-  };
+  return parsed;
+};
 
   // ===============================
   // 💾 SAVE USER REFERENCE
