@@ -18,15 +18,23 @@
   }
 
   
-async function fetchReference(filter) {
+async function fetchReference(whereObj) {
 
-  const encodedFilter = encodeURIComponent(filter);
-  const url = `${window.NOCODB_REFERENCES_URL}?where=${encodedFilter}`;
-  const res = await fetch(url, { headers: headers() });
+  const res = await fetch(
+    `${window.NOCODB_REFERENCES_URL}/list`,
+    {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({
+        where: whereObj,
+        limit: 1
+      })
+    }
+  );
 
   if (!res.ok) {
     const txt = await res.text();
-    console.error("❌ NocoDB WHERE ERROR:", txt);
+    console.error("❌ NocoDB ERROR:", txt);
     return null;
   }
 
@@ -66,13 +74,14 @@ window.getSystemReference = async function (club, camera) {
   const cacheKey = buildKey("system", club, camera);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const filter =
-    `(type,eq,system)~and~` +
-    `(club,eq,${club})~and~` +
-    `(camera,eq,${camera})~and~` +
-    `(is_active,eq,true)`;
+  const whereObj = {
+    type: { eq: "system" },
+    club: { eq: club },
+    camera: { eq: camera },
+    is_active: { eq: true }
+  };
 
-  const ref = await fetchReference(filter);
+  const ref = await fetchReference(whereObj);
 
   if (!ref) return null;
 
@@ -94,16 +103,15 @@ window.getUserReference = async function (club, camera) {
   const cacheKey = buildKey("user", club, camera, email);
   if (CACHE[cacheKey]) return CACHE[cacheKey];
 
-  const safeEmail = encodeURIComponent(email);
+  const whereObj = {
+    type: { eq: "user" },
+    club: { eq: club },
+    camera: { eq: camera },
+    created_by: { eq: email },
+    is_active: { eq: true }
+  };
 
-  const filter =
-    `(type,eq,user)~and~` +
-    `(club,eq,${club})~and~` +
-    `(camera,eq,${camera})~and~` +
-    `(created_by,eq,${safeEmail})~and~` +
-    `(is_active,eq,true)`;
-
-  const ref = await fetchReference(filter);
+  const ref = await fetchReference(whereObj);
 
   if (!ref) return null;
 
