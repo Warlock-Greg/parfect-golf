@@ -3588,7 +3588,7 @@ reviewEl.style.display = "block";
 
 requestAnimationFrame(() => {
   reviewEl.classList.add("active");
-});
+
   }
 
   // Replay
@@ -3600,7 +3600,7 @@ requestAnimationFrame(() => {
   console.log("📊 Review affichée");
 }
 
-
+});
 
 // ======================================================
 // ACTIONS REVIEW REFERENCES
