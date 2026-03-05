@@ -3572,6 +3572,12 @@ async function handleSwingComplete(swing) {
   buildPremiumBreakdown(swing, scores);
   bindSwingReviewActions(swing, scores);
 
+// 🔴 cacher vue swing
+const swingView = document.getElementById("swing-view");
+if (swingView) swingView.style.display = "none";
+
+
+  
   const reviewEl = document.getElementById("swing-review");
   if (reviewEl) {
 reviewEl.style.display = "block";
