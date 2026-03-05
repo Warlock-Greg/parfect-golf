@@ -3594,6 +3594,7 @@ state = JSW_STATE.REVIEW;
 updateUI();
 
 console.log("📊 Review affichée");
+}
 
 // ======================================================
 // ACTIONS REVIEW REFERENCES
@@ -3708,17 +3709,7 @@ async function updateQuotaUI() {
 // COACH COMMENT
 // ======================================================
 
-function coachTechnicalComment(scores) {
-  const msgs = [];
 
-  if (scores.triangleScore < 70) msgs.push("Garde ton triangle stable.");
-  if (scores.lagScore < 70) msgs.push("Garde les poignets armés plus longtemps.");
-  if (scores.planeScore < 70) msgs.push("Descends plus dans le plan.");
-
-  if (!msgs.length) return "Super swing 👌 Continue comme ça.";
-
-  return msgs.slice(0, 2).join(" ");
-}
 
 function coachTechnicalComment(scores) {
     const msgs = [];
@@ -3800,56 +3791,9 @@ function stopRecording() {
   }
 }
 
-  const btnUserRef = document.getElementById("swing-save-reference");
 
-if (btnUserRef) {
-  btnUserRef.onclick = () => {
-    saveUserReference(swing, scores);
-    showBigMessage("⭐ Swing enregistré comme référence personnelle");
-  };
-}
 
- // ======================================================
-// ⭐⭐ BOUTON RÉFÉRENCE PARFECT (SUPERADMIN)
-// ======================================================
 
-const isSuperAdmin =
-  window.userLicence?.role === "superadmin" ||
-  window.userLicence?.is_superadmin === true;
-
-const btnParfect = document.getElementById("swing-save-parfect");
-const feedbackEl = document.getElementById("parfect-ref-feedback");
-
-if (btnParfect && isSuperAdmin) {
-  btnParfect.style.display = "block";
-
-btnParfect.onclick = async () => {
-  console.log("👑 PARFECT REF CLICKED");
-
-  // Feedback immédiat (avant async)
-  btnParfect.disabled = true;
-  const prevText = btnParfect.innerHTML;
-  btnParfect.innerHTML = "⏳ Enregistrement…";
-
-  try {
-    await saveParfectReference(swing, scores);
-
-    // Feedback visible et durable
-    btnParfect.innerHTML = "✅ Référence enregistrée";
-    btnParfect.style.opacity = "0.9";
-
-    // Sécurité anti double clic
-    btnParfect.onclick = null;
-
-  } catch (err) {
-    console.error("❌ PARFECT REF ERROR", err);
-
-    // rollback UI
-    btnParfect.disabled = false;
-    btnParfect.innerHTML = prevText;
-  }
-};
-}
 
 
 
@@ -4070,35 +4014,6 @@ function stopReplay() {
 }
 
 
-  if (replayPlayBtn) {
-  replayPlayBtn.onclick = () => {
-    replayPlaying ? stopReplay() : startReplay();
-  };
-} else {
-  console.warn("⏪ replayPlayBtn absent du DOM");
-}
-
-if (replaySpeedSel) {
-  replaySpeedSel.onchange = () => {
-    if (replayPlaying) {
-      stopReplay();
-      setTimeout(startReplay, 50);
-    }
-  };
-}
-
-if (replayTimeline) {
-  replayTimeline.oninput = (e) => {
-    const idx = parseInt(e.target.value, 10) || 0;
-    renderFrame(idx);
-  };
-}
-
-
-
-    // Première frame affichée
-    renderFrame(0);
-  
 
 // -------------------------------------------
 // ⏭️ BOUTON "SWING SUIVANT" — VERSION STABLE
