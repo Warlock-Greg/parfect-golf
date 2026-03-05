@@ -3572,10 +3572,14 @@ async function handleSwingComplete(swing) {
   buildPremiumBreakdown(swing, scores);
   bindSwingReviewActions(swing, scores);
 
-// 🔴 cacher vue swing
-const swingView = document.getElementById("swing-view");
-if (swingView) swingView.style.display = "none";
+  // 🔴 cacher caméra
+const swingArea = document.getElementById("just-swing-area");
+if (swingArea) swingArea.style.display = "none";
 
+// 🟢 afficher review
+const reviewEl = document.getElementById("swing-review");
+if (reviewEl) {
+  reviewEl.style.display = "block";
 
   
   const reviewEl = document.getElementById("swing-review");
