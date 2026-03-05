@@ -83,7 +83,7 @@ window.getSystemReference = async function (club, camera) {
 
     if (!match) return null;
 
-    const parsed = JSON.parse(match.reference_json); // ton champ typo
+    const parsed = match.reference_json;
     CACHE[cacheKey] = parsed;
 
     return parsed;
@@ -123,7 +123,7 @@ window.getUserReference = async function (club, camera) {
 
     if (!match) return null;
 
-    const parsed = JSON.parse(match.reference_json);
+    const parsed = match.reference_json;
     CACHE[cacheKey] = parsed;
 
     return parsed;
