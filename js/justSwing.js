@@ -3566,41 +3566,34 @@ async function handleSwingComplete(swing) {
     console.warn("⚠️ Erreur sauvegarde", err);
   }
 
-  // ======================================================
-  // 6️⃣ Rendu UI Review
-  // ======================================================
-  buildPremiumBreakdown(swing, scores);
-  bindSwingReviewActions(swing, scores);
+// ======================================================
+// 6️⃣ Rendu UI Review
+// ======================================================
+buildPremiumBreakdown(swing, scores);
+bindSwingReviewActions(swing, scores);
 
-  // 🔴 cacher caméra
+// 🔴 cacher caméra
 const swingArea = document.getElementById("just-swing-area");
 if (swingArea) swingArea.style.display = "none";
 
 // 🟢 afficher review
 const reviewEl = document.getElementById("swing-review");
+
 if (reviewEl) {
   reviewEl.style.display = "block";
 
-  
-  const reviewEl = document.getElementById("swing-review");
-  if (reviewEl) {
-reviewEl.style.display = "block";
-
-requestAnimationFrame(() => {
-  reviewEl.classList.add("active");
-
-  }
-
-  // Replay
-  initSwingReplay(swing, scores);
-
-  state = JSW_STATE.REVIEW;
-  updateUI();
-
-  console.log("📊 Review affichée");
+  requestAnimationFrame(() => {
+    reviewEl.classList.add("active");
+  });
 }
 
-});
+// Replay
+initSwingReplay(swing, scores);
+
+state = JSW_STATE.REVIEW;
+updateUI();
+
+console.log("📊 Review affichée");
 
 // ======================================================
 // ACTIONS REVIEW REFERENCES
