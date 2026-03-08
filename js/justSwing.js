@@ -1865,9 +1865,9 @@ function scoreVsReference(value, target, tol) {
     const hipAngle      = jswLineAngleDeg(LH, RH);
     const alignDiff     = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
 
-    metrics.posture.flexionDeg        = flexionDeg;
-    metrics.posture.feetShoulderRatio = feetShoulderRatio;
-    metrics.posture.alignDiff         = alignDiff;
+    //metrics.posture.flexionDeg        = flexionDeg;
+    //metrics.posture.feetShoulderRatio = feetShoulderRatio;
+    //metrics.posture.alignDiff         = alignDiff;
 
     const flexScore  = jswClamp(1 - Math.abs(flexionDeg - 35)/25, 0, 1);
     const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2)/0.7, 0, 1);
