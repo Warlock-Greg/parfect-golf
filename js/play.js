@@ -753,9 +753,7 @@ async function saveRoundToNocoDB(roundSummary) {
     putts: roundSummary.putts ?? 0,
     mental_score: roundSummary.mentalScore ?? 0,
 
-    summary_json: JSON.stringify(roundSummary),
-
-    CreatedAt: now
+    summary_json: JSON.stringify(roundSummary)
   };
 
   try {
