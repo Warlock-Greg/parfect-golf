@@ -1813,6 +1813,7 @@ function scoreVsReference(value, target, tol) {
   }
 
   const metrics = {
+    posture: {},
     rotation:  {},
     triangle:  {},
     weightShift: {},
@@ -1822,12 +1823,22 @@ function scoreVsReference(value, target, tol) {
     viewType
   };
 
+metrics.posture = {};
+metrics.rotation = {};
+metrics.triangle = {};
+metrics.weightShift = {};
+metrics.extension = {};
+metrics.tempo = {};
+metrics.balance = {};
+   
   console.log("👁️ ViewType utilisé pour le scoring :", viewType);
 
   // =====================================================
   // 1) POSTURE (Address)
   // =====================================================
-  if (addressPose) {
+  metrics.posture = metrics.posture || {};
+   
+   if (addressPose) {
     const LS = addressPose[11];
     const RS = addressPose[12];
     const LH = addressPose[23];
