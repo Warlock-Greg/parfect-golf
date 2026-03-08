@@ -1696,13 +1696,15 @@ const refSystem = await window.getSystemReference(club, view);
 // 🟢 Référence User
 const refUser = await window.getUserReference(club, view);
 
+// référence active de calcul détaillé = Parfect par défaut
+window.REF = refSystem || refUser || null;
+
 console.log("🎯 Références chargées", {
   club,
   view,
   system: !!refSystem,
   user: !!refUser
 });
-    
     
     
   //const PARFECT_REF = window.parfectReference?.rotation;
@@ -1811,7 +1813,6 @@ function scoreVsReference(value, target, tol) {
   }
 
   const metrics = {
-    posture:   {},
     rotation:  {},
     triangle:  {},
     weightShift: {},
@@ -2280,7 +2281,9 @@ metrics.tempo.ratio = ratio;
     metrics.tempo = {
       backswingT,
       downswingT,
-      ratio
+      ratio,
+       targetRatio: ref?.ratio?.target ?? null,
+      tolRatio: ref?.ratio?.tol ?? null
     };
 
     const ref = window.REF?.tempo;
@@ -2375,8 +2378,6 @@ const METRIC_WEIGHTS = {
   rotation:    20,
   tempo:       20,
   triangle:    20,
-
-  posture:     10,
   weightShift: 10,
   extension:   10,
   balance:     10
@@ -2411,7 +2412,6 @@ const JSW_PILLARS = {
 // 🔢 Scores sources (UNE SEULE SOURCE DE VÉRITÉ)
 // -----------------------------------------------------
 const metricScores = {
-  posture:     metrics.posture?.score      ?? null,
   rotation:    metrics.rotation?.score     ?? null,
   triangle:    metrics.triangle?.score     ?? null,
   weightShift: metrics.weightShift?.score  ?? null,
@@ -2855,6 +2855,15 @@ function buildParfectReviewCard(swing, scores) {
   const container = document.getElementById("swing-score-breakdown");
   if (!container) return;
 
+  const objectiveMap = {
+  rotation: "Épaules ~ cible Parfect, hanches stables",
+  tempo: "Ratio cible ≈ 3:1",
+  triangle: "Triangle bras/épaules stable du top à l’impact",
+  plan: "Club dans le plan",
+  weightShift: "Transfert progressif vers l’avant",
+  extension: "Extension complète après impact",
+  balance: "Tête stable, finish équilibré"
+};
   const breakdown = scores?.breakdown || {};
 
   function getScore(key) {
@@ -2881,6 +2890,83 @@ function buildParfectReviewCard(swing, scores) {
     extension: 10,
     balance: 10
   };
+
+  function buildComparisonBlock(key, data) {
+  const m = data?.metrics || data || {};
+
+  if (key === "rotation") {
+    const actual = m?.stages?.baseToTop?.actual;
+    const target = m?.stages?.baseToTop?.target;
+
+    if (!actual) return "";
+
+    return `
+      <div class="jsw-detail-inline">
+        Épaules : ${fmt(actual.shoulder)}<br>
+        Hanches : ${fmt(actual.hip)}
+        ${
+          target
+            ? `<br><span class="jsw-target">Cible épaules : ${fmt(target.shoulder)} · hanches : ${fmt(target.hip)}</span>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  if (key === "tempo") {
+    if (typeof m?.backswingT !== "number") return "";
+
+    return `
+      <div class="jsw-detail-inline">
+        Back : ${fmt(m.backswingT)}s<br>
+        Down : ${fmt(m.downswingT)}s<br>
+        Ratio : ${fmt(m.ratio)}:1
+        ${
+          typeof m?.targetRatio === "number"
+            ? `<br><span class="jsw-target">Cible : ${fmt(m.targetRatio)}:1</span>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  if (key === "triangle") {
+    return `
+      <div class="jsw-detail-inline">
+        Top : ${fmt(m.varTopPct)}%<br>
+        Impact : ${fmt(m.varImpactPct)}%
+      </div>
+    `;
+  }
+
+  if (key === "weightShift") {
+    return `
+      <div class="jsw-detail-inline">
+        Back : ${fmt(m.shiftBack)}<br>
+        Forward : ${fmt(m.shiftFwd)}
+      </div>
+    `;
+  }
+
+  if (key === "extension") {
+    return `
+      <div class="jsw-detail-inline">
+        Impact : ${fmt(m.extImpact)}<br>
+        Finish : ${fmt(m.extFinish)}
+      </div>
+    `;
+  }
+
+  if (key === "balance") {
+    return `
+      <div class="jsw-detail-inline">
+        Finish move : ${fmt(m.finishMove)}
+      </div>
+    `;
+  }
+
+  return "";
+}
 
   // ===============================
   // SCORE FLOOR (UX uniquement)
@@ -2994,7 +3080,7 @@ function buildParfectReviewCard(swing, scores) {
 
 <div class="jsw-grid">
   ${getVisibleMetricKeys(viewTypeRaw).map((key) => {
-
+  const data = breakdown?.[key] || {};
   const raw = getScore(key);
 
     if (raw === null) return "";
@@ -3007,10 +3093,7 @@ function buildParfectReviewCard(swing, scores) {
       objectiveMap?.[key] ||
       "";
 
-    const measuredValue =
-      typeof data.value !== "undefined"
-        ? `<div class="jsw-detail-inline">${data.value}</div>`
-        : "";
+    const measuredValue = buildComparisonBlock(key, data);
 
     return `
       <div class="jsw-card">
@@ -3581,7 +3664,7 @@ async function handleSwingComplete(swing) {
 // ======================================================
 // 6️⃣ Rendu UI Review
 // ======================================================
-buildPremiumBreakdown(swing, scores);
+buildParfectReviewCard(swing, scores);
 bindSwingReviewActions(swing, scores);
 
 // 🔴 cacher caméra
