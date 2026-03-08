@@ -2856,6 +2856,19 @@ function buildParfectReviewCard(swing, scores) {
   if (!container) return;
 
   const breakdown = scores?.breakdown || {};
+
+  function getScore(key) {
+  const s = breakdown?.[key]?.score;
+
+  if (typeof s === "number") return s;
+
+  // fallback moteur
+  const alt = scores?.scores?.[key];
+  if (typeof alt === "number") return alt;
+
+  return 0;
+}
+  
   const viewTypeRaw = window.jswViewType || "faceOn";
   const viewLabel = viewTypeRaw === "dtl" ? "DTL" : "FACE";
 
@@ -2891,14 +2904,11 @@ function buildParfectReviewCard(swing, scores) {
   }
 
   function computeVisibleScore() {
-    return getVisibleMetricKeys(viewTypeRaw).reduce(
-      (sum, k) =>
-        sum + (typeof breakdown?.[k]?.score === "number"
-          ? breakdown[k].score
-          : 0),
-      0
-    );
-  }
+  return getVisibleMetricKeys(viewTypeRaw).reduce(
+    (sum, k) => sum + getScore(k),
+    0
+  );
+}
 
   function computeVisibleMax() {
     return getVisibleMetricKeys(viewTypeRaw).reduce(
@@ -2931,16 +2941,16 @@ function buildParfectReviewCard(swing, scores) {
   // BEST METRIC (focus positif)
   // ===============================
 
-  const bestMetric = Object.entries(breakdown)
-    .filter(([_, d]) => typeof d?.score === "number")
-    .sort((a, b) => b[1].score - a[1].score)[0];
+ const bestMetric = getVisibleMetricKeys(viewTypeRaw)
+  .map(k => [k, getScore(k)])
+  .sort((a,b) => b[1] - a[1])[0];
 
   // ===============================
   // SCORE LINE
   // ===============================
 
   const scoreLine = (key, label, max, icon) => {
-    const raw = breakdown[key]?.score;
+    const raw = getScore(key);
     const floored = applyScoreFloor(raw, max);
 
     const highlight =
@@ -2983,12 +2993,14 @@ function buildParfectReviewCard(swing, scores) {
 </div>
 
 <div class="jsw-grid">
-  ${Object.entries(breakdown).map(([key, data]) => {
+  ${getVisibleMetricKeys(viewTypeRaw).map((key) => {
 
-    if (!data || typeof data.score !== "number") return "";
+  const raw = getScore(key);
+
+    if (raw === null) return "";
 
     const max = METRIC_MAX[key] || 20;
-    const floored = applyScoreFloor(data.score, max);
+    const floored = applyScoreFloor(raw, max);
     const percent = Math.round((floored / max) * 100);
 
     const objective =
@@ -3046,7 +3058,7 @@ function buildParfectReviewCard(swing, scores) {
     card.classList.add("reveal");
   });
 
-  const scoreEl = container.querySelector("jsw-animated-score");
+  const scoreEl = container.querySelector("#jsw-animated-score");
 
   function animateScore(target) {
     let current = 0;
