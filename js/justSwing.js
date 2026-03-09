@@ -3627,6 +3627,8 @@ async function handleSwingComplete(swing) {
     swing.frames
   );
 
+  swing.club = window.currentClubType;
+    
   // ======================================================
   // 2️⃣ Validation UX
   // ======================================================
