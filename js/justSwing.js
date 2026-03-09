@@ -233,7 +233,8 @@ function nextSwing() {
   if (swingTimeout) {
     clearTimeout(swingTimeout);
     swingTimeout = null;
-  }
+  } 
+  if (engine) engine.reset();
 
   // -----------------------------------------------------
   // 4️⃣ RESET MACHINE ÉTAT
