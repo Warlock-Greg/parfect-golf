@@ -2903,6 +2903,14 @@ function buildParfectReviewCard(swing, scores) {
   const viewTypeRaw = window.jswViewType || "faceOn";
   const viewLabel = viewTypeRaw === "dtl" ? "DTL" : "FACE";
 
+  const club =
+    window.currentClubType ||
+    swing?.club ||
+    document.getElementById("jsw-club-select")?.value ||
+    "fer7";
+
+  const clubLabel = club.toUpperCase();
+
   const METRIC_MAX = {
     rotation: 20,
     tempo: 20,
