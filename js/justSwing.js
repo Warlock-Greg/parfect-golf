@@ -3138,15 +3138,15 @@ function buildParfectReviewCard(swing, scores) {
   }).join("")}
 </div>
 
-<div class="jsw-review-actions">
-  <button id="jsw-review-back" class="jsw-btn-secondary">
-    ← Retour
-  </button>
+//<div class="jsw-review-actions">
+  //<button id="jsw-review-back" class="jsw-btn-secondary">
+    //← Retour
+  //</button>
 
-  <button id="jsw-review-next" class="jsw-btn-primary">
-    Swing suivant 🏌️
-  </button>
-</div>
+  //<button id="jsw-review-next" class="jsw-btn-primary">
+   // Swing suivant 🏌️
+  //</button>
+//</div>
 
     </div>
   `;
