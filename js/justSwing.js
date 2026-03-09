@@ -3046,13 +3046,6 @@ function buildParfectReviewCard(swing, scores) {
       ? buildGlobalCoachComment(viewTypeRaw, scores)
       : "Continue ton travail avec régularité.";
 
-  const club = (
-    swing?.club ??
-    window.currentClubType ??
-    document.getElementById("jsw-club-select")?.value ??
-    "unknown"
-  ).toUpperCase();
-
   // ===============================
   // BEST METRIC (focus positif)
   // ===============================
