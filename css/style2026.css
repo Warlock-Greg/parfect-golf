@@ -2157,6 +2157,38 @@ background: #ffffff;
   );
 }
 
+.jsw-review-header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  margin-bottom:18px;
+}
+
+.jsw-score-block{
+  text-align:center;
+}
+
+.jsw-big-score{
+  font-size:56px;
+  font-weight:800;
+  line-height:1;
+  color:#16a34a; /* Parfect */
+}
+
+.jsw-score-label{
+  font-size:13px;
+  opacity:0.7;
+}
+
+.jsw-pill{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:20px;
+  background:#f1f5f9;
+  color:#334155;
+}
+
 #swing-score-breakdown::-webkit-scrollbar {
   width: 6px;
 }
