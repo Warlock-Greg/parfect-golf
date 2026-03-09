@@ -128,6 +128,12 @@ let captureArmed = false;
   let replaySpeedSel = null;
   let replayTimeline = null;
 
+  
+  function fmt(v, d = 2) {
+  return typeof v === "number" && Number.isFinite(v)
+    ? v.toFixed(d)
+    : "—";
+}
 
   // ---------------------------------------------------------
   //   INIT DOM
