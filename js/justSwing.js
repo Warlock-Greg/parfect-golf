@@ -3719,8 +3719,15 @@ console.log("📊 Review affichée");
 
 function bindSwingReviewActions(swing, scores) {
 
-  const club = swing.club;
-  const camera = window.jswViewType;
+  const club =
+  swing?.club ||
+  document.getElementById("jsw-club-select")?.value ||
+  "fer7";
+
+const camera =
+  window.jswViewType ||
+  document.getElementById("jsw-camera-select")?.value ||
+  "faceOn";
 
   const btnUserRef = document.getElementById("swing-save-reference");
 
