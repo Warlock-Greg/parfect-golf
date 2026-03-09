@@ -38,19 +38,20 @@ async function fetchReference(whereClause) {
   
 
   async function deactivateOld(type, club, camera, email = null) {
-    let filter = `type,eq,${type}~and~club,eq,${club}~and~camera,eq,${camera}~and~is_active,eq,true`;
-
+   
     if (type === "user") {
       filter += `~and~created_by,eq,${email}`;
     }
 
-    const url = `${window.NOCODB_REFERENCES_URL}?where=${filter}`;
+    const url =
+`${BASE_URL}?where=(type,eq,${type})~and~(club,eq,${club})~and~(camera,eq,${camera})~and~(is_active,eq,true)`;
     const res = await fetch(url, { headers: headers() });
     const data = await res.json();
 
-    if (!data?.list?.length) return;
+    const records = data.list || [];
 
-    for (const ref of data.list) {
+  for (const r of records) {
+
       await fetch(`${window.NOCODB_REFERENCES_URL}/${ref.id}`, {
         method: "PATCH",
         headers: headers(),
@@ -138,37 +139,45 @@ window.getUserReference = async function (club, camera) {
   // 💾 SAVE USER REFERENCE
   // ===============================
 
-  window.saveUserReference = async function (club, camera, targets) {
+ window.saveUserReference = async function (club, camera, targets) {
 
-    const email = window.userLicence?.email;
-    if (!email) throw new Error("Utilisateur non connecté");
+  const email = window.userLicence?.email;
+  if (!email) throw new Error("Utilisateur non connecté");
 
-    await deactivateOld("user", club, camera, email);
+  camera =
+    camera ||
+    window.jswViewType ||
+    document.getElementById("jsw-camera-select")?.value ||
+    "faceOn";
 
-    const payload = {
-      type: "user",
-      club,
-      camera,
-      reference_json: JSON.stringify(targets),
-      created_by: email,
-      is_active: true,
-      version: Date.now()
-    };
+  await deactivateOld("user", club, camera, email);
 
-    const res = await fetch(window.NOCODB_REFERENCES_URL, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    // invalidate cache
-    const cacheKey = buildKey("user", club, camera, email);
-    delete CACHE[cacheKey];
-
-    return data;
+  const payload = {
+    records: [
+      {
+        type: "user",
+        club,
+        camera,
+        reference_json: targets, // ⚠️ pas stringify
+        created_by: email,
+        is_active: true,
+        version: Date.now()
+      }
+    ]
   };
+
+  const res = await fetch(window.NOCODB_REFERENCES_URL, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt);
+  }
+
+};
 
   // ===============================
   // 👑 SAVE SYSTEM REFERENCE
@@ -176,35 +185,44 @@ window.getUserReference = async function (club, camera) {
 
   window.saveSystemReference = async function (club, camera, targets) {
 
-    if (!window.isAdmin?.()) {
-      throw new Error("Accès admin requis");
-    }
+  if (!window.isAdmin?.()) {
+    throw new Error("Accès admin requis");
+  }
 
-    await deactivateOld("system", club, camera);
+  camera =
+    camera ||
+    window.jswViewType ||
+    document.getElementById("jsw-camera-select")?.value ||
+    "faceOn";
 
-    const payload = {
-      type: "system",
-      club,
-      camera,
-      reference_json: JSON.stringify(targets),
-      created_by: window.userLicence?.email,
-      is_active: true,
-      version: Date.now()
-    };
+  await deactivateOld("system", club, camera);
 
-    const res = await fetch(window.NOCODB_REFERENCES_URL, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(payload)
-    });
-
-    const data = await res.json();
-
-    const cacheKey = buildKey("system", club, camera);
-    delete CACHE[cacheKey];
-
-    return data;
+  const payload = {
+    records: [
+      {
+        type: "system",
+        club,
+        camera,
+        reference_json: targets,
+        created_by: window.userLicence?.email,
+        is_active: true,
+        version: Date.now()
+      }
+    ]
   };
+
+  const res = await fetch(window.NOCODB_REFERENCES_URL, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(txt);
+  }
+
+};
 
   // ===============================
   // 🔄 GET REFERENCE SMART
