@@ -178,7 +178,7 @@ let captureArmed = false;
     // 🔥 important : sync au chargement
     currentClubType = clubSelect.value;
   }
-  window.REF ?? = null;
+  window.REF ??= null;
 
 fetch("/data/parfect_reference.json")
   .then(r => r.json())
