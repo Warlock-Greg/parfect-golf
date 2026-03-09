@@ -2289,6 +2289,9 @@ metrics.tempo.downswingT = downswingT;
 metrics.tempo.rawDownswingT = rawDownswingT;
 metrics.tempo.ratio = ratio;
 
+  
+  const ref = window.REF?.tempo;
+  
     metrics.tempo = {
       backswingT,
       downswingT,
@@ -2297,7 +2300,7 @@ metrics.tempo.ratio = ratio;
       tolRatio: ref?.ratio?.tol ?? null
     };
 
-    const ref = window.REF?.tempo;
+ 
     if (ref?.ratio?.target != null && ref?.ratio?.tol != null && ratio != null) {
       tempoScore = Math.round(
         jswClamp(
