@@ -208,15 +208,15 @@ function nextSwing() {
   // -----------------------------------------------------
   const review = document.getElementById("swing-review");
   if (review) {
+    review.classList.remove("active");
     review.style.display = "none";
-    review.classList.add("hidden");
   }
 
   const breakdown = document.getElementById("swing-score-breakdown");
   if (breakdown) breakdown.innerHTML = "";
 
   // -----------------------------------------------------
-  // 2️⃣ RESET FLAGS CRITIQUES
+  // 2️⃣ RESET FLAGS SWING
   // -----------------------------------------------------
   captureArmed = false;
   isRecordingActive = false;
@@ -224,6 +224,7 @@ function nextSwing() {
   pendingAddress = false;
   swingCompleted = false;
   addressCaptured = false;
+
   addressStabilityBuffer = [];
 
   // -----------------------------------------------------
@@ -235,18 +236,18 @@ function nextSwing() {
   }
 
   // -----------------------------------------------------
-  // 4️⃣ RESET STATE MACHINE
+  // 4️⃣ RESET MACHINE ÉTAT
   // -----------------------------------------------------
-  state = JSW_STATE.WAITING_START;
+  state = JSW_STATE.ROUTINE;
   updateUI();
 
   // -----------------------------------------------------
-  // 5️⃣ RELANCE FLOW (SANS CAMÉRA)
+  // 5️⃣ RELANCE ROUTINE DIRECTEMENT
   // -----------------------------------------------------
-setTimeout(() => {
-  console.log("🔄 Retour écran start");
-  showStartButton(); // 🔥 retour propre au début
-}, 300);
+  setTimeout(() => {
+    console.log("🏌️ Nouvelle routine");
+    startRoutineSequence();
+  }, 200);
 }
 
 
