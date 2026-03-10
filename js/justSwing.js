@@ -726,12 +726,19 @@ const SWING_TIMEOUT_MS = 6000;
 
 swingTimeout = setTimeout(() => {
   if (!activeSwing) return;
+//chgt 10 mars
+//const impactSeen =!!activeSwing?.keyFrames?.impact || !!engine?.keyFrames?.impact;
+//const finishSeen = !!activeSwing?.keyFrames?.finish || !!engine?.keyFrames?.finish;
+const impactSeen =
+  !!activeSwing?.keyFrames?.impact ||
+  !!engine?.keyFrames?.impact;
 
-  const impactSeen = !!activeSwing.keyFrames?.impact;
-  const finishSeen = !!activeSwing.keyFrames?.finish;
+const finishSeen =
+  !!activeSwing?.keyFrames?.finish ||
+  !!engine?.keyFrames?.finish;
 
   if (!impactSeen || !finishSeen) {
-    console.warn("⚠️ Swing partiel (timeout)", {
+    console.warn("⏱️ Swing encore en cours au timeout", {
       impactSeen,
       finishSeen
     });
@@ -874,9 +881,44 @@ async function getTodaySwingCount(email) {
 
 
   window.getTodaySwingCount = getTodaySwingCount;
+ // ---------------------------------------------------------
+  //   swing finish hanche
+  // ---------------------------------------------------------
 
+function detectFinishByStability(frames, lastIndex) {
 
+  if (lastIndex < 6) return false;
 
+  const poseA = frames[lastIndex - 3];
+  const poseB = frames[lastIndex];
+
+  if (!poseA || !poseB) return false;
+
+  const LH1 = poseA[23];
+  const RH1 = poseA[24];
+
+  const LH2 = poseB[23];
+  const RH2 = poseB[24];
+
+  if (!LH1 || !RH1 || !LH2 || !RH2) return false;
+
+  const hips1 = {
+    x: (LH1.x + RH1.x) / 2,
+    y: (LH1.y + RH1.y) / 2
+  };
+
+  const hips2 = {
+    x: (LH2.x + RH2.x) / 2,
+    y: (LH2.y + RH2.y) / 2
+  };
+
+  const move = Math.hypot(
+    hips2.x - hips1.x,
+    hips2.y - hips1.y
+  );
+
+  return move < 0.015;
+}
   
   
   // ---------------------------------------------------------
@@ -1701,8 +1743,16 @@ function getKeyframePose(type, metrics, activeSwing) {
 // 🔑 RÉFÉRENCES ACTIVES — DOUBLE MODE
 // =====================================================
 
-const club = swing.club || "default";
-const view = window.jswViewType || "faceOn";
+const club =
+  swing?.club ||
+  window.currentClubType ||
+  document.getElementById("jsw-club-select")?.value ||
+  "fer7";
+   
+const view =
+  window.jswViewType ||
+  document.getElementById("jsw-camera-select")?.value ||
+  "faceOn";
 
 // 🔵 Référence Parfect
 const refSystem = await window.getSystemReference(club, view);
@@ -1711,6 +1761,8 @@ const refSystem = await window.getSystemReference(club, view);
 const refUser = await window.getUserReference(club, view);
 
 // référence active de calcul détaillé = Parfect par défaut
+window.systemReference = refSystem || null;
+window.userReference = refUser || null;
 window.REF = refSystem || refUser || null;
 
 console.log("🎯 Références chargées", {
@@ -3739,18 +3791,25 @@ const camera =
   if (btnUserRef) {
     btnUserRef.onclick = async () => {
 
+      console.log("⭐ save user reference click", {
+      club,
+      camera,
+      metrics: scores?.metrics
+    });
       btnUserRef.disabled = true;
       btnUserRef.textContent = "⏳ Enregistrement…";
 
       try {
-        await window.saveUserReference(club, camera, scores.metrics);
-        btnUserRef.textContent = "✅ Référence enregistrée";
-      } catch (e) {
-        btnUserRef.disabled = false;
-        btnUserRef.textContent = "⭐ Sauvegarder comme ma référence";
-      }
-    };
-  }
+      await window.saveUserReference(club, camera, scores.metrics);
+      console.log("✅ user reference saved");
+      btnUserRef.textContent = "✅ Référence enregistrée";
+    } catch (e) {
+      console.error("❌ saveUserReference error", e);
+      btnUserRef.disabled = false;
+      btnUserRef.textContent = "⭐ Sauvegarder comme ma référence";
+    }
+  };
+}
 
   const btnParfect = document.getElementById("swing-save-parfect-reference");
 
@@ -3759,19 +3818,25 @@ const camera =
     btnParfect.style.display = "block";
 
     btnParfect.onclick = async () => {
-
+console.log("👑 save system reference click", {
+      club,
+      camera,
+      metrics: scores?.metrics
+    });
       btnParfect.disabled = true;
       btnParfect.innerHTML = "⏳ Enregistrement…";
 
-      try {
-        await window.saveSystemReference(club, camera, scores.metrics);
-        btnParfect.innerHTML = "✅ Référence PARFECT définie";
-      } catch (e) {
-        btnParfect.disabled = false;
-        btnParfect.innerHTML = "⭐ Définir comme référence PARFECT";
-      }
-    };
-  }
+   try {
+      await window.saveSystemReference(club, camera, scores.metrics);
+      console.log("✅ system reference saved");
+      btnParfect.innerHTML = "✅ Référence PARFECT définie";
+    } catch (e) {
+      console.error("❌ saveSystemReference error", e);
+      btnParfect.disabled = false;
+      btnParfect.innerHTML = "⭐ Définir comme référence PARFECT";
+    }
+  };
+}
 }
 
 
