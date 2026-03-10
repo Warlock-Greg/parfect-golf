@@ -31,7 +31,7 @@ const SwingEngine = (() => {
   const IMPACT_SPIKE = 0.25;         // spike vitesse = impact
   const FINISH_HOLD_MS = 250;        // (pas utilisé pour l'instant)
   const MAX_IDLE_MS = 1800;          // reset auto si inactif
-  const FINISH_TIMEOUT_MS = 400;     // timeout release → finish
+  const FINISH_TIMEOUT_MS = 700;     // timeout release → finish
 
   // fallback start (si thresholds stricts)
   const FALLBACK_MIN_FRAMES = 20;    // ≈ 0.7s à 30fps
@@ -351,37 +351,53 @@ const SwingEngine = (() => {
       // =====================================================
       // RELEASE → FINISH → swingComplete
       // =====================================================
-      if (state === "RELEASE") {
-        frames.push(pose);
-        timestamps.push(timeMs);
+ // =====================================================
+// RELEASE → FINISH → swingComplete
+// =====================================================
+if (state === "RELEASE") {
 
-        const timeInRelease = timeMs - (releaseStartTime ?? timeMs);
-        const stable = speedWrist < 0.02 && speedHip < 0.015;
+  frames.push(pose);
+  timestamps.push(timeMs);
 
-        if (stable || timeInRelease > FINISH_TIMEOUT_MS) {
-          state = "FINISH";
-          markKeyFrame("finish", frames.length - 1, pose);
+  const timeInRelease = timeMs - (releaseStartTime ?? timeMs);
 
-          const data = {
-            frames: [...frames],
-            timestamps: [...timestamps],
-            keyFrames: { ...keyFrames },
-            club: clubType,
-            fps,
+  // stabilité plus tolérante
+  const stable =
+    speedWrist < 0.035 &&
+    speedHip < 0.025;
 
-            // ✅ pour scoring premium
-            extensionDetected,
-            extensionStartTime,
-          };
+  // sécurité : assez de frames après impact
+  const enoughFramesAfterImpact =
+    keyFrames.impact &&
+    frames.length - keyFrames.impact.index > 5;
 
-          if (typeof onSwingComplete === "function") {
-            onSwingComplete({ type: "swingComplete", data });
-          }
+  if ((stable && enoughFramesAfterImpact) || timeInRelease > FINISH_TIMEOUT_MS) {
 
-          reset();
-        }
-        return null;
-      }
+    state = "FINISH";
+
+    markKeyFrame("finish", frames.length - 1, pose);
+
+    const data = {
+      frames: [...frames],
+      timestamps: [...timestamps],
+      keyFrames: { ...keyFrames },
+      club: clubType,
+      fps,
+
+      // scoring
+      extensionDetected,
+      extensionStartTime,
+    };
+
+    if (typeof onSwingComplete === "function") {
+      onSwingComplete({ type: "swingComplete", data });
+    }
+
+    reset();
+  }
+
+  return null;
+}
 
       return null;
     }
