@@ -135,6 +135,40 @@ let captureArmed = false;
     : "—";
 }
 
+  async function loadActiveReference() {
+
+  const club =
+    window.currentClubType ||
+    document.getElementById("jsw-club-select")?.value ||
+    "fer7";
+
+  const view =
+    window.jswViewType ||
+    document.getElementById("jsw-camera-select")?.value ||
+    "faceOn";
+
+  const refSystem = await window.getSystemReference?.(club, view);
+  const refUser = await window.getUserReference?.(club, view);
+
+  const fallback =
+    window.ParfectReference?.[club] ||
+    window.ParfectReference?.default ||
+    null;
+
+  window.systemReference = refSystem || null;
+  window.userReference = refUser || null;
+
+  window.REF = refSystem || refUser || fallback;
+
+  console.log("🎯 Active reference", {
+    club,
+    view,
+    system: !!refSystem,
+    user: !!refUser,
+    fallback: !!fallback
+  });
+}
+
   // ---------------------------------------------------------
   //   INIT DOM
   // ---------------------------------------------------------
@@ -173,6 +207,7 @@ let captureArmed = false;
     clubSelect.addEventListener("change", e => {
       currentClubType = e.target.value;
       console.log("🏌️ Club changé :", currentClubType);
+      loadActiveReference(); // 🔥 IMPORTANT
     });
 
     // 🔥 important : sync au chargement
@@ -190,13 +225,11 @@ fetch("/data/parfect_reference.json")
     console.log("📌 Parfect Reference loaded", json);
   })
   .catch(err => {
-    console.warn("⚠️ Parfect reference not loaded", err);
+    console.warn("⚠️ Parfect reference not loaded", json);
+    loadActiveReference();
   });
   
-   // ---------------------------------------------------------
-  //   FONCTION NEXT SWING
-  // ---------------------------------------------------------
-  
+
   // =========================================================
 // ⏭️ JUST SWING — NEXT SWING (SOURCE UNIQUE)
 // =========================================================
