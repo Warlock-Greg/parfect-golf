@@ -173,16 +173,20 @@ window.getUserReference = async function (club, camera) {
   const email = window.userLicence?.email;
   if (!email) throw new Error("Utilisateur non connecté");
 
+  console.log("⭐ Saving user reference", targets);
   camera =
     camera ||
     window.jswViewType ||
     document.getElementById("jsw-camera-select")?.value ||
     "faceOn";
 
+  try {
   await deactivateOld("user", club, camera, email);
+} catch(e) {
+  console.warn("deactivateOld failed", e);
+}
 
   const payload = {
-    records: [
       {
         type: "user",
         club,
@@ -192,9 +196,9 @@ window.getUserReference = async function (club, camera) {
         is_active: true,
         version: Date.now()
       }
-    ]
   };
-
+  console.log("REFERENCE PAYLOAD", payload);
+   
   const res = await fetch(window.NOCODB_REFERENCES_URL, {
     method: "POST",
     headers: headers(),
@@ -205,7 +209,7 @@ window.getUserReference = async function (club, camera) {
     const txt = await res.text();
     throw new Error(txt);
   }
-
+console.log("✅ User reference saved");
 };
 
   // ===============================
@@ -224,10 +228,13 @@ window.getUserReference = async function (club, camera) {
     document.getElementById("jsw-camera-select")?.value ||
     "faceOn";
 
-  await deactivateOld("system", club, camera);
+ try {
+  await deactivateOld("user", club, camera, email);
+} catch(e) {
+  console.warn("deactivateOld failed", e);
+}
 
   const payload = {
-    records: [
       {
         type: "system",
         club,
@@ -237,7 +244,6 @@ window.getUserReference = async function (club, camera) {
         is_active: true,
         version: Date.now()
       }
-    ]
   };
 
   const res = await fetch(window.NOCODB_REFERENCES_URL, {
