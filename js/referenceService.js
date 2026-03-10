@@ -37,28 +37,58 @@ async function fetchReference(whereClause) {
 
   
 
-  async function deactivateOld(type, club, camera, email = null) {
-   
-    if (type === "user") {
-      filter += `~and~created_by,eq,${email}`;
-    }
+ async function deactivateOld(type, club, camera, email = null) {
 
-    const url =
-`${BASE_URL}?where=(type,eq,${type})~and~(club,eq,${club})~and~(camera,eq,${camera})~and~(is_active,eq,true)`;
-    const res = await fetch(url, { headers: headers() });
-    const data = await res.json();
+  const whereParts = [
+    `type,eq,${type}`,
+    `club,eq,${club}`,
+    `camera,eq,${camera}`,
+    `is_active,eq,true`
+  ];
 
-    const records = data.list || [];
+  if (email) {
+    whereParts.push(`created_by,eq,${email}`);
+  }
 
-  for (const r of records) {
+  const where = whereParts.join("~and~");
 
-      await fetch(`${window.NOCODB_REFERENCES_URL}/${ref.id}`, {
+  const url =
+    `${window.NOCODB_REFERENCES_URL}?where=${where}`;
+
+  const res = await fetch(url, {
+    headers: headers()
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error("deactivateOld fetch failed: " + txt);
+  }
+
+  const data = await res.json();
+
+  if (!data?.list?.length) {
+    console.log("ℹ️ aucune ancienne référence à désactiver");
+    return;
+  }
+
+  for (const rec of data.list) {
+
+    await fetch(
+      `${window.NOCODB_REFERENCES_URL}/${rec.Id}`,
+      {
         method: "PATCH",
         headers: headers(),
-        body: JSON.stringify({ is_active: false })
-      });
-    }
+        body: JSON.stringify({
+          is_active: false
+        })
+      }
+    );
+
   }
+
+  console.log("♻️ anciennes références désactivées");
+
+}
 
  // ===============================
 // 🔵 GET SYSTEM REFERENCE
