@@ -212,6 +212,12 @@ function nextSwing() {
     review.style.display = "none";
   }
 
+  // 🔥 réafficher la zone swing
+  const swingArea = document.getElementById("just-swing-area");
+  if (swingArea) {
+    swingArea.style.display = "block";
+  }
+
   const breakdown = document.getElementById("swing-score-breakdown");
   if (breakdown) breakdown.innerHTML = "";
 
