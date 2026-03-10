@@ -39,21 +39,20 @@ async function fetchReference(whereClause) {
 
  async function deactivateOld(type, club, camera, email = null) {
 
-  const whereParts = [
-    `type,eq,${type}`,
-    `club,eq,${club}`,
-    `camera,eq,${camera}`,
-    `is_active,eq,true`
+  const filters = [
+    `(type,eq,${type})`,
+    `(club,eq,${club})`,
+    `(camera,eq,${camera})`,
+    `(is_active,eq,true)`
   ];
 
   if (email) {
-    whereParts.push(`created_by,eq,${email}`);
+    filters.push(`(created_by,eq,${email})`);
   }
 
-  const where = whereParts.join("~and~");
+  const where = filters.join("~and");
 
-  const url =
-    `${window.NOCODB_REFERENCES_URL}?where=${where}`;
+  const url = `${window.NOCODB_REFERENCES_URL}?where=${where}`;
 
   const res = await fetch(url, {
     headers: headers()
@@ -67,7 +66,7 @@ async function fetchReference(whereClause) {
   const data = await res.json();
 
   if (!data?.list?.length) {
-    console.log("ℹ️ aucune ancienne référence à désactiver");
+    console.log("ℹ️ aucune ancienne référence");
     return;
   }
 
