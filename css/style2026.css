@@ -1360,19 +1360,7 @@ position: fixed;
    ========================================================= */
 
 /* Container global */
-#swing-score-breakdown > div {
-  width: min(92vw, 560px);
-  max-height: 88vh;
-  overflow-y: auto;
 
-  background: rgba(15, 20, 18, 0.92);
-  border: 1px solid rgba(0,255,153,0.25);
-  box-shadow: 0 0 30px rgba(0,255,153,0.25);
-  backdrop-filter: blur(14px);
-  border-radius: 20px;
-  padding: 14px 14px 16px;
-   color: var(--pg-green-main);
-}
 
 .jsw-swing-summary {
   display: flex;
@@ -2127,17 +2115,15 @@ background: #ffffff;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 
-  padding: 16px;
+  padding: 0px;
 }
 
 .jsw-card {
   background: #121826;
-  border-radius: 18px;
-  padding: 16px;
-
+  border-radius: 12px;
+  padding: 12px;
   box-shadow: 
     0 8px 20px rgba(0,0,0,0.4);
-
   color: #fff;
 }
 
