@@ -187,7 +187,6 @@ window.getUserReference = async function (club, camera) {
 }
 
   const payload = {
-      {
         type: "user",
         club,
         camera,
@@ -195,7 +194,7 @@ window.getUserReference = async function (club, camera) {
         created_by: email,
         is_active: true,
         version: Date.now()
-      }
+
   };
   console.log("REFERENCE PAYLOAD", payload);
    
@@ -235,7 +234,6 @@ console.log("✅ User reference saved");
 }
 
   const payload = {
-      {
         type: "system",
         club,
         camera,
@@ -243,7 +241,6 @@ console.log("✅ User reference saved");
         created_by: window.userLicence?.email,
         is_active: true,
         version: Date.now()
-      }
   };
 
   const res = await fetch(window.NOCODB_REFERENCES_URL, {
