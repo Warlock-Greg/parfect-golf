@@ -192,7 +192,7 @@ window.getUserReference = async function (club, camera) {
         camera,
         reference_json: targets, // ⚠️ pas stringify
         created_by: email,
-        is_active: true,
+        is_active: "true",
         version: Date.now()
 
   };
@@ -239,7 +239,7 @@ console.log("✅ User reference saved");
         camera,
         reference_json: targets,
         created_by: window.userLicence?.email,
-        is_active: true,
+        is_active: "true",
         version: Date.now()
   };
 
