@@ -968,11 +968,17 @@ function detectFinishByStability(frames, lastIndex) {
   if (!window.PARFECT_LICENCE_OK) {
     console.warn("⛔ JustSwing bloqué : licence requise");
    // 👉 OUVRIR LA MODAL DE CRÉATION DE COMPTE
-  if (window.showEmailModal) {
-    window.showEmailModal();
-  } else {
-    alert("Crée ton compte pour accéder à JustSwing");
-  }
+  // 🛑 cacher l'écran JustSwing
+    const swingArea = document.getElementById("just-swing-area");
+    if (swingArea) swingArea.style.display = "none";
+
+    // 👉 ouvrir la modale compte
+    if (typeof window.showEmailModal === "function") {
+      window.showEmailModal();
+    } else {
+      alert("Crée ton compte pour accéder à JustSwing");
+    }
+
 
   return;
 }
