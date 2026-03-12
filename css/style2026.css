@@ -2183,3 +2183,78 @@ background: #ffffff;
   background: #2a2f3c;
   border-radius: 10px;
 }
+
+.jsw-ref-info{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.jsw-ref-block{
+  background:rgba(255,255,255,0.06);
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:12px;
+}
+
+.jsw-ref-title{
+  font-weight:700;
+  margin-bottom:2px;
+}
+
+.jsw-ref-meta{
+  opacity:.75;
+}
+
+.jsw-coach-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:14px;
+  background:rgba(0,255,153,0.08);
+}
+
+.jsw-coach-title{
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.jsw-radar-wrap{
+  position:relative;
+  height:220px;
+  margin:18px 0 12px;
+}
+
+.jsw-replay-compare-controls{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+.jsw-compare-row{
+  margin-top:6px;
+}
+
+.jsw-compare-main{
+  font-weight:600;
+}
+
+.jsw-compare-ref{
+  font-size:12px;
+  opacity:.8;
+}
+
+.jsw-ref-parfect{
+  color:#6ee7b7;
+}
+
+.jsw-ref-user{
+  color:#60a5fa;
+}
+
+.jsw-card-highlight{
+  outline:2px solid rgba(0,255,153,0.35);
+}
