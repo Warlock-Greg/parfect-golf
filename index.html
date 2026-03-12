@@ -559,44 +559,73 @@
   document.addEventListener("DOMContentLoaded", async () => {
     console.log("🚀 Parfect boot");
 
-    // ---------------------------------
-    // MODE ACCÈS LIBRE (LANCEMENT)
-    // ---------------------------------
-    if (window.PARFECT_FLAGS?.OPEN_ACCESS) {
-      console.log("🟢 OPEN ACCESS MODE");
+ 
+// ---------------------------------
+// MODE ACCÈS LIBRE (LANCEMENT)
+// ---------------------------------
+if (window.PARFECT_FLAGS?.OPEN_ACCESS) {
 
-      window.PARFECT_LICENCE_OK = true;
-      window.userLicence = {
-        licence: "open",
-        swing_quota_used: 0
-      };
+  console.log("🟢 OPEN ACCESS MODE");
 
-      // Notify app
-      window.dispatchEvent(new Event("parfect:licence:activated"));
+  window.PARFECT_LICENCE_OK = true;
 
-      // UI directe
-      window.injectSocialUI?.();
-      return;
-    }
+  window.userLicence = {
+    licence: "open",
+    swing_quota_used: 0
+  };
 
-    // ---------------------------------
-    // MODE NORMAL (AUTH + LICENCE)
-    // ---------------------------------
-    if (typeof window.initLicence !== "function") {
-      console.error("❌ initLicence manquant");
-      return;
-    }
+  window.dispatchEvent(new Event("parfect:licence:activated"));
 
-    await window.initLicence();
+  window.injectSocialUI?.();
+  return;
+}
 
-    if (!window.PARFECT_LICENCE_OK) {
-      console.log("🔐 Pas de session → auth requise");
-      window.showAuthModal?.();
-      return;
-    }
+// ---------------------------------
+// MODE NORMAL (AUTH + LICENCE)
+// ---------------------------------
 
-    console.log("✅ Session active");
-    window.injectSocialUI?.();
+if (typeof window.initLicence !== "function") {
+  console.error("❌ initLicence manquant");
+  return;
+}
+
+await window.initLicence();
+
+// ---------------------------------
+// PAS CONNECTÉ → LOGIN
+// ---------------------------------
+
+if (!window.userLicence?.email) {
+
+  console.log("🔐 Utilisateur non connecté → login");
+
+  window.showAuthModal?.();
+
+  return;
+}
+
+// ---------------------------------
+// CONNECTÉ MAIS PAS DE LICENCE
+// ---------------------------------
+
+if (!window.PARFECT_LICENCE_OK) {
+
+  console.log("💳 Licence requise");
+
+  window.showAuthModal?.({
+    mode: "upgrade"
+  });
+
+  return;
+}
+
+// ---------------------------------
+// SESSION OK
+// ---------------------------------
+
+console.log("✅ Session active", window.userLicence);
+
+window.injectSocialUI?.();
   });
 </script>
 
