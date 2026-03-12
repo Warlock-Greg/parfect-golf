@@ -976,7 +976,7 @@ function detectFinishByStability(frames, lastIndex) {
     if (typeof window.showEmailModal === "function") {
       window.showEmailModal();
     } else {
-      alert("Crée ton compte pour accéder à JustSwing");
+      alert("🎯 Analyse ton swing gratuitement. Crée ton compte pour commencer");
     }
 
 
