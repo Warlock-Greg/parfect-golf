@@ -113,7 +113,11 @@ window.getSystemReference = async function (club, camera) {
 
     if (!match) return null;
 
-    const parsed = match.reference_json;
+    const parsed = {
+      id: match.Id,
+      created_at: match.CreatedAt,
+      data: match.reference_json
+      };
     CACHE[cacheKey] = parsed;
 
     return parsed;
@@ -153,7 +157,11 @@ window.getUserReference = async function (club, camera) {
 
     if (!match) return null;
 
-    const parsed = match.reference_json;
+    const parsed = {
+        id: match.Id,
+        created_at: match.CreatedAt,
+        data: match.reference_json
+        };
     CACHE[cacheKey] = parsed;
 
     return parsed;
