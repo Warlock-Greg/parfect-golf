@@ -2972,85 +2972,31 @@ function renderSessionHistoryInline() {
 //   PREMIUM BREAKDOWN BUILDER (utilise scores.breakdown)
 //   ✅ plus de "metrics.xxx" en direct dans l UI
 //   ✅ affiche un message si un module est non mesuré
+// modif avec les réferences du 12 mars
 // ---------------------------------------------------------
 
 function buildParfectReviewCard(swing, scores) {
   const container = document.getElementById("swing-score-breakdown");
   if (!container) return;
 
-  const objectiveMap = {
-  rotation: "Épaules ~ cible Parfect, hanches stables",
-  tempo: "Ratio cible ≈ 3:1",
-  triangle: "Triangle bras/épaules stable du top à l’impact",
-  plan: "Club dans le plan",
-  weightShift: "Transfert progressif vers l’avant",
-  extension: "Extension complète après impact",
-  balance: "Tête stable, finish équilibré"
-};
   const breakdown = scores?.breakdown || {};
-
-  function buildReferenceInfo() {
-
-  const sys = window.parfectReference;
-  const usr = window.userReference;
-
-  return `
-  <div class="jsw-ref-info">
-
-    ${
-      sys
-        ? `
-      <div class="jsw-ref">
-        🧠 Parfect
-        <div class="jsw-ref-meta">
-          id ${sys.id}<br>
-          ${new Date(sys.created_at).toLocaleDateString()}
-        </div>
-      </div>`
-        : ""
-    }
-
-    ${
-      usr
-        ? `
-      <div class="jsw-ref">
-        ⭐ Ta référence
-        <div class="jsw-ref-meta">
-          id ${usr.id}<br>
-          ${new Date(usr.created_at).toLocaleDateString()}
-        </div>
-      </div>`
-        : ""
-    }
-
-  </div>
-  `;
-}
-
-
-  
-  function getScore(key) {
-  const s = breakdown?.[key]?.score;
-
-  if (typeof s === "number") return s;
-
-  // fallback moteur
-  const alt = scores?.scores?.[key];
-  if (typeof alt === "number") return alt;
-
-  return 0;
-}
-  
-  const viewTypeRaw = window.jswViewType || "faceOn";
+  const metrics = scores?.metrics || {};
+  const viewTypeRaw = window.jswViewType || metrics?.viewType || "faceOn";
   const viewLabel = viewTypeRaw === "dtl" ? "DTL" : "FACE";
 
   const club =
-    window.currentClubType ||
     swing?.club ||
+    window.currentClubType ||
     document.getElementById("jsw-club-select")?.value ||
     "fer7";
 
   const clubLabel = club.toUpperCase();
+
+  const parfectRef = window.parfectReference || null; // { id, created_at, data }
+  const userRef = window.userReference || null;       // { id, created_at, data }
+
+  const parfectData = parfectRef?.data || null;
+  const userData = userRef?.data || null;
 
   const METRIC_MAX = {
     rotation: 20,
@@ -3062,227 +3008,40 @@ function buildParfectReviewCard(swing, scores) {
     balance: 10
   };
 
-  function buildComparisonBlock(key, data) {
-
-  const m = data?.metrics || data || {};
-
-  const sys = window.parfectReference?.data?.[key] || null;
-  const usr = window.userReference?.data?.[key] || null;
-
-  const compareLine = (label, value, sysValue, usrValue, unit = "") => {
-
-    if (value == null) return "";
-
-    return `
-      <div class="jsw-compare-row">
-
-        <div class="jsw-compare-main">
-          ${label} : ${fmt(value)}${unit}
-        </div>
-
-        ${
-          sysValue != null
-            ? `<div class="jsw-compare-ref jsw-ref-parfect">
-                 Parfect : ${fmt(sysValue)}${unit}
-               </div>`
-            : ""
-        }
-
-        ${
-          usrValue != null
-            ? `<div class="jsw-compare-ref jsw-ref-user">
-                 Moi : ${fmt(usrValue)}${unit}
-               </div>`
-            : ""
-        }
-
-      </div>
-    `;
+  const LABELS = {
+    rotation: "Rotation",
+    tempo: "Tempo",
+    triangle: "Triangle",
+    weightShift: "Transfert",
+    extension: "Extension",
+    balance: "Balance",
+    plan: "Plan"
   };
 
-  // ===============================
-  // ROTATION
-  // ===============================
+  const OBJECTIVES = {
+    rotation: "Tourne les épaules et stabilise les hanches.",
+    tempo: "Montée fluide, descente engagée.",
+    triangle: "Garde le triangle bras/épaules stable.",
+    weightShift: "Transfère progressivement le poids vers l’avant.",
+    extension: "Tends les bras après impact.",
+    balance: "Termine en équilibre."
+  };
 
-  if (key === "rotation") {
-
-    const actual = m?.stages?.baseToTop?.actual;
-    if (!actual) return "";
-
-    const sysActual = sys?.stages?.baseToTop?.actual;
-    const usrActual = usr?.stages?.baseToTop?.actual;
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Épaules",
-          actual.shoulder,
-          sysActual?.shoulder,
-          usrActual?.shoulder,
-          "°"
-        )}
-
-        ${compareLine(
-          "Hanches",
-          actual.hip,
-          sysActual?.hip,
-          usrActual?.hip,
-          "°"
-        )}
-
-      </div>
-    `;
+  function fmt(v, d = 2) {
+    return typeof v === "number" && Number.isFinite(v)
+      ? v.toFixed(d)
+      : "—";
   }
 
-  // ===============================
-  // TEMPO
-  // ===============================
+  function getScore(key) {
+    const s = breakdown?.[key]?.score;
+    if (typeof s === "number") return s;
 
-  if (key === "tempo") {
+    const alt = scores?.scores?.[key];
+    if (typeof alt === "number") return alt;
 
-    if (typeof m?.backswingT !== "number") return "";
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Back",
-          m.backswingT,
-          sys?.backswingT,
-          usr?.backswingT,
-          "s"
-        )}
-
-        ${compareLine(
-          "Down",
-          m.downswingT,
-          sys?.downswingT,
-          usr?.downswingT,
-          "s"
-        )}
-
-        ${compareLine(
-          "Ratio",
-          m.ratio,
-          sys?.ratio,
-          usr?.ratio
-        )}
-
-      </div>
-    `;
+    return 0;
   }
-
-  // ===============================
-  // TRIANGLE
-  // ===============================
-
-  if (key === "triangle") {
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Top",
-          m.varTopPct,
-          sys?.varTopPct,
-          usr?.varTopPct,
-          "%"
-        )}
-
-        ${compareLine(
-          "Impact",
-          m.varImpactPct,
-          sys?.varImpactPct,
-          usr?.varImpactPct,
-          "%"
-        )}
-
-      </div>
-    `;
-  }
-
-  // ===============================
-  // WEIGHT SHIFT
-  // ===============================
-
-  if (key === "weightShift") {
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Back",
-          m.shiftBack,
-          sys?.shiftBack,
-          usr?.shiftBack
-        )}
-
-        ${compareLine(
-          "Forward",
-          m.shiftFwd,
-          sys?.shiftFwd,
-          usr?.shiftFwd
-        )}
-
-      </div>
-    `;
-  }
-
-  // ===============================
-  // EXTENSION
-  // ===============================
-
-  if (key === "extension") {
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Impact",
-          m.extImpact,
-          sys?.extImpact,
-          usr?.extImpact
-        )}
-
-        ${compareLine(
-          "Finish",
-          m.extFinish,
-          sys?.extFinish,
-          usr?.extFinish
-        )}
-
-      </div>
-    `;
-  }
-
-  // ===============================
-  // BALANCE
-  // ===============================
-
-  if (key === "balance") {
-
-    return `
-      <div class="jsw-detail-inline">
-
-        ${compareLine(
-          "Finish move",
-          m.finishMove,
-          sys?.finishMove,
-          usr?.finishMove
-        )}
-
-      </div>
-    `;
-  }
-
-  return "";
-}
-
-
-  // ===============================
-  // SCORE FLOOR (UX uniquement)
-  // ===============================
 
   function applyScoreFloor(score, max) {
     if (typeof score !== "number") return null;
@@ -3291,28 +3050,20 @@ function buildParfectReviewCard(swing, scores) {
     return score;
   }
 
-  // ===============================
-  // VISIBLE SCORE (inchangé moteur)
-  // ===============================
-
   function getVisibleMetricKeys(viewType) {
     return viewType === "dtl"
-      ? ["rotation","tempo","plan","triangle","weightShift","extension","balance"]
-      : ["rotation","tempo","triangle","weightShift","extension","balance"];
+      ? ["tempo", "plan", "rotation", "triangle", "extension", "balance"]
+      : ["rotation", "tempo", "triangle", "weightShift", "extension", "balance"];
   }
 
+  const visibleKeys = getVisibleMetricKeys(viewTypeRaw);
+
   function computeVisibleScore() {
-  return getVisibleMetricKeys(viewTypeRaw).reduce(
-    (sum, k) => sum + getScore(k),
-    0
-  );
-}
+    return visibleKeys.reduce((sum, k) => sum + getScore(k), 0);
+  }
 
   function computeVisibleMax() {
-    return getVisibleMetricKeys(viewTypeRaw).reduce(
-      (sum, k) => sum + (METRIC_MAX[k] || 0),
-      0
-    );
+    return visibleKeys.reduce((sum, k) => sum + (METRIC_MAX[k] || 0), 0);
   }
 
   const visibleScore = computeVisibleScore();
@@ -3323,128 +3074,267 @@ function buildParfectReviewCard(swing, scores) {
       ? Math.round((visibleScore / visibleMax) * 100)
       : 0;
 
-  const coachComment =
-    typeof buildGlobalCoachComment === "function"
-      ? buildGlobalCoachComment(viewTypeRaw, scores)
-      : "Continue ton travail avec régularité.";
-
-  // ===============================
-  // BEST METRIC (focus positif)
-  // ===============================
-
- const bestMetric = getVisibleMetricKeys(viewTypeRaw)
-  .map(k => [k, getScore(k)])
-  .sort((a,b) => b[1] - a[1])[0];
-
-  // ===============================
-  // SCORE LINE
-  // ===============================
-
-  const scoreLine = (key, label, max, icon) => {
-    const raw = getScore(key);
-    const floored = applyScoreFloor(raw, max);
-
-    const highlight =
-      bestMetric && bestMetric[0] === key
-        ? "jsw-metric-highlight"
-        : "";
-
+  function buildReferenceInfo() {
     return `
-      <div class="jsw-metric ${highlight}">
-        <span class="jsw-metric-label">${icon} ${label}</span>
-        <span class="jsw-metric-score">
-          ${floored !== null ? `${floored}/${max}` : "—"}
-        </span>
-      </div>
-    `;
-  };
-
-  // ===============================
-  // RENDER
-  // ===============================
-
-  container.innerHTML = `
-   <div class="jsw-review-card">
-
-  <div class="jsw-review-header">
-    <div class="jsw-score-ring">
-      <div class="jsw-big-score" id="jsw-animated-score">0</div>
-    </div>
-
-    <div class="jsw-score-label">Score Parfect</div>
-    <span class="jsw-pill">${viewLabel} · ${clubLabel}</span>
-    <div class="jsw-coach-comment">${coachComment}</div>
-  </div>
-
-  <div class="jsw-metrics">
-  
-
-<div class="jsw-grid">
-  ${getVisibleMetricKeys(viewTypeRaw).map((key) => {
-  const data = breakdown?.[key] || {};
-  const raw = getScore(key);
-
-    if (raw === null) return "";
-
-    const max = METRIC_MAX[key] || 20;
-    const floored = applyScoreFloor(raw, max);
-    const percent = Math.round((floored / max) * 100);
-
-    const objective =
-      objectiveMap?.[key] ||
-      "";
-
-    const measuredValue = buildComparisonBlock(key, data);
-
-    return `
-      <div class="jsw-card">
-        <div class="jsw-card-header">
-          <span>${key.toUpperCase()}</span>
-          <strong>${floored}/${max}</strong>
-        </div>
-
-        <div class="jsw-bar">
-          <div class="jsw-bar-fill" style="width:${percent}%"></div>
-        </div>
-
+      <div class="jsw-ref-info">
         ${
-          objective
-            ? `<div class="jsw-objective">${objective}</div>`
+          parfectRef
+            ? `
+          <div class="jsw-ref-block">
+            <div class="jsw-ref-title">🧠 Réf Parfect</div>
+            <div class="jsw-ref-meta">
+              id ${parfectRef.id}<br>
+              ${parfectRef.created_at ? new Date(parfectRef.created_at).toLocaleDateString() : "—"}
+            </div>
+          </div>`
             : ""
         }
 
-        ${measuredValue}
+        ${
+          userRef
+            ? `
+          <div class="jsw-ref-block">
+            <div class="jsw-ref-title">⭐ Ma réf</div>
+            <div class="jsw-ref-meta">
+              id ${userRef.id}<br>
+              ${userRef.created_at ? new Date(userRef.created_at).toLocaleDateString() : "—"}
+            </div>
+          </div>`
+            : ""
+        }
       </div>
     `;
+  }
 
-  }).join("")}
-</div>
+  function compareLine(label, actual, parfectValue, userValue, unit = "") {
+    if (actual == null) return "";
 
-//<div class="jsw-review-actions">
-  //<button id="jsw-review-back" class="jsw-btn-secondary">
-    //← Retour
-  //</button>
+    const deltaParfect =
+      typeof actual === "number" && typeof parfectValue === "number"
+        ? actual - parfectValue
+        : null;
 
-  //<button id="jsw-review-next" class="jsw-btn-primary">
-   // Swing suivant 🏌️
-  //</button>
-//</div>
+    return `
+      <div class="jsw-compare-row">
+        <div class="jsw-compare-main">${label} : ${fmt(actual)}${unit}</div>
 
+        ${
+          parfectValue != null
+            ? `<div class="jsw-compare-ref jsw-ref-parfect">
+                 Parfect : ${fmt(parfectValue)}${unit}
+                 ${deltaParfect != null ? ` · Δ ${fmt(deltaParfect)}${unit}` : ""}
+               </div>`
+            : ""
+        }
+
+        ${
+          userValue != null
+            ? `<div class="jsw-compare-ref jsw-ref-user">
+                 Moi : ${fmt(userValue)}${unit}
+               </div>`
+            : ""
+        }
+      </div>
+    `;
+  }
+
+  function buildComparisonBlock(key, data) {
+    const m = data?.metrics || data || {};
+    const sys = parfectData?.[key] || null;
+    const usr = userData?.[key] || null;
+
+    if (key === "rotation") {
+      const actual = m?.stages?.baseToTop?.actual;
+      const sysActual = sys?.stages?.baseToTop?.actual;
+      const usrActual = usr?.stages?.baseToTop?.actual;
+
+      if (!actual) return "";
+
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Épaules", actual.shoulder, sysActual?.shoulder, usrActual?.shoulder, "°")}
+          ${compareLine("Hanches", actual.hip, sysActual?.hip, usrActual?.hip, "°")}
+        </div>
+      `;
+    }
+
+    if (key === "tempo") {
+      if (typeof m?.backswingT !== "number") return "";
+
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Back", m.backswingT, sys?.backswingT, usr?.backswingT, "s")}
+          ${compareLine("Down", m.downswingT, sys?.downswingT, usr?.downswingT, "s")}
+          ${compareLine("Ratio", m.ratio, sys?.ratio, usr?.ratio)}
+        </div>
+      `;
+    }
+
+    if (key === "triangle") {
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Top", m.varTopPct, sys?.varTopPct, usr?.varTopPct, "%")}
+          ${compareLine("Impact", m.varImpactPct, sys?.varImpactPct, usr?.varImpactPct, "%")}
+        </div>
+      `;
+    }
+
+    if (key === "weightShift") {
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Back", m.shiftBack, sys?.shiftBack, usr?.shiftBack)}
+          ${compareLine("Forward", m.shiftFwd, sys?.shiftFwd, usr?.shiftFwd)}
+        </div>
+      `;
+    }
+
+    if (key === "extension") {
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Impact", m.extImpact, sys?.extImpact, usr?.extImpact)}
+          ${compareLine("Finish", m.extFinish, sys?.extFinish, usr?.extFinish)}
+        </div>
+      `;
+    }
+
+    if (key === "balance") {
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Finish move", m.finishMove, sys?.finishMove, usr?.finishMove)}
+        </div>
+      `;
+    }
+
+    if (key === "plan") {
+      return `
+        <div class="jsw-detail-inline">
+          ${compareLine("Déviation", m.deviation, sys?.deviation, usr?.deviation)}
+        </div>
+      `;
+    }
+
+    return "";
+  }
+
+  function buildCoachComment() {
+    const tips = [];
+
+    if (metrics?.rotation?.stages?.baseToTop?.actual && parfectData?.rotation?.stages?.baseToTop?.actual) {
+      const curShoulder = metrics.rotation.stages.baseToTop.actual.shoulder;
+      const refShoulder = parfectData.rotation.stages.baseToTop.actual.shoulder;
+      const d = refShoulder - curShoulder;
+
+      if (Math.abs(d) > 0.03) {
+        tips.push(`Tourne tes épaules ${d > 0 ? "+" : ""}${Math.round(d * 100)}°`);
+      }
+    }
+
+    if (typeof metrics?.tempo?.ratio === "number" && typeof metrics?.tempo?.targetRatio === "number") {
+      const d = metrics.tempo.targetRatio - metrics.tempo.ratio;
+      if (d > 0.5) {
+        tips.push("Ralentis ta montée");
+      }
+    }
+
+    if (metrics?.weightShift?.score != null && metrics.weightShift.score < 4) {
+      tips.push("Transfère plus ton poids vers l’avant");
+    }
+
+    if (metrics?.balance?.score != null && metrics.balance.score < 5) {
+      tips.push("Finis plus en équilibre");
+    }
+
+    if (!tips.length) {
+      return "Bon swing 👍 Continue comme ça.";
+    }
+
+    return tips.slice(0, 2).join("<br>");
+  }
+
+  const coachComment = buildCoachComment();
+
+  const bestMetric = visibleKeys
+    .map(k => [k, getScore(k)])
+    .sort((a, b) => b[1] - a[1])[0];
+
+  container.innerHTML = `
+    <div class="jsw-review-card">
+
+      <div class="jsw-review-header">
+        <div class="jsw-score-ring">
+          <div class="jsw-big-score" id="jsw-animated-score">0</div>
+        </div>
+
+        <div class="jsw-score-label">Score Parfect</div>
+        <span class="jsw-pill">${viewLabel} · ${clubLabel}</span>
+
+        ${buildReferenceInfo()}
+
+        <div class="jsw-coach-box">
+          <div class="jsw-coach-title">🎯 Coach Parfect</div>
+          <div class="jsw-coach-comment">${coachComment}</div>
+        </div>
+      </div>
+
+      <div class="jsw-radar-wrap">
+        <canvas id="jsw-radar" height="220"></canvas>
+      </div>
+
+      <div class="jsw-replay-compare-controls">
+        <label for="jsw-compare-mode">Replay comparatif</label>
+        <select id="jsw-compare-mode">
+          <option value="none">Aucun</option>
+          <option value="parfect" ${parfectRef ? "" : "disabled"}>vs Parfect</option>
+          <option value="user" ${userRef ? "" : "disabled"}>vs Ma référence</option>
+        </select>
+      </div>
+
+      <div class="jsw-grid">
+        ${visibleKeys.map((key) => {
+          const data = breakdown?.[key] || {};
+          const raw = getScore(key);
+          if (raw === null) return "";
+
+          const max = METRIC_MAX[key] || 20;
+          const floored = applyScoreFloor(raw, max);
+          const percent = Math.round((floored / max) * 100);
+          const measuredValue = buildComparisonBlock(key, data);
+
+          const highlight =
+            bestMetric && bestMetric[0] === key
+              ? "jsw-card-highlight"
+              : "";
+
+          return `
+            <div class="jsw-card ${highlight}">
+              <div class="jsw-card-header">
+                <span>${LABELS[key] || key.toUpperCase()}</span>
+                <strong>${floored}/${max}</strong>
+              </div>
+
+              <div class="jsw-bar">
+                <div class="jsw-bar-fill" style="width:${percent}%"></div>
+              </div>
+
+              <div class="jsw-objective">${OBJECTIVES[key] || ""}</div>
+
+              ${measuredValue}
+            </div>
+          `;
+        }).join("")}
+      </div>
     </div>
   `;
 
-  // ===============================
-  // SIGNATURE PARFECT
-  // ===============================
-
   const card = container.querySelector(".jsw-review-card");
   requestAnimationFrame(() => {
-    card.classList.add("reveal");
+    card?.classList.add("reveal");
   });
 
   const scoreEl = container.querySelector("#jsw-animated-score");
-
   function animateScore(target) {
+    if (!scoreEl) return;
+
     let current = 0;
     const duration = 700;
     const stepTime = 16;
@@ -3459,24 +3349,87 @@ function buildParfectReviewCard(swing, scores) {
       scoreEl.textContent = Math.round(current);
     }, stepTime);
   }
-
   animateScore(displayScore);
 
-  container.style.setProperty("--score", displayScore);
+  function buildRadar() {
+    const radarEl = document.getElementById("jsw-radar");
+    if (!radarEl || typeof Chart === "undefined") return;
 
-  // ===============================
-  // INTERACTIONS
-  // ===============================
+    if (window.__jswRadarChart) {
+      window.__jswRadarChart.destroy();
+      window.__jswRadarChart = null;
+    }
 
-  const toggleBtn = document.getElementById("jsw-toggle-details");
-  const detailsPanel = document.getElementById("jsw-details-panel");
+    const swingData = [
+      metrics.rotation?.score || 0,
+      metrics.tempo?.score || 0,
+      metrics.triangle?.score || 0,
+      metrics.weightShift?.score || 0,
+      metrics.extension?.score || 0,
+      metrics.balance?.score || 0
+    ];
 
-  if (toggleBtn && detailsPanel) {
-    toggleBtn.onclick = () => {
-      detailsPanel.classList.toggle("hidden");
-      toggleBtn.textContent = detailsPanel.classList.contains("hidden")
-        ? "+ Détails & objectifs"
-        : "− Masquer les détails";
+    const sysData = [
+      parfectData?.rotation?.score || 0,
+      parfectData?.tempo?.score || 0,
+      parfectData?.triangle?.score || 0,
+      parfectData?.weightShift?.score || 0,
+      parfectData?.extension?.score || 0,
+      parfectData?.balance?.score || 0
+    ];
+
+    const usrData = [
+      userData?.rotation?.score || 0,
+      userData?.tempo?.score || 0,
+      userData?.triangle?.score || 0,
+      userData?.weightShift?.score || 0,
+      userData?.extension?.score || 0,
+      userData?.balance?.score || 0
+    ];
+
+    window.__jswRadarChart = new Chart(radarEl, {
+      type: "radar",
+      data: {
+        labels: ["Rotation", "Tempo", "Triangle", "Transfert", "Extension", "Balance"],
+        datasets: [
+          {
+            label: "Swing",
+            data: swingData
+          },
+          {
+            label: "Parfect",
+            data: sysData
+          },
+          {
+            label: "Moi",
+            data: usrData
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true }
+        },
+        scales: {
+          r: {
+            min: 0,
+            max: 20,
+            ticks: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  buildRadar();
+
+  const compareModeSelect = document.getElementById("jsw-compare-mode");
+  if (compareModeSelect) {
+    compareModeSelect.onchange = () => {
+      window.jswReplayCompareMode = compareModeSelect.value;
+      renderFrame(replayFrameIndex || 0);
     };
   }
 
@@ -3908,7 +3861,7 @@ async function handleSwingComplete(swing) {
     swing.frames
   );
 
-  swing.club = window.currentClubType;
+  swing.club = swing.club || window.currentClubType || "fer7";
     
   // ======================================================
   // 2️⃣ Validation UX
