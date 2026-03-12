@@ -155,16 +155,20 @@ let captureArmed = false;
     window.ParfectReference?.default ||
     null;
 
-  window.systemReference = refSystem || null;
+  window.parfectReference = refSystem || null;
   window.userReference = refUser || null;
 
-  window.REF = refSystem || refUser || fallback;
+  window.REF =
+    refUser?.data ||
+    refSystem?.data ||
+    fallback ||
+    null;
 
   console.log("🎯 Active reference", {
     club,
     view,
-    system: !!refSystem,
-    user: !!refUser,
+   system: refSystem?.id,
+    user: refUser?.id,
     fallback: !!fallback
   });
 }
