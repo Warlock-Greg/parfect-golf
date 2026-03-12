@@ -4363,22 +4363,37 @@ function replaySwingFromHistory(swing) {
   // 4️⃣ Replay EXACT comme après un swing
   handleSwingComplete(parsedSwing);
 }
-
-    
-  function renderFrame(index) {
+function renderFrame(index) {
   if (!lastSwing || !replayCanvas || !replayCtx) return;
 
   const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
   replayFrameIndex = idx;
 
-  const refPose =
-  window.parfectReference?.data?.keyFrames?.[Object.keys(lastSwing.keyFrames)[0]]?.pose;
-  
   const pose = lastSwing.frames[idx];
-  drawPoseOnCanvas(pose, replayCanvas, replayCtx, "white");
 
-  if(refPose){
-  drawPoseOnCanvas(refPose, replayCanvas, replayCtx, "#00ff99");
+  replayCtx.clearRect(0, 0, replayCanvas.width, replayCanvas.height);
+
+  // swing courant
+  drawPoseOnCanvas(pose, replayCanvas, replayCtx, "rgba(255,255,255,0.9)");
+
+  // comparaison
+  const mode = window.jswReplayCompareMode || "none";
+  let refPose = null;
+
+  if (mode === "parfect") {
+    refPose =
+      window.parfectReference?.data?.keyFrames?.top?.pose ||
+      null;
+  }
+
+  if (mode === "user") {
+    refPose =
+      window.userReference?.data?.keyFrames?.top?.pose ||
+      null;
+  }
+
+  if (refPose) {
+    drawPoseOnCanvas(refPose, replayCanvas, replayCtx, "rgba(0,255,153,0.85)");
   }
 
   if (replayTimeline) replayTimeline.value = idx;
@@ -4387,12 +4402,13 @@ function replaySwingFromHistory(swing) {
   const t = (idx / fps).toFixed(2);
   const total = (lastSwing.frames.length / fps).toFixed(2);
 
-  // ✅ FIX ICI
   const timeEl = document.getElementById("replay-time");
   if (timeEl) {
     timeEl.textContent = `${t}s / ${total}s`;
   }
 }
+    
+ 
 
 
  function startReplay() {
