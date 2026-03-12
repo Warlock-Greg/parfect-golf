@@ -2983,6 +2983,46 @@ function buildParfectReviewCard(swing, scores) {
 };
   const breakdown = scores?.breakdown || {};
 
+  function buildReferenceInfo() {
+
+  const sys = window.parfectReference;
+  const usr = window.userReference;
+
+  return `
+  <div class="jsw-ref-info">
+
+    ${
+      sys
+        ? `
+      <div class="jsw-ref">
+        🧠 Parfect
+        <div class="jsw-ref-meta">
+          id ${sys.id}<br>
+          ${new Date(sys.created_at).toLocaleDateString()}
+        </div>
+      </div>`
+        : ""
+    }
+
+    ${
+      usr
+        ? `
+      <div class="jsw-ref">
+        ⭐ Ta référence
+        <div class="jsw-ref-meta">
+          id ${usr.id}<br>
+          ${new Date(usr.created_at).toLocaleDateString()}
+        </div>
+      </div>`
+        : ""
+    }
+
+  </div>
+  `;
+}
+
+
+  
   function getScore(key) {
   const s = breakdown?.[key]?.score;
 
@@ -3493,7 +3533,7 @@ function buildPremiumBreakdown(swing, scores) {
             ${score ?? "—"}/${max}
           </div>
         </div>
-
+        
         ${badge(score)}
 
         <div class="jsw-bar">
