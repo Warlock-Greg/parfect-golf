@@ -1088,13 +1088,13 @@ function detectFinishByStability(frames, lastIndex) {
   // ---------------------------------------------------------
   //   DRAW OVERLAY (reference)
   // ---------------------------------------------------------
-    function drawPoseOnCanvas(pose, canvas, ctx) {
+    function drawPoseOnCanvas(pose, canvas, ctx, color="gba(255,255,255,0.7)") {
     if (!canvas || !ctx || !pose) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.strokeStyle = color;
     ctx.lineWidth = 2;
 
     const w = canvas.width;
@@ -1121,7 +1121,7 @@ function detectFinishByStability(frames, lastIndex) {
       ctx.stroke();
     });
 
-    ctx.fillStyle = "rgba(0,255,153,0.9)";
+    ctx.fillStyle = color;
     [11,12,13,14,15,16,23,24,25,26,27,28].forEach((i) => {
       const pt = p(i);
       if (!pt) return;
@@ -4371,8 +4371,15 @@ function replaySwingFromHistory(swing) {
   const idx = Math.max(0, Math.min(lastSwing.frames.length - 1, index));
   replayFrameIndex = idx;
 
+  const refPose =
+  window.parfectReference?.data?.keyFrames?.[Object.keys(lastSwing.keyFrames)[0]]?.pose;
+  
   const pose = lastSwing.frames[idx];
-  drawPoseOnCanvas(pose, replayCanvas, replayCtx);
+  drawPoseOnCanvas(pose, replayCanvas, replayCtx, "white");
+
+  if(refPose){
+  drawPoseOnCanvas(refPose, replayCanvas, replayCtx, "#00ff99");
+  }
 
   if (replayTimeline) replayTimeline.value = idx;
 
