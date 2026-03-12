@@ -3057,81 +3057,222 @@ function buildParfectReviewCard(swing, scores) {
   };
 
   function buildComparisonBlock(key, data) {
+
   const m = data?.metrics || data || {};
 
-  if (key === "rotation") {
-    const actual = m?.stages?.baseToTop?.actual;
-    const target = m?.stages?.baseToTop?.target;
+  const sys = window.parfectReference?.data?.[key] || null;
+  const usr = window.userReference?.data?.[key] || null;
 
+  const compareLine = (label, value, sysValue, usrValue, unit = "") => {
+
+    if (value == null) return "";
+
+    return `
+      <div class="jsw-compare-row">
+
+        <div class="jsw-compare-main">
+          ${label} : ${fmt(value)}${unit}
+        </div>
+
+        ${
+          sysValue != null
+            ? `<div class="jsw-compare-ref jsw-ref-parfect">
+                 Parfect : ${fmt(sysValue)}${unit}
+               </div>`
+            : ""
+        }
+
+        ${
+          usrValue != null
+            ? `<div class="jsw-compare-ref jsw-ref-user">
+                 Moi : ${fmt(usrValue)}${unit}
+               </div>`
+            : ""
+        }
+
+      </div>
+    `;
+  };
+
+  // ===============================
+  // ROTATION
+  // ===============================
+
+  if (key === "rotation") {
+
+    const actual = m?.stages?.baseToTop?.actual;
     if (!actual) return "";
+
+    const sysActual = sys?.stages?.baseToTop?.actual;
+    const usrActual = usr?.stages?.baseToTop?.actual;
 
     return `
       <div class="jsw-detail-inline">
-        Épaules : ${fmt(actual.shoulder)}<br>
-        Hanches : ${fmt(actual.hip)}
-        ${
-          target
-            ? `<br><span class="jsw-target">Cible épaules : ${fmt(target.shoulder)} · hanches : ${fmt(target.hip)}</span>`
-            : ""
-        }
+
+        ${compareLine(
+          "Épaules",
+          actual.shoulder,
+          sysActual?.shoulder,
+          usrActual?.shoulder,
+          "°"
+        )}
+
+        ${compareLine(
+          "Hanches",
+          actual.hip,
+          sysActual?.hip,
+          usrActual?.hip,
+          "°"
+        )}
+
       </div>
     `;
   }
 
+  // ===============================
+  // TEMPO
+  // ===============================
+
   if (key === "tempo") {
+
     if (typeof m?.backswingT !== "number") return "";
 
     return `
       <div class="jsw-detail-inline">
-        Back : ${fmt(m.backswingT)}s<br>
-        Down : ${fmt(m.downswingT)}s<br>
-        Ratio : ${fmt(m.ratio)}:1
-        ${
-          typeof m?.targetRatio === "number"
-            ? `<br><span class="jsw-target">Cible : ${fmt(m.targetRatio)}:1</span>`
-            : ""
-        }
+
+        ${compareLine(
+          "Back",
+          m.backswingT,
+          sys?.backswingT,
+          usr?.backswingT,
+          "s"
+        )}
+
+        ${compareLine(
+          "Down",
+          m.downswingT,
+          sys?.downswingT,
+          usr?.downswingT,
+          "s"
+        )}
+
+        ${compareLine(
+          "Ratio",
+          m.ratio,
+          sys?.ratio,
+          usr?.ratio
+        )}
+
       </div>
     `;
   }
+
+  // ===============================
+  // TRIANGLE
+  // ===============================
 
   if (key === "triangle") {
+
     return `
       <div class="jsw-detail-inline">
-        Top : ${fmt(m.varTopPct)}%<br>
-        Impact : ${fmt(m.varImpactPct)}%
+
+        ${compareLine(
+          "Top",
+          m.varTopPct,
+          sys?.varTopPct,
+          usr?.varTopPct,
+          "%"
+        )}
+
+        ${compareLine(
+          "Impact",
+          m.varImpactPct,
+          sys?.varImpactPct,
+          usr?.varImpactPct,
+          "%"
+        )}
+
       </div>
     `;
   }
+
+  // ===============================
+  // WEIGHT SHIFT
+  // ===============================
 
   if (key === "weightShift") {
+
     return `
       <div class="jsw-detail-inline">
-        Back : ${fmt(m.shiftBack)}<br>
-        Forward : ${fmt(m.shiftFwd)}
+
+        ${compareLine(
+          "Back",
+          m.shiftBack,
+          sys?.shiftBack,
+          usr?.shiftBack
+        )}
+
+        ${compareLine(
+          "Forward",
+          m.shiftFwd,
+          sys?.shiftFwd,
+          usr?.shiftFwd
+        )}
+
       </div>
     `;
   }
+
+  // ===============================
+  // EXTENSION
+  // ===============================
 
   if (key === "extension") {
+
     return `
       <div class="jsw-detail-inline">
-        Impact : ${fmt(m.extImpact)}<br>
-        Finish : ${fmt(m.extFinish)}
+
+        ${compareLine(
+          "Impact",
+          m.extImpact,
+          sys?.extImpact,
+          usr?.extImpact
+        )}
+
+        ${compareLine(
+          "Finish",
+          m.extFinish,
+          sys?.extFinish,
+          usr?.extFinish
+        )}
+
       </div>
     `;
   }
 
+  // ===============================
+  // BALANCE
+  // ===============================
+
   if (key === "balance") {
+
     return `
       <div class="jsw-detail-inline">
-        Finish move : ${fmt(m.finishMove)}
+
+        ${compareLine(
+          "Finish move",
+          m.finishMove,
+          sys?.finishMove,
+          usr?.finishMove
+        )}
+
       </div>
     `;
   }
 
   return "";
 }
+
 
   // ===============================
   // SCORE FLOOR (UX uniquement)
