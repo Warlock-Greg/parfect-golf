@@ -1883,25 +1883,13 @@ const view =
   document.getElementById("jsw-camera-select")?.value ||
   "faceOn";
 
-// 🔵 Référence Parfect
-const refSystem = await window.getSystemReference(club, view);
+const REF = window.REF;
 
-// 🟢 Référence User
-const refUser = await window.getUserReference(club, view);
+if (!REF) {
+  console.warn("⚠️ No active reference → fallback scoring");
+}
 
-// référence active de calcul détaillé = Parfect par défaut
-window.systemReference = refSystem || null;
-window.userReference = refUser || null;
-window.REF = refSystem || refUser || null;
 
-console.log("REF rotation", window.REF?.rotation);
-console.log("REF tempo", window.REF?.tempo);
-console.log("🎯 Références chargées", {
-  club,
-  view,
-  system: !!refSystem,
-  user: !!refUser
-});
     
     
   //const PARFECT_REF = window.parfectReference?.rotation;
