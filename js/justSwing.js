@@ -1872,21 +1872,13 @@ function getKeyframePose(type, metrics, activeSwing) {
 // 🔑 RÉFÉRENCES ACTIVES — DOUBLE MODE
 // =====================================================
 
-const club =
-  swing?.club ||
-  window.currentClubType ||
-  document.getElementById("jsw-club-select")?.value ||
-  "fer7";
-   
-const view =
-  window.jswViewType ||
-  document.getElementById("jsw-camera-select")?.value ||
-  "faceOn";
+const REF = window.REF || null;
 
-const REF = window.REF;
+console.log("REF rotation", REF?.rotation);
+console.log("REF tempo", REF?.tempo);
 
 if (!REF) {
-  console.warn("⚠️ No active reference → fallback scoring");
+  console.warn("⚠️ No active reference available → fallback scoring");
 }
 
 
@@ -1904,14 +1896,14 @@ if (!REF) {
 
   
 const REF_SAFE = {
-  rotation: window.REF?.rotation ?? null,
-  triangle: window.REF?.triangle ?? null,
-  weightShift: window.REF?.weightShift ?? null,
-  extension: window.REF?.extension ?? null,
-  tempo: window.REF?.tempo ?? null,
+  rotation: REF?.rotation ?? null,
+  triangle: REF?.triangle ?? null,
+  weightShift: REF?.weightShift ?? null,
+  extension: REF?.extension ?? null,
+  tempo: REF?.tempo ?? null,
 };
 
-const REF = window.REF;
+
 
 if (!REF) {
   console.warn("⚠️ No Parfect reference available → fallback scoring");
