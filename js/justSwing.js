@@ -136,7 +136,6 @@ let captureArmed = false;
 }
 
 async function loadActiveReference() {
-
   const club =
     window.currentClubType ||
     document.getElementById("jsw-club-select")?.value ||
@@ -155,11 +154,16 @@ async function loadActiveReference() {
     window.ParfectReference?.default ||
     null;
 
-  // garder les objets complets pour l'UI
+  // objets complets pour l'UI
   window.parfectReference = refSystem || null;
   window.userReference = refUser || null;
 
-  const rawRef = refSystem || refUser || fallback;
+  // données brutes pour le scoring
+  const rawRef =
+    refUser?.data ||
+    refSystem?.data ||
+    fallback ||
+    null;
 
   if (!rawRef) {
     console.warn("⚠️ Aucune référence disponible");
@@ -167,43 +171,80 @@ async function loadActiveReference() {
     return;
   }
 
-  // -------------------------------------------------
-  // NORMALISATION POUR LE MOTEUR DE SCORING
-  // -------------------------------------------------
-
-  const normalized = {
-
+  window.REF = {
     rotation: {
-      shoulder: rawRef?.rotation?.stages?.baseToTop?.target?.shoulder ?? 0,
-      hip: rawRef?.rotation?.stages?.baseToTop?.target?.hip ?? 0
+      shoulder: {
+        target:
+          rawRef?.rotation?.ref?.shoulder?.target ??
+          rawRef?.rotation?.stages?.baseToTop?.target?.shoulder ??
+          0,
+        tol:
+          rawRef?.rotation?.ref?.shoulder?.tol ??
+          rawRef?.rotation?.stages?.baseToTop?.tol?.shoulder ??
+          0.05
+      },
+      hip: {
+        target:
+          rawRef?.rotation?.ref?.hip?.target ??
+          rawRef?.rotation?.stages?.baseToTop?.target?.hip ??
+          0.03,
+        tol:
+          rawRef?.rotation?.ref?.hip?.tol ??
+          rawRef?.rotation?.stages?.baseToTop?.tol?.hip ??
+          0.6
+      },
+      xFactor: {
+        target: rawRef?.rotation?.ref?.xFactor?.target ?? 0.17,
+        tol: rawRef?.rotation?.ref?.xFactor?.tol ?? 0.07
+      }
     },
 
     tempo: {
-      ratio: rawRef?.tempo?.targetRatio ?? 3
-    },
-
-    triangle: {
-      top: rawRef?.triangle?.varTopPct ?? 0,
-      impact: rawRef?.triangle?.varImpactPct ?? 0
+      ratio: {
+        target:
+          rawRef?.tempo?.ratio?.target ??
+          rawRef?.tempo?.targetRatio ??
+          3.05,
+        tol:
+          rawRef?.tempo?.ratio?.tol ??
+          rawRef?.tempo?.tolRatio ??
+          0.8
+      }
     },
 
     weightShift: {
-      back: rawRef?.weightShift?.shiftBack ?? 0,
-      forward: rawRef?.weightShift?.shiftFwd ?? 0
+      back: {
+        target:
+          rawRef?.weightShift?.back?.target ??
+          Math.abs(rawRef?.weightShift?.shiftBack ?? 0.03),
+        tol:
+          rawRef?.weightShift?.back?.tol ??
+          0.12
+      },
+      fwd: {
+        target:
+          rawRef?.weightShift?.fwd?.target ??
+          Math.abs(rawRef?.weightShift?.shiftFwd ?? 0.08),
+        tol:
+          rawRef?.weightShift?.fwd?.tol ??
+          0.12
+      }
     },
 
     extension: {
-      impact: rawRef?.extension?.extImpact ?? 0,
-      finish: rawRef?.extension?.extFinish ?? 0
+      target:
+        rawRef?.extension?.target ??
+        rawRef?.extension?.value ??
+        rawRef?.extension?.extFinish ??
+        2.5,
+      tol:
+        rawRef?.extension?.tol ??
+        1.0
     },
 
-    balance: {
-      finishMove: rawRef?.balance?.finishMove ?? 0
-    }
-
+    triangle: rawRef?.triangle || null,
+    balance: rawRef?.balance || null
   };
-
-  window.REF = normalized;
 
   console.log("🎯 Active reference", {
     club,
@@ -214,6 +255,8 @@ async function loadActiveReference() {
   });
 
   console.log("📊 REF normalisée", window.REF);
+  console.log("REF rotation", window.REF?.rotation);
+  console.log("REF tempo", window.REF?.tempo);
 }
 
   // ---------------------------------------------------------
