@@ -3892,6 +3892,15 @@ async function handleSwingComplete(swing) {
   isRecordingActive = false;
 
   // ======================================================
+  // 4️⃣ Charger référence active
+  // ======================================================
+
+  if (typeof loadActiveReference === "function") {
+  await loadActiveReference();
+  console.log("🎯 REF ACTIVE", window.REF);
+  }
+  
+  // ======================================================
   // 4️⃣ Scoring Premium
   // ======================================================
   const scores = await computeSwingScorePremium(swing);
