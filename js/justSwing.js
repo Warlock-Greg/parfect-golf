@@ -135,7 +135,7 @@ let captureArmed = false;
     : "—";
 }
 
-  async function loadActiveReference() {
+async function loadActiveReference() {
 
   const club =
     window.currentClubType ||
@@ -155,22 +155,65 @@ let captureArmed = false;
     window.ParfectReference?.default ||
     null;
 
+  // garder les objets complets pour l'UI
   window.parfectReference = refSystem || null;
   window.userReference = refUser || null;
 
-  window.REF =
-    refUser?.data ||
-    refSystem?.data ||
-    fallback ||
-    null;
+  const rawRef = refSystem || refUser || fallback;
+
+  if (!rawRef) {
+    console.warn("⚠️ Aucune référence disponible");
+    window.REF = null;
+    return;
+  }
+
+  // -------------------------------------------------
+  // NORMALISATION POUR LE MOTEUR DE SCORING
+  // -------------------------------------------------
+
+  const normalized = {
+
+    rotation: {
+      shoulder: rawRef?.rotation?.stages?.baseToTop?.target?.shoulder ?? 0,
+      hip: rawRef?.rotation?.stages?.baseToTop?.target?.hip ?? 0
+    },
+
+    tempo: {
+      ratio: rawRef?.tempo?.targetRatio ?? 3
+    },
+
+    triangle: {
+      top: rawRef?.triangle?.varTopPct ?? 0,
+      impact: rawRef?.triangle?.varImpactPct ?? 0
+    },
+
+    weightShift: {
+      back: rawRef?.weightShift?.shiftBack ?? 0,
+      forward: rawRef?.weightShift?.shiftFwd ?? 0
+    },
+
+    extension: {
+      impact: rawRef?.extension?.extImpact ?? 0,
+      finish: rawRef?.extension?.extFinish ?? 0
+    },
+
+    balance: {
+      finishMove: rawRef?.balance?.finishMove ?? 0
+    }
+
+  };
+
+  window.REF = normalized;
 
   console.log("🎯 Active reference", {
     club,
     view,
-   system: refSystem?.id,
+    system: refSystem?.id,
     user: refUser?.id,
     fallback: !!fallback
   });
+
+  console.log("📊 REF normalisée", window.REF);
 }
 
   // ---------------------------------------------------------
