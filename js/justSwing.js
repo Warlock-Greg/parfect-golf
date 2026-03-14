@@ -1882,8 +1882,6 @@ if (!REF) {
 }
 
 
-    
-    
   //const PARFECT_REF = window.parfectReference?.rotation;
   let postureScore = 0;   // valeur neutre, informative
   let addressScore = null; // ⚠️ null = “non scoré”
@@ -1902,8 +1900,6 @@ const REF_SAFE = {
   extension: REF?.extension ?? null,
   tempo: REF?.tempo ?? null,
 };
-
-
 
 if (!REF) {
   console.warn("⚠️ No Parfect reference available → fallback scoring");
