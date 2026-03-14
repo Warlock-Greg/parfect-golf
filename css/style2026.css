@@ -1766,7 +1766,6 @@ position: absolute;
 
 /* Contenu interne déjà généré par JS */
 #swing-score-breakdown > div {
-  width: min(92vw, 520px);
   max-height: 90vh;
   overflow-y: auto;
 
