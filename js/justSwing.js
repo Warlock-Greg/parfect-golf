@@ -1808,6 +1808,8 @@ window.systemReference = refSystem || null;
 window.userReference = refUser || null;
 window.REF = refSystem || refUser || null;
 
+console.log("REF rotation", window.REF?.rotation);
+console.log("REF tempo", window.REF?.tempo);
 console.log("🎯 Références chargées", {
   club,
   view,
