@@ -4188,7 +4188,7 @@ function stopRecording() {
   console.log("🟪 Frames disponibles :", swing?.frames?.length);
   console.log("🟪 Keyframes:", swing?.keyFrames);
   console.log("🟪 Scores:", scores);
-    console.trace("TRACE initSwingReplay");
+  
 
   // -----------------------------
   // Guard
