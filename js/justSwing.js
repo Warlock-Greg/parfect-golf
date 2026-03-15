@@ -2652,12 +2652,9 @@ const total =
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 
-function computeTotalWithReference(reference) {
+function computeTotalWithReference(reference, metrics) {
 
   if (!reference) return null;
-
-  // on extrait seulement les metrics
-  const ref = reference.reference_json || reference;
 
   const metricScores = {
     posture:     metrics.posture?.score ?? null,
@@ -2688,7 +2685,7 @@ function computeTotalWithReference(reference) {
 
   }
 
-  return maxPossible > 0
+  return maxPossible
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 }
