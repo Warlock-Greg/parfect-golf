@@ -2699,7 +2699,7 @@ const totalSystem = computeTotalWithReference(window.systemReference, metrics);
 const totalUser = computeTotalWithReference(window.userReference, metrics);
 
 // fallback si aucune référence
-const total = computeTotalWithReference({ demo: true }, metrics);
+// const total = computeTotalWithReference({ demo: true }, metrics);
    
 // =====================================================
 // RETURN FINAL — API STABLE
