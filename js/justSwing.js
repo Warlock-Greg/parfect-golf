@@ -1874,6 +1874,10 @@ function getKeyframePose(type, metrics, activeSwing) {
 
 const REF = window.REF || null;
 
+   // 🔧 récupération références UI
+const refSystem = window.systemReference || null;
+const refUser = window.userReference || null;
+
 console.log("REF rotation", REF?.rotation);
 console.log("REF tempo", REF?.tempo);
 
