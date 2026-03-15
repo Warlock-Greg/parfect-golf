@@ -2652,15 +2652,12 @@ const total =
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 
-// =====================================================
-// 🎯 DOUBLE SCORE (Parfect + Moi)
-// =====================================================
+function computeTotalWithReference(reference) {
 
-function computeTotalWithReference(ref) {
+  if (!reference) return null;
 
-  if (!ref) return null;
-
-  window.REF = ref;
+  // on extrait seulement les metrics
+  const ref = reference.reference_json || reference;
 
   const metricScores = {
     posture:     metrics.posture?.score ?? null,
@@ -2676,26 +2673,25 @@ function computeTotalWithReference(ref) {
   let maxPossible = 0;
 
   for (const key in METRIC_WEIGHTS) {
+
     const score  = metricScores[key];
     const weight = METRIC_WEIGHTS[key];
 
     if (typeof score === "number") {
+
       const normalized = score / 20;
+
       weightedSum += normalized * weight;
       maxPossible += weight;
+
     }
+
   }
 
   return maxPossible > 0
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 }
-
-// 🔵 vs Parfect
-const totalSystem = computeTotalWithReference(refSystem);
-
-// 🟢 vs Ma référence
-const totalUser = computeTotalWithReference(refUser);
     
 // =====================================================
 // RETURN FINAL — API STABLE
