@@ -2689,7 +2689,18 @@ function computeTotalWithReference(reference, metrics) {
     ? Math.round((weightedSum / maxPossible) * 100)
     : 0;
 }
-    
+
+// =====================================================
+// 🎯 DOUBLE SCORE (Parfect + User)
+// =====================================================
+
+const totalSystem = computeTotalWithReference(window.systemReference, metrics);
+
+const totalUser = computeTotalWithReference(window.userReference, metrics);
+
+// fallback si aucune référence
+const total = computeTotalWithReference({ demo: true }, metrics);
+   
 // =====================================================
 // RETURN FINAL — API STABLE
 // =====================================================
