@@ -138,7 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (routeKey === "justswing") {
       // JustSwing: on ne force pas leaveSwingMode ici
       document.body.classList.add("mode-swing");
-      document.body.classList.add("jsw-fullscreen"); // si ton CSS masque header/nav
+      document.body.classList.remove("jsw-fullscreen"); // si ton CSS masque header/nav
 
       // laisse le DOM respirer
       await new Promise((r) => requestAnimationFrame(r));
