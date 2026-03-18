@@ -2307,12 +2307,12 @@ background: #ffffff;
 #jsw-quit-btn {display: none;}
 
 #jsw-start.btn {
-    height: 42px;
-    padding: 0 18px;
-    background: var(--pg-green-main);
-    color: #fff;
-    border: none;
-    border-radius: var(--pg-radius-pill);
-    font-weight: 600;
+    height: 42px!important;
+    padding: 0 18px!important;
+    background: var(--pg-green-main)!important;
+    color: #fff!important;
+    border: none!important;
+    border-radius: var(--pg-radius-pill!important);
+    font-weight: 600!important;
     cursor: pointer;
     white-space: nowrap;}
