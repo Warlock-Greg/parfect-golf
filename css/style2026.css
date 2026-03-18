@@ -1243,12 +1243,10 @@ position: fixed;
   z-index: 50;
   min-width: 95vw;
   padding: 22px 28px;
-  background: rgba(0,0,0,0.55);
   border-radius: 18px;
   color: red;
   font-size: 1.4rem;
   font-weight: 700;
-  text-shadow: 0 0 12px rgba(0,0,0,0.9);
   backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.5s ease;
@@ -1275,6 +1273,7 @@ position: fixed;
   flex-direction: column;
   gap: 10px;
 }
+
 
 
 .jsw-details-btn {
@@ -2300,3 +2299,14 @@ background: #ffffff;
   background: var(--pg-bg-muted);
   border: none;
 }
+
+.jsw-start.btn {
+    height: 42px;
+    padding: 0 18px;
+    background: var(--pg-green-main);
+    color: #fff;
+    border: none;
+    border-radius: var(--pg-radius-pill);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;}
