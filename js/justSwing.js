@@ -135,6 +135,39 @@ let captureArmed = false;
     : "—";
 }
 
+  // ===============================
+// ORIENTATION HELPER
+// ===============================
+function updateOrientation() {
+  const isPortrait = window.innerHeight > window.innerWidth;
+
+  const video = document.getElementById("jsw-video");
+  const overlay = document.getElementById("jsw-overlay");
+
+  if (!video || !overlay) return;
+
+  if (isPortrait) {
+    video.style.transform =
+      "translate(-50%, -50%) rotate(90deg)";
+    overlay.style.transform =
+      "translate(-50%, -50%) rotate(90deg)";
+
+    video.style.top = "50%";
+    video.style.left = "50%";
+    overlay.style.top = "50%";
+    overlay.style.left = "50%";
+
+    video.style.width = "100vh";
+    video.style.height = "100vw";
+    overlay.style.width = "100vh";
+    overlay.style.height = "100vw";
+
+  } else {
+    video.style = "";
+    overlay.style = "";
+  }
+}
+
 async function loadActiveReference() {
   const club =
     window.currentClubType ||
@@ -284,9 +317,16 @@ async function loadActiveReference() {
     }
 
     ctx = overlayEl.getContext("2d", { willReadFrequently: true });
-
-    window.addEventListener("resize", resizeOverlay);
+    
     resizeOverlay();
+     updateOrientation(); // 🔥 initial
+   
+    window.addEventListener("resize", () => {
+    resizeOverlay();
+    updateOrientation();
+      });
+    
+  window.addEventListener("orientationchange", updateOrientation);
 
     console.log("✅ JustSwing initialisé");
   }
