@@ -2306,7 +2306,7 @@ background: #ffffff;
 
 #jsw-quit-btn {display: none;}
 
-#jsw-start.btn {
+#jsw-start-btn {
     height: 42px!important;
     padding: 0 18px!important;
     background: var(--pg-green-main)!important;
