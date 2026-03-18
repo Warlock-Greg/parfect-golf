@@ -1464,9 +1464,11 @@ position: fixed;
 
 
 #swing-replay-fullscreen {
-  background: rgba(255,255,255,0.08);
+  background: green;
   border: 1px solid rgba(255,255,255,0.2);
 }
+
+#swing-timeline {display: none;}
 
 /* -------------------------------
    VIDEO
