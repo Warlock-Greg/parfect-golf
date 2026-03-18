@@ -1643,6 +1643,7 @@ position: absolute;
   font-weight: 600;
   box-shadow: var(--pg-shadow-soft);
   z-index: 9000;
+   display: none;
 }
 
 
