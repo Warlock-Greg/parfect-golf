@@ -464,52 +464,8 @@ body.coach-hidden #coach-ia {
 .hidden { display: none; }
 
 
-/* En Just Swing → caché */
-body.jsw-fullscreen #coach-ia {
-  display: none;
-}
 
 
-
-
-
-/* En mode Just Swing : pas d’input */
-body.jsw-fullscreen .pg-coach-input {
-  display: none;
-}
-
-/* =========================================
-   JUST SWING (FULLSCREEN)
-   ========================================= */
-
-body.jsw-fullscreen {
-  overflow: hidden;
-}
-
-body.jsw-fullscreen .pg-header,
-body.jsw-fullscreen .bottom-nav {
-  display: none;
-}
-
-.jsw-area {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 5000;
-}
-
-.jsw-screen {
-  position: relative;
-  width: 100%;
-  height: 60vh;           /* 🔥 réduit la hauteur */
-  max-height: 600px;
-  overflow: hidden;
-  background: #000;
-  border-radius: 20px;
-  aspect-ratio: 9 / 16;
-  height: auto;
-  max-height: 70vh;
-}
 
 
 .jsw-logo {
@@ -1101,60 +1057,12 @@ position: fixed;
   width: min(92vw, 420px);
 }
 
-/* =========================================================
-   JUST SWING — ZEN OVERRIDE (SOURCE DE VÉRITÉ)
-   ========================================================= */
 
-#just-swing-area {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 20000;
-  display: block;
-}
 
-#just-swing-screen {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* === VIDÉO === */
-#jsw-video {
- position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;      /* 👈 important */
-}
-
-/* === OVERLAY SQUELETTE === */
-#jsw-overlay {
-   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-#swing-video,
-#jsw-overlay {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* 👈 important */
-}
 
 #jsw-overlay canvas,
 #jsw-overlay {
   image-rendering: optimizeQuality;
-}
-
-.jsw-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 16px;
-  margin-top: 12px;
 }
 
 .jsw-metric {
@@ -1581,13 +1489,7 @@ position: fixed;
   pointer-events: none;
 }
 
-#swing-video {
-  width: 100%;
-  border-radius: 18px;
-  background: #000;
-  box-shadow: var(--pg-shadow-soft);
-   height: 75%;
-}
+
 
 body.jsw-replay-fullscreen {
   overflow: hidden;
@@ -2104,6 +2006,9 @@ background: #ffffff;
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 18px;
+  background: #000;
+  box-shadow: var(--pg-shadow-soft);
 }
 
 #swing-score-breakdown {
@@ -2256,4 +2161,128 @@ background: #ffffff;
 
 .jsw-card-highlight{
   outline:2px solid rgba(0,255,153,0.35);
+}
+
+/* =====================================
+   JUST SWING — CORE CLEAN
+===================================== */
+
+#just-swing-area {
+  position: relative;
+  width: 100%;
+  padding: 12px;
+}
+
+/* écran principal */
+.jsw-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* =====================================
+   VIDEO (LANDSCAPE)
+===================================== */
+
+.jsw-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 50vh;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* video + canvas */
+#jsw-video,
+#jsw-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ✅ anti zoom */
+}
+
+#jsw-overlay {
+  pointer-events: none;
+}
+
+/* =====================================
+   CONTENT
+===================================== */
+
+.jsw-content {
+  background: var(--pg-bg-soft);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: var(--pg-shadow-soft);
+}
+
+/* score */
+.jsw-score-value {
+  font-size: 48px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--pg-green-main);
+}
+
+/* metrics */
+.jsw-metrics {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+/* coach */
+.jsw-coach {
+  background: var(--pg-green-soft);
+  color: var(--pg-green-main);
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+/* =====================================
+   ACTIONS
+===================================== */
+
+.jsw-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.jsw-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--pg-radius-pill);
+  font-weight: 600;
+}
+
+.jsw-actions .primary {
+  background: var(--pg-green-main);
+  color: white;
+}
+
+/* =====================================
+   HEADER JSW
+===================================== */
+
+.jsw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.jsw-logo {
+  height: 24px;
+  opacity: 0.9;
+}
+
+.jsw-select {
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--pg-bg-muted);
+  border: none;
 }
