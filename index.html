@@ -513,19 +513,7 @@
 
   document.body.classList.add("jsw-replay-fullscreen");
 
-  // 🔁 Recalculer la taille du canvas APRÈS le layout
-  setTimeout(() => {
-    const videoEl = document.getElementById("swing-video");
-    const overlay = document.getElementById("swing-overlay-canvas");
-    if (!videoEl || !overlay) return;
 
-    const rect = videoEl.getBoundingClientRect();
-    overlay.width = Math.floor(rect.width);
-    overlay.height = Math.floor(rect.height);
-
-    renderFrame(replayFrameIndex);
-  }, 50);
-});
 
     // Just Swing exit
     document.getElementById("jsw-exit-btn")?.addEventListener("click", exitJustSwing);
