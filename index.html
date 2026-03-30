@@ -175,8 +175,11 @@
        SWING REVIEW (tu l’avais en overlay)
        - je conserve tes IDs
        ========================================= -->
-  <section id="swing-review" style="display:none;">
-    <div class="swing-review-video">
+ <section id="swing-review" class="swing-review-screen" style="display:none;">
+
+  <!-- REPLAY -->
+  <div class="swing-review-video">
+    <div class="swing-video-stage">
       <video id="swing-video" playsinline></video>
 
       <div class="swing-player-controls">
@@ -192,45 +195,50 @@
 
         <input id="swing-timeline" type="range" min="0" max="100" value="0">
         <span id="swing-time-label">0.0s</span>
-        <button id="swing-replay-fullscreen" class="pg-btn-secondary" type="button">
-        🔁 Replay plein écran
-        </button>
 
+        <button id="swing-replay-fullscreen" class="pg-btn-secondary" type="button">
+          🔁 Replay plein écran
+        </button>
       </div>
     </div>
+  </div>
 
-    <div id="swing-score-breakdown" style="display:block;"></div>
+  <!-- SCORE : on ne change rien -->
+  <div id="swing-score-breakdown" style="display:block;"></div>
 
-    <div class="swing-review-info">
-      <h2 id="swing-review-score" style="display:none;">Score : --</h2>
-      <p id="swing-review-comment" style="display:none;">Analyse…</p>
-    </div>
+  <div class="swing-review-info">
+    <h2 id="swing-review-score" style="display:none;">Score : --</h2>
+    <p id="swing-review-comment" style="display:none;">Analyse…</p>
+  </div>
 
-    <div class="swing-review-actions">
-      <button id="swing-save-reference" class="pg-btn-secondary" type="button">
-        Définir comme ma référence
-      </button>
+  <!-- HISTORIQUE -->
+  <div class="swing-review-history">
+    <h3>Historique</h3>
+    <div id="swing-history" class="swing-history-list"></div>
+  </div>
 
-      <button id="swing-save-parfect-reference" class="pg-btn-secondary" type="button" style="display:none;">
-        Définir comme référence PARFECT
-      </button>
+  <!-- ACTIONS STICKY BOTTOM -->
+  <div class="swing-review-actions">
+    <button id="swing-save-reference" class="pg-btn-secondary" type="button">
+      Définir comme ma référence
+    </button>
 
-      <div id="parfect-ref-feedback" style="display:none;"></div>
+    <button id="swing-save-parfect-reference" class="pg-btn-secondary" type="button" style="display:none;">
+      Définir comme référence PARFECT
+    </button>
 
-      <button id="swing-review-next" class="pg-btn-primary" type="button">
-        Swing suivant
-      </button>
-    </div>
+    <div id="parfect-ref-feedback" style="display:none;"></div>
 
-    <div class="swing-review-history">
-      <h3>Historique</h3>
-      <div id="swing-history" class="swing-history-list"></div>
-    </div>
+    <button id="swing-review-next" class="pg-btn-primary" type="button">
+      Swing suivant
+    </button>
 
     <button id="jsw-close-review" class="pg-btn-secondary" type="button">
       Fermer
     </button>
-  </section>
+  </div>
+
+</section>
 
   <!-- =========================================
        ONBOARDING (Zen)
