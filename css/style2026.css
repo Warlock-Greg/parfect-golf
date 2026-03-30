@@ -2343,3 +2343,176 @@ background: #ffffff;
   height: 100%;
   object-fit: contain;
 }
+
+
+/* =========================================
+   SWING REVIEW LAYOUT
+========================================= */
+
+#swing-review.swing-review-screen {
+  min-height: 100vh;
+  padding-bottom: 150px; /* espace pour la barre sticky */
+  box-sizing: border-box;
+}
+
+/* =========================================
+   REPLAY ZONE = 50% écran
+========================================= */
+
+.swing-review-video {
+  height: 50vh;
+  min-height: 320px;
+  max-height: 520px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.swing-video-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  border-radius: 28px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#swing-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* si tu as aussi un canvas overlay */
+#swing-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* =========================================
+   CONTROLES REPLAY
+========================================= */
+
+.swing-player-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swing-player-controls button,
+.swing-player-controls select,
+.swing-player-controls input,
+.swing-player-controls span {
+  font-size: 14px;
+}
+
+#swing-play-pause,
+#swing-speed,
+#swing-replay-fullscreen {
+  min-height: 38px;
+  border-radius: 999px;
+}
+
+#swing-timeline {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+#swing-time-label {
+  min-width: 72px;
+  text-align: center;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* =========================================
+   SCORE / INFO / HISTORIQUE
+========================================= */
+
+.swing-review-info,
+.swing-review-history,
+#swing-score-breakdown {
+  position: relative;
+  z-index: 1;
+}
+
+/* on ne touche pas visuellement au score */
+#swing-score-breakdown {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* =========================================
+   ACTIONS STICKY BOTTOM
+========================================= */
+
+.swing-review-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  width: 100%;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+
+  background: rgba(245, 245, 245, 0.96);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.swing-review-actions button {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 16px;
+}
+
+/* feedback pleine largeur aussi */
+#parfect-ref-feedback {
+  width: 100%;
+  font-size: 14px;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+  .swing-review-video {
+    height: 50vh;
+    min-height: 280px;
+  }
+
+  .swing-player-controls {
+    gap: 6px;
+  }
+
+  #swing-replay-fullscreen {
+    width: 100%;
+  }
+
+  #swing-speed {
+    min-width: 76px;
+  }
+}
