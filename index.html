@@ -269,56 +269,6 @@
 
 </div>
 
-<script>
-(function () {
-  const KEY = "parfect:onboarding:done";
-  const onboarding = document.getElementById("onboarding");
-  if (!onboarding) return;
-
-  if (localStorage.getItem(KEY) === "true") {
-    onboarding.remove();
-    return;
-  }
-
-  document.body.classList.add("onboarding-active");
-
-  let step = 1;
-  const steps = onboarding.querySelectorAll(".pg-onboarding-step");
-
-  function showStep(n) {
-    steps.forEach(s => s.classList.remove("active"));
-    onboarding
-      .querySelector(`[data-step="${n}"]`)
-      ?.classList.add("active");
-  }
-
-  onboarding.querySelectorAll("[data-next]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      step++;
-      showStep(step);
-    });
-  });
-
-  document
-    .getElementById("finish-onboarding")
-    ?.addEventListener("click", () => {
-      localStorage.setItem(KEY, "true");
-      onboarding.classList.add("fade-out");
-
-      setTimeout(() => onboarding.remove(), 400);
-      document.body.classList.remove("onboarding-active");
-
-      showView?.("home-area");
-      window.coachReact?.(
-        "Choisis une action. Une seule intention, un seul coup."
-      );
-    });
-
-  showStep(1);
-})();
-</script>
-
-
   <!-- =========================================
        NAV BOTTOM (Home hub)
        - Visible hors Just Swing fullscreen
@@ -512,11 +462,11 @@
   console.log("🔁 Replay fullscreen");
 
   document.body.classList.add("jsw-replay-fullscreen");
-
+});
 
 
     // Just Swing exit
-    document.getElementById("jsw-exit-btn")?.addEventListener("click", exitJustSwing);
+    document.getElementById("jsw-quit-btn")?.addEventListener("click", exitJustSwing);
 
     // Default view safety
     if (document.body.classList.contains("onboarding-active")) {
