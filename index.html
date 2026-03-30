@@ -178,30 +178,33 @@
  <section id="swing-review" class="swing-review-screen" style="display:none;">
 
   <!-- REPLAY -->
-  <div class="swing-review-video">
-    <div class="swing-video-stage">
+ <div class="swing-review-video">
+  <div class="swing-video-stage">
+    <div class="swing-video-canvas-wrap">
       <video id="swing-video" playsinline></video>
-
-      <div class="swing-player-controls">
-        <button id="swing-play-pause" type="button">Play</button>
-
-        <select id="swing-speed">
-          <option value="0.25">0.25×</option>
-          <option value="0.5">0.5×</option>
-          <option value="1" selected>1×</option>
-          <option value="1.5">1.5×</option>
-          <option value="2">2×</option>
-        </select>
-
-        <input id="swing-timeline" type="range" min="0" max="100" value="0">
-        <span id="swing-time-label">0.0s</span>
-
-        <button id="swing-replay-fullscreen" class="pg-btn-secondary" type="button">
-          🔁 Replay plein écran
-        </button>
-      </div>
+      <canvas id="swing-overlay-canvas"></canvas>
     </div>
   </div>
+
+  <div class="swing-player-controls swing-player-controls-below">
+    <button id="swing-play-pause" type="button">Play</button>
+
+    <select id="swing-speed">
+      <option value="0.25">0.25×</option>
+      <option value="0.5">0.5×</option>
+      <option value="1" selected>1×</option>
+      <option value="1.5">1.5×</option>
+      <option value="2">2×</option>
+    </select>
+
+    <input id="swing-timeline" type="range" min="0" max="100" value="0">
+    <span id="swing-time-label">0.0s</span>
+
+    <button id="swing-replay-fullscreen" class="pg-btn-secondary" type="button">
+      🔁 Replay plein écran
+    </button>
+  </div>
+</div>
 
   <!-- SCORE : on ne change rien -->
   <div id="swing-score-breakdown" style="display:block;"></div>
