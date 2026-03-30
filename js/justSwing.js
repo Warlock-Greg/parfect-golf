@@ -2463,6 +2463,7 @@ const rawDownswingT = (tImpact - tTop) / 1000;
 
 // 🛡️ Sécurité MediaPipe (downswing trop court = bruit)
 const MIN_DOWNSWING = 0.12; // 120 ms plancher réaliste
+const isClampedDownswing = rawDownswingT < MIN_DOWNSWING;
 const downswingT = Math.max(rawDownswingT, MIN_DOWNSWING);
 
 const ratio = backswingT / downswingT;
@@ -2471,34 +2472,50 @@ const ratio = backswingT / downswingT;
 metrics.tempo.backswingT = backswingT;
 metrics.tempo.downswingT = downswingT;
 metrics.tempo.rawDownswingT = rawDownswingT;
+metrics.tempo.isClampedDownswing = isClampedDownswing;
 metrics.tempo.ratio = ratio;
 
   
   const ref = window.REF?.tempo;
   
     metrics.tempo = {
-      backswingT,
-      downswingT,
-      ratio,
-       targetRatio: ref?.ratio?.target ?? null,
-      tolRatio: ref?.ratio?.tol ?? null
-    };
+  backswingT,
+  downswingT,
+  rawDownswingT,
+  isClampedDownswing,
+  ratio,
+  targetRatio: ref?.ratio?.target ?? null,
+  tolRatio: ref?.ratio?.tol ?? null
+};
 
  
-    if (ref?.ratio?.target != null && ref?.ratio?.tol != null && ratio != null) {
-      tempoScore = Math.round(
-        jswClamp(
-          1 - Math.abs(ratio - ref.ratio.target) / ref.ratio.tol,
-          0,
-          1
-        ) * 20
-      );
-    }
+   if (ref?.ratio?.target != null && ratio != null) {
+  const target = ref.ratio.target ?? 3.05;
+  const softTol = Math.max(ref?.ratio?.tol ?? 0.8, 1.2);
+
+  const error = (ratio - target) / softTol;
+  const rawScore = 20 * Math.exp(-(error * error));
+
+  // plancher plus coach si le ratio reste plausible
+  const plausible = ratio >= 1.4 && ratio <= 4.8;
+  const minScore = plausible ? 4 : 2;
+
+  tempoScore = Math.round(jswClamp(rawScore, minScore, 20));
+}
   }
 }
 
 metrics.tempo.score = tempoScore;
-
+console.log("TEMPO DEBUG", {
+  backswingT,
+  rawDownswingT,
+  downswingT,
+  isClampedDownswing,
+  ratio,
+  target: ref?.ratio?.target,
+  tol: ref?.ratio?.tol,
+  tempoScore
+});
 
 // =====================================================
 // TEMPO ↔ EXTENSION SYNCHRO
