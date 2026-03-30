@@ -2363,14 +2363,15 @@ background: #ffffff;
   height: 50vh;
   min-height: 320px;
   max-height: 520px;
-  padding: 12px;
+  padding: 12px 12px 0;
   box-sizing: border-box;
 }
 
 .swing-video-stage {
-  position: relative;
   width: 100%;
-  height: 100%;
+  height: 50vh;
+  min-height: 300px;
+  max-height: 520px;
   background: #000;
   border-radius: 28px;
   overflow: hidden;
@@ -2494,6 +2495,76 @@ background: #ffffff;
   font-size: 14px;
 }
 
+
+/* conteneur interne qui centre vraiment le contenu */
+.swing-video-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* vidéo et canvas bien visibles */
+#swing-video,
+#swing-overlay-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+#swing-video {
+  display: block;
+  background: #000;
+}
+
+#swing-overlay-canvas {
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* =========================================
+   CONTROLES EN DESSOUS
+========================================= */
+
+.swing-player-controls-below {
+  margin-top: 10px;
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swing-player-controls-below #swing-play-pause,
+.swing-player-controls-below #swing-speed,
+.swing-player-controls-below #swing-replay-fullscreen {
+  min-height: 38px;
+  border-radius: 999px;
+}
+
+.swing-player-controls-below #swing-timeline {
+  flex: 1 1 160px;
+  min-width: 130px;
+}
+
+.swing-player-controls-below #swing-time-label {
+  min-width: 86px;
+  text-align: center;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+/* le bouton plein écran passe sur sa ligne si besoin */
+.swing-player-controls-below #swing-replay-fullscreen {
+  width: 100%;
+}
+
 /* =========================================
    MOBILE
 ========================================= */
@@ -2514,5 +2585,34 @@ background: #ffffff;
 
   #swing-speed {
     min-width: 76px;
+  }
+    .swing-video-stage {
+    height: 46vh;
+    min-height: 280px;
+  }
+
+  .swing-player-controls-below {
+    gap: 6px;
+  }
+
+  .swing-player-controls-below #swing-play-pause {
+    flex: 0 0 auto;
+  }
+
+  .swing-player-controls-below #swing-speed {
+    flex: 0 0 84px;
+  }
+
+  .swing-player-controls-below #swing-timeline {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .swing-player-controls-below #swing-time-label {
+    order: 3;
+  }
+
+  .swing-player-controls-below #swing-replay-fullscreen {
+    order: 4;
   }
 }
