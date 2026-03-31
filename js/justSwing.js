@@ -2440,6 +2440,7 @@ metrics.extension.status = extensionStatus;
 let tempoScore = null;
 metrics.tempo = {};
 
+const ref = window.REF?.tempo;
 let backswingT = null;
 let rawDownswingT = null;
 let downswingT = null;
@@ -2482,7 +2483,6 @@ metrics.tempo.isClampedDownswing = isClampedDownswing;
 metrics.tempo.ratio = ratio;
 
   
-  const ref = window.REF?.tempo;
   
     metrics.tempo = {
   backswingT,
