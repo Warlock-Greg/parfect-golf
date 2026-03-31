@@ -2440,6 +2440,12 @@ metrics.extension.status = extensionStatus;
 let tempoScore = null;
 metrics.tempo = {};
 
+let backswingT = null;
+let rawDownswingT = null;
+let downswingT = null;
+let ratio = null;
+let isClampedDownswing = false;
+   
 const kfIdx = {
   address: kf.address?.index,
   top:     kf.top?.index,
