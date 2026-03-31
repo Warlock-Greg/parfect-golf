@@ -1584,11 +1584,10 @@ position: absolute;
 
 .swing-review-actions button {
   flex: 1;
-  min-width: 160px;
+  min-width: 100px;
   background: var(--pg-bg-soft);
   border: 1px solid var(--pg-border-soft);
   border-radius: var(--pg-radius-pill);
-  padding: 12px 18px;
   font-weight: 600;
   color: var(--pg-text-main);
   cursor: pointer;
@@ -2466,8 +2465,8 @@ background: #ffffff;
   position: sticky;
   z-index: 30;
   bottom: -82px !important;
-  /*display: flex;*/
-  flex-direction: column;
+  display: flex;
+  flex-direction: row;
   gap: 0px;
 
   width: 100%;
