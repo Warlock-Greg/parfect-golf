@@ -3371,11 +3371,11 @@ function buildParfectReviewCard(swing, scores) {
         <span class="jsw-pill">${viewLabel} · ${clubLabel}</span>
 
         ${buildReferenceInfo()}
-
+        </div>
+        
         <div class="jsw-coach-box">
           <div class="jsw-coach-title">🎯 Coach Parfect</div>
           <div class="jsw-coach-comment">${coachComment}</div>
-        </div>
       </div>
 
       <div class="jsw-radar-wrap">
