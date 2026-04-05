@@ -4554,8 +4554,17 @@ document.addEventListener("click", (e) => {
   window.jswGoHome();
 });
 
+    document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("lang-fr")?.addEventListener("click", () => {
+    setParfectLang("fr");
+    location.reload();
+  });
 
-    
+  document.getElementById("lang-en")?.addEventListener("click", () => {
+    setParfectLang("en");
+    location.reload();
+  });
+});
   // ---------------------------------------------------------
   //   EXPORT
   // ---------------------------------------------------------
