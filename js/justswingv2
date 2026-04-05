@@ -2890,7 +2890,7 @@ function renderSessionHistoryInline() {
   if (!swings.length) {
     el.innerHTML = `
       <div style="color:#777;font-size:0.85rem;">
-        Aucun swing dans la session
+        ${t("ui.noSessionSwings")}
       </div>`;
     return;
   }
@@ -2928,34 +2928,23 @@ function renderSessionHistoryInline() {
  function buildGlobalCoachComment(viewType, scores) {
   const breakdown = scores?.breakdown || {};
 
-  // Ordre de priorité Parfect (simple & lisible)
   const ORDER =
     viewType === "dtl"
       ? ["tempo", "plan", "rotation", "triangle", "extension", "balance"]
       : ["tempo", "rotation", "triangle", "weightShift", "extension", "balance"];
 
-  const LABEL = {
-    tempo: "le tempo",
-    rotation: "la rotation",
-    triangle: "le triangle bras/épaules",
-    weightShift: "le transfert d’appui",
-    extension: "l’extension",
-    balance: "l’équilibre",
-    plan: "le plan de swing"
-  };
-
-  // Cherche le premier pilier sous le seuil
   const weak = ORDER.find((k) => {
     const s = breakdown[k]?.score;
     return typeof s === "number" && s < 15;
   });
 
-  // 🟢 Tout est OK
   if (!weak) {
-    return "Très belle séance. Les fondamentaux sont en place. Continue comme ça 👍";
+    return t("coach.sessionGreat");
   }
 
-  return `Priorité : travaille ${LABEL[weak]}.`;
+  return tt("coach.globalPriority", {
+    metric: t(`coach.metric_${weak}`, weak)
+  });
 }
 
 
@@ -3001,23 +2990,23 @@ function buildParfectReviewCard(swing, scores) {
   };
 
   const LABELS = {
-    rotation: "Rotation",
-    tempo: "Tempo",
-    triangle: "Triangle",
-    weightShift: "Transfert",
-    extension: "Extension",
-    balance: "Balance",
-    plan: "Plan"
-  };
+  rotation: t("metrics.rotation"),
+  tempo: t("metrics.tempo"),
+  triangle: t("metrics.triangle"),
+  weightShift: t("metrics.weightShift"),
+  extension: t("metrics.extension"),
+  balance: t("metrics.balance"),
+  plan: t("metrics.plan")
+};
 
-  const OBJECTIVES = {
-    rotation: "Tourne les épaules et stabilise les hanches.",
-    tempo: "Montée fluide, descente engagée.",
-    triangle: "Garde le triangle bras/épaules stable.",
-    weightShift: "Transfère progressivement le poids vers l’avant.",
-    extension: "Tends les bras après impact.",
-    balance: "Termine en équilibre."
-  };
+const OBJECTIVES = {
+  rotation: t("review.objective_rotation"),
+  tempo: t("review.objective_tempo"),
+  triangle: t("review.objective_triangle"),
+  weightShift: t("review.objective_weightShift"),
+  extension: t("review.objective_extension"),
+  balance: t("review.objective_balance")
+};
 
   function fmt(v, d = 2) {
     return typeof v === "number" && Number.isFinite(v)
@@ -3208,40 +3197,104 @@ function buildParfectReviewCard(swing, scores) {
     return "";
   }
 
-  function buildCoachComment() {
-    const tips = [];
+ function buildCoachComment(scores) {
+  const metrics = scores?.metrics || {};
+  const tips = [];
 
-    if (metrics?.rotation?.stages?.baseToTop?.actual && parfectData?.rotation?.stages?.baseToTop?.actual) {
-      const curShoulder = metrics.rotation.stages.baseToTop.actual.shoulder;
-      const refShoulder = parfectData.rotation.stages.baseToTop.actual.shoulder;
-      const d = refShoulder - curShoulder;
+  const tempo = metrics.tempo || {};
+  if (typeof tempo.ratio === "number" && typeof tempo.targetRatio === "number") {
+    const ratio = tempo.ratio;
+    const target = tempo.targetRatio;
+    const diff = target - ratio;
 
-      if (Math.abs(d) > 0.03) {
-        tips.push(`Tourne tes épaules ${d > 0 ? "+" : ""}${Math.round(d * 100)}°`);
+    if (Math.abs(diff) > 0.30) {
+      if (diff > 0 && typeof tempo.backswingT === "number" && typeof tempo.downswingT === "number") {
+        const idealBackswing = tempo.downswingT * target;
+        const deltaBack = Math.max(0, idealBackswing - tempo.backswingT);
+        tips.push(tt("coach.tempoAddTime", {
+          ratio: fmtCoach(ratio, 2),
+          target: fmtCoach(target, 2),
+          delta: fmtCoach(deltaBack, 2)
+        }));
+      } else if (diff < 0) {
+        tips.push(tt("coach.tempoStartDownSooner", {
+          ratio: fmtCoach(ratio, 2),
+          target: fmtCoach(target, 2)
+        }));
       }
     }
-
-    if (typeof metrics?.tempo?.ratio === "number" && typeof metrics?.tempo?.targetRatio === "number") {
-      const d = metrics.tempo.targetRatio - metrics.tempo.ratio;
-      if (d > 0.5) {
-        tips.push("Ralentis ta montée");
-      }
-    }
-
-    if (metrics?.weightShift?.score != null && metrics.weightShift.score < 4) {
-      tips.push("Transfère plus ton poids vers l’avant");
-    }
-
-    if (metrics?.balance?.score != null && metrics.balance.score < 5) {
-      tips.push("Finis plus en équilibre");
-    }
-
-    if (!tips.length) {
-      return "Bon swing 👍 Continue comme ça.";
-    }
-
-    return tips.slice(0, 2).join("<br>");
   }
+
+  const ws = metrics.weightShift || {};
+  if (typeof ws.absFwd === "number" && typeof ws.targetFwd === "number") {
+    const missingFwd = ws.targetFwd - ws.absFwd;
+    if (missingFwd > 0.03) {
+      tips.push(tt("coach.weightShiftForwardShort", {
+        actual: fmtCoach(ws.absFwd, 2),
+        target: fmtCoach(ws.targetFwd, 2),
+        delta: fmtCoach(missingFwd, 2)
+      }));
+    }
+  }
+
+  if (typeof ws.absBack === "number" && typeof ws.targetBack === "number") {
+    const missingBack = ws.targetBack - ws.absBack;
+    if (missingBack > 0.03 && tips.length < 2) {
+      tips.push(tt("coach.weightShiftBackShort", {
+        actual: fmtCoach(ws.absBack, 2),
+        target: fmtCoach(ws.targetBack, 2)
+      }));
+    }
+  }
+
+  const ext = metrics.extension || {};
+  if (typeof ext.value === "number" && typeof ext.target === "number") {
+    const missingExt = ext.target - ext.value;
+    if (missingExt > 0.15) {
+      if (typeof ext.progress === "number" && ext.progress <= 0.05) {
+        tips.push(tt("coach.extensionEarlyFold", {
+          actual: fmtCoach(ext.value, 2),
+          target: fmtCoach(ext.target, 2)
+        }));
+      } else {
+        tips.push(tt("coach.extensionShort", {
+          actual: fmtCoach(ext.value, 2),
+          target: fmtCoach(ext.target, 2),
+          delta: fmtCoach(missingExt, 2)
+        }));
+      }
+    }
+  }
+
+  const balance = metrics.balance || {};
+  if (typeof balance.score === "number" && balance.score < 5) {
+    if (typeof balance.finishMove === "number") {
+      tips.push(tt("coach.balanceShort", {
+        actual: fmtCoach(balance.finishMove, 2)
+      }));
+    } else {
+      tips.push(t("coach.balanceShortNoValue"));
+    }
+  }
+
+  const rot = metrics.rotation || {};
+  if (typeof rot.score === "number" && rot.score < 12 && rot.measure) {
+    const shoulder = rot.measure.shoulder;
+    const hip = rot.measure.hip;
+    if (typeof shoulder === "number" && typeof hip === "number" && tips.length < 2) {
+      tips.push(tt("coach.rotationImprove", {
+        shoulder: fmtCoach(shoulder, 2),
+        hip: fmtCoach(hip, 2)
+      }));
+    }
+  }
+
+  if (!tips.length) {
+    return t("coach.globalGood");
+  }
+
+  return tips.slice(0, 2).join("<br><br>");
+}
 
   const coachComment = buildCoachComment();
 
