@@ -6,7 +6,239 @@
 
 const $$ = (id) => document.getElementById(id);
 
+// =====================================================
+// I18N V1 — FR / EN
+// =====================================================
+window.PARFECT_LANG =
+  localStorage.getItem("parfect_lang") ||
+  window.PARFECT_LANG ||
+  "fr";
 
+window.PARFECT_I18N = {
+  fr: {
+    ui: {
+      startSwing: "Démarrer le swing 🏌️",
+      retrySwing: "🔁 Recommencer le swing",
+      nextSwing: "Swing suivant",
+      close: "Fermer",
+      history: "Historique",
+      score: "Score",
+      replayFullscreen: "🔁 Replay plein écran",
+      noSessionSwings: "Aucun swing dans la session"
+    },
+    status: {
+      noFullBody: "Je ne te vois pas entièrement 👀 Reviens bien dans le cadre.",
+      swingComplete: "Swing Complete"
+    },
+    quota: {
+      blockedTitle: "🚫 Analyse bloquée",
+      blockedBody: "Tu as analysé {limit} swings.<br>Passe PRO pour continuer avec l’analyse IA."
+    },
+    routine: {
+      checkSetup: "Vérifie (3sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignement 🎯",
+      holdAddress: "Maintien l'Adresse… (3sec) \nRespire \n😮‍💨",
+      swingNow: "*SWING ! \n🏌️"
+    },
+    review: {
+      referenceParfect: "🧠 Réf Parfect",
+      referenceMine: "⭐ Ma réf",
+      objective_rotation: "Tourne les épaules et stabilise les hanches.",
+      objective_tempo: "Montée fluide, descente engagée.",
+      objective_triangle: "Garde le triangle bras/épaules stable.",
+      objective_weightShift: "Transfère progressivement le poids vers l’avant.",
+      objective_extension: "Tends les bras après impact.",
+      objective_balance: "Termine en équilibre."
+    },
+    metrics: {
+      rotation: "Rotation",
+      tempo: "Tempo",
+      triangle: "Triangle",
+      weightShift: "Transfert",
+      extension: "Extension",
+      balance: "Balance",
+      plan: "Plan"
+    },
+    coach: {
+      globalGood: "Bon swing 👍 Les fondamentaux sont en place. Continue comme ça.",
+      sessionGreat: "Très belle séance. Les fondamentaux sont en place. Continue comme ça 👍",
+      globalPriority: "Priorité : travaille {metric}.",
+      metric_tempo: "le tempo",
+      metric_rotation: "la rotation",
+      metric_triangle: "le triangle bras/épaules",
+      metric_weightShift: "le transfert d’appui",
+      metric_extension: "l’extension",
+      metric_balance: "l’équilibre",
+      metric_plan: "le plan de swing",
+      tempoAddTime: "Tempo à {ratio}:1. La cible est proche de {target}:1. Ajoute environ {delta}s à la montée pour retrouver un rythme plus fluide.",
+      tempoStartDownSooner: "Tempo à {ratio}:1. La cible est proche de {target}:1. Ta montée est déjà longue : engage un peu plus tôt la descente.",
+      weightShiftForwardShort: "Transfert avant encore court : {actual} mesuré à l’impact, pour une zone cible autour de {target}. Cherche environ {delta} de transfert supplémentaire vers l’avant.",
+      weightShiftBackShort: "Charge encore un peu plus au backswing : {actual} mesuré, cible autour de {target}.",
+      extensionShort: "Extension encore courte : {actual} mesuré pour une cible autour de {target}. Il manque environ {delta} d’amplitude.",
+      extensionEarlyFold: "Extension incomplète : {actual} mesuré pour une cible autour de {target}. Tes bras se replient trop tôt après impact : laisse-les s’allonger plus longtemps vers la cible.",
+      balanceShort: "Finish à stabiliser : déplacement mesuré {actual}. Termine plus posé, avec la tête au-dessus des hanches et le poids sur l’avant.",
+      balanceShortNoValue: "Finish à stabiliser : termine plus posé, avec la tête au-dessus des hanches et le poids sur l’avant.",
+      rotationImprove: "Rotation perfectible : épaules {shoulder}, hanches {hip}. Cherche plus de rotation d’épaules tout en gardant les hanches plus stables."
+    }
+  },
+  en: {
+    ui: {
+      startSwing: "Start swing 🏌️",
+      retrySwing: "🔁 Try again",
+      nextSwing: "Next swing",
+      close: "Close",
+      history: "History",
+      score: "Score",
+      replayFullscreen: "🔁 Fullscreen replay",
+      noSessionSwings: "No swings in this session"
+    },
+    status: {
+      noFullBody: "I can't see your full body 👀 Step back into the frame.",
+      swingComplete: "Swing Complete"
+    },
+    quota: {
+      blockedTitle: "🚫 Analysis locked",
+      blockedBody: "You have already analyzed {limit} swings.<br>Upgrade to PRO to keep using AI analysis."
+    },
+    routine: {
+      checkSetup: "Check (3 sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignment 🎯",
+      holdAddress: "Hold address… (3 sec) \nBreathe \n😮‍💨",
+      swingNow: "*SWING ! \n🏌️"
+    },
+    review: {
+      referenceParfect: "🧠 Parfect ref",
+      referenceMine: "⭐ My ref",
+      objective_rotation: "Turn the shoulders and keep the hips stable.",
+      objective_tempo: "Smooth backswing, committed downswing.",
+      objective_triangle: "Keep the arm/shoulder triangle stable.",
+      objective_weightShift: "Shift pressure progressively toward the lead side.",
+      objective_extension: "Extend the arms after impact.",
+      objective_balance: "Finish in balance."
+    },
+    metrics: {
+      rotation: "Rotation",
+      tempo: "Tempo",
+      triangle: "Triangle",
+      weightShift: "Weight shift",
+      extension: "Extension",
+      balance: "Balance",
+      plan: "Plane"
+    },
+    coach: {
+      globalGood: "Good swing 👍 The fundamentals are in place. Keep going.",
+      sessionGreat: "Very good session. The fundamentals are in place. Keep going 👍",
+      globalPriority: "Priority: work on {metric}.",
+      metric_tempo: "tempo",
+      metric_rotation: "rotation",
+      metric_triangle: "the arm/shoulder triangle",
+      metric_weightShift: "weight shift",
+      metric_extension: "extension",
+      metric_balance: "balance",
+      metric_plan: "swing plane",
+      tempoAddTime: "Tempo at {ratio}:1. The target is close to {target}:1. Add about {delta}s to the backswing to restore a smoother rhythm.",
+      tempoStartDownSooner: "Tempo at {ratio}:1. The target is close to {target}:1. Your backswing is already long enough: start the downswing a little earlier.",
+      weightShiftForwardShort: "Forward shift is still short: {actual} measured at impact for a target zone around {target}. Try to add about {delta} more shift toward the lead side.",
+      weightShiftBackShort: "Load a little more in the backswing: {actual} measured, target around {target}.",
+      extensionShort: "Extension is still short: {actual} measured for a target around {target}. About {delta} of extension is missing.",
+      extensionEarlyFold: "Extension is incomplete: {actual} measured for a target around {target}. Your arms fold too early after impact: let them extend longer toward the target.",
+      balanceShort: "Finish needs more stability: measured movement {actual}. Finish more quietly, with the head above the hips and pressure on the lead side.",
+      balanceShortNoValue: "Finish needs more stability: finish more quietly, with the head above the hips and pressure on the lead side.",
+      rotationImprove: "Rotation can improve: shoulders {shoulder}, hips {hip}. Turn the shoulders more while keeping the hips quieter."
+    }
+  }
+};
+
+function setParfectLang(lang) {
+  const next = ["fr", "en"].includes(lang) ? lang : "fr";
+  window.PARFECT_LANG = next;
+  localStorage.setItem("parfect_lang", next);
+}
+
+function getParfectLang() {
+  return window.PARFECT_LANG || "fr";
+}
+
+function t(path, fallback = "") {
+  const lang = getParfectLang();
+  const dict = window.PARFECT_I18N?.[lang] || window.PARFECT_I18N?.fr || {};
+  const value = path.split(".").reduce((o, k) => (o && o[k] != null ? o[k] : null), dict);
+  return value ?? fallback ?? path;
+}
+
+function tt(path, vars = {}, fallback = "") {
+  let str = t(path, fallback);
+  Object.keys(vars).forEach((key) => {
+    str = str.replaceAll(`{${key}}`, String(vars[key]));
+  });
+  return str;
+}
+
+// =====================================================
+// HELPERS COMMUNS
+// =====================================================
+function fmt(v, d = 2) {
+  return typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
+}
+
+function fmtCoach(v, d = 2) {
+  return typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
+}
+
+function jswClamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function jswDist(a, b) {
+  if (!a || !b) return null;
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function jswLineAngleDeg(a, b) {
+  if (!a || !b) return null;
+  return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+}
+
+function jswDegDiff(a, b) {
+  if (a == null || b == null) return null;
+  let d = Math.abs(a - b);
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
+function safePose(pose) {
+  return Array.isArray(pose) ? pose : null;
+}
+
+function jswSafePoseFromKF(kf) {
+  if (!kf) return null;
+  if (kf.pose) return kf.pose;
+  if (Array.isArray(kf)) return kf;
+  return null;
+}
+
+function LM(pose, idx) {
+  if (!pose || !Array.isArray(pose)) return null;
+  return pose[idx] ?? null;
+}
+
+function scoreCoachCurve(value, target, tol, maxScore = 20, minScore = 2) {
+  if (
+    typeof value !== "number" || !Number.isFinite(value) ||
+    typeof target !== "number" || !Number.isFinite(target) ||
+    typeof tol !== "number" || !Number.isFinite(tol) || tol <= 0
+  ) return minScore;
+
+  const error = (value - target) / tol;
+  const raw = maxScore * Math.exp(-(error * error));
+  return Math.round(jswClamp(raw, minScore, maxScore));
+}
+
+function scoreCoachCurve10(value, target, tol, minScore = 2) {
+  return Math.round(jswClamp(scoreCoachCurve(value, target, tol, 10, minScore), minScore, 10));
+}
+
+function scoreCoachCurve20(value, target, tol, minScore = 4) {
+  return Math.round(jswClamp(scoreCoachCurve(value, target, tol, 20, minScore), minScore, 20));
+}
 const JSW_STATE = {
   IDLE: "IDLE",
   WAITING_START: "WAITING_START", // bouton start affiché
