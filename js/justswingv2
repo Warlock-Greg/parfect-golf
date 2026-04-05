@@ -2116,6 +2116,9 @@ async function computeSwingScorePremium(swing) {
   const kf = swing.keyFrames || swing.keyframes || {};
   const T = swing.timestamps || [];
 
+  const swingQuality = swing.quality || {};
+  const keyframeConfidence = swingQuality?.confidence || {};
+
   const rawView = (window.jswViewType || window.jswViewOverride || "faceOn").toLowerCase();
   const viewType =
     rawView.includes("mobile") ? "mobileFaceOn" :
@@ -2490,6 +2493,23 @@ async function computeSwingScorePremium(swing) {
     }
   }
   metrics.tempo.score = tempoScore;
+
+const topConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+const impactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+const tempoConfidence =
+  typeof topConf === "number" && typeof impactConf === "number"
+    ? Math.min(topConf, impactConf)
+    : (typeof topConf === "number" ? topConf :
+       typeof impactConf === "number" ? impactConf : null);
+
+metrics.tempo.confidenceTop = topConf;
+metrics.tempo.confidenceImpact = impactConf;
+metrics.tempo.confidence = tempoConfidence;
+
+if (typeof tempoScore === "number") {
+  tempoScore = applyConfidenceSoftening(tempoScore, tempoConfidence, 20);
+  metrics.tempo.score = tempoScore;
+}
 
   if (metrics.extension?.score != null && metrics.tempo?.ratio != null) {
     if (metrics.tempo.ratio < 2.2 && extensionScore != null) {
