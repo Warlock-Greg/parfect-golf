@@ -2112,11 +2112,11 @@ function getKeyframePose(type, metrics, activeSwing) {
 async function computeSwingScorePremium(swing) {
   const REF = window.REF || null;
 
-  const frames = swing.frames || [];
-  const kf = swing.keyFrames || swing.keyframes || {};
-  const T = swing.timestamps || [];
+  const frames = Array.isArray(swing?.frames) ? swing.frames : [];
+  const kf = swing?.keyFrames || swing?.keyframes || {};
+  const T = Array.isArray(swing?.timestamps) ? swing.timestamps : [];
 
-  const swingQuality = swing.quality || {};
+  const swingQuality = swing?.quality || {};
   const keyframeConfidence = swingQuality?.confidence || {};
 
   const rawView = (window.jswViewType || window.jswViewOverride || "faceOn").toLowerCase();
@@ -2150,8 +2150,8 @@ async function computeSwingScorePremium(swing) {
     const LH = addressPose[23], RH = addressPose[24];
     const LA = addressPose[27], RA = addressPose[28];
 
-    const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y: (LH.y + RH.y)/2 } : null;
-    const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y: (LS.y + RS.y)/2 } : null;
+    const hipsMid = (LH && RH) ? { x: (LH.x + RH.x) / 2, y: (LH.y + RH.y) / 2 } : null;
+    const shMid = (LS && RS) ? { x: (LS.x + RS.x) / 2, y: (LS.y + RS.y) / 2 } : null;
 
     let flexionDeg = 30;
     if (hipsMid && shMid) {
@@ -2170,7 +2170,7 @@ async function computeSwingScorePremium(swing) {
     const hipAngle = jswLineAngleDeg(LH, RH);
     const alignDiff = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
 
-    const flexScore  = jswClamp(1 - Math.abs(flexionDeg - 35) / 25, 0, 1);
+    const flexScore = jswClamp(1 - Math.abs(flexionDeg - 35) / 25, 0, 1);
     const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2) / 0.7, 0, 1);
     const alignScore = jswClamp(1 - alignDiff / 20, 0, 1);
 
@@ -2188,6 +2188,7 @@ async function computeSwingScorePremium(swing) {
   // ROTATION
   // =====================================================
   metrics.rotation = { stages: {}, score: 0, status: "incomplete" };
+
   const basePoseRot = addressPose || backswingPose || null;
   const topPoseRot = topPose || null;
 
@@ -2232,12 +2233,20 @@ async function computeSwingScorePremium(swing) {
 
         const s10 =
           refRot?.shoulder?.target != null && refRot?.shoulder?.tol != null
-            ? jswClamp(1 - Math.abs(shoulder - refRot.shoulder.target) / Math.max(refRot.shoulder.tol, 0.08), 0, 1) * 10
+            ? jswClamp(
+                1 - Math.abs(shoulder - refRot.shoulder.target) / Math.max(refRot.shoulder.tol, 0.08),
+                0,
+                1
+              ) * 10
             : 5;
 
         const h10 =
           refRot?.hip?.target != null && refRot?.hip?.tol != null
-            ? jswClamp(1 - Math.abs(hip - refRot.hip.target) / Math.max(refRot.hip.tol, 0.10), 0, 1) * 10
+            ? jswClamp(
+                1 - Math.abs(hip - refRot.hip.target) / Math.max(refRot.hip.tol, 0.10),
+                0,
+                1
+              ) * 10
             : 5;
 
         score = Math.round(s10 + h10);
@@ -2268,14 +2277,17 @@ async function computeSwingScorePremium(swing) {
   // TRIANGLE
   // =====================================================
   let triangleScore = 10;
+
   if (topPose && impactPose) {
     const basePose = addressPose || backswingPose || topPose;
+
     const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12), LW0 = LM(basePose, 15);
     const LS1 = LM(topPose, 11),  RS1 = LM(topPose, 12),  LW1 = LM(topPose, 15);
     const LS2 = LM(impactPose, 11), RS2 = LM(impactPose, 12), LW2 = LM(impactPose, 15);
 
     if (LS0 && RS0 && LW0 && LS1 && RS1 && LW1 && LS2 && RS2 && LW2) {
       const shoulderW0 = jswDist(LS0, RS0);
+
       if (shoulderW0 && shoulderW0 > 0) {
         const refTri = jswDist(LS0, LW0) / shoulderW0;
         const topV = jswDist(LS1, LW1) / shoulderW0;
@@ -2300,15 +2312,29 @@ async function computeSwingScorePremium(swing) {
       }
     }
   }
-  metrics.triangle.score = Math.max(4, triangleScore);
+
+  const triTopConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const triImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const triConfidence =
+    typeof triTopConf === "number" && typeof triImpactConf === "number"
+      ? Math.min(triTopConf, triImpactConf)
+      : null;
+
+  metrics.triangle.confidenceTop = triTopConf;
+  metrics.triangle.confidenceImpact = triImpactConf;
+  metrics.triangle.confidence = triConfidence;
+  metrics.triangle.score = applyConfidenceSoftening(Math.max(4, triangleScore), triConfidence, 20);
 
   // =====================================================
   // WEIGHT SHIFT
   // =====================================================
   let weightShiftScore = 6;
+
   metrics.weightShift = {
     shiftBack: null,
     shiftFwd: null,
+    absBack: null,
+    absFwd: null,
     backScore: null,
     fwdScore: null,
     targetBack: null,
@@ -2317,12 +2343,16 @@ async function computeSwingScorePremium(swing) {
     tolFwd: null,
     deltaBack: null,
     deltaFwd: null,
+    confidenceTop: null,
+    confidenceImpact: null,
+    confidence: null,
     score: 6,
     status: "incomplete"
   };
 
   if (topPose && impactPose) {
     const basePose = addressPose || backswingPose || topPose;
+
     const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
     const LH1 = LM(topPose, 23), RH1 = LM(topPose, 24);
     const LH2 = LM(impactPose, 23), RH2 = LM(impactPose, 24);
@@ -2332,11 +2362,12 @@ async function computeSwingScorePremium(swing) {
       const hips0 = { x: (LH0.x + RH0.x) / 2, y: (LH0.y + RH0.y) / 2 };
       const hips1 = { x: (LH1.x + RH1.x) / 2, y: (LH1.y + RH1.y) / 2 };
       const hips2 = { x: (LH2.x + RH2.x) / 2, y: (LH2.y + RH2.y) / 2 };
+
       const shoulderWidth = jswDist(LS0, RS0);
 
       if (shoulderWidth && shoulderWidth > 0.001) {
         const shiftBack = (hips1.x - hips0.x) / shoulderWidth;
-        const shiftFwd  = (hips2.x - hips0.x) / shoulderWidth;
+        const shiftFwd = (hips2.x - hips0.x) / shoulderWidth;
 
         const refWS = window.REF?.weightShift || null;
         const absBack = Math.abs(shiftBack);
@@ -2365,18 +2396,34 @@ async function computeSwingScorePremium(swing) {
           tolFwd,
           deltaBack: absBack - targetBack,
           deltaFwd: absFwd - targetFwd,
+          confidenceTop: null,
+          confidenceImpact: null,
+          confidence: null,
           score: weightShiftScore,
           status: "ok"
         };
       }
     }
   }
-  metrics.weightShift.score = weightShiftScore;
+
+  const wsTopConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const wsImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const wsConfidence =
+    typeof wsTopConf === "number" && typeof wsImpactConf === "number"
+      ? Math.min(wsTopConf, wsImpactConf)
+      : (typeof wsTopConf === "number" ? wsTopConf :
+         typeof wsImpactConf === "number" ? wsImpactConf : null);
+
+  metrics.weightShift.confidenceTop = wsTopConf;
+  metrics.weightShift.confidenceImpact = wsImpactConf;
+  metrics.weightShift.confidence = wsConfidence;
+  metrics.weightShift.score = applyConfidenceSoftening(metrics.weightShift.score, wsConfidence, 10);
 
   // =====================================================
   // EXTENSION
   // =====================================================
   let extensionScore = 4;
+
   metrics.extension = {
     extImpact: null,
     extFinish: null,
@@ -2385,6 +2432,8 @@ async function computeSwingScorePremium(swing) {
     target: null,
     tol: null,
     deltaToTarget: null,
+    confidenceImpact: null,
+    confidence: null,
     status: "incomplete",
     score: 4
   };
@@ -2403,6 +2452,7 @@ async function computeSwingScorePremium(swing) {
     ) / shoulderWidth;
 
     let extFinish = null;
+
     if (finishPose && finishPose[11] && finishPose[12] && (finishPose[15] || finishPose[16])) {
       const swf = Math.max(jswDist(finishPose[11], finishPose[12]), 0.001);
       extFinish = Math.max(
@@ -2419,6 +2469,7 @@ async function computeSwingScorePremium(swing) {
     const tol = Math.max(refExt?.tol ?? 1.0, 1.2);
 
     extensionScore = scoreCoachCurve10(extensionValue, target, tol, 2);
+
     if (typeof progress === "number" && progress > 0.10) {
       extensionScore = Math.min(10, extensionScore + 1);
     }
@@ -2431,16 +2482,24 @@ async function computeSwingScorePremium(swing) {
       target,
       tol,
       deltaToTarget: extensionValue - target,
+      confidenceImpact: null,
+      confidence: null,
       status: "ok",
       score: extensionScore
     };
   }
+
+  const extImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  metrics.extension.confidenceImpact = extImpactConf;
+  metrics.extension.confidence = extImpactConf;
+  metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extImpactConf, 10);
 
   // =====================================================
   // TEMPO
   // =====================================================
   let tempoScore = null;
   const refTempo = window.REF?.tempo;
+
   let backswingT = null;
   let rawDownswingT = null;
   let downswingT = null;
@@ -2466,9 +2525,11 @@ async function computeSwingScorePremium(swing) {
     if (tTop > tAddr && tImpact > tTop) {
       backswingT = (tTop - tAddr) / 1000;
       rawDownswingT = (tImpact - tTop) / 1000;
+
       const MIN_DOWNSWING = 0.12;
       isClampedDownswing = rawDownswingT < MIN_DOWNSWING;
       downswingT = Math.max(rawDownswingT, MIN_DOWNSWING);
+
       ratio = backswingT / downswingT;
 
       metrics.tempo = {
@@ -2484,37 +2545,43 @@ async function computeSwingScorePremium(swing) {
       if (refTempo?.ratio?.target != null && ratio != null) {
         const target = refTempo.ratio.target ?? 3.05;
         const softTol = Math.max(refTempo?.ratio?.tol ?? 0.8, 1.2);
+
         const error = (ratio - target) / softTol;
         const rawScore = 20 * Math.exp(-(error * error));
+
         const plausible = ratio >= 1.4 && ratio <= 4.8;
         const minScore = plausible ? 4 : 2;
+
         tempoScore = Math.round(jswClamp(rawScore, minScore, 20));
       }
     }
   }
+
   metrics.tempo.score = tempoScore;
 
-const topConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
-const impactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
-const tempoConfidence =
-  typeof topConf === "number" && typeof impactConf === "number"
-    ? Math.min(topConf, impactConf)
-    : (typeof topConf === "number" ? topConf :
-       typeof impactConf === "number" ? impactConf : null);
+  const topConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const impactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const tempoConfidence =
+    typeof topConf === "number" && typeof impactConf === "number"
+      ? Math.min(topConf, impactConf)
+      : (typeof topConf === "number" ? topConf :
+         typeof impactConf === "number" ? impactConf : null);
 
-metrics.tempo.confidenceTop = topConf;
-metrics.tempo.confidenceImpact = impactConf;
-metrics.tempo.confidence = tempoConfidence;
+  metrics.tempo.confidenceTop = topConf;
+  metrics.tempo.confidenceImpact = impactConf;
+  metrics.tempo.confidence = tempoConfidence;
 
-if (typeof tempoScore === "number") {
-  tempoScore = applyConfidenceSoftening(tempoScore, tempoConfidence, 20);
-  metrics.tempo.score = tempoScore;
-}
+  if (typeof tempoScore === "number") {
+    tempoScore = applyConfidenceSoftening(tempoScore, tempoConfidence, 20);
+    metrics.tempo.score = tempoScore;
+  }
 
+  // =====================================================
+  // TEMPO ↔ EXTENSION
+  // =====================================================
   if (metrics.extension?.score != null && metrics.tempo?.ratio != null) {
-    if (metrics.tempo.ratio < 2.2 && extensionScore != null) {
-      extensionScore = Math.min(10, extensionScore + 1);
-      metrics.extension.score = extensionScore;
+    if (metrics.tempo.ratio < 2.2) {
+      metrics.extension.score = Math.min(10, metrics.extension.score + 1);
       metrics.extension.syncedWithTempo = true;
     }
   }
@@ -2523,8 +2590,10 @@ if (typeof tempoScore === "number") {
   // BALANCE
   // =====================================================
   let balanceScore = 7;
+
   if (finishPose) {
     const basePose = addressPose || backswingPose || topPose;
+
     const LHb = LM(basePose, 23), RHb = LM(basePose, 24);
     const LHf = LM(finishPose, 23), RHf = LM(finishPose, 24);
     const headFin = LM(finishPose, 0);
@@ -2548,6 +2617,7 @@ if (typeof tempoScore === "number") {
       };
     }
   }
+
   metrics.balance.score = Math.max(2, balanceScore);
 
   // =====================================================
@@ -2589,11 +2659,13 @@ if (typeof tempoScore === "number") {
   for (const key in METRIC_WEIGHTS) {
     const score = metricScores[key];
     const weight = METRIC_WEIGHTS[key];
+
     if (typeof score === "number" && !isNaN(score)) {
       const normalized =
         key === "rotation" || key === "triangle" || key === "tempo"
           ? score / 20
           : score / 10;
+
       weightedSum += normalized * weight;
       maxPossible += weight;
     }
@@ -2601,13 +2673,52 @@ if (typeof tempoScore === "number") {
 
   const total = maxPossible > 0 ? Math.round((weightedSum / maxPossible) * 100) : 0;
 
+  function computeTotalWithReference(reference, metricsObj) {
+    if (!reference) return null;
+
+    const refMetricScores = {
+      posture: metricsObj.posture?.score ?? null,
+      rotation: metricsObj.rotation?.score ?? null,
+      triangle: metricsObj.triangle?.score ?? null,
+      weightShift: metricsObj.weightShift?.score ?? null,
+      extension: metricsObj.extension?.score ?? null,
+      tempo: metricsObj.tempo?.score ?? null,
+      balance: metricsObj.balance?.score ?? null
+    };
+
+    let ws = 0;
+    let mp = 0;
+
+    for (const key in METRIC_WEIGHTS) {
+      const score = refMetricScores[key];
+      const weight = METRIC_WEIGHTS[key];
+
+      if (typeof score === "number") {
+        const normalized =
+          key === "rotation" || key === "triangle" || key === "tempo"
+            ? score / 20
+            : score / 10;
+
+        ws += normalized * weight;
+        mp += weight;
+      }
+    }
+
+    return mp ? Math.round((ws / mp) * 100) : 0;
+  }
+
+  const totalSystem = computeTotalWithReference(window.systemReference, metrics);
+  const totalUser = computeTotalWithReference(window.userReference, metrics);
+
   return {
-    total,
-    totalDynamic: total,
+    total: totalSystem ?? totalUser ?? total,
+    totalDynamic: totalSystem ?? totalUser ?? total,
+
     totals: {
-      system: total,
-      user: null
+      system: totalSystem,
+      user: totalUser
     },
+
     scores: {
       posture: metrics.posture?.score ?? 0,
       rotation: metrics.rotation?.score ?? 0,
@@ -2617,6 +2728,7 @@ if (typeof tempoScore === "number") {
       tempo: metrics.tempo?.score ?? 0,
       balance: metrics.balance?.score ?? 0
     },
+
     breakdown: {
       posture: { score: metrics.posture?.score ?? 0, metrics: metrics.posture || null },
       rotation: { score: metrics.rotation?.score ?? 0, metrics: metrics.rotation || null },
@@ -2626,60 +2738,10 @@ if (typeof tempoScore === "number") {
       tempo: { score: metrics.tempo?.score ?? 0, metrics: metrics.tempo || null },
       balance: { score: metrics.balance?.score ?? 0, metrics: metrics.balance || null }
     },
+
     metrics
   };
 }
-
-// =====================================================
-// 🎯 DOUBLE SCORE (Parfect + User)
-// =====================================================
-
-const totalSystem = computeTotalWithReference(window.systemReference, metrics);
-
-const totalUser = computeTotalWithReference(window.userReference, metrics);
-
-// fallback si aucune référence
-// const total = computeTotalWithReference({ demo: true }, metrics);
-   
-// =====================================================
-// RETURN FINAL — API STABLE
-// =====================================================
-return {
- total: totalSystem ?? totalUser ?? total,
-  totalDynamic: totalSystem ?? totalUser ?? total,
-
-  totals: {
-    system: totalSystem,
-    user: totalUser
-  },
-
-  // ✅ Scores lisibles directement depuis metrics
-  scores: {
-    posture:     metrics.posture?.score      ?? 0,
-    rotation:    metrics.rotation?.score     ?? 0,
-    triangle:    metrics.triangle?.score     ?? 0,
-    weightShift: metrics.weightShift?.score  ?? 0,
-    extension:   metrics.extension?.score    ?? 0,
-    tempo:       metrics.tempo?.score        ?? 0,
-    balance:     metrics.balance?.score      ?? 0
-  },
-
-  // ✅ Breakdown propre pour UI / Coach
-  breakdown: {
-    posture:     { score: metrics.posture?.score      ?? 0, metrics: metrics.posture     || null },
-    rotation:    { score: metrics.rotation?.score     ?? 0, metrics: metrics.rotation    || null },
-    triangle:    { score: metrics.triangle?.score     ?? 0, metrics: metrics.triangle    || null },
-    weightShift: { score: metrics.weightShift?.score  ?? 0, metrics: metrics.weightShift || null },
-    extension:   { score: metrics.extension?.score    ?? 0, metrics: metrics.extension   || null },
-    tempo:       { score: metrics.tempo?.score        ?? 0, metrics: metrics.tempo       || null },
-    balance:     { score: metrics.balance?.score      ?? 0, metrics: metrics.balance     || null }
-  },
-
-  // 🔍 debug / export complet
-  metrics
-};
-
-};
 
 
  function jswBuildLandmarksJSON(swing) {
