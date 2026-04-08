@@ -236,17 +236,21 @@ wristDirHistory = [];
       return p?JSON.parse(JSON.stringify(p)):null;
     }
 
-  function markKeyFrame(type,index,pose){
-  keyFrames[type]={
+ function markKeyFrame(type, index, pose, meta = {}) {
+  keyFrames[type] = {
     index,
-    pose:clonePose(pose)
+    pose: clonePose(pose),
+    confidence: meta.confidence ?? null,
+    meta: { ...meta }
   };
 
-  if(onKeyFrame){
+  if (onKeyFrame) {
     onKeyFrame({
       type,
       index,
-      pose:clonePose(pose)
+      pose: clonePose(pose),
+      confidence: meta.confidence ?? null,
+      meta: { ...meta }
     });
   }
 }
@@ -536,7 +540,7 @@ if (impactDetectedNow) {
             club:clubType,
             fps,
             extensionDetected,
-            extensionStartTime
+            extensionStartTime,
             quality: {
             confidence: { ...confidence },
             keyFrames: {
