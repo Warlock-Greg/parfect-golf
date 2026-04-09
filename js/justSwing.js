@@ -2660,6 +2660,7 @@ async function computeSwingScorePremium(swing) {
   // TOTAL
   // =====================================================
   const METRIC_WEIGHTS = {
+    posture: 10,
     rotation: 20,
     tempo: 20,
     triangle: 20,
@@ -2669,6 +2670,7 @@ async function computeSwingScorePremium(swing) {
   };
 
   const metricScores = {
+    posture: metrics.posture?.score ?? null,
     rotation: metrics.rotation?.score ?? null,
     triangle: metrics.triangle?.score ?? null,
     weightShift: metrics.weightShift?.score ?? null,
@@ -3086,6 +3088,7 @@ function buildParfectReviewCard(swing, scores) {
   const userData = userRef?.data || null;
 
   const METRIC_MAX = {
+    posture: 10,
     rotation: 20,
     tempo: 20,
     triangle: 20,
@@ -3096,6 +3099,7 @@ function buildParfectReviewCard(swing, scores) {
   };
 
   const LABELS = {
+  posture: t("metrics.posture")
   rotation: t("metrics.rotation"),
   tempo: t("metrics.tempo"),
   triangle: t("metrics.triangle"),
@@ -3106,6 +3110,7 @@ function buildParfectReviewCard(swing, scores) {
 };
 
 const OBJECTIVES = {
+  posture: t("review.objective_posture"),
   rotation: t("review.objective_rotation"),
   tempo: t("review.objective_tempo"),
   triangle: t("review.objective_triangle"),
@@ -3512,6 +3517,7 @@ const OBJECTIVES = {
     }
 
     const swingData = [
+       metrics.posture?.score || 0,
       metrics.rotation?.score || 0,
       metrics.tempo?.score || 0,
       metrics.triangle?.score || 0,
@@ -3521,6 +3527,7 @@ const OBJECTIVES = {
     ];
 
     const sysData = [
+       parfectData?.posture?.score || 0,
       parfectData?.rotation?.score || 0,
       parfectData?.tempo?.score || 0,
       parfectData?.triangle?.score || 0,
@@ -3530,6 +3537,7 @@ const OBJECTIVES = {
     ];
 
     const usrData = [
+      userData?.posture?.score || 0,
       userData?.rotation?.score || 0,
       userData?.tempo?.score || 0,
       userData?.triangle?.score || 0,
@@ -4393,6 +4401,11 @@ function stopRecording() {
     timeLabel.textContent = `0.0s / ${totalTimeSec}s`;
   }
 
+     if (replayTimeline) {
+  replayTimeline.style.display = "block";
+  replayTimeline.disabled = false;
+  }
+
   // -----------------------------
   // Canvas overlay (skeleton)
   // -----------------------------
@@ -4521,18 +4534,23 @@ function renderFrame(index) {
   const t = (idx / fps).toFixed(2);
   const total = (lastSwing.frames.length / fps).toFixed(2);
 
-  const timeEl = document.getElementById("replay-time");
+ const timeEl = document.getElementById("swing-time-label");
   if (timeEl) {
-    timeEl.textContent = `${t}s / ${total}s`;
+  timeEl.textContent = `${t}s / ${total}s`;
   }
+ 
 }
     
  
-
-
- function startReplay() {
+function startReplay() {
   if (!lastSwing) return;
   if (replayPlaying) return;
+
+  // si on est à la fin, on repart du début
+  if (replayFrameIndex >= lastSwing.frames.length - 1) {
+    replayFrameIndex = 0;
+    renderFrame(0);
+  }
 
   replayPlaying = true;
   if (replayPlayBtn) replayPlayBtn.textContent = "⏸️";
@@ -4555,6 +4573,8 @@ function renderFrame(index) {
     renderFrame(next);
   }, baseDt / getSpeed());
 }
+
+ 
 
 function stopReplay() {
   replayPlaying = false;
