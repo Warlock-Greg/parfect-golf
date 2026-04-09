@@ -2104,6 +2104,30 @@ function getKeyframePose(type, metrics, activeSwing) {
 }
 
 
+function confidenceFloor(conf, low = 0.45, high = 0.80) {
+  if (typeof conf !== "number" || !Number.isFinite(conf)) return 0.75;
+
+  if (conf <= low) return 0.70;
+  if (conf >= high) return 1.00;
+
+  const t = (conf - low) / (high - low);
+  return 0.70 + t * 0.30;
+}
+
+function applyConfidenceSoftening(score, conf, maxScore) {
+  if (typeof score !== "number" || !Number.isFinite(score)) return score;
+
+  const floorRatio = confidenceFloor(conf);
+
+  const floor =
+    maxScore === 20
+      ? Math.round(20 * floorRatio * 0.5)
+      : Math.round(10 * floorRatio * 0.5);
+
+  return Math.max(score, floor);
+}
+  
+
 // ---------------------------------------------------------
 //   PREMIUM SCORING – utilise les keyFrames du SwingEngine
 //   Gère les vues : faceOn / mobileFaceOn / dtl
