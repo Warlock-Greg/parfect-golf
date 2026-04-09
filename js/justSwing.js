@@ -6,7 +6,239 @@
 
 const $$ = (id) => document.getElementById(id);
 
+// =====================================================
+// I18N V1 — FR / EN
+// =====================================================
+window.PARFECT_LANG =
+  localStorage.getItem("parfect_lang") ||
+  window.PARFECT_LANG ||
+  "fr";
 
+window.PARFECT_I18N = {
+  fr: {
+    ui: {
+      startSwing: "Démarrer le swing 🏌️",
+      retrySwing: "🔁 Recommencer le swing",
+      nextSwing: "Swing suivant",
+      close: "Fermer",
+      history: "Historique",
+      score: "Score",
+      replayFullscreen: "🔁 Replay plein écran",
+      noSessionSwings: "Aucun swing dans la session"
+    },
+    status: {
+      noFullBody: "Je ne te vois pas entièrement 👀 Reviens bien dans le cadre.",
+      swingComplete: "Swing Complete"
+    },
+    quota: {
+      blockedTitle: "🚫 Analyse bloquée",
+      blockedBody: "Tu as analysé {limit} swings.<br>Passe PRO pour continuer avec l’analyse IA."
+    },
+    routine: {
+      checkSetup: "Vérifie (3sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignement 🎯",
+      holdAddress: "Maintien l'Adresse… (3sec) \nRespire \n😮‍💨",
+      swingNow: "*SWING ! \n🏌️"
+    },
+    review: {
+      referenceParfect: "🧠 Réf Parfect",
+      referenceMine: "⭐ Ma réf",
+      objective_rotation: "Tourne les épaules et stabilise les hanches.",
+      objective_tempo: "Montée fluide, descente engagée.",
+      objective_triangle: "Garde le triangle bras/épaules stable.",
+      objective_weightShift: "Transfère progressivement le poids vers l’avant.",
+      objective_extension: "Tends les bras après impact.",
+      objective_balance: "Termine en équilibre."
+    },
+    metrics: {
+      rotation: "Rotation",
+      tempo: "Tempo",
+      triangle: "Triangle",
+      weightShift: "Transfert",
+      extension: "Extension",
+      balance: "Balance",
+      plan: "Plan"
+    },
+    coach: {
+      globalGood: "Bon swing 👍 Les fondamentaux sont en place. Continue comme ça.",
+      sessionGreat: "Très belle séance. Les fondamentaux sont en place. Continue comme ça 👍",
+      globalPriority: "Priorité : travaille {metric}.",
+      metric_tempo: "le tempo",
+      metric_rotation: "la rotation",
+      metric_triangle: "le triangle bras/épaules",
+      metric_weightShift: "le transfert d’appui",
+      metric_extension: "l’extension",
+      metric_balance: "l’équilibre",
+      metric_plan: "le plan de swing",
+      tempoAddTime: "Tempo à {ratio}:1. La cible est proche de {target}:1. Ajoute environ {delta}s à la montée pour retrouver un rythme plus fluide.",
+      tempoStartDownSooner: "Tempo à {ratio}:1. La cible est proche de {target}:1. Ta montée est déjà longue : engage un peu plus tôt la descente.",
+      weightShiftForwardShort: "Transfert avant encore court : {actual} mesuré à l’impact, pour une zone cible autour de {target}. Cherche environ {delta} de transfert supplémentaire vers l’avant.",
+      weightShiftBackShort: "Charge encore un peu plus au backswing : {actual} mesuré, cible autour de {target}.",
+      extensionShort: "Extension encore courte : {actual} mesuré pour une cible autour de {target}. Il manque environ {delta} d’amplitude.",
+      extensionEarlyFold: "Extension incomplète : {actual} mesuré pour une cible autour de {target}. Tes bras se replient trop tôt après impact : laisse-les s’allonger plus longtemps vers la cible.",
+      balanceShort: "Finish à stabiliser : déplacement mesuré {actual}. Termine plus posé, avec la tête au-dessus des hanches et le poids sur l’avant.",
+      balanceShortNoValue: "Finish à stabiliser : termine plus posé, avec la tête au-dessus des hanches et le poids sur l’avant.",
+      rotationImprove: "Rotation perfectible : épaules {shoulder}, hanches {hip}. Cherche plus de rotation d’épaules tout en gardant les hanches plus stables."
+    }
+  },
+  en: {
+    ui: {
+      startSwing: "Start swing 🏌️",
+      retrySwing: "🔁 Try again",
+      nextSwing: "Next swing",
+      close: "Close",
+      history: "History",
+      score: "Score",
+      replayFullscreen: "🔁 Fullscreen replay",
+      noSessionSwings: "No swings in this session"
+    },
+    status: {
+      noFullBody: "I can't see your full body 👀 Step back into the frame.",
+      swingComplete: "Swing Complete"
+    },
+    quota: {
+      blockedTitle: "🚫 Analysis locked",
+      blockedBody: "You have already analyzed {limit} swings.<br>Upgrade to PRO to keep using AI analysis."
+    },
+    routine: {
+      checkSetup: "Check (3 sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignment 🎯",
+      holdAddress: "Hold address… (3 sec) \nBreathe \n😮‍💨",
+      swingNow: "*SWING ! \n🏌️"
+    },
+    review: {
+      referenceParfect: "🧠 Parfect ref",
+      referenceMine: "⭐ My ref",
+      objective_rotation: "Turn the shoulders and keep the hips stable.",
+      objective_tempo: "Smooth backswing, committed downswing.",
+      objective_triangle: "Keep the arm/shoulder triangle stable.",
+      objective_weightShift: "Shift pressure progressively toward the lead side.",
+      objective_extension: "Extend the arms after impact.",
+      objective_balance: "Finish in balance."
+    },
+    metrics: {
+      rotation: "Rotation",
+      tempo: "Tempo",
+      triangle: "Triangle",
+      weightShift: "Weight shift",
+      extension: "Extension",
+      balance: "Balance",
+      plan: "Plane"
+    },
+    coach: {
+      globalGood: "Good swing 👍 The fundamentals are in place. Keep going.",
+      sessionGreat: "Very good session. The fundamentals are in place. Keep going 👍",
+      globalPriority: "Priority: work on {metric}.",
+      metric_tempo: "tempo",
+      metric_rotation: "rotation",
+      metric_triangle: "the arm/shoulder triangle",
+      metric_weightShift: "weight shift",
+      metric_extension: "extension",
+      metric_balance: "balance",
+      metric_plan: "swing plane",
+      tempoAddTime: "Tempo at {ratio}:1. The target is close to {target}:1. Add about {delta}s to the backswing to restore a smoother rhythm.",
+      tempoStartDownSooner: "Tempo at {ratio}:1. The target is close to {target}:1. Your backswing is already long enough: start the downswing a little earlier.",
+      weightShiftForwardShort: "Forward shift is still short: {actual} measured at impact for a target zone around {target}. Try to add about {delta} more shift toward the lead side.",
+      weightShiftBackShort: "Load a little more in the backswing: {actual} measured, target around {target}.",
+      extensionShort: "Extension is still short: {actual} measured for a target around {target}. About {delta} of extension is missing.",
+      extensionEarlyFold: "Extension is incomplete: {actual} measured for a target around {target}. Your arms fold too early after impact: let them extend longer toward the target.",
+      balanceShort: "Finish needs more stability: measured movement {actual}. Finish more quietly, with the head above the hips and pressure on the lead side.",
+      balanceShortNoValue: "Finish needs more stability: finish more quietly, with the head above the hips and pressure on the lead side.",
+      rotationImprove: "Rotation can improve: shoulders {shoulder}, hips {hip}. Turn the shoulders more while keeping the hips quieter."
+    }
+  }
+};
+
+function setParfectLang(lang) {
+  const next = ["fr", "en"].includes(lang) ? lang : "fr";
+  window.PARFECT_LANG = next;
+  localStorage.setItem("parfect_lang", next);
+}
+
+function getParfectLang() {
+  return window.PARFECT_LANG || "fr";
+}
+
+function t(path, fallback = "") {
+  const lang = getParfectLang();
+  const dict = window.PARFECT_I18N?.[lang] || window.PARFECT_I18N?.fr || {};
+  const value = path.split(".").reduce((o, k) => (o && o[k] != null ? o[k] : null), dict);
+  return value ?? fallback ?? path;
+}
+
+function tt(path, vars = {}, fallback = "") {
+  let str = t(path, fallback);
+  Object.keys(vars).forEach((key) => {
+    str = str.replaceAll(`{${key}}`, String(vars[key]));
+  });
+  return str;
+}
+
+// =====================================================
+// HELPERS COMMUNS
+// =====================================================
+function fmt(v, d = 2) {
+  return typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
+}
+
+function fmtCoach(v, d = 2) {
+  return typeof v === "number" && Number.isFinite(v) ? v.toFixed(d) : "—";
+}
+
+function jswClamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function jswDist(a, b) {
+  if (!a || !b) return null;
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function jswLineAngleDeg(a, b) {
+  if (!a || !b) return null;
+  return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+}
+
+function jswDegDiff(a, b) {
+  if (a == null || b == null) return null;
+  let d = Math.abs(a - b);
+  if (d > 180) d = 360 - d;
+  return d;
+}
+
+function safePose(pose) {
+  return Array.isArray(pose) ? pose : null;
+}
+
+function jswSafePoseFromKF(kf) {
+  if (!kf) return null;
+  if (kf.pose) return kf.pose;
+  if (Array.isArray(kf)) return kf;
+  return null;
+}
+
+function LM(pose, idx) {
+  if (!pose || !Array.isArray(pose)) return null;
+  return pose[idx] ?? null;
+}
+
+function scoreCoachCurve(value, target, tol, maxScore = 20, minScore = 2) {
+  if (
+    typeof value !== "number" || !Number.isFinite(value) ||
+    typeof target !== "number" || !Number.isFinite(target) ||
+    typeof tol !== "number" || !Number.isFinite(tol) || tol <= 0
+  ) return minScore;
+
+  const error = (value - target) / tol;
+  const raw = maxScore * Math.exp(-(error * error));
+  return Math.round(jswClamp(raw, minScore, maxScore));
+}
+
+function scoreCoachCurve10(value, target, tol, minScore = 2) {
+  return Math.round(jswClamp(scoreCoachCurve(value, target, tol, 10, minScore), minScore, 10));
+}
+
+function scoreCoachCurve20(value, target, tol, minScore = 4) {
+  return Math.round(jswClamp(scoreCoachCurve(value, target, tol, 20, minScore), minScore, 20));
+}
 const JSW_STATE = {
   IDLE: "IDLE",
   WAITING_START: "WAITING_START", // bouton start affiché
@@ -585,7 +817,7 @@ function showStartButton() {
   bigMsgEl.innerHTML = `
     <div class="jsw-start-card">
       <button id="jsw-start-btn" class="jsw-btn-primary">
-        Démarrer le swing 🏌️
+        ${t("ui.startSwing")}
       </button>
     </div>
   `;
@@ -749,7 +981,7 @@ function isValidSwing(swing) {
         font-weight:700;
         cursor:pointer;
       ">
-        🔁 Recommencer le swing
+        ${t("ui.retrySwing")}
       </button>
     </div>
   `;
@@ -770,22 +1002,26 @@ function isValidSwing(swing) {
   // ---------------------------------------------------------
   //   ROUTINE GUIDÉE
   // ---------------------------------------------------------
-  const routineStepsAuto = [
-    "Vérifie (3sec) \ngrip ✋ \nposture 🧍‍♂️ \nalignement 🎯",
-    //"Fais un swing d’essai 🌀",
-    "Maintien l'Adresse… (3sec) \nRespire \n😮‍💨",
+function getRoutineStepsAuto() {
+  return [
+    t("routine.checkSetup"),
+    t("routine.holdAddress")
   ];
+}
 
 
   function showSwingMessage() {
   if (!bigMsgEl) return;
 
-  bigMsgEl.innerHTML = "*SWING ! \n🏌️";
+  bigMsgEl.innerHTML = t("routine.swingNow");
   bigMsgEl.style.opacity = 1;
   bigMsgEl.classList.add("swing-active");
 }
 
 function startRoutineSequence() {
+const routineStepsAuto = getRoutineStepsAuto();
+showBigMessage(routineStepsAuto[0]);
+
   if (!bigMsgEl) return;
 
   // Reset UX
@@ -1873,903 +2109,639 @@ function getKeyframePose(type, metrics, activeSwing) {
 //   Gère les vues : faceOn / mobileFaceOn / dtl
 // ---------------------------------------------------------
 
-  
- async function computeSwingScorePremium(swing) {
-// =====================================================
-// 🔑 RÉFÉRENCES ACTIVES — DOUBLE MODE
-// =====================================================
+async function computeSwingScorePremium(swing) {
+  const REF = window.REF || null;
 
-const REF = window.REF || null;
+  const frames = Array.isArray(swing?.frames) ? swing.frames : [];
+  const kf = swing?.keyFrames || swing?.keyframes || {};
+  const T = Array.isArray(swing?.timestamps) ? swing.timestamps : [];
 
-   // 🔧 récupération références UI
-const refSystem = window.systemReference || null;
-const refUser = window.userReference || null;
+  const swingQuality = swing?.quality || {};
+  const keyframeConfidence = swingQuality?.confidence || {};
 
-console.log("REF rotation", REF?.rotation);
-console.log("REF tempo", REF?.tempo);
+  const rawView = (window.jswViewType || window.jswViewOverride || "faceOn").toLowerCase();
+  const viewType =
+    rawView.includes("mobile") ? "mobileFaceOn" :
+    (rawView.includes("dtl") || rawView.includes("line")) ? "dtl" :
+    "faceOn";
 
-if (!REF) {
-  console.warn("⚠️ No active reference available → fallback scoring");
-}
-
-
-  //const PARFECT_REF = window.parfectReference?.rotation;
-  let postureScore = 0;   // valeur neutre, informative
-  let addressScore = null; // ⚠️ null = “non scoré”
-
-    
-  const fps    = swing.fps || 30;
-  const frames = swing.frames || [];
-  const kf = swing.keyFrames || swing.keyframes || {};
-  const T = swing.timestamps || [];
-
-  
-const REF_SAFE = {
-  rotation: REF?.rotation ?? null,
-  triangle: REF?.triangle ?? null,
-  weightShift: REF?.weightShift ?? null,
-  extension: REF?.extension ?? null,
-  tempo: REF?.tempo ?? null,
-};
-
-if (!REF) {
-  console.warn("⚠️ No Parfect reference available → fallback scoring");
-}
- // -------------------------------------
-  // Récup des poses clés
-  // -------------------------------------
-const addressPose = safePose(jswSafePoseFromKF(kf.address));
-const backswingPose = safePose(jswSafePoseFromKF(kf.backswing)); 
-const topPose     = safePose(jswSafePoseFromKF(kf.top));
-const impactPose  = safePose(jswSafePoseFromKF(kf.impact));
-const finishPose  = safePose(jswSafePoseFromKF(kf.finish));
-    
-  // -------------------------------------
-  // Helpers locaux
-  // -------------------------------------
-  function jswClamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
-
-  function getKF(type, metrics, activeSwing) {
-  return (
-    metrics?.keyframes?.[type]?.pose ||
-    activeSwing?.keyFrames?.[type]?.pose ||        // ✅ SOURCE DE VÉRITÉ
-    activeSwing?.keyframeLandmarks?.[type]?.pose || // fallback
-    null
-  );
-}
-
-
-
-  function jswDist(a, b) {
-    if (!a || !b) return null;
-    const dx = a.x - b.x;
-    const dy = a.y - b.y;
-    return Math.hypot(dx, dy);
-  }
-
-  function jswLineAngleDeg(a, b) {
-    if (!a || !b) return null;
-    return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-  }
-
-  function jswDegDiff(a, b) {
-    if (a == null || b == null) return null;
-    let d = Math.abs(a - b);
-    if (d > 180) d = 360 - d;
-    return d;
-  }
-
-  function jswSafePoseFromKF(kfEntry) {
-    if (kfEntry == null) return null;
-    let idx = null;
-    if (typeof kfEntry === "number") {
-      idx = kfEntry;
-    } else if (typeof kfEntry.index === "number") {
-      idx = kfEntry.index;
-    }
-    if (idx == null || !frames[idx]) return null;
-    return frames[idx];
-  }
-
-function scoreVsReference(value, target, tol) {
-  if (value == null || target == null || tol == null) return 0;
-  const diff = Math.abs(value - target);
-  return jswClamp(1 - diff / tol, 0, 1);
-}
-
-
-  // -------------------------------------
-  // Vue caméra (driver par l UI)
-  // -------------------------------------
-  const rawView =
-    (window.jswViewType || window.jswViewOverride || "faceOn")
-      .toLowerCase();
-
-  let viewType;
-  if (rawView.includes("mobile")) {
-    viewType = "mobileFaceOn";
-  } else if (rawView.includes("dtl") || rawView.includes("line")) {
-    viewType = "dtl";
-  } else {
-    viewType = "faceOn";
-  }
+  const addressPose = safePose(jswSafePoseFromKF(kf.address));
+  const backswingPose = safePose(jswSafePoseFromKF(kf.backswing));
+  const topPose = safePose(jswSafePoseFromKF(kf.top));
+  const impactPose = safePose(jswSafePoseFromKF(kf.impact));
+  const finishPose = safePose(jswSafePoseFromKF(kf.finish));
 
   const metrics = {
     posture: {},
-    rotation:  {},
-    triangle:  {},
+    rotation: {},
+    triangle: {},
     weightShift: {},
     extension: {},
-    tempo:     {},
-    balance:   {},
+    tempo: {},
+    balance: {},
     viewType
   };
 
-metrics.posture = {};
-metrics.rotation = {};
-metrics.triangle = {};
-metrics.weightShift = {};
-metrics.extension = {};
-metrics.tempo = {};
-metrics.balance = {};
-   
-  console.log("👁️ ViewType utilisé pour le scoring :", viewType);
-
   // =====================================================
-  // 1) POSTURE (Address)
+  // POSTURE
   // =====================================================
-  metrics.posture = metrics.posture || {};
-   
-   if (addressPose) {
-    const LS = addressPose[11];
-    const RS = addressPose[12];
-    const LH = addressPose[23];
-    const RH = addressPose[24];
-    const LA = addressPose[27];
-    const RA = addressPose[28];
+  if (addressPose) {
+    const LS = addressPose[11], RS = addressPose[12];
+    const LH = addressPose[23], RH = addressPose[24];
+    const LA = addressPose[27], RA = addressPose[28];
 
-    const hipsMid = (LH && RH) ? { x: (LH.x + RH.x)/2, y:(LH.y + RH.y)/2 } : null;
-    const shMid   = (LS && RS) ? { x: (LS.x + RS.x)/2, y:(LS.y + RS.y)/2 } : null;
+    const hipsMid = (LH && RH) ? { x: (LH.x + RH.x) / 2, y: (LH.y + RH.y) / 2 } : null;
+    const shMid = (LS && RS) ? { x: (LS.x + RS.x) / 2, y: (LS.y + RS.y) / 2 } : null;
 
-    let flexionDeg = 30; // fallback "athlétique
-    
-
-
+    let flexionDeg = 30;
     if (hipsMid && shMid) {
       const vx = hipsMid.x - shMid.x;
       const vy = hipsMid.y - shMid.y;
       const norm = Math.hypot(vx, vy) || 1;
       const vyNorm = vy / norm;
-
-      // vyNorm ≈ 1 → colonne verticale, vyNorm < 1 → penchée
-      const theta = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
-      // 0° = vertical, 30-45° = flexion correcte
-      flexionDeg = theta;
+      flexionDeg = Math.acos(jswClamp(vyNorm, -1, 1)) * 180 / Math.PI;
     }
 
-    const feetWidth     = (LA && RA) ? jswDist(LA, RA) : null;
+    const feetWidth = (LA && RA) ? jswDist(LA, RA) : null;
     const shoulderWidth = (LS && RS) ? jswDist(LS, RS) : null;
-    let feetShoulderRatio = 1.0;
-    if (feetWidth && shoulderWidth) {
-      feetShoulderRatio = feetWidth / shoulderWidth;
-    }
+    const feetShoulderRatio = (feetWidth && shoulderWidth) ? feetWidth / shoulderWidth : 1.0;
 
     const shoulderAngle = jswLineAngleDeg(LS, RS);
-    const hipAngle      = jswLineAngleDeg(LH, RH);
-    const alignDiff     = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
+    const hipAngle = jswLineAngleDeg(LH, RH);
+    const alignDiff = jswDegDiff(shoulderAngle, hipAngle) ?? 0;
 
-    //metrics.posture.flexionDeg        = flexionDeg;
-    //metrics.posture.feetShoulderRatio = feetShoulderRatio;
-    //metrics.posture.alignDiff         = alignDiff;
+    const flexScore = jswClamp(1 - Math.abs(flexionDeg - 35) / 25, 0, 1);
+    const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2) / 0.7, 0, 1);
+    const alignScore = jswClamp(1 - alignDiff / 20, 0, 1);
 
-    const flexScore  = jswClamp(1 - Math.abs(flexionDeg - 35)/25, 0, 1);
-    const ratioScore = jswClamp(1 - Math.abs(feetShoulderRatio - 1.2)/0.7, 0, 1);
-    const alignScore = jswClamp(1 - alignDiff/20, 0, 1);
-
-    metrics.posture.score = Math.round((flexScore + ratioScore + alignScore)/3 * 10);
+    metrics.posture = {
+      flexionDeg,
+      feetShoulderRatio,
+      alignDiff,
+      score: Math.round((flexScore + ratioScore + alignScore) / 3 * 10)
+    };
   } else {
     metrics.posture.score = 10;
   }
-postureScore = metrics.posture.score;
 
+  // =====================================================
+  // ROTATION
+  // =====================================================
+  metrics.rotation = { stages: {}, score: 0, status: "incomplete" };
 
-const rotBasePose = backswingPose || topPose; // ✅ fallback
+  const basePoseRot = addressPose || backswingPose || null;
+  const topPoseRot = topPose || null;
 
-// =====================================================
-// ROTATION FACE-ON — scoring par seuils (ROBUSTE)
-// =====================================================
-function scoreFaceOnRotationRatio(ratio) {
-  if (ratio == null || isNaN(ratio)) return 0;
+  if (basePoseRot && topPoseRot) {
+    const m = computeRotationSignature(basePoseRot, topPoseRot, window.jswViewType);
 
-  if (ratio < 0.20) return 10;   // rotation excellente
-  if (ratio < 0.35) return 8;
-  if (ratio < 0.50) return 5;
-  if (ratio < 0.65) return 2;
-  return 0;
-}
+    if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
+      const shoulder = m.shoulder;
+      const hip = m.hip;
+      metrics.rotation.measure = { shoulder, hip };
 
-// =====================================================
-// ROTATION — robuste (Face-On & DTL)
-// source unique : addressPose / backswingPose / topPose
-// =====================================================
+      let score = 0;
 
-// init SAFE (ne redéclare rien ailleurs)
-metrics.rotation = metrics.rotation || {};
-metrics.rotation.stages = metrics.rotation.stages || {};
-metrics.rotation.score = 0;
-metrics.rotation.status = "incomplete";
+      if (window.jswViewType === "dtl") {
+        const SHOULDER_OK = 45;
+        const HIP_OK = 25;
+        const SEP_OK = 10;
+        const sep = shoulder - hip;
 
-// poses déjà extraites PLUS HAUT
-const basePoseRot = addressPose || backswingPose || null;
-const topPoseRot  = topPose || null;
+        if (shoulder >= SHOULDER_OK) score += 10;
+        else if (shoulder >= 30) score += 6;
+        else if (shoulder >= 20) score += 3;
 
-if (!basePoseRot || !topPoseRot) {
-  console.warn("🌀 ROT ENGINE: missing base/top", {
-    base: !!basePoseRot,
-    top:  !!topPoseRot
-  });
-} else {
+        if (hip >= HIP_OK) score += 6;
+        else if (hip >= 15) score += 4;
+        else if (hip >= 10) score += 2;
 
-  const m = computeRotationSignature(
-    basePoseRot,
-    topPoseRot,
-    window.jswViewType
-  );
+        if (sep >= SEP_OK) score += 4;
 
-  if (!m || typeof m.shoulder !== "number" || typeof m.hip !== "number") {
-    metrics.rotation.status = "invalid-measure";
-    console.warn("🌀 ROT ENGINE: invalid rotation measure", m);
-  } else {
+        metrics.rotation.ref = {
+          shoulder: { ok: SHOULDER_OK },
+          hip: { ok: HIP_OK },
+          separation: { ok: SEP_OK }
+        };
 
-    const shoulder = m.shoulder;
-    const hip      = m.hip;
+        metrics.rotation.stages.baseToTop = {
+          actual: { shoulder, hip, separation: sep },
+          score
+        };
+      } else {
+        const refRot = window.REF?.rotation || null;
 
-    // 🔑 TOUJOURS exposer les mesures (sinon UI = vide)
-    metrics.rotation.measure = { shoulder, hip };
+        const s10 =
+          refRot?.shoulder?.target != null && refRot?.shoulder?.tol != null
+            ? jswClamp(
+                1 - Math.abs(shoulder - refRot.shoulder.target) / Math.max(refRot.shoulder.tol, 0.08),
+                0,
+                1
+              ) * 10
+            : 5;
 
-    // =================================================
-    // 🎯 SCORING — dépend de la vue
-    // =================================================
-    let score = 0;
+        const h10 =
+          refRot?.hip?.target != null && refRot?.hip?.tol != null
+            ? jswClamp(
+                1 - Math.abs(hip - refRot.hip.target) / Math.max(refRot.hip.tol, 0.10),
+                0,
+                1
+              ) * 10
+            : 5;
 
-    if (window.jswViewType === "dtl") {
+        score = Math.round(s10 + h10);
 
-      // ---------- DTL : angles réels ----------
-      // seuils réalistes (degrés)
-      const SHOULDER_OK = 45;
-      const HIP_OK      = 25;
-      const SEP_OK      = 10;
+        metrics.rotation.ref = refRot;
+        metrics.rotation.stages.baseToTop = {
+          actual: { shoulder, hip },
+          target: {
+            shoulder: refRot?.shoulder?.target ?? null,
+            hip: refRot?.hip?.target ?? null
+          },
+          tol: {
+            shoulder: refRot?.shoulder?.tol ?? null,
+            hip: refRot?.hip?.tol ?? null
+          },
+          score
+        };
+      }
 
-      const sep = shoulder - hip;
-
-      // épaules (10 pts)
-      if (shoulder >= SHOULDER_OK) score += 10;
-      else if (shoulder >= 30) score += 6;
-      else if (shoulder >= 20) score += 3;
-
-      // hanches (6 pts)
-      if (hip >= HIP_OK) score += 6;
-      else if (hip >= 15) score += 4;
-      else if (hip >= 10) score += 2;
-
-      // dissociation (4 pts)
-      if (sep >= SEP_OK) score += 4;
-
-      metrics.rotation.ref = {
-        shoulder: { ok: SHOULDER_OK },
-        hip: { ok: HIP_OK },
-        separation: { ok: SEP_OK }
-      };
-
-      metrics.rotation.stages.baseToTop = {
-        actual: { shoulder, hip, separation: sep },
-        score
-      };
-
+      metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
+      metrics.rotation.status = "ok";
     } else {
-
-      // ---------- FACE-ON : ratios projetés ----------
-      const ref = window.REF?.rotation || null;
-
-      let s10 = 0;
-      let h10 = 0;
-
-      if (ref?.shoulder?.target != null && ref?.shoulder?.tol != null) {
-        s10 = jswClamp(
-          1 - Math.abs(shoulder - ref.shoulder.target) / ref.shoulder.tol,
-          0,
-          1
-        ) * 10;
-      }
-
-      if (ref?.hip?.target != null && ref?.hip?.tol != null) {
-        h10 = jswClamp(
-          1 - Math.abs(hip - ref.hip.target) / ref.hip.tol,
-          0,
-          1
-        ) * 10;
-      }
-
-      score = Math.round(s10 + h10);
-
-      metrics.rotation.ref = ref;
-
-      metrics.rotation.stages.baseToTop = {
-        actual: { shoulder, hip },
-        target: {
-          shoulder: ref?.shoulder?.target ?? null,
-          hip: ref?.hip?.target ?? null
-        },
-        tol: {
-          shoulder: ref?.shoulder?.tol ?? null,
-          hip: ref?.hip?.tol ?? null
-        },
-        score
-      };
+      metrics.rotation.status = "invalid-measure";
     }
-
-    metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
-    metrics.rotation.status = "ok";
-
-    console.log("🌀 ROT ENGINE OK", metrics.rotation);
   }
-}
 
+  // =====================================================
+  // TRIANGLE
+  // =====================================================
+  let triangleScore = 10;
 
+  if (topPose && impactPose) {
+    const basePose = addressPose || backswingPose || topPose;
 
+    const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12), LW0 = LM(basePose, 15);
+    const LS1 = LM(topPose, 11),  RS1 = LM(topPose, 12),  LW1 = LM(topPose, 15);
+    const LS2 = LM(impactPose, 11), RS2 = LM(impactPose, 12), LW2 = LM(impactPose, 15);
 
-// =====================================================
-// 3) TRIANGLE — stabilité bras / buste (robuste mobile)
-// =====================================================
-let triangleScore = 10;
-    
-if (topPose && impactPose) {
-
-  // 👉 base fiable : address → backswing → top
-  const basePose = addressPose || backswingPose || topPose;
-
-  if (!basePose) {
-    triangleScore = 10;
-  } else {
-    const LS0 = LM(basePose, 11);
-    const RS0 = LM(basePose, 12);
-    const LW0 = LM(basePose, 15); // poignet lead
-
-    const LS1 = LM(topPose, 11);
-    const RS1 = LM(topPose, 12);
-    const LW1 = LM(topPose, 15);
-
-    const LS2 = LM(impactPose, 11);
-    const RS2 = LM(impactPose, 12);
-    const LW2 = LM(impactPose, 15);
-
-    if (!LS0 || !RS0 || !LW0 || !LS1 || !RS1 || !LW1 || !LS2 || !RS2 || !LW2) {
-      triangleScore = 10;
-    } else {
+    if (LS0 && RS0 && LW0 && LS1 && RS1 && LW1 && LS2 && RS2 && LW2) {
       const shoulderW0 = jswDist(LS0, RS0);
 
-      if (!shoulderW0 || shoulderW0 <= 0) {
-        triangleScore = 10;
-      } else {
-        const ref   = jswDist(LS0, LW0) / shoulderW0;
-        const topV  = jswDist(LS1, LW1) / shoulderW0;
-        const impV  = jswDist(LS2, LW2) / shoulderW0;
+      if (shoulderW0 && shoulderW0 > 0) {
+        const refTri = jswDist(LS0, LW0) / shoulderW0;
+        const topV = jswDist(LS1, LW1) / shoulderW0;
+        const impV = jswDist(LS2, LW2) / shoulderW0;
 
-        const varTop = Math.abs(topV - ref) / ref * 100;
-        const varImp = Math.abs(impV - ref) / ref * 100;
+        const varTop = Math.abs(topV - refTri) / refTri * 100;
+        const varImp = Math.abs(impV - refTri) / refTri * 100;
 
-        const scoreTop = jswClamp(1 - varTop / 18, 0, 1);
-        const scoreImp = jswClamp(1 - varImp / 12, 0, 1);
+        const scoreTop = jswClamp(1 - varTop / 22, 0, 1);
+        const scoreImp = jswClamp(1 - varImp / 16, 0, 1);
 
         triangleScore = Math.round((scoreTop * 0.5 + scoreImp * 0.5) * 20);
 
         metrics.triangle = {
-          refRatio: ref,
+          refRatio: refTri,
           topRatio: topV,
           impactRatio: impV,
           varTopPct: varTop,
           varImpactPct: varImp,
-          score: triangleScore
+          score: Math.max(4, triangleScore)
         };
       }
     }
   }
-} else {
-  triangleScore = 10;
-}
 
-metrics.triangle.score = triangleScore;
+  const triTopConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const triImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const triConfidence =
+    typeof triTopConf === "number" && typeof triImpactConf === "number"
+      ? Math.min(triTopConf, triImpactConf)
+      : null;
 
+  metrics.triangle.confidenceTop = triTopConf;
+  metrics.triangle.confidenceImpact = triImpactConf;
+  metrics.triangle.confidence = triConfidence;
+  metrics.triangle.score = applyConfidenceSoftening(Math.max(4, triangleScore), triConfidence, 20);
 
-// =====================================================
-// 4) WEIGHT SHIFT — transfert latéral hanches (robuste)
-// =====================================================
-let weightShiftScore = 10;
+  // =====================================================
+  // WEIGHT SHIFT
+  // =====================================================
+  let weightShiftScore = 6;
 
-if (topPose && impactPose) {
-  // base fiable: address → backswing → top
-  const basePose = addressPose || backswingPose || topPose;
+  metrics.weightShift = {
+    shiftBack: null,
+    shiftFwd: null,
+    absBack: null,
+    absFwd: null,
+    backScore: null,
+    fwdScore: null,
+    targetBack: null,
+    targetFwd: null,
+    tolBack: null,
+    tolFwd: null,
+    deltaBack: null,
+    deltaFwd: null,
+    confidenceTop: null,
+    confidenceImpact: null,
+    confidence: null,
+    score: 6,
+    status: "incomplete"
+  };
 
-  const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
-  const LH1 = LM(topPose, 23),  RH1 = LM(topPose, 24);
-  const LH2 = LM(impactPose, 23),RH2 = LM(impactPose, 24);
+  if (topPose && impactPose) {
+    const basePose = addressPose || backswingPose || topPose;
 
-  const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12);
+    const LH0 = LM(basePose, 23), RH0 = LM(basePose, 24);
+    const LH1 = LM(topPose, 23), RH1 = LM(topPose, 24);
+    const LH2 = LM(impactPose, 23), RH2 = LM(impactPose, 24);
+    const LS0 = LM(basePose, 11), RS0 = LM(basePose, 12);
 
-  if (LH0 && RH0 && LH1 && RH1 && LH2 && RH2 && LS0 && RS0) {
-    const hips0 = { x:(LH0.x + RH0.x)/2, y:(LH0.y + RH0.y)/2 };
-    const hips1 = { x:(LH1.x + RH1.x)/2, y:(LH1.y + RH1.y)/2 };
-    const hips2 = { x:(LH2.x + RH2.x)/2, y:(LH2.y + RH2.y)/2 };
+    if (LH0 && RH0 && LH1 && RH1 && LH2 && RH2 && LS0 && RS0) {
+      const hips0 = { x: (LH0.x + RH0.x) / 2, y: (LH0.y + RH0.y) / 2 };
+      const hips1 = { x: (LH1.x + RH1.x) / 2, y: (LH1.y + RH1.y) / 2 };
+      const hips2 = { x: (LH2.x + RH2.x) / 2, y: (LH2.y + RH2.y) / 2 };
 
-    const shoulderWidth = jswDist(LS0, RS0);
+      const shoulderWidth = jswDist(LS0, RS0);
 
-    if (shoulderWidth && shoulderWidth > 0) {
-      const shiftBack = (hips1.x - hips0.x) / shoulderWidth;
-      const shiftFwd  = (hips2.x - hips0.x) / shoulderWidth;
+      if (shoulderWidth && shoulderWidth > 0.001) {
+        const shiftBack = (hips1.x - hips0.x) / shoulderWidth;
+        const shiftFwd = (hips2.x - hips0.x) / shoulderWidth;
 
-      metrics.weightShift.shiftBack = shiftBack;
-      metrics.weightShift.shiftFwd  = shiftFwd;
+        const refWS = window.REF?.weightShift || null;
+        const absBack = Math.abs(shiftBack);
+        const absFwd = Math.abs(shiftFwd);
 
-      // ✅ référence active (club+vue) si tu l’as dans window.REF
-      const REF = window.REF?.weightShift || null;
+        const targetBack = refWS?.back?.target ?? 0.08;
+        const targetFwd = refWS?.fwd?.target ?? 0.12;
+        const tolBack = Math.max(refWS?.back?.tol ?? 0.12, 0.16);
+        const tolFwd = Math.max(refWS?.fwd?.tol ?? 0.12, 0.18);
 
-      let backScore = 0.5;
-      let fwdScore  = 0.5;
+        const backScore = scoreCoachCurve10(absBack, targetBack, tolBack, 2);
+        const fwdScore = scoreCoachCurve10(absFwd, targetFwd, tolFwd, 2);
 
-      if (REF?.back && REF?.fwd) {
-        backScore = jswClamp(
-          1 - Math.abs(Math.abs(shiftBack) - REF.back.target) / REF.back.tol,
-          0, 1
-        );
-        fwdScore = jswClamp(
-          1 - Math.abs(Math.abs(shiftFwd) - REF.fwd.target) / REF.fwd.tol,
-          0, 1
-        );
-      } else {
-        backScore = jswClamp((Math.abs(shiftBack) - 0.03) / 0.12, 0, 1);
-        fwdScore  = jswClamp((Math.abs(shiftFwd)  - 0.03) / 0.12, 0, 1);
+        weightShiftScore = Math.round(backScore * 0.4 + fwdScore * 0.6);
+
+        metrics.weightShift = {
+          shiftBack,
+          shiftFwd,
+          absBack,
+          absFwd,
+          backScore,
+          fwdScore,
+          targetBack,
+          targetFwd,
+          tolBack,
+          tolFwd,
+          deltaBack: absBack - targetBack,
+          deltaFwd: absFwd - targetFwd,
+          confidenceTop: null,
+          confidenceImpact: null,
+          confidence: null,
+          score: weightShiftScore,
+          status: "ok"
+        };
       }
-
-      weightShiftScore = Math.round((backScore * 0.4 + fwdScore * 0.6) * 10);
     }
   }
-}
 
-metrics.weightShift.score = weightShiftScore;
+  const wsTopConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const wsImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const wsConfidence =
+    typeof wsTopConf === "number" && typeof wsImpactConf === "number"
+      ? Math.min(wsTopConf, wsImpactConf)
+      : (typeof wsTopConf === "number" ? wsTopConf :
+         typeof wsImpactConf === "number" ? wsImpactConf : null);
 
+  metrics.weightShift.confidenceTop = wsTopConf;
+  metrics.weightShift.confidenceImpact = wsImpactConf;
+  metrics.weightShift.confidence = wsConfidence;
+  metrics.weightShift.score = applyConfidenceSoftening(metrics.weightShift.score, wsConfidence, 10);
 
-// =====================================================
-// EXTENSION — robuste (impact prioritaire)
-// =====================================================
+  // =====================================================
+  // EXTENSION
+  // =====================================================
+  let extensionScore = 4;
 
-// ⚠️ NE PAS redéclarer impactPose / finishPose / metrics
-    let extensionScore = 0;
+  metrics.extension = {
+    extImpact: null,
+    extFinish: null,
+    progress: null,
+    value: null,
+    target: null,
+    tol: null,
+    deltaToTarget: null,
+    confidenceImpact: null,
+    confidence: null,
+    status: "incomplete",
+    score: 4
+  };
 
-metrics.extension = metrics.extension || {
-  extImpact: null,
-  extFinish: null,
-  progress: null,
-  value: null,
-  status: "incomplete",
-  score: 0
-};
+  const ELS = impactPose?.[11];
+  const ERS = impactPose?.[12];
+  const ELW = impactPose?.[15];
+  const ERW = impactPose?.[16];
 
-let extensionStatus = "incomplete";
+  if (ELS && ERS && (ELW || ERW)) {
+    const shoulderWidth = Math.max(jswDist(ELS, ERS), 0.001);
 
-// -----------------------------------------------------
-// 🔑 Landmarks depuis poses EXISTANTES
-// -----------------------------------------------------
-const LS = impactPose?.[11];
-const RS = impactPose?.[12];
-const LW = impactPose?.[15];
-const RW = impactPose?.[16];
+    const extImpact = Math.max(
+      ELW ? jswDist(ELS, ELW) : 0,
+      ERW ? jswDist(ERS, ERW) : 0
+    ) / shoulderWidth;
 
-if (!LS || !RS || (!LW && !RW)) {
-  extensionStatus = "no-hands";
-} else {
-  const shoulderWidth = Math.max(jswDist(LS, RS), 0.001);
+    let extFinish = null;
 
-  // 👉 extension réelle à l’impact (PRIORITÉ)
-  const extImpact = Math.max(
-    LW ? jswDist(LS, LW) : 0,
-    RW ? jswDist(RS, RW) : 0
-  ) / shoulderWidth;
+    if (finishPose && finishPose[11] && finishPose[12] && (finishPose[15] || finishPose[16])) {
+      const swf = Math.max(jswDist(finishPose[11], finishPose[12]), 0.001);
+      extFinish = Math.max(
+        finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
+        finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
+      ) / swf;
+    }
 
-  // 👉 extension post-impact (si dispo)
-  let extFinish = null;
+    const extensionValue = Math.max(extImpact, extFinish ?? 0);
+    const progress = extFinish != null ? extFinish - extImpact : null;
+
+    const refExt = window.REF?.extension || null;
+    const target = refExt?.target ?? 2.5;
+    const tol = Math.max(refExt?.tol ?? 1.0, 1.2);
+
+    extensionScore = scoreCoachCurve10(extensionValue, target, tol, 2);
+
+    if (typeof progress === "number" && progress > 0.10) {
+      extensionScore = Math.min(10, extensionScore + 1);
+    }
+
+    metrics.extension = {
+      extImpact,
+      extFinish,
+      progress,
+      value: extensionValue,
+      target,
+      tol,
+      deltaToTarget: extensionValue - target,
+      confidenceImpact: null,
+      confidence: null,
+      status: "ok",
+      score: extensionScore
+    };
+  }
+
+  const extImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  metrics.extension.confidenceImpact = extImpactConf;
+  metrics.extension.confidence = extImpactConf;
+  metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extImpactConf, 10);
+
+  // =====================================================
+  // TEMPO
+  // =====================================================
+  let tempoScore = null;
+  const refTempo = window.REF?.tempo;
+
+  let backswingT = null;
+  let rawDownswingT = null;
+  let downswingT = null;
+  let ratio = null;
+  let isClampedDownswing = false;
+
+  const kfIdx = {
+    address: kf.address?.index,
+    top: kf.top?.index,
+    impact: kf.impact?.index
+  };
 
   if (
-    finishPose &&
-    finishPose[11] &&
-    finishPose[12] &&
-    (finishPose[15] || finishPose[16])
+    typeof kfIdx.top === "number" &&
+    typeof kfIdx.impact === "number" &&
+    typeof kfIdx.address === "number" &&
+    T.length > Math.max(kfIdx.address, kfIdx.top, kfIdx.impact)
   ) {
-    const swf = Math.max(
-      jswDist(finishPose[11], finishPose[12]),
-      0.001
-    );
+    const tAddr = T[kfIdx.address];
+    const tTop = T[kfIdx.top];
+    const tImpact = T[kfIdx.impact];
 
-    extFinish = Math.max(
-      finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
-      finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
-    ) / swf;
+    if (tTop > tAddr && tImpact > tTop) {
+      backswingT = (tTop - tAddr) / 1000;
+      rawDownswingT = (tImpact - tTop) / 1000;
+
+      const MIN_DOWNSWING = 0.12;
+      isClampedDownswing = rawDownswingT < MIN_DOWNSWING;
+      downswingT = Math.max(rawDownswingT, MIN_DOWNSWING);
+
+      ratio = backswingT / downswingT;
+
+      metrics.tempo = {
+        backswingT,
+        downswingT,
+        rawDownswingT,
+        isClampedDownswing,
+        ratio,
+        targetRatio: refTempo?.ratio?.target ?? null,
+        tolRatio: refTempo?.ratio?.tol ?? null
+      };
+
+      if (refTempo?.ratio?.target != null && ratio != null) {
+        const target = refTempo.ratio.target ?? 3.05;
+        const softTol = Math.max(refTempo?.ratio?.tol ?? 0.8, 1.2);
+
+        const error = (ratio - target) / softTol;
+        const rawScore = 20 * Math.exp(-(error * error));
+
+        const plausible = ratio >= 1.4 && ratio <= 4.8;
+        const minScore = plausible ? 4 : 2;
+
+        tempoScore = Math.round(jswClamp(rawScore, minScore, 20));
+      }
+    }
   }
 
-  const extensionValue = Math.max(extImpact, extFinish ?? 0);
+  metrics.tempo.score = tempoScore;
 
-  metrics.extension.extImpact = extImpact;
-  metrics.extension.extFinish = extFinish;
-  metrics.extension.progress =
-    extFinish != null ? extFinish - extImpact : null;
+  const topConf = keyframeConfidence?.top ?? kf.top?.confidence ?? null;
+  const impactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+  const tempoConfidence =
+    typeof topConf === "number" && typeof impactConf === "number"
+      ? Math.min(topConf, impactConf)
+      : (typeof topConf === "number" ? topConf :
+         typeof impactConf === "number" ? impactConf : null);
 
-  metrics.extension.value = extensionValue;
+  metrics.tempo.confidenceTop = topConf;
+  metrics.tempo.confidenceImpact = impactConf;
+  metrics.tempo.confidence = tempoConfidence;
 
-  extensionStatus = "ok";
-
- 
-  // ---------------------------------------------------
-  // 🎯 Scoring (tolérance humaine)
-  // ---------------------------------------------------
-  const ref = window.REF?.extension;
-
-  if (ref?.target != null && ref?.tol != null) {
-    extensionScore = Math.round(
-      jswClamp(
-        1 - Math.abs(extensionValue - ref.target) / ref.tol,
-        0,
-        1
-      ) * 10
-    );
-  } else {
-    // fallback intelligent
-    extensionScore = extensionValue > 0.55 ? 7 : 4;
+  if (typeof tempoScore === "number") {
+    tempoScore = applyConfidenceSoftening(tempoScore, tempoConfidence, 20);
+    metrics.tempo.score = tempoScore;
   }
 
-  metrics.extension.score = extensionScore;
-}
-
-metrics.extension.status = extensionStatus;
-
-
-// =====================================================
-// TEMPO — keyframes (address → top → impact)
-// =====================================================
-
-let tempoScore = null;
-metrics.tempo = {};
-
-const ref = window.REF?.tempo;
-let backswingT = null;
-let rawDownswingT = null;
-let downswingT = null;
-let ratio = null;
-let isClampedDownswing = false;
-   
-const kfIdx = {
-  address: kf.address?.index,
-  top:     kf.top?.index,
-  impact:  kf.impact?.index
-};
-
-if (
-  typeof kfIdx.top === "number" &&
-  typeof kfIdx.impact === "number" &&
-  typeof kfIdx.address === "number" &&
-  T.length > Math.max(kfIdx.address, kfIdx.top, kfIdx.impact)
-) {
-
-  const tAddr   = T[kfIdx.address];
-  const tTop    = T[kfIdx.top];
-  const tImpact = T[kfIdx.impact];
-
-  if (tTop > tAddr && tImpact > tTop) {
-    const backswingT = (tTop - tAddr) / 1000;
-const rawDownswingT = (tImpact - tTop) / 1000;
-
-// 🛡️ Sécurité MediaPipe (downswing trop court = bruit)
-const MIN_DOWNSWING = 0.12; // 120 ms plancher réaliste
-const isClampedDownswing = rawDownswingT < MIN_DOWNSWING;
-const downswingT = Math.max(rawDownswingT, MIN_DOWNSWING);
-
-const ratio = backswingT / downswingT;
-
-// exposé metrics
-metrics.tempo.backswingT = backswingT;
-metrics.tempo.downswingT = downswingT;
-metrics.tempo.rawDownswingT = rawDownswingT;
-metrics.tempo.isClampedDownswing = isClampedDownswing;
-metrics.tempo.ratio = ratio;
-
-  
-  
-    metrics.tempo = {
-  backswingT,
-  downswingT,
-  rawDownswingT,
-  isClampedDownswing,
-  ratio,
-  targetRatio: ref?.ratio?.target ?? null,
-  tolRatio: ref?.ratio?.tol ?? null
-};
-
- 
-   if (ref?.ratio?.target != null && ratio != null) {
-  const target = ref.ratio.target ?? 3.05;
-  const softTol = Math.max(ref?.ratio?.tol ?? 0.8, 1.2);
-
-  const error = (ratio - target) / softTol;
-  const rawScore = 20 * Math.exp(-(error * error));
-
-  // plancher plus coach si le ratio reste plausible
-  const plausible = ratio >= 1.4 && ratio <= 4.8;
-  const minScore = plausible ? 4 : 2;
-
-  tempoScore = Math.round(jswClamp(rawScore, minScore, 20));
-}
+  // =====================================================
+  // TEMPO ↔ EXTENSION
+  // =====================================================
+  if (metrics.extension?.score != null && metrics.tempo?.ratio != null) {
+    if (metrics.tempo.ratio < 2.2) {
+      metrics.extension.score = Math.min(10, metrics.extension.score + 1);
+      metrics.extension.syncedWithTempo = true;
+    }
   }
-}
 
-metrics.tempo.score = tempoScore;
-console.log("TEMPO DEBUG", {
-  backswingT,
-  rawDownswingT,
-  downswingT,
-  isClampedDownswing,
-  ratio,
-  target: ref?.ratio?.target,
-  tol: ref?.ratio?.tol,
-  tempoScore
-});
+  // =====================================================
+  // BALANCE
+  // =====================================================
+  let balanceScore = 7;
 
-// =====================================================
-// TEMPO ↔ EXTENSION SYNCHRO
-// =====================================================
+  if (finishPose) {
+    const basePose = addressPose || backswingPose || topPose;
 
-if (
-  metrics.extension?.score != null &&
-  metrics.tempo?.ratio != null
-) {
-  const ratio = metrics.tempo.ratio;
+    const LHb = LM(basePose, 23), RHb = LM(basePose, 24);
+    const LHf = LM(finishPose, 23), RHf = LM(finishPose, 24);
+    const headFin = LM(finishPose, 0);
 
-  // downswing très rapide → tolérance extension
-  if (ratio < 2.2 && extensionScore != null) {
-    extensionScore = Math.min(20, extensionScore + 2);
-    metrics.extension.score = extensionScore;
-    metrics.extension.syncedWithTempo = true;
+    if (LHb && RHb && LHf && RHf && headFin) {
+      const hipsBase = { x: (LHb.x + RHb.x) / 2, y: (LHb.y + RHb.y) / 2 };
+      const hipsFin = { x: (LHf.x + RHf.x) / 2, y: (LHf.y + RHf.y) / 2 };
+
+      const headOverHips = Math.abs(headFin.x - hipsFin.x) < 0.08;
+      const finishMove = jswDist(hipsBase, hipsFin) || 0;
+
+      const headScore = headOverHips ? 1 : 0.5;
+      const moveScore = jswClamp(1 - finishMove / 0.30, 0, 1);
+
+      balanceScore = Math.round((headScore * 0.5 + moveScore * 0.5) * 10);
+
+      metrics.balance = {
+        headOverHips,
+        finishMove,
+        score: Math.max(2, balanceScore)
+      };
+    }
   }
-}
 
-    
-// =====================================================
-// 7) BALANCE — finish + base (address/backswing/top)
-// =====================================================
-let balanceScore = 7;
+  metrics.balance.score = Math.max(2, balanceScore);
 
-if (finishPose) {
-  const basePose = addressPose || backswingPose || topPose;
-
-  const LHb = LM(basePose, 23), RHb = LM(basePose, 24);
-  const LHf2 = LM(finishPose, 23), RHf2 = LM(finishPose, 24);
-  const headFin = LM(finishPose, 0);
-
-  if (LHb && RHb && LHf2 && RHf2 && headFin) {
-    const hipsBase = { x:(LHb.x + RHb.x)/2, y:(LHb.y + RHb.y)/2 };
-    const hipsFin  = { x:(LHf2.x + RHf2.x)/2, y:(LHf2.y + RHf2.y)/2 };
-
-    const headOverHips = Math.abs(headFin.x - hipsFin.x) < 0.08;
-    const finishMove = jswDist(hipsBase, hipsFin) || 0;
-
-    metrics.balance.headOverHips = headOverHips;
-    metrics.balance.finishMove   = finishMove;
-
-    const headScore = headOverHips ? 1 : 0.4;
-    const moveScore = jswClamp(1 - finishMove/0.25, 0, 1);
-
-    balanceScore = Math.round((headScore*0.5 + moveScore*0.5) * 10);
+  // =====================================================
+  // PLAN DTL
+  // =====================================================
+  if (window.jswViewType === "dtl") {
+    const plan = computeDTLPlanScore(swing);
+    metrics.swingPlane = {
+      score: plan.score,
+      deviation: plan.deviation,
+      status: plan.status
+    };
   }
-}
 
-metrics.balance.score = balanceScore;
-
-// =====================================================
-// PLAN
-// =====================================================
-    if (window.jswViewType === "dtl") {
-  const plan = computeDTLPlanScore(swing);
-
-  metrics.swingPlane = {
-    score: plan.score,
-    deviation: plan.deviation,
-    status: plan.status
+  // =====================================================
+  // TOTAL
+  // =====================================================
+  const METRIC_WEIGHTS = {
+    rotation: 20,
+    tempo: 20,
+    triangle: 20,
+    weightShift: 10,
+    extension: 10,
+    balance: 10
   };
-}
-
-
-// =====================================================
-// 8) TOTAL — Pondération Parfect V1
-// - 3 axes majeurs à 20 pts
-// - 4 axes secondaires à 10 pts
-// - Les métrics non évaluées ne pénalisent PAS
-// =====================================================
-
-// 🎯 Pondérations officielles
-const METRIC_WEIGHTS = {
-  rotation:    20,
-  tempo:       20,
-  triangle:    20,
-  weightShift: 10,
-  extension:   10,
-  balance:     10
-};
-
-// =====================================================
-// JUST SWING — PILIERS PAR VUE
-// =====================================================
-
-const JSW_PILLARS = {
-  faceOn: [
-    "rotation",
-    "tempo",
-    "triangle",
-    "weightShift",
-    "extension",
-    "balance"
-  ],
-
-  dtl: [
-    "tempo",
-    "plan",
-    "rotation",   // secondaire (plafonnée à 15)
-    "triangle",
-    "extension",
-    "balance"
-  ]
-};
-
-    
-// -----------------------------------------------------
-// 🔢 Scores sources (UNE SEULE SOURCE DE VÉRITÉ)
-// -----------------------------------------------------
-const metricScores = {
-  rotation:    metrics.rotation?.score     ?? null,
-  triangle:    metrics.triangle?.score     ?? null,
-  weightShift: metrics.weightShift?.score  ?? null,
-  extension:   metrics.extension?.score    ?? null,
-  tempo:       metrics.tempo?.score        ?? null,
-  balance:     metrics.balance?.score      ?? null
-};
-
-let weightedSum = 0;
-let maxPossible = 0;
-
-// -----------------------------------------------------
-// 🧮 Calcul pondéré robuste
-// -----------------------------------------------------
-for (const key in METRIC_WEIGHTS) {
-  const score  = metricScores[key];
-  const weight = METRIC_WEIGHTS[key];
-
-  // ✅ on ignore les métrics non évaluées
-  if (typeof score === "number" && !isNaN(score)) {
-    const normalized = score / 20; // score ∈ [0..1]
-    weightedSum += normalized * weight;
-    maxPossible += weight;
-  }
-}
-
-    function getPillarBadge(score) {
-  if (typeof score !== "number") return null;
-
-  if (score >= 18) {
-    return { label: "✔︎ Solide", tone: "good" };
-  }
-
-  if (score >= 15) {
-    return { label: "✓ Validé", tone: "mid" };
-  }
-
-  return null;
-}
-
-
-// -----------------------------------------------------
-// 🎯 Score final normalisé sur 100
-// -----------------------------------------------------
-const total =
-  maxPossible > 0
-    ? Math.round((weightedSum / maxPossible) * 100)
-    : 0;
-
-function computeTotalWithReference(reference, metrics) {
-
-  if (!reference) return null;
 
   const metricScores = {
-    posture:     metrics.posture?.score ?? null,
-    rotation:    metrics.rotation?.score ?? null,
-    triangle:    metrics.triangle?.score ?? null,
+    rotation: metrics.rotation?.score ?? null,
+    triangle: metrics.triangle?.score ?? null,
     weightShift: metrics.weightShift?.score ?? null,
-    extension:   metrics.extension?.score ?? null,
-    tempo:       metrics.tempo?.score ?? null,
-    balance:     metrics.balance?.score ?? null
+    extension: metrics.extension?.score ?? null,
+    tempo: metrics.tempo?.score ?? null,
+    balance: metrics.balance?.score ?? null
   };
 
   let weightedSum = 0;
   let maxPossible = 0;
 
   for (const key in METRIC_WEIGHTS) {
-
-    const score  = metricScores[key];
+    const score = metricScores[key];
     const weight = METRIC_WEIGHTS[key];
 
-    if (typeof score === "number") {
-
-      const normalized = score / 20;
+    if (typeof score === "number" && !isNaN(score)) {
+      const normalized =
+        key === "rotation" || key === "triangle" || key === "tempo"
+          ? score / 20
+          : score / 10;
 
       weightedSum += normalized * weight;
       maxPossible += weight;
-
     }
-
   }
 
-  return maxPossible
-    ? Math.round((weightedSum / maxPossible) * 100)
-    : 0;
+  const total = maxPossible > 0 ? Math.round((weightedSum / maxPossible) * 100) : 0;
+
+  function computeTotalWithReference(reference, metricsObj) {
+    if (!reference) return null;
+
+    const refMetricScores = {
+      posture: metricsObj.posture?.score ?? null,
+      rotation: metricsObj.rotation?.score ?? null,
+      triangle: metricsObj.triangle?.score ?? null,
+      weightShift: metricsObj.weightShift?.score ?? null,
+      extension: metricsObj.extension?.score ?? null,
+      tempo: metricsObj.tempo?.score ?? null,
+      balance: metricsObj.balance?.score ?? null
+    };
+
+    let ws = 0;
+    let mp = 0;
+
+    for (const key in METRIC_WEIGHTS) {
+      const score = refMetricScores[key];
+      const weight = METRIC_WEIGHTS[key];
+
+      if (typeof score === "number") {
+        const normalized =
+          key === "rotation" || key === "triangle" || key === "tempo"
+            ? score / 20
+            : score / 10;
+
+        ws += normalized * weight;
+        mp += weight;
+      }
+    }
+
+    return mp ? Math.round((ws / mp) * 100) : 0;
+  }
+
+  const totalSystem = computeTotalWithReference(window.systemReference, metrics);
+  const totalUser = computeTotalWithReference(window.userReference, metrics);
+
+  return {
+    total: totalSystem ?? totalUser ?? total,
+    totalDynamic: totalSystem ?? totalUser ?? total,
+
+    totals: {
+      system: totalSystem,
+      user: totalUser
+    },
+
+    scores: {
+      posture: metrics.posture?.score ?? 0,
+      rotation: metrics.rotation?.score ?? 0,
+      triangle: metrics.triangle?.score ?? 0,
+      weightShift: metrics.weightShift?.score ?? 0,
+      extension: metrics.extension?.score ?? 0,
+      tempo: metrics.tempo?.score ?? 0,
+      balance: metrics.balance?.score ?? 0
+    },
+
+    breakdown: {
+      posture: { score: metrics.posture?.score ?? 0, metrics: metrics.posture || null },
+      rotation: { score: metrics.rotation?.score ?? 0, metrics: metrics.rotation || null },
+      triangle: { score: metrics.triangle?.score ?? 0, metrics: metrics.triangle || null },
+      weightShift: { score: metrics.weightShift?.score ?? 0, metrics: metrics.weightShift || null },
+      extension: { score: metrics.extension?.score ?? 0, metrics: metrics.extension || null },
+      tempo: { score: metrics.tempo?.score ?? 0, metrics: metrics.tempo || null },
+      balance: { score: metrics.balance?.score ?? 0, metrics: metrics.balance || null }
+    },
+
+    metrics
+  };
 }
-
-// =====================================================
-// 🎯 DOUBLE SCORE (Parfect + User)
-// =====================================================
-
-const totalSystem = computeTotalWithReference(window.systemReference, metrics);
-
-const totalUser = computeTotalWithReference(window.userReference, metrics);
-
-// fallback si aucune référence
-// const total = computeTotalWithReference({ demo: true }, metrics);
-   
-// =====================================================
-// RETURN FINAL — API STABLE
-// =====================================================
-return {
- total: totalSystem ?? totalUser ?? total,
-  totalDynamic: totalSystem ?? totalUser ?? total,
-
-  totals: {
-    system: totalSystem,
-    user: totalUser
-  },
-
-  // ✅ Scores lisibles directement depuis metrics
-  scores: {
-    posture:     metrics.posture?.score      ?? 0,
-    rotation:    metrics.rotation?.score     ?? 0,
-    triangle:    metrics.triangle?.score     ?? 0,
-    weightShift: metrics.weightShift?.score  ?? 0,
-    extension:   metrics.extension?.score    ?? 0,
-    tempo:       metrics.tempo?.score        ?? 0,
-    balance:     metrics.balance?.score      ?? 0
-  },
-
-  // ✅ Breakdown propre pour UI / Coach
-  breakdown: {
-    posture:     { score: metrics.posture?.score      ?? 0, metrics: metrics.posture     || null },
-    rotation:    { score: metrics.rotation?.score     ?? 0, metrics: metrics.rotation    || null },
-    triangle:    { score: metrics.triangle?.score     ?? 0, metrics: metrics.triangle    || null },
-    weightShift: { score: metrics.weightShift?.score  ?? 0, metrics: metrics.weightShift || null },
-    extension:   { score: metrics.extension?.score    ?? 0, metrics: metrics.extension   || null },
-    tempo:       { score: metrics.tempo?.score        ?? 0, metrics: metrics.tempo       || null },
-    balance:     { score: metrics.balance?.score      ?? 0, metrics: metrics.balance     || null }
-  },
-
-  // 🔍 debug / export complet
-  metrics
-};
-
-};
 
 
  function jswBuildLandmarksJSON(swing) {
@@ -3000,7 +2972,7 @@ function renderSessionHistoryInline() {
   if (!swings.length) {
     el.innerHTML = `
       <div style="color:#777;font-size:0.85rem;">
-        Aucun swing dans la session
+        ${t("ui.noSessionSwings")}
       </div>`;
     return;
   }
@@ -3038,34 +3010,23 @@ function renderSessionHistoryInline() {
  function buildGlobalCoachComment(viewType, scores) {
   const breakdown = scores?.breakdown || {};
 
-  // Ordre de priorité Parfect (simple & lisible)
   const ORDER =
     viewType === "dtl"
       ? ["tempo", "plan", "rotation", "triangle", "extension", "balance"]
       : ["tempo", "rotation", "triangle", "weightShift", "extension", "balance"];
 
-  const LABEL = {
-    tempo: "le tempo",
-    rotation: "la rotation",
-    triangle: "le triangle bras/épaules",
-    weightShift: "le transfert d’appui",
-    extension: "l’extension",
-    balance: "l’équilibre",
-    plan: "le plan de swing"
-  };
-
-  // Cherche le premier pilier sous le seuil
   const weak = ORDER.find((k) => {
     const s = breakdown[k]?.score;
     return typeof s === "number" && s < 15;
   });
 
-  // 🟢 Tout est OK
   if (!weak) {
-    return "Très belle séance. Les fondamentaux sont en place. Continue comme ça 👍";
+    return t("coach.sessionGreat");
   }
 
-  return `Priorité : travaille ${LABEL[weak]}.`;
+  return tt("coach.globalPriority", {
+    metric: t(`coach.metric_${weak}`, weak)
+  });
 }
 
 
@@ -3111,23 +3072,23 @@ function buildParfectReviewCard(swing, scores) {
   };
 
   const LABELS = {
-    rotation: "Rotation",
-    tempo: "Tempo",
-    triangle: "Triangle",
-    weightShift: "Transfert",
-    extension: "Extension",
-    balance: "Balance",
-    plan: "Plan"
-  };
+  rotation: t("metrics.rotation"),
+  tempo: t("metrics.tempo"),
+  triangle: t("metrics.triangle"),
+  weightShift: t("metrics.weightShift"),
+  extension: t("metrics.extension"),
+  balance: t("metrics.balance"),
+  plan: t("metrics.plan")
+};
 
-  const OBJECTIVES = {
-    rotation: "Tourne les épaules et stabilise les hanches.",
-    tempo: "Montée fluide, descente engagée.",
-    triangle: "Garde le triangle bras/épaules stable.",
-    weightShift: "Transfère progressivement le poids vers l’avant.",
-    extension: "Tends les bras après impact.",
-    balance: "Termine en équilibre."
-  };
+const OBJECTIVES = {
+  rotation: t("review.objective_rotation"),
+  tempo: t("review.objective_tempo"),
+  triangle: t("review.objective_triangle"),
+  weightShift: t("review.objective_weightShift"),
+  extension: t("review.objective_extension"),
+  balance: t("review.objective_balance")
+};
 
   function fmt(v, d = 2) {
     return typeof v === "number" && Number.isFinite(v)
@@ -3318,40 +3279,104 @@ function buildParfectReviewCard(swing, scores) {
     return "";
   }
 
-  function buildCoachComment() {
-    const tips = [];
+ function buildCoachComment(scores) {
+  const metrics = scores?.metrics || {};
+  const tips = [];
 
-    if (metrics?.rotation?.stages?.baseToTop?.actual && parfectData?.rotation?.stages?.baseToTop?.actual) {
-      const curShoulder = metrics.rotation.stages.baseToTop.actual.shoulder;
-      const refShoulder = parfectData.rotation.stages.baseToTop.actual.shoulder;
-      const d = refShoulder - curShoulder;
+  const tempo = metrics.tempo || {};
+  if (typeof tempo.ratio === "number" && typeof tempo.targetRatio === "number") {
+    const ratio = tempo.ratio;
+    const target = tempo.targetRatio;
+    const diff = target - ratio;
 
-      if (Math.abs(d) > 0.03) {
-        tips.push(`Tourne tes épaules ${d > 0 ? "+" : ""}${Math.round(d * 100)}°`);
+    if (Math.abs(diff) > 0.30) {
+      if (diff > 0 && typeof tempo.backswingT === "number" && typeof tempo.downswingT === "number") {
+        const idealBackswing = tempo.downswingT * target;
+        const deltaBack = Math.max(0, idealBackswing - tempo.backswingT);
+        tips.push(tt("coach.tempoAddTime", {
+          ratio: fmtCoach(ratio, 2),
+          target: fmtCoach(target, 2),
+          delta: fmtCoach(deltaBack, 2)
+        }));
+      } else if (diff < 0) {
+        tips.push(tt("coach.tempoStartDownSooner", {
+          ratio: fmtCoach(ratio, 2),
+          target: fmtCoach(target, 2)
+        }));
       }
     }
-
-    if (typeof metrics?.tempo?.ratio === "number" && typeof metrics?.tempo?.targetRatio === "number") {
-      const d = metrics.tempo.targetRatio - metrics.tempo.ratio;
-      if (d > 0.5) {
-        tips.push("Ralentis ta montée");
-      }
-    }
-
-    if (metrics?.weightShift?.score != null && metrics.weightShift.score < 4) {
-      tips.push("Transfère plus ton poids vers l’avant");
-    }
-
-    if (metrics?.balance?.score != null && metrics.balance.score < 5) {
-      tips.push("Finis plus en équilibre");
-    }
-
-    if (!tips.length) {
-      return "Bon swing 👍 Continue comme ça.";
-    }
-
-    return tips.slice(0, 2).join("<br>");
   }
+
+  const ws = metrics.weightShift || {};
+  if (typeof ws.absFwd === "number" && typeof ws.targetFwd === "number") {
+    const missingFwd = ws.targetFwd - ws.absFwd;
+    if (missingFwd > 0.03) {
+      tips.push(tt("coach.weightShiftForwardShort", {
+        actual: fmtCoach(ws.absFwd, 2),
+        target: fmtCoach(ws.targetFwd, 2),
+        delta: fmtCoach(missingFwd, 2)
+      }));
+    }
+  }
+
+  if (typeof ws.absBack === "number" && typeof ws.targetBack === "number") {
+    const missingBack = ws.targetBack - ws.absBack;
+    if (missingBack > 0.03 && tips.length < 2) {
+      tips.push(tt("coach.weightShiftBackShort", {
+        actual: fmtCoach(ws.absBack, 2),
+        target: fmtCoach(ws.targetBack, 2)
+      }));
+    }
+  }
+
+  const ext = metrics.extension || {};
+  if (typeof ext.value === "number" && typeof ext.target === "number") {
+    const missingExt = ext.target - ext.value;
+    if (missingExt > 0.15) {
+      if (typeof ext.progress === "number" && ext.progress <= 0.05) {
+        tips.push(tt("coach.extensionEarlyFold", {
+          actual: fmtCoach(ext.value, 2),
+          target: fmtCoach(ext.target, 2)
+        }));
+      } else {
+        tips.push(tt("coach.extensionShort", {
+          actual: fmtCoach(ext.value, 2),
+          target: fmtCoach(ext.target, 2),
+          delta: fmtCoach(missingExt, 2)
+        }));
+      }
+    }
+  }
+
+  const balance = metrics.balance || {};
+  if (typeof balance.score === "number" && balance.score < 5) {
+    if (typeof balance.finishMove === "number") {
+      tips.push(tt("coach.balanceShort", {
+        actual: fmtCoach(balance.finishMove, 2)
+      }));
+    } else {
+      tips.push(t("coach.balanceShortNoValue"));
+    }
+  }
+
+  const rot = metrics.rotation || {};
+  if (typeof rot.score === "number" && rot.score < 12 && rot.measure) {
+    const shoulder = rot.measure.shoulder;
+    const hip = rot.measure.hip;
+    if (typeof shoulder === "number" && typeof hip === "number" && tips.length < 2) {
+      tips.push(tt("coach.rotationImprove", {
+        shoulder: fmtCoach(shoulder, 2),
+        hip: fmtCoach(hip, 2)
+      }));
+    }
+  }
+
+  if (!tips.length) {
+    return t("coach.globalGood");
+  }
+
+  return tips.slice(0, 2).join("<br><br>");
+}
 
   const coachComment = buildCoachComment();
 
@@ -4611,8 +4636,17 @@ document.addEventListener("click", (e) => {
   window.jswGoHome();
 });
 
+    document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("lang-fr")?.addEventListener("click", () => {
+    setParfectLang("fr");
+    location.reload();
+  });
 
-    
+  document.getElementById("lang-en")?.addEventListener("click", () => {
+    setParfectLang("en");
+    location.reload();
+  });
+});
   // ---------------------------------------------------------
   //   EXPORT
   // ---------------------------------------------------------
@@ -4626,6 +4660,3 @@ document.addEventListener("click", (e) => {
 })();
 
 window.JustSwing = JustSwing;
-
-
-
