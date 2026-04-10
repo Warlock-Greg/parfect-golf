@@ -3099,7 +3099,7 @@ function buildParfectReviewCard(swing, scores) {
   };
 
   const LABELS = {
-  posture: t("metrics.posture")
+  posture: t("metrics.posture"),
   rotation: t("metrics.rotation"),
   tempo: t("metrics.tempo"),
   triangle: t("metrics.triangle"),
