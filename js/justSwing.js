@@ -2660,7 +2660,6 @@ async function computeSwingScorePremium(swing) {
   // TOTAL
   // =====================================================
   const METRIC_WEIGHTS = {
-    posture: 10,
     rotation: 20,
     tempo: 20,
     triangle: 20,
@@ -2670,7 +2669,6 @@ async function computeSwingScorePremium(swing) {
   };
 
   const metricScores = {
-    posture: metrics.posture?.score ?? null,
     rotation: metrics.rotation?.score ?? null,
     triangle: metrics.triangle?.score ?? null,
     weightShift: metrics.weightShift?.score ?? null,
@@ -2703,7 +2701,6 @@ async function computeSwingScorePremium(swing) {
     if (!reference) return null;
 
     const refMetricScores = {
-      posture: metricsObj.posture?.score ?? null,
       rotation: metricsObj.rotation?.score ?? null,
       triangle: metricsObj.triangle?.score ?? null,
       weightShift: metricsObj.weightShift?.score ?? null,
@@ -2746,7 +2743,6 @@ async function computeSwingScorePremium(swing) {
     },
 
     scores: {
-      posture: metrics.posture?.score ?? 0,
       rotation: metrics.rotation?.score ?? 0,
       triangle: metrics.triangle?.score ?? 0,
       weightShift: metrics.weightShift?.score ?? 0,
@@ -2756,7 +2752,6 @@ async function computeSwingScorePremium(swing) {
     },
 
     breakdown: {
-      posture: { score: metrics.posture?.score ?? 0, metrics: metrics.posture || null },
       rotation: { score: metrics.rotation?.score ?? 0, metrics: metrics.rotation || null },
       triangle: { score: metrics.triangle?.score ?? 0, metrics: metrics.triangle || null },
       weightShift: { score: metrics.weightShift?.score ?? 0, metrics: metrics.weightShift || null },
@@ -3088,18 +3083,16 @@ function buildParfectReviewCard(swing, scores) {
   const userData = userRef?.data || null;
 
   const METRIC_MAX = {
-    posture: 10,
     rotation: 20,
     tempo: 20,
     triangle: 20,
     plan: 20,
-    weightShift: 10,
+    weightShift: 20,
     extension: 10,
     balance: 10
   };
 
   const LABELS = {
-  posture: t("metrics.posture"),
   rotation: t("metrics.rotation"),
   tempo: t("metrics.tempo"),
   triangle: t("metrics.triangle"),
@@ -3110,7 +3103,6 @@ function buildParfectReviewCard(swing, scores) {
 };
 
 const OBJECTIVES = {
-  posture: t("review.objective_posture"),
   rotation: t("review.objective_rotation"),
   tempo: t("review.objective_tempo"),
   triangle: t("review.objective_triangle"),
