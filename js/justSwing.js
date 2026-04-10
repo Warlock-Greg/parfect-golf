@@ -2402,18 +2402,19 @@ async function computeSwingScorePremium(swing) {
         const tolBack = Math.max(refWS?.back?.tol ?? 0.12, 0.16);
         const tolFwd = Math.max(refWS?.fwd?.tol ?? 0.12, 0.18);
 
-        const backScore = scoreCoachCurve10(absBack, targetBack, tolBack, 2);
-        const fwdScore = scoreCoachCurve10(absFwd, targetFwd, tolFwd, 2);
+        const backScore10 = scoreCoachCurve10(absBack, targetBack, tolBack, 2);
+        const fwdScore10 = scoreCoachCurve10(absFwd, targetFwd, tolFwd, 2);
 
-        weightShiftScore = Math.round(backScore * 0.4 + fwdScore * 0.6);
+        const weightShiftScore10 = Math.round(backScore10 * 0.4 + fwdScore10 * 0.6);
+        weightShiftScore = Math.round(weightShiftScore10 * 2);
 
         metrics.weightShift = {
           shiftBack,
           shiftFwd,
           absBack,
           absFwd,
-          backScore,
-          fwdScore,
+          backScore: Math.round(backScore10 * 2),
+          fwdScore: Math.round(fwdScore10 * 2),
           targetBack,
           targetFwd,
           tolBack,
@@ -2441,7 +2442,7 @@ async function computeSwingScorePremium(swing) {
   metrics.weightShift.confidenceTop = wsTopConf;
   metrics.weightShift.confidenceImpact = wsImpactConf;
   metrics.weightShift.confidence = wsConfidence;
-  metrics.weightShift.score = applyConfidenceSoftening(metrics.weightShift.score, wsConfidence, 10);
+  metrics.weightShift.score = applyConfidenceSoftening(metrics.weightShift.score, wsConfidence, 20);
 
   // =====================================================
   // EXTENSION
@@ -2663,7 +2664,7 @@ async function computeSwingScorePremium(swing) {
     rotation: 20,
     tempo: 20,
     triangle: 20,
-    weightShift: 10,
+    weightShift: 20,
     extension: 10,
     balance: 10
   };
