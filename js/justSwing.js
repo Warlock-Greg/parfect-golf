@@ -2496,47 +2496,69 @@ async function computeSwingScorePremium(swing) {
   // =====================================================
   // EXTENSION
   // =====================================================
-  let extensionScore = 4;
+let extensionScore = 4;
 
-  metrics.extension = {
-    extImpact: null,
-    extFinish: null,
-    progress: null,
-    value: null,
-    target: null,
-    tol: null,
-    deltaToTarget: null,
-    confidenceImpact: null,
-    confidence: null,
-    status: "incomplete",
-    score: 4
-  };
+metrics.extension = {
+  extImpact: null,
+  extFinish: null,
+  progress: null,
+  value: null,
+  target: null,
+  tol: null,
+  deltaToTarget: null,
+  confidenceImpact: null,
+  confidence: null,
+  status: "incomplete",
+  score: 4
+};
 
-  const ELS = impactPose?.[11];
-  const ERS = impactPose?.[12];
-  const ELW = impactPose?.[15];
-  const ERW = impactPose?.[16];
+const ELS = impactPose?.[11];
+const ERS = impactPose?.[12];
+const ELW = impactPose?.[15];
+const ERW = impactPose?.[16];
 
-  if (ELS && ERS && (ELW || ERW)) {
-    const shoulderWidth = Math.max(jswDist(ELS, ERS), 0.001);
+if (ELS && ERS && (ELW || ERW)) {
+  const rawShoulderWidth = jswDist(ELS, ERS);
 
-    const extImpact = Math.max(
+  // 🛡️ largeur d’épaules trop faible = mesure non fiable
+  if (!rawShoulderWidth || rawShoulderWidth < 0.03) {
+    metrics.extension.status = "invalid-width";
+    metrics.extension.score = 4;
+  } else {
+    const shoulderWidth = rawShoulderWidth;
+
+    const extImpactRaw = Math.max(
       ELW ? jswDist(ELS, ELW) : 0,
       ERW ? jswDist(ERS, ERW) : 0
     ) / shoulderWidth;
 
-    let extFinish = null;
+    let extFinishRaw = null;
 
-    if (finishPose && finishPose[11] && finishPose[12] && (finishPose[15] || finishPose[16])) {
-      const swf = Math.max(jswDist(finishPose[11], finishPose[12]), 0.001);
-      extFinish = Math.max(
-        finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
-        finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
-      ) / swf;
+    if (
+      finishPose &&
+      finishPose[11] &&
+      finishPose[12] &&
+      (finishPose[15] || finishPose[16])
+    ) {
+      const rawFinishShoulderWidth = jswDist(finishPose[11], finishPose[12]);
+
+      if (rawFinishShoulderWidth && rawFinishShoulderWidth >= 0.03) {
+        const swf = rawFinishShoulderWidth;
+
+        extFinishRaw = Math.max(
+          finishPose[15] ? jswDist(finishPose[11], finishPose[15]) : 0,
+          finishPose[16] ? jswDist(finishPose[12], finishPose[16]) : 0
+        ) / swf;
+      }
     }
 
+    // 🛡️ borne anti-explosion
+    const extImpact = jswClamp(extImpactRaw, 0, 5);
+    const extFinish = extFinishRaw != null ? jswClamp(extFinishRaw, 0, 5) : null;
+
+    // valeur retenue
     const extensionValue = Math.max(extImpact, extFinish ?? 0);
-    const progress = extFinish != null ? extFinish - extImpact : null;
+    const progress = extFinish != null ? (extFinish - extImpact) : null;
 
     const refExt = window.REF?.extension || null;
     const target = refExt?.target ?? 2.5;
@@ -2544,6 +2566,7 @@ async function computeSwingScorePremium(swing) {
 
     extensionScore = scoreCoachCurve10(extensionValue, target, tol, 2);
 
+    // bonus léger si la sortie progresse vraiment
     if (typeof progress === "number" && progress > 0.10) {
       extensionScore = Math.min(10, extensionScore + 1);
     }
@@ -2562,12 +2585,12 @@ async function computeSwingScorePremium(swing) {
       score: extensionScore
     };
   }
+}
 
-  const extImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
-  metrics.extension.confidenceImpact = extImpactConf;
-  metrics.extension.confidence = extImpactConf;
-  metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extImpactConf, 10);
-
+const extImpactConf = keyframeConfidence?.impact ?? kf.impact?.confidence ?? null;
+metrics.extension.confidenceImpact = extImpactConf;
+metrics.extension.confidence = extImpactConf;
+metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extImpactConf, 10);
   // =====================================================
   // TEMPO
   // =====================================================
