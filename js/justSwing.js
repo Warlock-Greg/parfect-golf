@@ -3595,76 +3595,69 @@ const OBJECTIVES = {
   animateScore(displayScore);
 
   function buildRadar() {
-    const radarEl = document.getElementById("jsw-radar");
-    if (!radarEl || typeof Chart === "undefined") return;
+  const radarEl = document.getElementById("jsw-radar");
+  if (!radarEl || typeof Chart === "undefined") return;
 
-    if (window.__jswRadarChart) {
-      window.__jswRadarChart.destroy();
-      window.__jswRadarChart = null;
-    }
+  if (window.__jswRadarChart) {
+    window.__jswRadarChart.destroy();
+    window.__jswRadarChart = null;
+  }
 
-    const swingData = [
-      metrics.rotation?.score || 0,
-      metrics.tempo?.score || 0,
-      metrics.triangle?.score || 0,
-      metrics.weightShift?.score || 0,
-      metrics.extension?.score || 0,
-      metrics.balance?.score || 0
-    ];
+  const keys = ["rotation", "tempo", "triangle", "weightShift", "extension", "balance"];
+  const labels = ["Rotation", "Tempo", "Triangle", "Transfert", "Extension", "Balance"];
 
-    const sysData = [
-      parfectData?.rotation?.score || 0,
-      parfectData?.tempo?.score || 0,
-      parfectData?.triangle?.score || 0,
-      parfectData?.weightShift?.score || 0,
-      parfectData?.extension?.score || 0,
-      parfectData?.balance?.score || 0
-    ];
+  const normalize = (score, key) => {
+    const max = METRIC_MAX[key] || 20;
+    if (typeof score !== "number" || !Number.isFinite(score)) return 0;
+    return Math.round((score / max) * 100);
+  };
 
-    const usrData = [
-      userData?.rotation?.score || 0,
-      userData?.tempo?.score || 0,
-      userData?.triangle?.score || 0,
-      userData?.weightShift?.score || 0,
-      userData?.extension?.score || 0,
-      userData?.balance?.score || 0
-    ];
+  const swingData = keys.map((key) => normalize(getScore(key), key));
 
-    window.__jswRadarChart = new Chart(radarEl, {
-      type: "radar",
-      data: {
-        labels: ["Rotation", "Tempo", "Triangle", "Transfert", "Extension", "Balance"],
-        datasets: [
-          {
-            label: "Swing",
-            data: swingData
-          },
-          {
-            label: "Parfect",
-            data: sysData
-          },
-          {
-            label: "Moi",
-            data: usrData
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true }
+  // Parfect = référence cible → on la trace comme zone idéale pleine
+  const sysData = keys.map(() => 100);
+
+  // Ma réf = si on a une vraie référence user avec score, on la normalise, sinon null
+  const usrData = keys.map((key) => {
+    const raw = userData?.[key]?.score;
+    return typeof raw === "number" ? normalize(raw, key) : null;
+  });
+
+  window.__jswRadarChart = new Chart(radarEl, {
+    type: "radar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Swing",
+          data: swingData
         },
-        scales: {
-          r: {
-            min: 0,
-            max: 20,
-            ticks: { display: false }
-          }
+        {
+          label: "Parfect",
+          data: sysData
+        },
+        {
+          label: "Moi",
+          data: usrData
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true }
+      },
+      scales: {
+        r: {
+          min: 0,
+          max: 100,
+          ticks: { display: false }
         }
       }
-    });
-  }
+    }
+  });
+}
 
   buildRadar();
 
