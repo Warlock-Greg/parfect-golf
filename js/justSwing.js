@@ -392,10 +392,21 @@ async function loadActiveReference() {
   window.parfectReference = refSystem || null;
   window.userReference = refUser || null;
 
-  // données brutes pour le scoring
+  // ---------------------------------------------------
+  // Helpers de compatibilité V2
+  // ---------------------------------------------------
+  const userData = refUser?.data || null;
+  const systemData = refSystem?.data || null;
+
+  const isV2 = (ref) => ref?.schema_version === 2;
+
+  // priorité :
+  // 1) user V2
+  // 2) system V2
+  // 3) fallback local
   const rawRef =
-    refUser?.data ||
-    refSystem?.data ||
+    (isV2(userData) ? userData : null) ||
+    (isV2(systemData) ? systemData : null) ||
     fallback ||
     null;
 
@@ -405,31 +416,63 @@ async function loadActiveReference() {
     return;
   }
 
+  const isDTL = view === "dtl";
+
+  // ---------------------------------------------------
+  // Fallbacks intelligents par vue
+  // ---------------------------------------------------
+  const rotationShoulderTarget = isDTL ? 45 : 0.55;
+  const rotationShoulderTol = isDTL ? 15 : 0.30;
+
+  const rotationHipTarget = isDTL ? 25 : 0.30;
+  const rotationHipTol = isDTL ? 12 : 0.25;
+
+  const rotationXFactorTarget = isDTL ? 15 : 0.20;
+  const rotationXFactorTol = isDTL ? 8 : 0.12;
+
+  const tempoTarget = 3.05;
+  const tempoTol = 1.2;
+
+  const weightBackTarget = 0.05;
+  const weightBackTol = 0.16;
+
+  const weightFwdTarget = 0.10;
+  const weightFwdTol = 0.18;
+
+  const extensionTarget = 2.5;
+  const extensionTol = 1.2;
+
   window.REF = {
+    schema_version: rawRef?.schema_version ?? 2,
+
     rotation: {
       shoulder: {
         target:
           rawRef?.rotation?.ref?.shoulder?.target ??
           rawRef?.rotation?.stages?.baseToTop?.target?.shoulder ??
-          0,
+          rotationShoulderTarget,
         tol:
           rawRef?.rotation?.ref?.shoulder?.tol ??
           rawRef?.rotation?.stages?.baseToTop?.tol?.shoulder ??
-          0.05
+          rotationShoulderTol
       },
       hip: {
         target:
           rawRef?.rotation?.ref?.hip?.target ??
           rawRef?.rotation?.stages?.baseToTop?.target?.hip ??
-          0.03,
+          rotationHipTarget,
         tol:
           rawRef?.rotation?.ref?.hip?.tol ??
           rawRef?.rotation?.stages?.baseToTop?.tol?.hip ??
-          0.6
+          rotationHipTol
       },
       xFactor: {
-        target: rawRef?.rotation?.ref?.xFactor?.target ?? 0.17,
-        tol: rawRef?.rotation?.ref?.xFactor?.tol ?? 0.07
+        target:
+          rawRef?.rotation?.ref?.xFactor?.target ??
+          rotationXFactorTarget,
+        tol:
+          rawRef?.rotation?.ref?.xFactor?.tol ??
+          rotationXFactorTol
       }
     },
 
@@ -438,11 +481,11 @@ async function loadActiveReference() {
         target:
           rawRef?.tempo?.ratio?.target ??
           rawRef?.tempo?.targetRatio ??
-          3.05,
+          tempoTarget,
         tol:
           rawRef?.tempo?.ratio?.tol ??
           rawRef?.tempo?.tolRatio ??
-          0.8
+          tempoTol
       }
     },
 
@@ -450,18 +493,18 @@ async function loadActiveReference() {
       back: {
         target:
           rawRef?.weightShift?.back?.target ??
-          Math.abs(rawRef?.weightShift?.shiftBack ?? 0.03),
+          Math.abs(rawRef?.weightShift?.shiftBack ?? weightBackTarget),
         tol:
           rawRef?.weightShift?.back?.tol ??
-          0.12
+          weightBackTol
       },
       fwd: {
         target:
           rawRef?.weightShift?.fwd?.target ??
-          Math.abs(rawRef?.weightShift?.shiftFwd ?? 0.08),
+          Math.abs(rawRef?.weightShift?.shiftFwd ?? weightFwdTarget),
         tol:
           rawRef?.weightShift?.fwd?.tol ??
-          0.12
+          weightFwdTol
       }
     },
 
@@ -470,10 +513,10 @@ async function loadActiveReference() {
         rawRef?.extension?.target ??
         rawRef?.extension?.value ??
         rawRef?.extension?.extFinish ??
-        2.5,
+        extensionTarget,
       tol:
         rawRef?.extension?.tol ??
-        1.0
+        extensionTol
     },
 
     triangle: rawRef?.triangle || null,
@@ -483,9 +526,15 @@ async function loadActiveReference() {
   console.log("🎯 Active reference", {
     club,
     view,
-    system: refSystem?.id,
-    user: refUser?.id,
-    fallback: !!fallback
+    userId: refUser?.id ?? null,
+    systemId: refSystem?.id ?? null,
+    userSchema: userData?.schema_version ?? null,
+    systemSchema: systemData?.schema_version ?? null,
+    fallbackSchema: fallback?.schema_version ?? null,
+    source:
+      (isV2(userData) ? "user_v2" : null) ||
+      (isV2(systemData) ? "system_v2" : null) ||
+      "fallback_json_v2"
   });
 
   console.log("📊 REF normalisée", window.REF);
