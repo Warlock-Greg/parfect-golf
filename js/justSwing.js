@@ -3227,9 +3227,14 @@ const OBJECTIVES = {
   const visibleMax = computeVisibleMax();
 
   const displayScore =
-    visibleMax > 0
-      ? Math.round((visibleScore / visibleMax) * 100)
-      : 0;
+  typeof scores?.total === "number"
+    ? scores.total
+    : (typeof scores?.totalDynamic === "number" ? scores.totalDynamic : 0);
+
+  console.log("DISPLAY SCORE FIX", {
+  fromEngine: scores.total,
+  displayed: displayScore
+});
 
   function buildReferenceInfo() {
     return `
