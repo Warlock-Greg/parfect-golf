@@ -3300,83 +3300,100 @@ const OBJECTIVES = {
     `;
   }
 
-  function buildComparisonBlock(key, data) {
-    const m = data?.metrics || data || {};
-    const sys = parfectData?.[key] || null;
-    const usr = userData?.[key] || null;
+ function buildComparisonBlock(key, data) {
+  const m = data?.metrics || data || {};
+  const isDTL = viewTypeRaw === "dtl";
 
-    if (key === "rotation") {
-      const actual = m?.stages?.baseToTop?.actual;
-      const sysActual = sys?.stages?.baseToTop?.actual;
-      const usrActual = usr?.stages?.baseToTop?.actual;
+  function compareLineSimple(label, actual, target = null, unit = "") {
+    if (actual == null) return "";
 
-      if (!actual) return "";
-
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Épaules", actual.shoulder, sysActual?.shoulder, usrActual?.shoulder, "°")}
-          ${compareLine("Hanches", actual.hip, sysActual?.hip, usrActual?.hip, "°")}
-        </div>
-      `;
-    }
-
-    if (key === "tempo") {
-      if (typeof m?.backswingT !== "number") return "";
-
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Back", m.backswingT, sys?.backswingT, usr?.backswingT, "s")}
-          ${compareLine("Down", m.downswingT, sys?.downswingT, usr?.downswingT, "s")}
-          ${compareLine("Ratio", m.ratio, sys?.ratio, usr?.ratio)}
-        </div>
-      `;
-    }
-
-    if (key === "triangle") {
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Top", m.varTopPct, sys?.varTopPct, usr?.varTopPct, "%")}
-          ${compareLine("Impact", m.varImpactPct, sys?.varImpactPct, usr?.varImpactPct, "%")}
-        </div>
-      `;
-    }
-
-    if (key === "weightShift") {
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Back", m.shiftBack, sys?.shiftBack, usr?.shiftBack)}
-          ${compareLine("Forward", m.shiftFwd, sys?.shiftFwd, usr?.shiftFwd)}
-        </div>
-      `;
-    }
-
-    if (key === "extension") {
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Impact", m.extImpact, sys?.extImpact, usr?.extImpact)}
-          ${compareLine("Finish", m.extFinish, sys?.extFinish, usr?.extFinish)}
-        </div>
-      `;
-    }
-
-    if (key === "balance") {
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Finish move", m.finishMove, sys?.finishMove, usr?.finishMove)}
-        </div>
-      `;
-    }
-
-    if (key === "plan") {
-      return `
-        <div class="jsw-detail-inline">
-          ${compareLine("Déviation", m.deviation, sys?.deviation, usr?.deviation)}
-        </div>
-      `;
-    }
-
-    return "";
+    return `
+      <div class="jsw-compare-row">
+        <div class="jsw-compare-main">${label} : ${fmt(actual)}${unit}</div>
+        ${
+          target != null
+            ? `<div class="jsw-compare-ref jsw-ref-parfect">
+                 Cible : ${fmt(target)}${unit}
+               </div>`
+            : ""
+        }
+      </div>
+    `;
   }
+
+  if (key === "rotation") {
+    const actual = m?.stages?.baseToTop?.actual;
+    const target = m?.stages?.baseToTop?.target;
+
+    if (!actual) return "";
+
+    const unit = isDTL ? "°" : "";
+
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Épaules", actual.shoulder, target?.shoulder, unit)}
+        ${compareLineSimple("Hanches", actual.hip, target?.hip, unit)}
+      </div>
+    `;
+  }
+
+  if (key === "tempo") {
+    if (typeof m?.backswingT !== "number") return "";
+
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Back", m.backswingT, null, "s")}
+        ${compareLineSimple("Down", m.downswingT, null, "s")}
+        ${compareLineSimple("Ratio", m.ratio, m.targetRatio)}
+      </div>
+    `;
+  }
+
+  if (key === "triangle") {
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Écart top", m.varTopPct, null, "%")}
+        ${compareLineSimple("Écart impact", m.varImpactPct, null, "%")}
+      </div>
+    `;
+  }
+
+  if (key === "weightShift") {
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Back", m.absBack, m.targetBack)}
+        ${compareLineSimple("Forward", m.absFwd, m.targetFwd)}
+      </div>
+    `;
+  }
+
+  if (key === "extension") {
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Impact", m.extImpact, null)}
+        ${compareLineSimple("Finish", m.extFinish, m.target)}
+      </div>
+    `;
+  }
+
+  if (key === "balance") {
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Finish move", m.finishMove)}
+      </div>
+    `;
+  }
+
+  if (key === "plan") {
+    return `
+      <div class="jsw-detail-inline">
+        ${compareLineSimple("Déviation", m.deviation)}
+      </div>
+    `;
+  }
+
+  return "";
+}
 
  function buildCoachComment(scores) {
   const metrics = scores?.metrics || {};
