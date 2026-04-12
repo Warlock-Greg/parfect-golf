@@ -3587,7 +3587,6 @@ const OBJECTIVES = {
     }
 
     const swingData = [
-       metrics.posture?.score || 0,
       metrics.rotation?.score || 0,
       metrics.tempo?.score || 0,
       metrics.triangle?.score || 0,
@@ -3597,7 +3596,6 @@ const OBJECTIVES = {
     ];
 
     const sysData = [
-       parfectData?.posture?.score || 0,
       parfectData?.rotation?.score || 0,
       parfectData?.tempo?.score || 0,
       parfectData?.triangle?.score || 0,
@@ -3607,7 +3605,6 @@ const OBJECTIVES = {
     ];
 
     const usrData = [
-      userData?.posture?.score || 0,
       userData?.rotation?.score || 0,
       userData?.tempo?.score || 0,
       userData?.triangle?.score || 0,
