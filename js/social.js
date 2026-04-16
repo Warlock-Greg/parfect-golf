@@ -462,9 +462,9 @@ function showHistoryTabs() {
   content.innerHTML = `
     <div class="pg-tabs">
       <button class="pg-tab-btn" data-tab="feed">Communauté</button>
-      <button class="pg-tab-btn" data-tab="swing">Swings</button>
+      <button class="pg-tab-btn" data-tab="swings">Swings</button>
       <button class="pg-tab-btn" data-tab="training">Training</button>
-      <button class="pg-tab-btn" data-tab="round">Parties</button>
+      <button class="pg-tab-btn" data-tab="rounds">Parties</button>
     </div>
     <div id="history-panel" class="pg-history-panel"></div>
   `;
@@ -565,39 +565,34 @@ function buildCommunityFeedCard(swing) {
 
 function buildSocialSwingItem(swing, index) {
   const id = getRecordId(swing);
+  const data = extractSwingData(swing);
 
-  const parsed = swing?.scores || {};
-  const breakdown = parsed?.breakdown || {};
-  const total = parsed?.total ?? "—";
-
-  const club = (swing?.club || "?").toUpperCase();
-
-  const view =
-    swing?.view === "dtl"
-      ? "DTL"
-      : swing?.view === "faceOn"
-      ? "FACE"
-      : "FACE";
-
-  const dateLabel = formatDate(swing?.CreatedAt);
-
-  const mini = (k) =>
-    typeof breakdown?.[k]?.score === "number"
-      ? `${breakdown[k].score}/20`
+  const mini = (k, max) =>
+    typeof data.breakdown?.[k]?.score === "number"
+      ? `${data.breakdown[k].score}/${max}`
       : "—";
+
+  const dateLabel = data.createdAt
+    ? new Date(data.createdAt).toLocaleDateString([], {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      })
+    : "—";
+
   return `
     <div class="pg-card">
-      <div style="display:flex;justify-content:space-between;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
         <strong>#${index}</strong>
         <span style="opacity:.6;">${dateLabel}</span>
       </div>
 
       <div style="margin-top:6px;">
-        ${club} · ${view}
+        ${data.club} · ${data.view}
       </div>
 
       <div style="margin-top:6px;font-weight:700;font-size:20px;">
-        ${total} Score
+        ${data.total} Score
       </div>
 
       <div style="
@@ -608,17 +603,19 @@ function buildSocialSwingItem(swing, index) {
         gap:6px;
         opacity:.85;
       ">
-        <div>🔄 Rotation : ${mini("rotation")}</div>
-        <div>⏱ Tempo : ${mini("tempo")}</div>
-        <div>🔺 Triangle : ${mini("triangle")}</div>
-        <div>⚖️ WeightShift : ${mini("weightShift")}</div>
-        <div>📏 Extension : ${mini("extension")}</div>
-        <div>🧘 Balance : ${mini("balance")}</div>
-        <div>📐 Plan : ${mini("plan")}</div>
+        <div>🔄 Rotation : ${mini("rotation", 20)}</div>
+        <div>⏱ Tempo : ${mini("tempo", 20)}</div>
+        <div>🔺 Triangle : ${mini("triangle", 20)}</div>
+        <div>⚖️ Transfert : ${mini("weightShift", 20)}</div>
+        <div>📏 Extension : ${mini("extension", 10)}</div>
+        <div>🧘 Balance : ${mini("balance", 10)}</div>
       </div>
 
-      <button class="pg-btn-replay" data-swing-id="${id}"
-        style="margin-top:12px;padding:6px 14px;border-radius:999px;border:none;background:var(--pg-green-main,#4ade80);color:#111;cursor:pointer;">
+      <button
+        class="pg-btn-replay"
+        data-swing-id="${id}"
+        style="margin-top:12px;padding:6px 14px;border-radius:999px;border:none;background:var(--pg-green-main,#2D5A27);color:#fff;cursor:pointer;"
+      >
         ▶️ Replay
       </button>
     </div>
@@ -711,6 +708,10 @@ async function loadHistoryTab(type) {
   if (!panel) return;
 
   const email = window.userLicence?.email;
+  if (!email) {
+    panel.innerHTML = `<p class="pg-muted">Aucun utilisateur connecté.</p>`;
+    return;
+  }
 
   if (type === "feed") {
     const swings = await SocialAPI.loadSwingsByEmail(email, 20);
@@ -728,33 +729,15 @@ async function loadHistoryTab(type) {
     return;
   }
 
- if (type === "training") {
-  const trainings = await SocialAPI.loadTrainingsByEmail(email);
+  if (type === "training") {
+    const trainings = await SocialAPI.loadTrainingsByEmail(email);
 
-  panel.innerHTML = trainings.length
-    ? trainings.map((t) => {
+    panel.innerHTML = trainings.length
+      ? trainings.map((t) => buildTrainingCard(t)).join("")
+      : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
 
-        const name = t.exercise_name || "Séance";
-        const quality = t.quality || "—";
-        const mental = t.mental_score ?? "—";
-
-        const dateLabel =
-          t.CreatedAt && !isNaN(new Date(t.CreatedAt))
-            ? formatDate(t.CreatedAt)
-            : "—";
-
-        return `
-          <div class="pg-card">
-            <strong>${name}</strong><br>
-            ${quality} · Mental ${mental}/5<br>
-            <small>${dateLabel}</small>
-          </div>
-        `;
-      }).join("")
-    : `<p class="pg-muted">Aucune séance enregistrée.</p>`;
-
-  return;
-}
+    return;
+  }
 
   if (type === "rounds") {
     const rounds = await SocialAPI.loadRoundsByEmail(email);
@@ -763,6 +746,8 @@ async function loadHistoryTab(type) {
       : `<p class="pg-muted">Aucune partie enregistrée.</p>`;
     return;
   }
+
+  panel.innerHTML = `<p class="pg-muted">Onglet inconnu.</p>`;
 }
 
 // ------------------------------------------------
