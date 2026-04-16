@@ -2729,110 +2729,212 @@ metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extI
     };
   }
 
+   // =====================================================
+  // TOTAL = SOMME DES 6 MÉTRIQUES VISIBLES
   // =====================================================
-  // TOTAL
-  // =====================================================
-  const METRIC_WEIGHTS = {
-    rotation: 20,
-    tempo: 20,
-    triangle: 20,
-    weightShift: 20,
-    extension: 10,
-    balance: 10
-  };
 
   const metricScores = {
-    rotation: metrics.rotation?.score ?? null,
-    triangle: metrics.triangle?.score ?? null,
-    weightShift: metrics.weightShift?.score ?? null,
-    extension: metrics.extension?.score ?? null,
-    tempo: metrics.tempo?.score ?? null,
-    balance: metrics.balance?.score ?? null
+    rotation: metrics.rotation?.score ?? 0,     // /20
+    tempo: metrics.tempo?.score ?? 0,           // /20
+    triangle: metrics.triangle?.score ?? 0,     // /20
+    weightShift: metrics.weightShift?.score ?? 0, // /20
+    extension: metrics.extension?.score ?? 0,   // /10
+    balance: metrics.balance?.score ?? 0        // /10
   };
 
-  let weightedSum = 0;
-  let maxPossible = 0;
+  const total =
+    metricScores.rotation +
+    metricScores.tempo +
+    metricScores.triangle +
+    metricScores.weightShift +
+    metricScores.extension +
+    metricScores.balance;
 
-  for (const key in METRIC_WEIGHTS) {
-    const score = metricScores[key];
-    const weight = METRIC_WEIGHTS[key];
+  // =====================================================
+  // COMPARAISON INFO AVEC RÉFÉRENCE
+  // - ne pilote plus le total
+  // - sert seulement à afficher / tracer
+  // =====================================================
 
-    if (typeof score === "number" && !isNaN(score)) {
-      const normalized =
-        key === "rotation" || key === "triangle" || key === "tempo"
-          ? score / 20
-          : score / 10;
+  function compareMetricToReference(metricName, metricObj, reference) {
+    if (!metricObj || !reference) return null;
 
-      weightedSum += normalized * weight;
-      maxPossible += weight;
-    }
-  }
+    if (metricName === "rotation") {
+      const actual = metricObj?.stages?.baseToTop?.actual;
+      const target = reference?.rotation || metricObj?.ref || null;
 
-  const total = maxPossible > 0 ? Math.round((weightedSum / maxPossible) * 100) : 0;
+      if (!actual || !target) return null;
 
-  function computeTotalWithReference(reference, metricsObj) {
-    if (!reference) return null;
-
-    const refMetricScores = {
-      rotation: metricsObj.rotation?.score ?? null,
-      triangle: metricsObj.triangle?.score ?? null,
-      weightShift: metricsObj.weightShift?.score ?? null,
-      extension: metricsObj.extension?.score ?? null,
-      tempo: metricsObj.tempo?.score ?? null,
-      balance: metricsObj.balance?.score ?? null
-    };
-
-    let ws = 0;
-    let mp = 0;
-
-    for (const key in METRIC_WEIGHTS) {
-      const score = refMetricScores[key];
-      const weight = METRIC_WEIGHTS[key];
-
-      if (typeof score === "number") {
-        const normalized =
-          key === "rotation" || key === "triangle" || key === "tempo"
-            ? score / 20
-            : score / 10;
-
-        ws += normalized * weight;
-        mp += weight;
-      }
+      return {
+        actual: {
+          shoulder: actual.shoulder ?? null,
+          hip: actual.hip ?? null
+        },
+        target: {
+          shoulder: target?.shoulder?.target ?? null,
+          hip: target?.hip?.target ?? null
+        },
+        tol: {
+          shoulder: target?.shoulder?.tol ?? null,
+          hip: target?.hip?.tol ?? null
+        },
+        score: metricObj?.score ?? null
+      };
     }
 
-    return mp ? Math.round((ws / mp) * 100) : 0;
+    if (metricName === "tempo") {
+      return {
+        actual: {
+          backswingT: metricObj?.backswingT ?? null,
+          downswingT: metricObj?.downswingT ?? null,
+          ratio: metricObj?.ratio ?? null
+        },
+        target: {
+          ratio: reference?.tempo?.ratio?.target ?? metricObj?.targetRatio ?? null
+        },
+        tol: {
+          ratio: reference?.tempo?.ratio?.tol ?? metricObj?.tolRatio ?? null
+        },
+        score: metricObj?.score ?? null
+      };
+    }
+
+    if (metricName === "triangle") {
+      return {
+        actual: {
+          refRatio: metricObj?.refRatio ?? null,
+          topRatio: metricObj?.topRatio ?? null,
+          impactRatio: metricObj?.impactRatio ?? null,
+          varTopPct: metricObj?.varTopPct ?? null,
+          varImpactPct: metricObj?.varImpactPct ?? null
+        },
+        target: null,
+        tol: null,
+        score: metricObj?.score ?? null
+      };
+    }
+
+    if (metricName === "weightShift") {
+      return {
+        actual: {
+          back: metricObj?.absBack ?? metricObj?.shiftBack ?? null,
+          forward: metricObj?.absFwd ?? metricObj?.shiftFwd ?? null
+        },
+        target: {
+          back: reference?.weightShift?.back?.target ?? metricObj?.targetBack ?? null,
+          forward: reference?.weightShift?.fwd?.target ?? metricObj?.targetFwd ?? null
+        },
+        tol: {
+          back: reference?.weightShift?.back?.tol ?? metricObj?.tolBack ?? null,
+          forward: reference?.weightShift?.fwd?.tol ?? metricObj?.tolFwd ?? null
+        },
+        score: metricObj?.score ?? null
+      };
+    }
+
+    if (metricName === "extension") {
+      return {
+        actual: {
+          impact: metricObj?.extImpact ?? null,
+          finish: metricObj?.extFinish ?? null,
+          value: metricObj?.value ?? null
+        },
+        target: {
+          value: reference?.extension?.target ?? metricObj?.target ?? null
+        },
+        tol: {
+          value: reference?.extension?.tol ?? metricObj?.tol ?? null
+        },
+        score: metricObj?.score ?? null
+      };
+    }
+
+    if (metricName === "balance") {
+      return {
+        actual: {
+          headOverHips: metricObj?.headOverHips ?? null,
+          finishMove: metricObj?.finishMove ?? null
+        },
+        target: null,
+        tol: null,
+        score: metricObj?.score ?? null
+      };
+    }
+
+    return null;
   }
 
-  const totalSystem = computeTotalWithReference(window.systemReference, metrics);
-  const totalUser = computeTotalWithReference(window.userReference, metrics);
+  const referenceComparison = {
+    system: {
+      rotation: compareMetricToReference("rotation", metrics.rotation, window.systemReference || window.REF || null),
+      tempo: compareMetricToReference("tempo", metrics.tempo, window.systemReference || window.REF || null),
+      triangle: compareMetricToReference("triangle", metrics.triangle, window.systemReference || window.REF || null),
+      weightShift: compareMetricToReference("weightShift", metrics.weightShift, window.systemReference || window.REF || null),
+      extension: compareMetricToReference("extension", metrics.extension, window.systemReference || window.REF || null),
+      balance: compareMetricToReference("balance", metrics.balance, window.systemReference || window.REF || null)
+    },
+    user: {
+      rotation: compareMetricToReference("rotation", metrics.rotation, window.userReference || null),
+      tempo: compareMetricToReference("tempo", metrics.tempo, window.userReference || null),
+      triangle: compareMetricToReference("triangle", metrics.triangle, window.userReference || null),
+      weightShift: compareMetricToReference("weightShift", metrics.weightShift, window.userReference || null),
+      extension: compareMetricToReference("extension", metrics.extension, window.userReference || null),
+      balance: compareMetricToReference("balance", metrics.balance, window.userReference || null)
+    }
+  };
 
   return {
-    total: totalSystem ?? totalUser ?? total,
-    totalDynamic: totalSystem ?? totalUser ?? total,
+    total,
+    totalDynamic: total,
 
     totals: {
-      system: totalSystem,
-      user: totalUser
+      system: null,
+      user: null
     },
 
     scores: {
-      rotation: metrics.rotation?.score ?? 0,
-      triangle: metrics.triangle?.score ?? 0,
-      weightShift: metrics.weightShift?.score ?? 0,
-      extension: metrics.extension?.score ?? 0,
-      tempo: metrics.tempo?.score ?? 0,
-      balance: metrics.balance?.score ?? 0
+      rotation: metricScores.rotation,
+      triangle: metricScores.triangle,
+      weightShift: metricScores.weightShift,
+      extension: metricScores.extension,
+      tempo: metricScores.tempo,
+      balance: metricScores.balance
     },
 
     breakdown: {
-      rotation: { score: metrics.rotation?.score ?? 0, metrics: metrics.rotation || null },
-      triangle: { score: metrics.triangle?.score ?? 0, metrics: metrics.triangle || null },
-      weightShift: { score: metrics.weightShift?.score ?? 0, metrics: metrics.weightShift || null },
-      extension: { score: metrics.extension?.score ?? 0, metrics: metrics.extension || null },
-      tempo: { score: metrics.tempo?.score ?? 0, metrics: metrics.tempo || null },
-      balance: { score: metrics.balance?.score ?? 0, metrics: metrics.balance || null }
+      rotation: {
+        score: metricScores.rotation,
+        metrics: metrics.rotation || null,
+        compare: referenceComparison.system.rotation
+      },
+      triangle: {
+        score: metricScores.triangle,
+        metrics: metrics.triangle || null,
+        compare: referenceComparison.system.triangle
+      },
+      weightShift: {
+        score: metricScores.weightShift,
+        metrics: metrics.weightShift || null,
+        compare: referenceComparison.system.weightShift
+      },
+      extension: {
+        score: metricScores.extension,
+        metrics: metrics.extension || null,
+        compare: referenceComparison.system.extension
+      },
+      tempo: {
+        score: metricScores.tempo,
+        metrics: metrics.tempo || null,
+        compare: referenceComparison.system.tempo
+      },
+      balance: {
+        score: metricScores.balance,
+        metrics: metrics.balance || null,
+        compare: referenceComparison.system.balance
+      }
     },
 
+    referenceComparison,
     metrics
   };
 }
