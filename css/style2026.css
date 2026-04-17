@@ -2602,7 +2602,7 @@ background: #ffffff;
   }
 
   .swing-player-controls-below #swing-timeline {
-    flex: 1 1 100%;
+    flex: 1 1 22%;
     order: 2;
   }
 
@@ -2611,7 +2611,7 @@ background: #ffffff;
   }
 
   .swing-player-controls-below #swing-replay-fullscreen {
-    order: 4;
+    display: none;
   }
 }
 
