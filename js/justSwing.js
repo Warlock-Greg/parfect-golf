@@ -421,14 +421,14 @@ async function loadActiveReference() {
   // ---------------------------------------------------
   // Fallbacks intelligents par vue
   // ---------------------------------------------------
-  const rotationShoulderTarget = isDTL ? 45 : 0.55;
-  const rotationShoulderTol = isDTL ? 15 : 0.30;
+  const rotationShoulderTarget = isDTL ? 45 : 0.40;
+  const rotationShoulderTol = isDTL ? 15 : 0.20;
 
-  const rotationHipTarget = isDTL ? 25 : 0.30;
-  const rotationHipTol = isDTL ? 12 : 0.25;
+  const rotationHipTarget = isDTL ? 25 : 0.10;
+  const rotationHipTol = isDTL ? 12 : 0.10;
 
-  const rotationXFactorTarget = isDTL ? 15 : 0.20;
-  const rotationXFactorTol = isDTL ? 8 : 0.12;
+  const rotationXFactorTarget = isDTL ? 15 : 0.22;
+  const rotationXFactorTol = isDTL ? 8 : 0.10;
 
   const tempoTarget = 3.05;
   const tempoTol = 1.2;
@@ -2257,25 +2257,32 @@ async function computeSwingScorePremium(swing) {
     metrics.posture.score = 10;
   }
 
-  // =====================================================
+    // =====================================================
   // ROTATION
+  // - DTL  : angles réels
+  // - FACE : rotation épaules + hanches contenues + séparation (xFactor)
   // =====================================================
   metrics.rotation = { stages: {}, score: 0, status: "incomplete" };
 
   const basePoseRot = addressPose || backswingPose || null;
-  const topPoseRot = topPose || null;
+  const topPoseRot = topPose || backswingPose || null;
 
   if (basePoseRot && topPoseRot) {
-    const m = computeRotationSignature(basePoseRot, topPoseRot, window.jswViewType);
+    const m = computeRotationSignature(basePoseRot, topPoseRot, viewType);
 
     if (m && typeof m.shoulder === "number" && typeof m.hip === "number") {
       const shoulder = m.shoulder;
       const hip = m.hip;
-      metrics.rotation.measure = { shoulder, hip };
+      const xFactor = shoulder - hip;
+
+      metrics.rotation.measure = { shoulder, hip, xFactor };
 
       let score = 0;
 
-      if (window.jswViewType === "dtl") {
+      // -------------------------------------------------
+      // DTL → logique angle réel
+      // -------------------------------------------------
+      if (viewType === "dtl") {
         const SHOULDER_OK = 45;
         const HIP_OK = 25;
         const SEP_OK = 10;
@@ -2292,48 +2299,82 @@ async function computeSwingScorePremium(swing) {
         if (sep >= SEP_OK) score += 4;
 
         metrics.rotation.ref = {
-          shoulder: { ok: SHOULDER_OK },
-          hip: { ok: HIP_OK },
-          separation: { ok: SEP_OK }
+          shoulder: { target: SHOULDER_OK, tol: 15 },
+          hip: { target: HIP_OK, tol: 12 },
+          xFactor: { target: SEP_OK, tol: 8 }
         };
 
         metrics.rotation.stages.baseToTop = {
-          actual: { shoulder, hip, separation: sep },
-          score
-        };
-      } else {
-        const refRot = window.REF?.rotation || null;
-
-        const s10 =
-          refRot?.shoulder?.target != null && refRot?.shoulder?.tol != null
-            ? jswClamp(
-                1 - Math.abs(shoulder - refRot.shoulder.target) / Math.max(refRot.shoulder.tol, 0.08),
-                0,
-                1
-              ) * 10
-            : 5;
-
-        const h10 =
-          refRot?.hip?.target != null && refRot?.hip?.tol != null
-            ? jswClamp(
-                1 - Math.abs(hip - refRot.hip.target) / Math.max(refRot.hip.tol, 0.10),
-                0,
-                1
-              ) * 10
-            : 5;
-
-        score = Math.round(s10 + h10);
-
-        metrics.rotation.ref = refRot;
-        metrics.rotation.stages.baseToTop = {
-          actual: { shoulder, hip },
+          actual: { shoulder, hip, xFactor: sep },
           target: {
-            shoulder: refRot?.shoulder?.target ?? null,
-            hip: refRot?.hip?.target ?? null
+            shoulder: SHOULDER_OK,
+            hip: HIP_OK,
+            xFactor: SEP_OK
           },
           tol: {
-            shoulder: refRot?.shoulder?.tol ?? null,
-            hip: refRot?.hip?.tol ?? null
+            shoulder: 15,
+            hip: 12,
+            xFactor: 8
+          },
+          score
+        };
+      }
+
+      // -------------------------------------------------
+      // FACE-ON → ratios projetés recalibrés
+      // Objectif :
+      // - épaules = vrai moteur du score
+      // - hanches = ne doivent plus tuer la note
+      // - xFactor = valorise la dissociation
+      // -------------------------------------------------
+      else {
+        const refRot = window.REF?.rotation || null;
+
+        const shoulderTarget = refRot?.shoulder?.target ?? 0.40;
+        const shoulderTol = Math.max(refRot?.shoulder?.tol ?? 0.20, 0.20);
+
+        const hipTarget = refRot?.hip?.target ?? 0.10;
+        const hipTol = Math.max(refRot?.hip?.tol ?? 0.10, 0.10);
+
+        const xFactorTarget = refRot?.xFactor?.target ?? 0.22;
+        const xFactorTol = Math.max(refRot?.xFactor?.tol ?? 0.10, 0.10);
+
+        const shoulder20 = scoreCoachCurve20(shoulder, shoulderTarget, shoulderTol, 4);
+        const hip20 = scoreCoachCurve20(hip, hipTarget, hipTol, 4);
+        const xFactor20 = scoreCoachCurve20(xFactor, xFactorTarget, xFactorTol, 4);
+
+        // Pondération biomécanique
+        // épaules dominantes, hanches contenues, séparation importante
+        score = Math.round(
+          shoulder20 * 0.50 +
+          hip20 * 0.15 +
+          xFactor20 * 0.35
+        );
+
+        score = jswClamp(score, 0, 20);
+
+        metrics.rotation.ref = {
+          shoulder: { target: shoulderTarget, tol: shoulderTol },
+          hip: { target: hipTarget, tol: hipTol },
+          xFactor: { target: xFactorTarget, tol: xFactorTol }
+        };
+
+        metrics.rotation.stages.baseToTop = {
+          actual: { shoulder, hip, xFactor },
+          target: {
+            shoulder: shoulderTarget,
+            hip: hipTarget,
+            xFactor: xFactorTarget
+          },
+          tol: {
+            shoulder: shoulderTol,
+            hip: hipTol,
+            xFactor: xFactorTol
+          },
+          subScores: {
+            shoulder: shoulder20,
+            hip: hip20,
+            xFactor: xFactor20
           },
           score
         };
@@ -2341,10 +2382,22 @@ async function computeSwingScorePremium(swing) {
 
       metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
       metrics.rotation.status = "ok";
+
+      console.log("ROTATION DEBUG", {
+        viewType,
+        shoulder,
+        hip,
+        xFactor,
+        ref: metrics.rotation.ref,
+        stage: metrics.rotation.stages?.baseToTop,
+        finalScore: metrics.rotation.score
+      });
     } else {
       metrics.rotation.status = "invalid-measure";
+      metrics.rotation.score = 0;
     }
   }
+  
 
   // =====================================================
   // TRIANGLE
@@ -3423,21 +3476,59 @@ const OBJECTIVES = {
     `;
   }
 
-  if (key === "rotation") {
-    const actual = m?.stages?.baseToTop?.actual;
-    const target = m?.stages?.baseToTop?.target;
+ if (key === "rotation") {
+  const actual = m?.stages?.baseToTop?.actual;
+  const target = m?.stages?.baseToTop?.target;
+  const tol = m?.stages?.baseToTop?.tol;
+  const explanation = buildRotationExplanation(m);
 
-    if (!actual) return "";
-
-    const unit = isDTL ? "°" : "";
-
+  if (!actual) {
     return `
       <div class="jsw-detail-inline">
-        ${compareLineSimple("Épaules", actual.shoulder, target?.shoulder, unit)}
-        ${compareLineSimple("Hanches", actual.hip, target?.hip, unit)}
+        <div class="jsw-compare-row">
+          <div class="jsw-compare-main">Rotation non évaluée</div>
+        </div>
       </div>
     `;
   }
+
+  const unit = isDTL ? "°" : "";
+
+  return `
+    <div class="jsw-detail-inline">
+      ${compareLineSimple("Épaules", actual.shoulder, target?.shoulder, unit)}
+      ${
+        tol?.shoulder != null
+          ? `<div class="jsw-compare-ref jsw-ref-parfect">Tolérance épaules : ${fmt(tol.shoulder)}${unit}</div>`
+          : ""
+      }
+
+      ${compareLineSimple("Hanches", actual.hip, target?.hip, unit)}
+      ${
+        tol?.hip != null
+          ? `<div class="jsw-compare-ref jsw-ref-parfect">Tolérance hanches : ${fmt(tol.hip)}${unit}</div>`
+          : ""
+      }
+
+      ${
+        actual?.xFactor != null
+          ? compareLineSimple("Séparation", actual.xFactor, target?.xFactor, unit)
+          : ""
+      }
+      ${
+        tol?.xFactor != null
+          ? `<div class="jsw-compare-ref jsw-ref-parfect">Tolérance séparation : ${fmt(tol.xFactor)}${unit}</div>`
+          : ""
+      }
+
+      ${
+        explanation
+          ? `<div class="jsw-detail-objective">🧠 ${explanation}</div>`
+          : ""
+      }
+    </div>
+  `;
+}
 
   if (key === "tempo") {
     if (typeof m?.backswingT !== "number") return "";
@@ -3497,6 +3588,50 @@ const OBJECTIVES = {
   return "";
 }
 
+  function buildRotationExplanation(m) {
+  const actual = m?.stages?.baseToTop?.actual;
+  const target = m?.stages?.baseToTop?.target;
+  const tol = m?.stages?.baseToTop?.tol;
+
+  if (!actual || !target || !tol) return "";
+
+  const shoulder = actual.shoulder;
+  const hip = actual.hip;
+  const xFactor = actual.xFactor;
+
+  const shoulderTooLow = shoulder < (target.shoulder - tol.shoulder);
+  const shoulderTooHigh = shoulder > (target.shoulder + tol.shoulder);
+
+  const hipTooLow = hip < (target.hip - tol.hip);
+  const hipTooHigh = hip > (target.hip + tol.hip);
+
+  const xFactorGood =
+    typeof xFactor === "number" &&
+    Math.abs(xFactor - target.xFactor) <= tol.xFactor;
+
+  if (shoulderTooLow && hipTooLow && !xFactorGood) {
+    return "Rotation insuffisante : les épaules ne chargent pas assez au top.";
+  }
+
+  if (!shoulderTooLow && hipTooLow && xFactorGood) {
+    return "Bonne dissociation : les épaules tournent pendant que les hanches restent calmes.";
+  }
+
+  if (!shoulderTooLow && hipTooHigh) {
+    return "Les épaules tournent, mais les hanches accompagnent trop. Stabilise davantage le bassin.";
+  }
+
+  if (shoulderTooLow && !hipTooLow) {
+    return "Les hanches bougent plus que les épaules. Cherche d’abord plus de rotation d’épaules.";
+  }
+
+  if (shoulderTooHigh && hipTooHigh) {
+    return "Rotation très ample, mais l’ensemble tourne trop. Garde plus de contrôle du bassin.";
+  }
+
+  return "Rotation comparée à la cible épaules / hanches / séparation.";
+}
+  
  function buildCoachComment(scores) {
   const metrics = scores?.metrics || {};
   const tips = [];
