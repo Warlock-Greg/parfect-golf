@@ -2626,12 +2626,12 @@ background: #ffffff;
   }
 
   .jsw-video {
-    width: 100vw;
-    max-width: none;
-    aspect-ratio: 9 / 16;
-    min-height: calc(100dvh - 140px);
-    border-radius: 0 0 18px 18px;
-    margin: 0;
+        width: 80vw;
+        max-width: none;
+        aspect-ratio: 9 / 16;
+        min-height: calc(86dvh - 181px);
+        border-radius: 0 0 18px 18px;
+        margin: 0 auto;
   }
 
   #jsw-video,
