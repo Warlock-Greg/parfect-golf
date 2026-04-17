@@ -2617,15 +2617,31 @@ background: #ffffff;
 
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
-
-  body.jsw-fullscreen .jsw-video {
-    position: fixed;
-    inset: 0;
+  #just-swing-area {
+    padding: 0;
   }
 
-  body.jsw-fullscreen #jsw-video,
-  body.jsw-fullscreen #jsw-overlay {
+  .jsw-screen {
+    gap: 0;
+  }
+
+  .jsw-video {
+    width: 100vw;
+    max-width: none;
+    aspect-ratio: 9 / 16;
+    min-height: calc(100dvh - 140px);
+    border-radius: 0 0 18px 18px;
+    margin: 0;
+  }
+
+  #jsw-video,
+  #jsw-overlay {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
   }
 
+  .jsw-header {
+    padding: 10px 12px;
+  }
 }
