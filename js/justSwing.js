@@ -1174,10 +1174,10 @@ const finishSeen =
 }, SWING_TIMEOUT_MS);
 
 
-}, 1500);
+}, 500);
 
     }
-  }, 3500);
+  }, 1500);
 }
 
 
