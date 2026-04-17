@@ -2227,6 +2227,8 @@ background: #ffffff;
   pointer-events: none;
 }
 
+
+
 /* =====================================
    CONTENT
 ===================================== */
@@ -2611,4 +2613,19 @@ background: #ffffff;
   .swing-player-controls-below #swing-replay-fullscreen {
     order: 4;
   }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  body.jsw-fullscreen .jsw-video {
+    position: fixed;
+    inset: 0;
+  }
+
+  body.jsw-fullscreen #jsw-video,
+  body.jsw-fullscreen #jsw-overlay {
+    object-fit: contain;
+  }
+
 }
