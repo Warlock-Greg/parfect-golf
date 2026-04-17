@@ -582,7 +582,7 @@ function buildSocialSwingItem(swing, index) {
 
   return `
     <div class="pg-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="display:flex;justify-content:space-between;">
         <strong>#${index}</strong>
         <span style="opacity:.6;">${dateLabel}</span>
       </div>
@@ -611,11 +611,8 @@ function buildSocialSwingItem(swing, index) {
         <div>🧘 Balance : ${mini("balance", 10)}</div>
       </div>
 
-      <button
-        class="pg-btn-replay"
-        data-swing-id="${id}"
-        style="margin-top:12px;padding:6px 14px;border-radius:999px;border:none;background:var(--pg-green-main,#2D5A27);color:#fff;cursor:pointer;"
-      >
+      <button class="pg-btn-replay" data-swing-id="${id}"
+        style="margin-top:12px;padding:6px 14px;border-radius:999px;border:none;background:var(--pg-green-main,#2D5A27);color:#fff;cursor:pointer;">
         ▶️ Replay
       </button>
     </div>
