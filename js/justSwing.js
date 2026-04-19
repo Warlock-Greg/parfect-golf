@@ -2328,56 +2328,73 @@ async function computeSwingScorePremium(swing) {
       // - xFactor = valorise la dissociation
       // -------------------------------------------------
       else {
-        const refRot = window.REF?.rotation || null;
+     const refRot = window.REF?.rotation || null;
 
-        const shoulderTarget = refRot?.shoulder?.target ?? 0.40;
-        const shoulderTol = Math.max(refRot?.shoulder?.tol ?? 0.20, 0.20);
+const shoulderTarget = refRot?.shoulder?.target ?? 0.40;
+const shoulderTol = Math.max(refRot?.shoulder?.tol ?? 0.22, 0.22);
 
-        const hipTarget = refRot?.hip?.target ?? 0.10;
-        const hipTol = Math.max(refRot?.hip?.tol ?? 0.10, 0.10);
+const hipSoftCap = refRot?.hip?.target ?? 0.18;
+const hipTol = Math.max(refRot?.hip?.tol ?? 0.12, 0.12);
 
-        const xFactorTarget = refRot?.xFactor?.target ?? 0.22;
-        const xFactorTol = Math.max(refRot?.xFactor?.tol ?? 0.10, 0.10);
+const xFactor = shoulder - hip;
+const xFactorTarget = refRot?.xFactor?.target ?? 0.18;
+const xFactorTol = Math.max(refRot?.xFactor?.tol ?? 0.10, 0.10);
 
-        const shoulder20 = scoreCoachCurve20(shoulder, shoulderTarget, shoulderTol, 4);
-        const hip20 = scoreCoachCurve20(hip, hipTarget, hipTol, 4);
-        const xFactor20 = scoreCoachCurve20(xFactor, xFactorTarget, xFactorTol, 4);
+// 1) Score principal = épaules
+const shoulder20 = scoreCoachCurve20(shoulder, shoulderTarget, shoulderTol, 4);
 
-        // Pondération biomécanique
-        // épaules dominantes, hanches contenues, séparation importante
-        score = Math.round(
-          shoulder20 * 0.50 +
-          hip20 * 0.15 +
-          xFactor20 * 0.35
-        );
+// 2) Bonus séparation
+let xFactorAdj = 0;
 
-        score = jswClamp(score, 0, 20);
+if (xFactor >= 0) {
+  const xFactor20 = scoreCoachCurve20(xFactor, xFactorTarget, xFactorTol, 4);
+  // convertit en ajustement léger de -2 à +4
+  xFactorAdj = Math.round((xFactor20 - 10) * 0.4);
+} else {
+  // séparation négative = pénalité forte
+  xFactorAdj = -6;
+}
 
-        metrics.rotation.ref = {
-          shoulder: { target: shoulderTarget, tol: shoulderTol },
-          hip: { target: hipTarget, tol: hipTol },
-          xFactor: { target: xFactorTarget, tol: xFactorTol }
-        };
+// 3) Pénalité bassin trop envahissant
+let hipPenalty = 0;
+if (hip > hipSoftCap + hipTol) {
+  hipPenalty = -3;
+} else if (hip > hipSoftCap) {
+  hipPenalty = -1;
+}
 
-        metrics.rotation.stages.baseToTop = {
-          actual: { shoulder, hip, xFactor },
-          target: {
-            shoulder: shoulderTarget,
-            hip: hipTarget,
-            xFactor: xFactorTarget
-          },
-          tol: {
-            shoulder: shoulderTol,
-            hip: hipTol,
-            xFactor: xFactorTol
-          },
-          subScores: {
-            shoulder: shoulder20,
-            hip: hip20,
-            xFactor: xFactor20
-          },
-          score
-        };
+// 4) Score final
+score = jswClamp(
+  Math.round(shoulder20 + xFactorAdj + hipPenalty),
+  0,
+  20
+);
+
+metrics.rotation.ref = {
+  shoulder: { target: shoulderTarget, tol: shoulderTol },
+  hip: { target: hipSoftCap, tol: hipTol },
+  xFactor: { target: xFactorTarget, tol: xFactorTol }
+};
+
+metrics.rotation.stages.baseToTop = {
+  actual: { shoulder, hip, xFactor },
+  target: {
+    shoulder: shoulderTarget,
+    hip: hipSoftCap,
+    xFactor: xFactorTarget
+  },
+  tol: {
+    shoulder: shoulderTol,
+    hip: hipTol,
+    xFactor: xFactorTol
+  },
+  subScores: {
+    shoulder: shoulder20,
+    xFactorAdj,
+    hipPenalty
+  },
+  score
+};
       }
 
       metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
