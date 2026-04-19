@@ -8,6 +8,13 @@ if (typeof window.$$ !== "function") {
   window.$$ = (id) => document.getElementById(id);
 }
 
+let socialSummaryCache = {
+  email: null,
+  ts: 0,
+  data: null
+};
+
+let socialSummaryInflight = null;
 function getCurrentUser() {
   return window.userLicence || null;
 }
@@ -333,43 +340,74 @@ window.refreshSwingQuotaUI = async function () {
   }
 };
 
-async function loadCommunitySummary() {
+async function loadCommunitySummary(force = false) {
   const email = window.userLicence?.email;
   if (!email) return;
 
-  const api = window.api; // adapte si besoin
+  const now = Date.now();
+  const CACHE_TTL = 15000; // 15 s
 
-  try {
-    const [swings, rounds, trainings] = await Promise.all([
-      SocialAPI.loadSwingsByEmail(email, 1),
-      SocialAPI.loadRoundsByEmail(email),
-      SocialAPI.loadTrainingsByEmail(email)
-    ]);
+  if (
+    !force &&
+    socialSummaryCache.email === email &&
+    socialSummaryCache.data &&
+    (now - socialSummaryCache.ts) < CACHE_TTL
+  ) {
+    renderCommunitySummary(socialSummaryCache.data);
+    return;
+  }
 
-    if (swings?.length) {
-      document.getElementById("latest-swing").innerHTML = `
-        <h4 class="pg-section-title">Dernier Swing</h4>
-        ${buildSocialSwingItem(swings[0], 1)}
-      `;
+  if (socialSummaryInflight) {
+    return socialSummaryInflight;
+  }
+
+  socialSummaryInflight = (async () => {
+    try {
+      const [swings, rounds, trainings] = await Promise.all([
+        SocialAPI.loadSwingsByEmail(email, 1),
+        SocialAPI.loadRoundsByEmail(email),
+        SocialAPI.loadTrainingsByEmail(email, 1)
+      ]);
+
+      const payload = { swings, rounds, trainings };
+
+      socialSummaryCache = {
+        email,
+        ts: Date.now(),
+        data: payload
+      };
+
+      renderCommunitySummary(payload);
+    } catch (err) {
+      console.error("❌ loadCommunitySummary error", err);
+    } finally {
+      socialSummaryInflight = null;
     }
+  })();
 
-    if (rounds?.length) {
-      document.getElementById("latest-round").innerHTML = `
-        <h4 class="pg-section-title">Dernière Partie</h4>
-        ${buildRoundCard(rounds[0])}
-      `;
-    }
-    console.log("ROUNDS:", rounds);
-console.log("SWINGS FULL", swings);
-    if (trainings?.length) {
-      document.getElementById("latest-training").innerHTML = `
-        <h4 class="pg-section-title">Dernier Entraînement</h4>
-        ${buildTrainingCard(trainings[0])}
-      `;
-    }
+  return socialSummaryInflight;
+}
 
-  } catch (err) {
-    console.error("❌ loadCommunitySummary error", err);
+function renderCommunitySummary({ swings = [], rounds = [], trainings = [] }) {
+  if (swings?.length) {
+    document.getElementById("latest-swing").innerHTML = `
+      <h4 class="pg-section-title">Dernier Swing</h4>
+      ${buildSocialSwingItem(swings[0], 1)}
+    `;
+  }
+
+  if (rounds?.length) {
+    document.getElementById("latest-round").innerHTML = `
+      <h4 class="pg-section-title">Dernière Partie</h4>
+      ${buildRoundCard(rounds[0])}
+    `;
+  }
+
+  if (trainings?.length) {
+    document.getElementById("latest-training").innerHTML = `
+      <h4 class="pg-section-title">Dernier Entraînement</h4>
+      ${buildTrainingCard(trainings[0])}
+    `;
   }
 }
 
