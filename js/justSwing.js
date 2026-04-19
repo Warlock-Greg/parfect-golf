@@ -2400,15 +2400,18 @@ metrics.rotation.stages.baseToTop = {
       metrics.rotation.score = Math.max(0, Math.min(20, Math.round(score)));
       metrics.rotation.status = "ok";
 
-      console.log("ROTATION DEBUG", {
-        viewType,
-        shoulder,
-        hip,
-        xFactor,
-        ref: metrics.rotation.ref,
-        stage: metrics.rotation.stages?.baseToTop,
-        finalScore: metrics.rotation.score
-      });
+     console.log("ROTATION FACEON RAW", {
+  shoulder,
+  hip,
+  xFactor: shoulder - hip,
+  addressIndex: kf.address?.index,
+  topIndex: kf.top?.index,
+  backswingIndex: kf.backswing?.index,
+  topConfidence: keyframeConfidence?.top ?? kf.top?.confidence ?? null,
+  addressPose: !!addressPose,
+  topPose: !!topPose,
+  backswingPose: !!backswingPose
+});
     } else {
       metrics.rotation.status = "invalid-measure";
       metrics.rotation.score = 0;
