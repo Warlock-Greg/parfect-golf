@@ -144,7 +144,7 @@ body {
 }
 
 .pg-tile {
-  background: var(--pg-bg-soft);
+  background: var(--pg-green-main);
   border: 1px solid var(--pg-border-soft);
   border-radius: var(--pg-radius);
   padding: 18px;
@@ -161,12 +161,12 @@ body {
 .pg-tile-title {
   font-size: 1.8rem;
   font-weight: 900;
-  color: var(--pg-green-main);
+  color: var(--pg-bg-soft);
 }
 
 .pg-tile-desc {
   font-size: 0.9rem;
-  color: var(--pg-text-muted);
+  color: var(--pg-bg-soft);
   margin-top: 4px;
 }
 
