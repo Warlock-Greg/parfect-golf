@@ -148,7 +148,7 @@ body {
   border: 1px solid var(--pg-border-soft);
   border-radius: var(--pg-radius);
   padding: 18px;
-  text-align: left;
+  text-align: center;
   box-shadow: var(--pg-shadow-soft);
   cursor: pointer;
   transition: transform .2s ease;
@@ -159,8 +159,8 @@ body {
 }
 
 .pg-tile-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.8rem;
+  font-weight: 900;
   color: var(--pg-green-main);
 }
 
