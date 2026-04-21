@@ -1,4 +1,4 @@
-// === TRAINING.JS — Parfect.golfr Zen 2026 ===
+// === TRAINING.JS — Parfect.golfr Zen 2026 (refactor coach) ===
 console.log("🏋️ Training (Zen 2026) chargé");
 
 if (typeof window.$$ !== "function") {
@@ -6,12 +6,15 @@ if (typeof window.$$ !== "function") {
 }
 
 let EXERCISES_CACHE = null;
+let CURRENT_OBJECTIVE = localStorage.getItem("trainingObjective") || "SKIP";
+let CURRENT_COACH = localStorage.getItem("coach") || null;
 
 // -----------------------------
 // Data
 // -----------------------------
 async function loadExercises() {
   if (EXERCISES_CACHE) return EXERCISES_CACHE;
+
   try {
     const res = await fetch("./data/exercises.json");
     EXERCISES_CACHE = await res.json();
@@ -23,22 +26,116 @@ async function loadExercises() {
 }
 
 // -----------------------------
+// Coach helpers
+// -----------------------------
+function getTrainingHistory() {
+  try {
+    return JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function setTrainingObjective(objective) {
+  CURRENT_OBJECTIVE = objective || "SKIP";
+  localStorage.setItem("trainingObjective", CURRENT_OBJECTIVE);
+}
+
+function getTrainingObjectiveLabel(code) {
+  switch (code) {
+    case "REGULARITE":
+      return "Régularité";
+    case "ZONE":
+      return "Rester dans la zone";
+    case "ROUTINE":
+      return "Routine solide";
+    case "CALME":
+      return "Calme & intention";
+    case "SCORE":
+      return "Simple et efficace";
+    default:
+      return "Libre";
+  }
+}
+
+function buildTrainingRecentSwingsFromSession() {
+  return window.TrainingSession?.swings || [];
+}
+
+function buildTrainingContext(extra = {}) {
+  if (typeof window.buildTrainingCoachContext !== "function") {
+    return {};
+  }
+
+  return window.buildTrainingCoachContext({
+    objective: CURRENT_OBJECTIVE || "SKIP",
+    trainingType: extra.trainingType || "swing",
+    recentSwings: buildTrainingRecentSwingsFromSession(),
+    selfReport: extra.selfReport || {}
+  });
+}
+
+async function requestTrainingCoach(userMessage, extra = {}) {
+  try {
+    const context = buildTrainingContext(extra);
+
+    window.CoachMemory?.setLastTraining?.(context);
+
+    return await window.requestCoach?.({
+      mode: "training_session",
+      context,
+      userMessage,
+      uiTarget: "whisper"
+    });
+  } catch (err) {
+    console.warn("❌ requestTrainingCoach failed", err);
+    return null;
+  }
+}
+
+function refreshTrainingHeader() {
+  const btn = document.getElementById("change-training-coach");
+  const objectiveEl = document.getElementById("training-objective-label");
+
+  if (btn) {
+    btn.textContent = `Coach : ${CURRENT_COACH || "Choisir"}`;
+  }
+
+  if (objectiveEl) {
+    objectiveEl.textContent = `Objectif : ${getTrainingObjectiveLabel(CURRENT_OBJECTIVE)}`;
+  }
+}
+
+// -----------------------------
 // Init Training
 // -----------------------------
 async function initTraining() {
   const root = document.getElementById("training-root");
   if (!root) return;
 
+  CURRENT_COACH = localStorage.getItem("coach") || null;
+  CURRENT_OBJECTIVE = localStorage.getItem("trainingObjective") || "SKIP";
+
   root.innerHTML = `
     <div class="pg-training-header">
       <div>
         <h2>Entraînement</h2>
         <p>Une intention. Une répétition consciente.</p>
+        <p id="training-objective-label" class="pg-muted">
+          Objectif : ${getTrainingObjectiveLabel(CURRENT_OBJECTIVE)}
+        </p>
       </div>
-      <button id="change-training-coach" class="pg-btn-secondary">
-        Coach : ${localStorage.getItem("coach") || "Choisir"}
-      </button>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button id="change-training-objective" class="pg-btn-secondary">
+          Objectif
+        </button>
+        <button id="change-training-coach" class="pg-btn-secondary">
+          Coach : ${CURRENT_COACH || "Choisir"}
+        </button>
+      </div>
     </div>
+
     <div class="pg-training-body" id="training-body"></div>
   `;
 
@@ -46,17 +143,32 @@ async function initTraining() {
     .getElementById("change-training-coach")
     ?.addEventListener("click", showTrainingCoachSelectModal);
 
-  // 👉 Toujours proposer le coach si pas encore défini
-  if (!localStorage.getItem("coach")) {
-    showTrainingCoachSelectModal();
-  } else {
-    coachReact?.(
-      `${localStorage.getItem("coach")} t’accompagne pour cette séance.`
-    );
-    showTrainingTypes();
-  }
-}
+  document
+    .getElementById("change-training-objective")
+    ?.addEventListener("click", showTrainingObjectiveModal);
 
+  // Coach humain non défini
+  if (!CURRENT_COACH) {
+    showTrainingCoachSelectModal();
+    return;
+  }
+
+  refreshTrainingHeader();
+
+  // Si pas d’objectif encore choisi → on propose
+  if (!localStorage.getItem("trainingObjective")) {
+    showTrainingObjectiveModal();
+    return;
+  }
+
+  window.coachReact?.(
+    `${CURRENT_COACH} t’accompagne pour cette séance. Objectif : ${getTrainingObjectiveLabel(CURRENT_OBJECTIVE)}.`
+  );
+
+  await requestTrainingCoach("Je démarre ma séance d'entraînement");
+
+  showTrainingTypes();
+}
 
 // -----------------------------
 // Coach selection (modal)
@@ -71,7 +183,7 @@ function showTrainingCoachSelectModal() {
       <h3>Choisis ton coach</h3>
       <div class="coach-grid">
         ${["Dorothee", "Gauthier", "Greg", "Chill"]
-          .map(c => `<button class="coach-choice" data-coach="${c}">${c}</button>`)
+          .map((c) => `<button class="coach-choice" data-coach="${c}">${c}</button>`)
           .join("")}
       </div>
       <button class="pg-btn-primary" id="validate-coach">Valider</button>
@@ -81,21 +193,63 @@ function showTrainingCoachSelectModal() {
 
   let selected = null;
 
-  modal.querySelectorAll(".coach-choice").forEach(btn => {
+  modal.querySelectorAll(".coach-choice").forEach((btn) => {
     btn.addEventListener("click", () => {
-      modal.querySelectorAll(".coach-choice").forEach(b => b.classList.remove("active"));
+      modal.querySelectorAll(".coach-choice").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       selected = btn.dataset.coach;
     });
   });
 
-  modal.querySelector("#validate-coach").onclick = () => {
+  modal.querySelector("#validate-coach").onclick = async () => {
     if (!selected) return;
+
+    CURRENT_COACH = selected;
     localStorage.setItem("coach", selected);
     modal.remove();
-    coachReact?.(`${selected} est avec toi.`);
+
+    refreshTrainingHeader();
+    window.coachReact?.(`${selected} est avec toi.`);
+
+    if (!localStorage.getItem("trainingObjective")) {
+      showTrainingObjectiveModal();
+      return;
+    }
+
+    await requestTrainingCoach("Le coach est choisi, donne-moi le focus de la séance");
     showTrainingTypes();
   };
+}
+
+// -----------------------------
+// Objective selection
+// -----------------------------
+function showTrainingObjectiveModal() {
+  if (typeof window.createObjectiveModal === "function") {
+    const modal = window.createObjectiveModal({
+      onSelect: async (objective) => {
+        setTrainingObjective(objective);
+        refreshTrainingHeader();
+
+        await requestTrainingCoach(
+          objective === "SKIP"
+            ? "Je veux un focus simple pour ma séance"
+            : `Je choisis l'objectif ${objective} pour ma séance`
+        );
+
+        showTrainingTypes();
+      }
+    });
+
+    modal.open();
+    return;
+  }
+
+  // fallback minimal si la modale n'est pas chargée
+  setTrainingObjective("REGULARITE");
+  refreshTrainingHeader();
+  requestTrainingCoach("Je démarre une séance avec objectif régularité");
+  showTrainingTypes();
 }
 
 // -----------------------------
@@ -103,18 +257,25 @@ function showTrainingCoachSelectModal() {
 // -----------------------------
 async function showTrainingTypes() {
   const body = $$("training-body");
+  if (!body) return;
+
   const exercises = await loadExercises();
-  const types = [...new Set(exercises.map(e => e.type))];
+  const types = [...new Set(exercises.map((e) => e.type))];
 
   body.innerHTML = `
     <div class="pg-training-types">
-      ${types.map(t => `<button class="pg-chip" data-type="${t}">${t}</button>`).join("")}
+      ${types
+        .map((t) => `<button class="pg-chip" data-type="${t}">${t}</button>`)
+        .join("")}
     </div>
     <div id="training-list"></div>
   `;
 
-  body.querySelectorAll(".pg-chip").forEach(btn => {
-    btn.onclick = () => showTrainingList(btn.dataset.type);
+  body.querySelectorAll(".pg-chip").forEach((btn) => {
+    btn.onclick = async () => {
+      await requestTrainingCoach(`Je veux travailler le type ${btn.dataset.type}`);
+      showTrainingList(btn.dataset.type);
+    };
   });
 }
 
@@ -123,23 +284,37 @@ async function showTrainingTypes() {
 // -----------------------------
 async function showTrainingList(type) {
   const list = $$("training-list");
+  if (!list) return;
+
   const exercises = await loadExercises();
-  const filtered = exercises.filter(e => e.type === type);
+  const filtered = exercises.filter((e) => e.type === type);
 
   list.innerHTML = `
     <div class="pg-training-list">
-      ${filtered.map(e => `
+      ${filtered
+        .map(
+          (e) => `
         <div class="pg-exercise-card">
           <h4>${e.name}</h4>
           <p>${e.goal}</p>
           <button class="pg-btn-secondary" data-id="${e.id}">Démarrer</button>
         </div>
-      `).join("")}
+      `
+        )
+        .join("")}
     </div>
   `;
 
-  list.querySelectorAll("button").forEach(btn => {
-    btn.onclick = () => startTrainingSession(btn.dataset.id);
+  list.querySelectorAll("button").forEach((btn) => {
+    btn.onclick = async () => {
+      const exo = filtered.find((e) => e.id === btn.dataset.id);
+      if (exo) {
+        await requestTrainingCoach(`Je démarre l'exercice ${exo.name}`, {
+          trainingType: exo.type || "swing"
+        });
+      }
+      startTrainingSession(btn.dataset.id);
+    };
   });
 }
 
@@ -148,8 +323,10 @@ async function showTrainingList(type) {
 // -----------------------------
 async function startTrainingSession(id) {
   const body = $$("training-body");
+  if (!body) return;
+
   const exercises = await loadExercises();
-  const exo = exercises.find(e => e.id === id);
+  const exo = exercises.find((e) => e.id === id);
   if (!exo) return;
 
   body.innerHTML = `
@@ -174,29 +351,35 @@ async function startTrainingSession(id) {
   `;
 
   let quality = null;
-  body.querySelectorAll(".pg-quality button").forEach(b => {
+
+  body.querySelectorAll(".pg-quality button").forEach((b) => {
     b.onclick = () => {
-      body.querySelectorAll(".pg-quality button").forEach(x => x.classList.remove("active"));
+      body.querySelectorAll(".pg-quality button").forEach((x) => x.classList.remove("active"));
       b.classList.add("active");
       quality = b.dataset.q;
     };
   });
 
- $$("save").onclick = async () => {
-  console.log("🔥 SAVE CLICKED");
+  $$("back").onclick = () => {
+    showTrainingList(exo.type);
+  };
 
-  if (!quality) {
-    console.log("❌ No quality");
-    return;
-  }
+  $$("save").onclick = async () => {
+    console.log("🔥 SAVE CLICKED");
 
-  try {
-    await recordTraining(exo, quality, +$$("mental").value);
-    console.log("✅ recordTraining finished");
-  } catch (e) {
-    console.error("❌ recordTraining error", e);
-  }
-};
+    if (!quality) {
+      console.log("❌ No quality");
+      window.coachReact?.("Choisis d’abord si c’était réussi, moyen ou difficile.");
+      return;
+    }
+
+    try {
+      await recordTraining(exo, quality, +$$("mental").value);
+      console.log("✅ recordTraining finished");
+    } catch (e) {
+      console.error("❌ recordTraining error", e);
+    }
+  };
 }
 
 // -----------------------------
@@ -211,21 +394,22 @@ async function recordTraining(exo, quality, mentalScore) {
     type: exo.type,
     quality,
     mental_score: mentalScore,
-    coach: localStorage.getItem("coach"),
+    coach: CURRENT_COACH,
+    objective: CURRENT_OBJECTIVE,
     player_email: user?.email ?? null,
     licence_type: user?.licence ?? "free",
     CreatedAt: new Date().toISOString()
   };
 
   // -----------------------------
-  // 1️⃣ Local backup (toujours)
+  // 1️⃣ Local backup
   // -----------------------------
-  const history = JSON.parse(localStorage.getItem("trainingHistory") || "[]");
+  const history = getTrainingHistory();
   history.push(entry);
   localStorage.setItem("trainingHistory", JSON.stringify(history));
 
   // -----------------------------
-  // 2️⃣ Save NocoDB (safe)
+  // 2️⃣ Save NocoDB
   // -----------------------------
   if (window.NOCODB_TRAININGS_URL && window.NOCODB_TOKEN) {
     try {
@@ -246,15 +430,36 @@ async function recordTraining(exo, quality, mentalScore) {
       } else {
         console.log("✅ Training sauvegardé NocoDB");
       }
-
     } catch (e) {
       console.warn("⚠️ Training NocoDB error", e);
     }
   }
 
-  coachReact?.(`Séance "${exo.name}" enregistrée. Ressenti ${mentalScore}/5.`);
+  // -----------------------------
+  // 3️⃣ Coach feedback fin de bloc
+  // -----------------------------
+  await requestTrainingCoach(
+    `Je viens de terminer l'exercice ${exo.name}. C'était ${quality} avec un ressenti mental de ${mentalScore}/5.`,
+    {
+      trainingType: exo.type || "swing",
+      selfReport: {
+        calm: mentalScore,
+        confidence: quality === "success" ? 4 : quality === "medium" ? 3 : 2,
+        energy: 3
+      }
+    }
+  );
+
+  window.coachReact?.(
+    `Séance "${exo.name}" enregistrée. Ressenti ${mentalScore}/5.`
+  );
+
   showTrainingTypes();
 }
 
+// -----------------------------
 // Export
+// -----------------------------
 window.initTraining = initTraining;
+window.showTrainingCoachSelectModal = showTrainingCoachSelectModal;
+window.showTrainingObjectiveModal = showTrainingObjectiveModal;
