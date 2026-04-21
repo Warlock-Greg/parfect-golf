@@ -277,7 +277,7 @@ function injectSocialUI() {
         🚪 Se déconnecter
       </button>
       <button id="edit-user-reference-btn" class="pg-btn-secondary">
-        Mes références
+        Modifier la référence
       </button>
     </div>
 
@@ -313,6 +313,14 @@ function injectSocialUI() {
   $$("edit-user-reference-btn")?.addEventListener("click", () => {
     window.openUserReferenceModal?.();
   });
+
+  const btn = $$("edit-user-reference-btn");
+if (btn) {
+  const club = window.currentClubType || "fer7";
+  const view = window.jswViewType === "dtl" ? "DTL" : "FACE";
+
+  btn.textContent = `Référence ${club.toUpperCase()} · ${view}`;
+}
 
   // load quota + current tab
   setTimeout(() => window.refreshSocialData?.(), 100);
