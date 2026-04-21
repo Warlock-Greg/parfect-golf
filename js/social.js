@@ -276,6 +276,9 @@ function injectSocialUI() {
       <button class="pg-btn-secondary" onclick="logoutParfect()">
         🚪 Se déconnecter
       </button>
+      <button id="edit-user-reference-btn" class="pg-btn-secondary">
+        Mes références
+      </button>
     </div>
 
   <div class="pg-card pg-community-card">
@@ -307,6 +310,9 @@ function injectSocialUI() {
   $$("invite-friend-btn")?.addEventListener("click", handleInviteFriend);
   $$("show-history-btn")?.addEventListener("click", showHistoryTabs);
   $$("upgrade-btn")?.addEventListener("click", () => window.startStripeCheckout?.());
+  $$("edit-user-reference-btn")?.addEventListener("click", () => {
+    window.openUserReferenceModal?.();
+  });
 
   // load quota + current tab
   setTimeout(() => window.refreshSocialData?.(), 100);
