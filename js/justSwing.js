@@ -1284,39 +1284,74 @@ function initEngine() {
 }
 
 
+let __todaySwingCountCache = {
+  email: null,
+  day: null,
+  value: null,
+  ts: 0
+};
+
 async function getTodaySwingCount(email) {
   if (!email) return 0;
 
-  const url =
-    `${window.NOCODB_SWINGS_URL}?` +
-    `where=(` +
-      `cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)}` +
-    `)`;
+  const today = new Date().toISOString().slice(0, 10);
+  const now = Date.now();
 
-  console.log("📊 NocoDB FETCH URL =", url);
-
-  const res = await fetch(url, {
-    headers: { "xc-token": window.NOCODB_TOKEN }
-  });
-
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error("❌ NocoDB error:", txt);
-    throw new Error("Impossible de récupérer les swings");
+  // cache 15s
+  if (
+    __todaySwingCountCache.email === email &&
+    __todaySwingCountCache.day === today &&
+    typeof __todaySwingCountCache.value === "number" &&
+    (now - __todaySwingCountCache.ts) < 15000
+  ) {
+    return __todaySwingCountCache.value;
   }
 
-  const data = await res.json();
+  const tryUrls = [
+    `${window.NOCODB_SWINGS_URL}?where=(email,eq,${encodeURIComponent(email)})&sort=-CreatedAt&limit=100&fields=CreatedAt,createdAt,email`,
+    `${window.NOCODB_SWINGS_URL}?where=(player_email,eq,${encodeURIComponent(email)})&sort=-CreatedAt&limit=100&fields=CreatedAt,createdAt,player_email`,
+    `${window.NOCODB_SWINGS_URL}?where=(cy88wsoi5b8bq9s,eq,${encodeURIComponent(email)})&sort=-CreatedAt&limit=100&fields=CreatedAt,createdAt,cy88wsoi5b8bq9s`
+  ];
 
-  // ⏱️ Filtrage côté JS (aujourd’hui uniquement)
-  const today = new Date().toISOString().slice(0, 10);
+  for (const url of tryUrls) {
+    try {
+      console.log("📊 NocoDB FETCH URL =", url);
 
-  return (data.list || []).filter(r =>
-    r.createdAt?.startsWith(today)
-  ).length;
+      const res = await fetch(url, {
+        headers: { "xc-token": window.NOCODB_TOKEN }
+      });
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.warn("⚠️ getTodaySwingCount tentative échouée", txt);
+        continue;
+      }
+
+      const data = await res.json();
+      const count = (data.list || []).filter((r) => {
+        const d = r.CreatedAt || r.createdAt || "";
+        return typeof d === "string" && d.startsWith(today);
+      }).length;
+
+      __todaySwingCountCache = {
+        email,
+        day: today,
+        value: count,
+        ts: Date.now()
+      };
+
+      return count;
+    } catch (err) {
+      console.warn("⚠️ getTodaySwingCount tentative erreur", err);
+    }
+  }
+
+  throw new Error("Impossible de récupérer les swings");
 }
 
+window.getTodaySwingCount = getTodaySwingCount;
 
-  window.getTodaySwingCount = getTodaySwingCount;
+  
  // ---------------------------------------------------------
   //   swing finish hanche
   // ---------------------------------------------------------
