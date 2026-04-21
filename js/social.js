@@ -321,6 +321,8 @@ function injectSocialUI() {
 // ------------------------------------------------
 // QUOTA UI
 // ------------------------------------------------
+let __quotaRefreshInFlight = false;
+
 window.refreshSwingQuotaUI = async function () {
   const el = document.getElementById("swing-quota");
   if (!el) return;
@@ -330,6 +332,9 @@ window.refreshSwingQuotaUI = async function () {
     el.textContent = "—";
     return;
   }
+
+  if (__quotaRefreshInFlight) return;
+  __quotaRefreshInFlight = true;
 
   try {
     const used = await window.getTodaySwingCount(email);
@@ -343,6 +348,8 @@ window.refreshSwingQuotaUI = async function () {
   } catch (err) {
     console.error("❌ Swing quota error", err);
     el.textContent = "—";
+  } finally {
+    __quotaRefreshInFlight = false;
   }
 };
 
