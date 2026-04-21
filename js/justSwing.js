@@ -292,7 +292,7 @@ window.TrainingSession = {
   swings: [] // max 5
 };
 
-window.jswReferenceMode = "system"; 
+window.jswReferenceMode = "auto"; 
 // "system" | "user"
 
 
@@ -370,7 +370,7 @@ let captureArmed = false;
 
 
 async function loadActiveReference() {
-  const club =
+const club =
     window.currentClubType ||
     document.getElementById("jsw-club-select")?.value ||
     "fer7";
@@ -379,6 +379,8 @@ async function loadActiveReference() {
     window.jswViewType ||
     document.getElementById("jsw-camera-select")?.value ||
     "faceOn";
+
+  const playerEmail = window.userLicence?.email || null;
 
   const refSystem = await window.getSystemReference?.(club, view);
   const refUser = await window.getUserReference?.(club, view);
@@ -395,20 +397,36 @@ async function loadActiveReference() {
   // ---------------------------------------------------
   // Helpers de compatibilité V2
   // ---------------------------------------------------
+
   const userData = refUser?.data || null;
   const systemData = refSystem?.data || null;
 
   const isV2 = (ref) => ref?.schema_version === 2;
 
-  // priorité :
-  // 1) user V2
-  // 2) system V2
-  // 3) fallback local
-  const rawRef =
-    (isV2(userData) ? userData : null) ||
-    (isV2(systemData) ? systemData : null) ||
-    fallback ||
-    null;
+  // mode explicite ou auto
+  const refMode = window.jswReferenceMode || "auto";
+
+  let rawRef = null;
+
+ if (refMode === "user") {
+    rawRef =
+      (isV2(userData) ? userData : null) ||
+      (isV2(systemData) ? systemData : null) ||
+      fallback ||
+      null;
+  } else if (refMode === "system") {
+    rawRef =
+      (isV2(systemData) ? systemData : null) ||
+      fallback ||
+      null;
+  } else {
+    // auto = priorité user > system > fallback
+    rawRef =
+      (isV2(userData) ? userData : null) ||
+      (isV2(systemData) ? systemData : null) ||
+      fallback ||
+      null;
+  }
 
   if (!rawRef) {
     console.warn("⚠️ Aucune référence disponible");
@@ -523,15 +541,18 @@ async function loadActiveReference() {
     balance: rawRef?.balance || null
   };
 
-  console.log("🎯 Active reference", {
+   console.log("🎯 Active reference", {
     club,
     view,
-    userId: refUser?.id ?? null,
-    systemId: refSystem?.id ?? null,
+    refMode,
+    userId: refUser?.id ?? refUser?.Id ?? null,
+    systemId: refSystem?.id ?? refSystem?.Id ?? null,
     userSchema: userData?.schema_version ?? null,
     systemSchema: systemData?.schema_version ?? null,
     fallbackSchema: fallback?.schema_version ?? null,
     source:
+      (refMode === "user" && isV2(userData) ? "user_v2" : null) ||
+      (refMode === "system" && isV2(systemData) ? "system_v2" : null) ||
       (isV2(userData) ? "user_v2" : null) ||
       (isV2(systemData) ? "system_v2" : null) ||
       "fallback_json_v2"
