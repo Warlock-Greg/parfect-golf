@@ -393,6 +393,74 @@ body {
 }
 
 /* =====================================
+   MODAL REFERENCE
+   ===================================== */
+
+.pg-ref-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pg-ref-modal {
+  width: min(760px, 94vw);
+  max-height: 85vh;
+  overflow: auto;
+  background: var(--pg-bg-soft);
+  border: 1px solid var(--pg-border-soft);
+  border-radius: 18px;
+  box-shadow: var(--pg-shadow-soft);
+  padding: 18px;
+}
+
+.pg-ref-header h3 {
+  margin: 0 0 4px 0;
+  color: var(--pg-green-main);
+}
+
+.pg-ref-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.pg-ref-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--pg-text-main);
+}
+
+.pg-ref-grid input {
+  border: 1px solid var(--pg-border-soft);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--pg-bg-main);
+  color: var(--pg-text-main);
+}
+
+.pg-ref-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .pg-ref-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =====================================
    COACH — FERMETURE TEMPORAIRE
    ===================================== */
 
