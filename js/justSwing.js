@@ -3205,11 +3205,14 @@ function onSwingValidated({ scores, currentClub, swing }) {
   // 1️⃣ SESSION LOCALE (5 derniers swings)
   // =================================================
   if (window.TrainingSession) {
-    TrainingSession.swings.unshift({
-      created_at: Date.now(),
-      club: currentClub || "?",
-      breakdown
-    });
+   TrainingSession.swings.unshift({
+  created_at: Date.now(),
+  club: currentClub || swing?.club || "?",
+  total: scores?.total || null,
+  breakdown: scores?.breakdown || {},
+  metrics: scores?.metrics || {},
+  scores: scores || null
+});
 
     TrainingSession.swings = TrainingSession.swings.slice(0, 5);
 
@@ -3282,6 +3285,11 @@ function onSwingValidated({ scores, currentClub, swing }) {
   window.saveSwingToNocoDB(swingRecord).catch(err => {
     console.error("❌ Erreur sauvegarde swing:", err);
   });
+  
+  // =================================================
+  // 5️⃣ COACH IA — analyse du swing
+  // =================================================
+  requestSwingCoachAnalysis(swing, scores);
 }
   
 // ---------------------------------------------------------
