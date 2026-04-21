@@ -3119,7 +3119,7 @@ metrics.extension.score = applyConfidenceSoftening(metrics.extension.score, extI
 
   return dump;
 }
-
+window.jswBuildLandmarksJSON = jswBuildLandmarksJSON;
 
 // =====================================================
 // 💾 SAUVEGARDE SWING — NOCODB (VERSION STABLE)
@@ -3188,7 +3188,40 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
     throw err;
   }
 };
+// =====================================================
+// COACH IA — SWING ANALYSIS
+// =====================================================
+async function requestSwingCoachAnalysis(swing, scores) {
+  try {
+    if (!swing || !scores) {
+      console.warn("⚠️ requestSwingCoachAnalysis: swing ou scores manquants");
+      return null;
+    }
 
+    if (typeof window.buildSwingCoachContext !== "function") {
+      console.warn("⚠️ buildSwingCoachContext non disponible");
+      return null;
+    }
+    if (window.__lastSwingCoachTs && Date.now() - window.__lastSwingCoachTs < 1200) {
+      return null;
+    }
+    window.__lastSwingCoachTs = Date.now();
+   
+    const context = window.buildSwingCoachContext({ swing, scores });
+
+    window.CoachMemory?.setLastSwing?.(context);
+
+    return await window.requestCoach?.({
+      mode: "swing_analysis",
+      context,
+      userMessage: "Analyse ce swing",
+      uiTarget: "whisper"
+    });
+  } catch (err) {
+    console.warn("❌ Coach swing analysis failed", err);
+    return null;
+  }
+}
   
 // ========================================
 // ✅ APPELÉ QUAND UN SWING EST VALIDÉ
@@ -3289,7 +3322,11 @@ function onSwingValidated({ scores, currentClub, swing }) {
   // =================================================
   // 5️⃣ COACH IA — analyse du swing
   // =================================================
-  requestSwingCoachAnalysis(swing, scores);
+   if (isValidSwing(swing)) {
+    requestSwingCoachAnalysis(swing, scores);
+  } else {
+    console.warn("⚠️ Swing non valide → pas d’appel coach");
+  }
 }
   
 // ---------------------------------------------------------
