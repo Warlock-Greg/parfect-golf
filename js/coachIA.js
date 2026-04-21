@@ -69,6 +69,49 @@ function onUserSend(input) {
   respondAsCoach(message);
 }
 
+
+window.requestCoach = async function ({
+  mode = "generic",
+  context = {},
+  userMessage = "",
+  uiTarget = "whisper"
+}) {
+  try {
+    let response;
+
+    switch (mode) {
+      case "swing_analysis":
+        response = await window.CoachModes.swing({ context, userMessage });
+        break;
+
+      case "training_session":
+        response = await window.CoachModes.training({ context, userMessage });
+        break;
+
+      case "round_support":
+        response = await window.CoachModes.round({ context, userMessage });
+        break;
+
+      default:
+        response = {
+          summary: "Je t’écoute. Dis-moi si tu veux parler swing, entraînement ou parcours."
+        };
+    }
+
+    window.CoachMemory?.setLastResponse?.(response);
+
+    const text = formatCoachResponseForUI(response, mode);
+    window.coachReact?.(text);
+
+    return response;
+  } catch (err) {
+    console.warn("requestCoach failed", err);
+    const fallback = "Je suis là. On repart simple : une respiration, une intention, une action.";
+    window.coachReact?.(fallback);
+    return { summary: fallback, error: true };
+  }
+};
+
 // -----------------------------------------------------
 // COACH LOCAL (FAQ)
 // -----------------------------------------------------
@@ -114,7 +157,33 @@ function hideCoachIA() {
   const coach = $("coach-ia");
   if (coach) coach.style.display = "none";
 }
+function formatCoachResponseForUI(response, mode) {
+  if (!response) return "Je t’écoute.";
 
+  if (mode === "swing_analysis") {
+    return [
+      response.summary,
+      ...(response.immediate_actions || []).slice(0, 2)
+    ].join(" ");
+  }
+
+  if (mode === "training_session") {
+    return [
+      response.summary,
+      response.session_focus ? `Focus : ${response.session_focus}.` : "",
+      ...(response.immediate_actions || []).slice(0, 1)
+    ].filter(Boolean).join(" ");
+  }
+
+  if (mode === "round_support") {
+    return [
+      response.summary,
+      ...(response.reset_protocol || []).slice(0, 2)
+    ].join(" ");
+  }
+
+  return response.summary || "Je t’écoute.";
+}
 // -----------------------------------------------------
 // TOAST (inchangé)
 // -----------------------------------------------------
