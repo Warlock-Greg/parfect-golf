@@ -849,8 +849,7 @@ function analyzeHole(holeData) {
   } else if (diff === 1 && hasFairway) {
     message = "💙 Bogey’fect ! Bogey solide, garde ton mental propre.";
   } else if (diff < 0) {
-    message = "🕊️ Birdie ! Fluide et en contrôle.";
-  } 
+    message = "🕊️ Birdie ! Fluide et en contrôle."; 
   } else if (diff >= 2) {
   showDoubleReasonModal(async (reasonKey) => {
     lastDoubleReason = reasonKey;
