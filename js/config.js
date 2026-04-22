@@ -1,6 +1,9 @@
 // =====================================================
 // CONFIG GLOBALE — PARFECT.GOLFR (NON-MODULE SAFE)
 // =====================================================
+window.CONFIG = {
+  API_BASE_URL: "http://localhost:3001"
+};
 
 // -----------------------------------------------------
 // GitHub RAW (data publiques)
