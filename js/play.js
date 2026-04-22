@@ -11,6 +11,138 @@ let holes = [];
 let currentDiff = null;
 let totalParfects = parseInt(localStorage.getItem("totalParfects") || "0");
 
+let roundEvents = [];
+let lastDoubleReason = null;
+
+function getRoundScoreState() {
+  const valid = (holes || []).filter((h) => h && typeof h.score === "number");
+
+  const totalVsPar = valid.reduce((sum, h) => sum + ((h.score ?? 0) - (h.par ?? 0)), 0);
+  const totalScore = valid.reduce((sum, h) => sum + (h.score ?? 0), 0);
+
+  const fairwaysHit = valid.filter((h) => !!h.fairway).length;
+  const greensInReg = valid.filter((h) => !!h.gir).length;
+
+  const putts = valid.reduce((sum, h) => {
+    const v = Number(h?.dist2 || 0);
+    if (!Number.isFinite(v)) return sum;
+    return sum + v;
+  }, 0);
+
+  const lastHole = valid[valid.length - 1] || null;
+  const lastHoleDiff =
+    lastHole && typeof lastHole.score === "number"
+      ? lastHole.score - lastHole.par
+      : null;
+
+  const lastHoleScore =
+    lastHoleDiff == null
+      ? null
+      : lastHoleDiff >= 3
+      ? "triple_or_more"
+      : lastHoleDiff === 2
+      ? "double"
+      : lastHoleDiff === 1
+      ? "bogey"
+      : lastHoleDiff === 0
+      ? "par"
+      : "birdie_or_better";
+
+  return {
+    totalScore,
+    scoreToPar: totalVsPar > 0 ? `+${totalVsPar}` : `${totalVsPar}`,
+    totalVsPar,
+    fairwaysHit,
+    gir: greensInReg,
+    putts,
+    lastHoleScore,
+    streak: computeBadHoleStreak(valid)
+  };
+}
+
+function computeBadHoleStreak(validHoles) {
+  let streak = 0;
+  for (let i = validHoles.length - 1; i >= 0; i--) {
+    const h = validHoles[i];
+    const diff = (h?.score ?? 0) - (h?.par ?? 0);
+    if (diff >= 1) streak++;
+    else break;
+  }
+  return streak ? `${streak} bad hole${streak > 1 ? "s" : ""}` : null;
+}
+
+function getCurrentHoleContext() {
+  const hole = holes?.[currentHole - 1] || null;
+  if (!hole) return {};
+  return {
+    number: hole.number,
+    par: hole.par
+  };
+}
+
+function getNextShotContext() {
+  return {
+    type: currentHole === 1 ? "tee_shot" : "next_shot"
+  };
+}
+
+function getMentalStateFromStorage(trigger = "manual") {
+  const mood = (localStorage.getItem("mood") || "focus").toLowerCase();
+
+  const map = {
+    focus: { state: "focused", calm: 3, confidence: 3, frustration: 1 },
+    relax: { state: "relaxed", calm: 4, confidence: 3, frustration: 1 },
+    fun: { state: "light", calm: 4, confidence: 3, frustration: 1 },
+    grind: { state: "intense", calm: 2, confidence: 3, frustration: 2 }
+  };
+
+  return {
+    ...(map[mood] || map.focus),
+    trigger
+  };
+}
+
+function buildRoundCoachContext(extra = {}) {
+  if (typeof window.buildRoundCoachContext !== "function") {
+    return {};
+  }
+
+  return window.buildRoundCoachContext({
+    hole: getCurrentHoleContext(),
+    scoreState: getRoundScoreState(),
+    nextShot: getNextShotContext(),
+    mentalState: extra.mentalState || getMentalStateFromStorage(extra.trigger || "manual"),
+    recentEvents: roundEvents
+  });
+}
+
+async function requestRoundCoach(userMessage, extra = {}) {
+  try {
+    const context = buildRoundCoachContext(extra);
+
+    window.CoachMemory?.setLastRound?.(context);
+
+    return await window.requestCoach?.({
+      mode: "round_support",
+      context,
+      userMessage,
+      uiTarget: "whisper"
+    });
+  } catch (err) {
+    console.warn("❌ requestRoundCoach failed", err);
+    return null;
+  }
+}
+
+function pushRoundEvent(type, payload = {}) {
+  roundEvents.push({
+    type,
+    at: new Date().toISOString(),
+    ...payload
+  });
+  roundEvents = roundEvents.slice(-10);
+}
+
 // === Helpers génériques ===
 function pickRandom(arr) {
   if (!arr || !arr.length) return "";
@@ -449,7 +581,21 @@ function showMoodAndStrategyModal(onConfirm) {
     modal.remove();
 
     showCoachIA?.(`🧠 Mood: ${mood} · 🎯 Stratégie: ${strat} · 🗣️ Coach: ${coach}`);
-    if (typeof onConfirm === "function") onConfirm();
+
+pushRoundEvent("round_start", {
+  mood,
+  strategy: strat,
+  coach
+});
+
+requestRoundCoach("Je démarre ma partie", {
+  trigger: "round_start",
+  mentalState: {
+    ...getMentalStateFromStorage("round_start")
+  }
+});
+
+if (typeof onConfirm === "function") onConfirm();
   });
 }
 
@@ -604,6 +750,18 @@ function renderHole(number = currentHole) {
           🏁 Terminer la partie
         </button>
       </div>
+            <div style="margin-top:10px;">
+        <button id="round-reset-btn" class="btn" style="
+          background:transparent;
+          border:1px solid rgba(0,255,153,0.35);
+          color:var(--pg-green-main,#00ff99);
+          padding:6px 12px;
+          border-radius:999px;
+          font-size:0.85rem;
+        ">
+          🧠 Recentre-moi
+        </button>
+      </div>
     </div>`;
 
   // Score selection
@@ -645,6 +803,23 @@ function renderHole(number = currentHole) {
       summarizeRound();
     }
   });
+
+    document.getElementById("round-reset-btn")?.addEventListener("click", async () => {
+    pushRoundEvent("manual_reset", {
+      hole: currentHole
+    });
+
+    await requestRoundCoach("J'ai besoin de me recentrer maintenant.", {
+      trigger: "manual_reset",
+      mentalState: {
+        ...getMentalStateFromStorage("manual_reset"),
+        state: "shaken",
+        frustration: 3,
+        calm: 2,
+        confidence: 2
+      }
+    });
+  });
 }
 
 
@@ -675,17 +850,54 @@ function analyzeHole(holeData) {
     message = "💙 Bogey’fect ! Bogey solide, garde ton mental propre.";
   } else if (diff < 0) {
     message = "🕊️ Birdie ! Fluide et en contrôle.";
+  } 
   } else if (diff >= 2) {
-    // Double ou plus : ouvre la modale “Que s’est-il passé ?”
-    showDoubleReasonModal((reasonKey) => {
-      const msg = buildDoubleCoachMessage(holeData, reasonKey);
-      if (msg && msg !== lastCoachMessage) {
-        lastCoachMessage = msg;
-        showCoachIA?.(msg);
-      }
+  showDoubleReasonModal(async (reasonKey) => {
+    lastDoubleReason = reasonKey;
+
+    pushRoundEvent("bad_hole", {
+      hole: holeData?.number || currentHole,
+      diff,
+      reason: reasonKey
     });
-  } else {
-    message = "👌 respecte la règle du n'importe où : sur le farway, sur le green proche du trou. Pense à ta routine, ta rotation et ton tempo.";
+
+    const fallbackMsg = buildDoubleCoachMessage(holeData, reasonKey);
+
+    const frustration =
+      diff >= 3 ? 5 :
+      diff === 2 ? 4 : 3;
+
+    const coachResponse = await requestRoundCoach(
+      `Je viens de faire ${diff >= 3 ? "un très mauvais trou" : "un double"} à cause de ${reasonKey}. Aide-moi à me recentrer.`,
+      {
+        trigger: "bad_hole",
+        mentalState: {
+          ...getMentalStateFromStorage("bad_hole"),
+          state: "tilted",
+          frustration,
+          calm: 1,
+          confidence: 1
+        }
+      }
+    );
+
+    const msg =
+      coachResponse?.summary
+        ? [
+            coachResponse.summary,
+            ...(coachResponse.reset_protocol || []).slice(0, 2)
+          ].filter(Boolean).join(" ")
+        : fallbackMsg;
+
+    if (msg && msg !== lastCoachMessage) {
+      lastCoachMessage = msg;
+      showCoachIA?.(msg);
+    }
+  });
+}
+  
+  else {
+    message = "👌 respecte la règle du n'importe où : sur le fairway, sur le green, 1er putt proche du trou. Pense à ta routine, ta rotation et ton tempo. 1 mauvais coup ne ruine pas une partie.";
   }
 
   if (message && diff < 2) {
@@ -694,6 +906,19 @@ function analyzeHole(holeData) {
       showCoachIA?.(message);
     }
   }
+
+  if (diff === 1) {
+    pushRoundEvent("bogey", {
+      hole: holeData?.number || currentHole
+    });
+  }
+
+  if (diff <= 0) {
+    pushRoundEvent("good_hole", {
+      hole: holeData?.number || currentHole
+    });
+  }
+
 }
 
 // === Compteur Parfect ===
@@ -823,10 +1048,23 @@ async function summarizeRound() {
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 3000);
 
-  showCoachIA?.(
-    `🏁 Fin de partie ! Score total ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar}, ${parfects} Parfect${
-      parfects > 1 ? "s" : ""
-    } collecté${parfects > 1 ? "s" : ""} !`
+    pushRoundEvent("round_end", {
+    totalVsPar,
+    parfects
+  });
+
+  await requestRoundCoach(
+    `Ma partie est terminée. J'ai fait ${totalVsPar > 0 ? `+${totalVsPar}` : totalVsPar} avec ${parfects} parfects.`,
+    {
+      trigger: "round_end",
+      mentalState: {
+        ...getMentalStateFromStorage("round_end"),
+        state: "reflective",
+        frustration: totalVsPar > 10 ? 4 : 2,
+        calm: 3,
+        confidence: 3
+      }
+    }
   );
 
   showShareBadge?.(totalVsPar, parfects);
