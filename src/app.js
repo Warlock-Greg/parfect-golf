@@ -27,5 +27,5 @@ app.use((err, _req, res, _next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Parfect coach backend listening on http://localhost:${PORT}`);
+  console.log(`✅ Parfect coach backend listening on R ${PORT}`);
 });
