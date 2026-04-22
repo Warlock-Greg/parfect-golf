@@ -1,7 +1,17 @@
+// =====================================================
+// Coach Transport — appels backend centralisés
+// =====================================================
+
 const BASE = window.CONFIG?.API_BASE_URL || "";
 
+console.log("🌍 API BASE =", BASE);
+
 async function postJSON(path, body) {
-  const res = await fetch(BASE + path, {
+  const url = `${BASE}${path}`;
+
+  console.log("🛰️ Coach API call ->", url);
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -17,29 +27,27 @@ async function postJSON(path, body) {
   return res.json();
 }
 
-window.CoachTransport = {async analyzeSwing(context, userMessage = "") {
-    return postJSON("/api/coach/analyze-swing", { context, userMessage });
+window.CoachTransport = {
+  async analyzeSwing(context, userMessage = "") {
+    return postJSON("/api/coach/analyze-swing", {
+      context,
+      userMessage
+    });
   },
 
   async trainingAdvice(context, userMessage = "") {
-    return postJSON("/api/coach/training", { context, userMessage });
+    return postJSON("/api/coach/training", {
+      context,
+      userMessage
+    });
   },
 
   async roundSupport(context, userMessage = "") {
-    return postJSON("/api/coach/round-support", { context, userMessage });
+    return postJSON("/api/coach/round-support", {
+      context,
+      userMessage
+    });
   }
 };
 
-async function postJSON(url, body) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    throw new Error(`Coach API error ${res.status}`);
-  }
-
-  return res.json();
-}
+console.log("✅ CoachTransport chargé");
