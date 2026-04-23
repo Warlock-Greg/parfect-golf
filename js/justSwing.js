@@ -3215,7 +3215,7 @@ async function requestSwingCoachAnalysis(swing, scores) {
       mode: "swing_analysis",
       context,
       userMessage: "Analyse ce swing",
-      uiTarget: "whisper"
+      uiTarget: "chat"
     });
   } catch (err) {
     console.warn("❌ Coach swing analysis failed", err);
