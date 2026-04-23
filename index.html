@@ -317,14 +317,25 @@
      COACH IA (input + user log)
      =============================== -->
 <section id="coach-ia" class="pg-coach-ia coach-medium" style="display:flex;">
-  <!-- Log joueur uniquement -->
-  <div id="coach-user-log" class="pg-coach-user-log"></div>
+  <div class="pg-coach-shell">
+    <div class="pg-coach-header">
+      <div class="pg-coach-title-wrap">
+        <div class="pg-coach-dot"></div>
+        <div>
+          <div class="pg-coach-title">Coach IA</div>
+          <div class="pg-coach-subtitle">Swing · Training · Round</div>
+        </div>
+      </div>
 
-  <!-- Input en bas pleine largeur -->
-  <div id="coach-input-zone" class="pg-coach-input-zone">
-    <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
-    <button id="coach-send" type="button">Envoyer</button>
-    <button id="coach-close" type="button" aria-label="Fermer">✕</button>
+      <button id="coach-close" type="button" class="pg-coach-close" aria-label="Fermer">✕</button>
+    </div>
+
+    <div id="coach-user-log" class="pg-coach-user-log"></div>
+
+    <div id="coach-input-zone" class="pg-coach-input-zone">
+      <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
+      <button id="coach-send" type="button" class="pg-coach-send">Envoyer</button>
+    </div>
   </div>
 </section>
 
