@@ -2,7 +2,7 @@
 // CONFIG GLOBALE — PARFECT.GOLFR (NON-MODULE SAFE)
 // =====================================================
 window.CONFIG = {
-  API_BASE_URL: "https://parfect-coach-backend.onrender.com"
+  API_BASE_URL: "https://parfect-golf.onrender.com/"
 };
 
 // -----------------------------------------------------
