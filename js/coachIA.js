@@ -224,9 +224,11 @@ window.requestCoach = async function ({
 
     const text = formatCoachResponseForUI(response, mode);
 
-    if (uiTarget === "whisper") {
+   if (uiTarget === "chat") {
+      window.sendCoachToChat?.(text);
+      } else {
       window.coachReact?.(text);
-    }
+      }
 
     return response;
   } catch (err) {
