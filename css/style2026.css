@@ -332,7 +332,28 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.coach-quick-actions {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 12px;
+  flex-wrap: wrap;
+}
 
+.coach-quick-actions button {
+  background: rgba(0,255,153,0.1);
+  border: 1px solid rgba(0,255,153,0.3);
+  color: #00ff99;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.coach-quick-actions button:hover {
+  background: #00ff99;
+  color: #111;
+}
 /* ================================
    WHISPER HISTORY (OVERLAY)
    ================================ */
