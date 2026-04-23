@@ -1,8 +1,8 @@
 // =====================================================
 // Parfect.golfr — Coach IA Orchestrateur (ZEN compatible)
 // - UI gérée par coach-zen.js
-// - Sortie coach = coachReact() UNIQUEMENT
 // - Ce fichier ne bind PAS l'input
+// - Supporte whisper + chat + quick actions adaptatives
 // =====================================================
 
 console.log("🧠 Coach IA Orchestrateur chargé");
@@ -98,7 +98,6 @@ function detectCoachModeFromRouteAndMessage(message) {
 // -----------------------------------------------------
 function formatCoachResponseForUI(response, mode) {
   if (!response) return "Je t’écoute.";
-
   if (typeof response === "string") return response;
 
   if (mode === "swing_analysis") {
@@ -154,7 +153,8 @@ async function respondCoachGeneric(message) {
     } catch (err) {
       console.warn("FAQ coach indisponible", err);
       return {
-        summary: "Désolé, je ne trouve pas mes notes. Dis-moi si tu veux parler swing, entraînement ou parcours."
+        summary:
+          "Désolé, je ne trouve pas mes notes. Dis-moi si tu veux parler swing, entraînement ou parcours."
       };
     }
   }
@@ -178,47 +178,168 @@ async function respondCoachGeneric(message) {
   };
 }
 
+// -----------------------------------------------------
+// Mémoire locale orchestrateur
+// -----------------------------------------------------
+window.__CoachState = window.__CoachState || {
+  lastMode: null,
+  lastContext: null,
+  lastResponse: null,
+  lastUiTarget: "whisper"
+};
 
-function renderCoachQuickActions() {
+function setCoachState({ mode, context, response, uiTarget }) {
+  window.__CoachState.lastMode = mode || window.__CoachState.lastMode;
+  window.__CoachState.lastContext = context || window.__CoachState.lastContext;
+  window.__CoachState.lastResponse = response || window.__CoachState.lastResponse;
+  window.__CoachState.lastUiTarget = uiTarget || window.__CoachState.lastUiTarget;
+}
+
+function getLastCoachMode() {
+  return window.__CoachState?.lastMode || "generic";
+}
+
+function getLastCoachContext() {
+  return window.__CoachState?.lastContext || {};
+}
+
+// -----------------------------------------------------
+// Quick actions adaptatives
+// -----------------------------------------------------
+function getQuickActionsForMode(mode) {
+  if (mode === "round_support") {
+    return [
+      {
+        key: "reset",
+        label: "🧘 Recentre-moi",
+        message: "Aide-moi à me recentrer mentalement maintenant"
+      },
+      {
+        key: "plan",
+        label: "🎯 Plan simple",
+        message: "Donne-moi un plan simple pour le prochain coup"
+      },
+      {
+        key: "explain",
+        label: "🔁 Explique-moi autrement",
+        message: "Explique-moi autrement et plus simplement"
+      }
+    ];
+  }
+
+  if (mode === "training_session") {
+    return [
+      {
+        key: "plan",
+        label: "🎯 Plan simple",
+        message: "Donne-moi un plan simple pour la suite de la séance"
+      },
+      {
+        key: "drill",
+        label: "🏋️ Drill suivant",
+        message: "Donne-moi un drill simple pour continuer la séance"
+      },
+      {
+        key: "explain",
+        label: "🔁 Explique-moi autrement",
+        message: "Explique-moi autrement et plus simplement"
+      }
+    ];
+  }
+
+  if (mode === "swing_analysis") {
+    return [
+      {
+        key: "priority",
+        label: "🎯 Priorité",
+        message: "Quelle est ma priorité absolue sur ce swing ?"
+      },
+      {
+        key: "drill",
+        label: "🏋️ Drill",
+        message: "Donne-moi un drill simple pour corriger ce swing"
+      },
+      {
+        key: "explain",
+        label: "🔁 Explique-moi autrement",
+        message: "Explique-moi autrement et plus simplement"
+      }
+    ];
+  }
+
+  return [
+    {
+      key: "explain",
+      label: "🔁 Explique-moi autrement",
+      message: "Explique-moi autrement et plus simplement"
+    }
+  ];
+}
+
+function clearExistingQuickActions() {
+  document.querySelectorAll(".coach-quick-actions").forEach((el) => el.remove());
+}
+
+function renderCoachQuickActions(mode = getLastCoachMode()) {
+  const actions = getQuickActionsForMode(mode);
+  if (!actions.length) return null;
+
   const container = document.createElement("div");
   container.className = "coach-quick-actions";
 
-  container.innerHTML = `
-    <button data-action="reset">🧘 Recentre-moi</button>
-    <button data-action="plan">🎯 Plan simple</button>
-    <button data-action="explain">🔁 Explique-moi autrement</button>
-  `;
+  actions.forEach((action) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.action = action.key;
+    btn.textContent = action.label;
 
-  container.querySelectorAll("button").forEach(btn => {
     btn.addEventListener("click", async () => {
-      const action = btn.dataset.action;
-
-      let message = "";
-
-      if (action === "reset") {
-        message = "Aide-moi à me recentrer mentalement maintenant";
+      try {
+        await window.requestCoach({
+          mode: getLastCoachMode(),
+          context: getLastCoachContext(),
+          userMessage: action.message,
+          uiTarget: "chat"
+        });
+      } catch (err) {
+        console.warn("quick action failed", err);
       }
-
-      if (action === "plan") {
-        message = "Donne-moi un plan simple pour le prochain coup";
-      }
-
-      if (action === "explain") {
-        message = "Explique-moi autrement et plus simplement";
-      }
-
-      await window.requestCoach({
-        mode: "round_support",
-        context: window.CoachMemory?.getLastContext?.() || {},
-        userMessage: message,
-        uiTarget: "chat"
-      });
     });
+
+    container.appendChild(btn);
   });
 
   return container;
 }
 
+// -----------------------------------------------------
+// Envoi vers le chat avec quick actions
+// -----------------------------------------------------
+function sendCoachTextToChat(text, mode) {
+  const clean = cleanText(text);
+  if (!clean) return;
+
+  if (typeof window.sendCoachToChat === "function") {
+    window.sendCoachToChat(clean);
+  } else if (typeof window.appendCoachMessageToChat === "function") {
+    window.showCoachIA?.();
+    window.appendCoachMessageToChat(clean);
+  } else {
+    window.coachReact?.(clean);
+    return;
+  }
+
+  const log = $("coach-user-log");
+  if (!log) return;
+
+  clearExistingQuickActions();
+
+  const actions = renderCoachQuickActions(mode);
+  if (actions) {
+    log.appendChild(actions);
+    log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
+  }
+}
 
 // -----------------------------------------------------
 // Point d’entrée unique pour les réponses coach
@@ -234,27 +355,21 @@ window.requestCoach = async function ({
 
     switch (mode) {
       case "swing_analysis":
-        if (window.CoachModes?.swing) {
-          response = await window.CoachModes.swing({ context, userMessage });
-        } else {
-          response = await respondCoachGeneric(userMessage);
-        }
+        response = window.CoachModes?.swing
+          ? await window.CoachModes.swing({ context, userMessage })
+          : await respondCoachGeneric(userMessage);
         break;
 
       case "training_session":
-        if (window.CoachModes?.training) {
-          response = await window.CoachModes.training({ context, userMessage });
-        } else {
-          response = await respondCoachGeneric(userMessage);
-        }
+        response = window.CoachModes?.training
+          ? await window.CoachModes.training({ context, userMessage })
+          : await respondCoachGeneric(userMessage);
         break;
 
       case "round_support":
-        if (window.CoachModes?.round) {
-          response = await window.CoachModes.round({ context, userMessage });
-        } else {
-          response = await respondCoachGeneric(userMessage);
-        }
+        response = window.CoachModes?.round
+          ? await window.CoachModes.round({ context, userMessage })
+          : await respondCoachGeneric(userMessage);
         break;
 
       default:
@@ -263,14 +378,15 @@ window.requestCoach = async function ({
     }
 
     window.CoachMemory?.setLastResponse?.(response);
+    setCoachState({ mode, context, response, uiTarget });
 
     const text = formatCoachResponseForUI(response, mode);
 
-   if (uiTarget === "chat") {
-      window.sendCoachToChat?.(text);
-      } else {
+    if (uiTarget === "chat") {
+      sendCoachTextToChat(text, mode);
+    } else {
       window.coachReact?.(text);
-      }
+    }
 
     return response;
   } catch (err) {
@@ -279,7 +395,11 @@ window.requestCoach = async function ({
     const fallback =
       "Je suis là. On repart simple : une respiration, une intention, une action.";
 
-    window.coachReact?.(fallback);
+    if (uiTarget === "chat") {
+      sendCoachTextToChat(fallback, mode);
+    } else {
+      window.coachReact?.(fallback);
+    }
 
     return {
       summary: fallback,
@@ -296,14 +416,13 @@ window.respondAsCoach = async function (message) {
   if (!clean) return null;
 
   const mode = detectCoachModeFromRouteAndMessage(clean);
-  const context =
-    window.CoachContextFactory?.fromCurrentAppState?.(mode) || {};
+  const context = window.CoachContextFactory?.fromCurrentAppState?.(mode) || {};
 
   return window.requestCoach({
     mode,
     context,
     userMessage: clean,
-    uiTarget: "whisper"
+    uiTarget: "chat"
   });
 };
 
@@ -350,6 +469,7 @@ window.initCoachIA = initCoachIA;
 window.showCoachIA = showCoachIA;
 window.hideCoachIA = hideCoachIA;
 window.showCoachToast = showCoachToast;
+window.renderCoachQuickActions = renderCoachQuickActions;
 
 // auto init légère
 document.addEventListener("DOMContentLoaded", () => {
