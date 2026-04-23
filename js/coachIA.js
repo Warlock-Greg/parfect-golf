@@ -178,6 +178,48 @@ async function respondCoachGeneric(message) {
   };
 }
 
+
+function renderCoachQuickActions() {
+  const container = document.createElement("div");
+  container.className = "coach-quick-actions";
+
+  container.innerHTML = `
+    <button data-action="reset">🧘 Recentre-moi</button>
+    <button data-action="plan">🎯 Plan simple</button>
+    <button data-action="explain">🔁 Explique-moi autrement</button>
+  `;
+
+  container.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const action = btn.dataset.action;
+
+      let message = "";
+
+      if (action === "reset") {
+        message = "Aide-moi à me recentrer mentalement maintenant";
+      }
+
+      if (action === "plan") {
+        message = "Donne-moi un plan simple pour le prochain coup";
+      }
+
+      if (action === "explain") {
+        message = "Explique-moi autrement et plus simplement";
+      }
+
+      await window.requestCoach({
+        mode: "round_support",
+        context: window.CoachMemory?.getLastContext?.() || {},
+        userMessage: message,
+        uiTarget: "chat"
+      });
+    });
+  });
+
+  return container;
+}
+
+
 // -----------------------------------------------------
 // Point d’entrée unique pour les réponses coach
 // -----------------------------------------------------
