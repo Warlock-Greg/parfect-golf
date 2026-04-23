@@ -126,7 +126,7 @@ async function requestRoundCoach(userMessage, extra = {}) {
       mode: "round_support",
       context,
       userMessage,
-      uiTarget: "whisper"
+      uiTarget: "chat"
     });
   } catch (err) {
     console.warn("❌ requestRoundCoach failed", err);
