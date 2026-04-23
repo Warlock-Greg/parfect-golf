@@ -103,6 +103,30 @@ window.hideCoachIA = function () {
     if (e.target === historyWrap) historyWrap.classList.remove("is-open");
   });
 
+function appendCoachMessageToChat(text) {
+  if (!userLog) return;
+
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
+  const div = document.createElement("div");
+  div.className = "msg coach";
+  div.textContent = clean;
+  userLog.appendChild(div);
+
+  userLog.scrollTo({ top: userLog.scrollHeight, behavior: "smooth" });
+}
+
+window.appendCoachMessageToChat = appendCoachMessageToChat;
+
+   window.sendCoachToChat = function (text) {
+  const clean = String(text || "").trim();
+  if (!clean) return;
+
+  if (coachSection) coachSection.style.display = "flex";
+  appendCoachMessageToChat(clean);
+};
+   
   // ---------- user log (input) ----------
   function appendUserMessage(text) {
     if (!userLog) return;
