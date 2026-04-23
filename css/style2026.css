@@ -1126,6 +1126,34 @@ position: fixed;
 }
 
 
+.pg-coach-user-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 180px;
+}
+
+.pg-coach-user-log .msg.user {
+  align-self: flex-end;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 14px;
+  max-width: 85%;
+}
+
+.pg-coach-user-log .msg.coach {
+  align-self: flex-start;
+  background: rgba(0,255,153,0.10);
+  border: 1px solid rgba(0,255,153,0.20);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 14px;
+  max-width: 85%;
+}
 
 
 #jsw-overlay canvas,
