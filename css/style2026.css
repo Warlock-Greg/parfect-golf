@@ -147,7 +147,7 @@ body {
   background: var(--pg-green-main);
   border: 1px solid var(--pg-border-soft);
   border-radius: var(--pg-radius);
-  padding: 18px;
+  padding: 10px;
   text-align: center;
   box-shadow: var(--pg-shadow-soft);
   cursor: pointer;
