@@ -85,7 +85,7 @@ async function requestTrainingCoach(userMessage, extra = {}) {
       mode: "training_session",
       context,
       userMessage,
-      uiTarget: "whisper"
+      uiTarget: "chat"
     });
   } catch (err) {
     console.warn("❌ requestTrainingCoach failed", err);
