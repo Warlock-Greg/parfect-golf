@@ -221,7 +221,7 @@ function getQuickActionsForMode(mode) {
       },
       {
         key: "explain",
-        label: "🔁 Explique-moi autrement",
+        label: "🔁 Explique autrement",
         message: "Explique-moi autrement et plus simplement"
       }
     ];
@@ -230,18 +230,18 @@ function getQuickActionsForMode(mode) {
   if (mode === "training_session") {
     return [
       {
-        key: "plan",
-        label: "🎯 Plan simple",
-        message: "Donne-moi un plan simple pour la suite de la séance"
+        key: "home",
+        label: "📱 Maison + JustSwing",
+        message: "Explique-moi comment m'entraîner à la maison avec JustSwing, téléphone posé sur un plan de travail, en faisant des swings sans club"
       },
       {
         key: "drill",
-        label: "🏋️ Drill suivant",
+        label: "🏋️ Drill simple",
         message: "Donne-moi un drill simple pour continuer la séance"
       },
       {
         key: "explain",
-        label: "🔁 Explique-moi autrement",
+        label: "🔁 Explique autrement",
         message: "Explique-moi autrement et plus simplement"
       }
     ];
@@ -255,14 +255,14 @@ function getQuickActionsForMode(mode) {
         message: "Quelle est ma priorité absolue sur ce swing ?"
       },
       {
+        key: "home",
+        label: "📱 Avec JustSwing",
+        message: "Explique-moi comment travailler ce point avec JustSwing à la maison, téléphone posé sur un plan de travail et swings sans club"
+      },
+      {
         key: "drill",
         label: "🏋️ Drill",
         message: "Donne-moi un drill simple pour corriger ce swing"
-      },
-      {
-        key: "explain",
-        label: "🔁 Explique-moi autrement",
-        message: "Explique-moi autrement et plus simplement"
       }
     ];
   }
@@ -270,7 +270,7 @@ function getQuickActionsForMode(mode) {
   return [
     {
       key: "explain",
-      label: "🔁 Explique-moi autrement",
+      label: "🔁 Explique autrement",
       message: "Explique-moi autrement et plus simplement"
     }
   ];
