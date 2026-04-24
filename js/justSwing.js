@@ -3191,7 +3191,7 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
 // =====================================================
 // COACH IA — SWING ANALYSIS
 // =====================================================
-async function requestSwingCoachAnalysis(swing, scores) {
+window.requestSwingCoachAnalysis = async function requestSwingCoachAnalysis(swing, scores)  {
   try {
     const box = document.querySelector(".jsw-coach-box");
 
@@ -3343,6 +3343,25 @@ function onSwingValidated({ scores, currentClub, swing }) {
     }
   }
 
+cwindow.lastSwing = swing;
+window.lastSwingScores = scores;
+
+console.log("🧠 onSwingValidated coach check", {
+  hasSwing: !!swing,
+  hasScores: !!scores,
+  hasBreakdown: !!scores?.breakdown,
+  hasRequestSwingCoachAnalysis: typeof window.requestSwingCoachAnalysis,
+  hasWindowRequestCoach: typeof window.requestCoach,
+  hasBuildSwingCoachContext: typeof window.buildSwingCoachContext
+});
+
+if (typeof window.requestSwingCoachAnalysis === "function") {
+  console.log("🧠 Calling window.requestSwingCoachAnalysis...");
+  window.requestSwingCoachAnalysis(swing, scores);
+} else {
+  console.warn("⚠️ window.requestSwingCoachAnalysis indisponible");
+}
+  
   // =================================================
   // 2️⃣ COACH IA — Analyse swing via JSON + landmarks
   // =================================================
