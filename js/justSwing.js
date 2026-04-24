@@ -3983,36 +3983,6 @@ container.innerHTML = `
       </select>
     </div>
   </div>
-`;
-
-// =================================================
-// COACH IA — Analyse swing via scores + landmarks
-// =================================================
-window.lastSwing = swing;
-window.lastSwingScores = scores;
-
-console.log("🧠 JustSwing coach trigger from review", {
-  hasSwing: !!swing,
-  hasScores: !!scores,
-  hasBreakdown: !!scores?.breakdown,
-  requestSwingCoachAnalysis: typeof window.requestSwingCoachAnalysis,
-  requestCoach: typeof window.requestCoach,
-  buildSwingCoachContext: typeof window.buildSwingCoachContext
-});
-
-if (typeof window.requestSwingCoachAnalysis === "function") {
-  window.requestSwingCoachAnalysis(swing, scores);
-} else {
-  console.warn("⚠️ window.requestSwingCoachAnalysis indisponible");
-
-  const box = document.querySelector(".jsw-coach-box");
-  if (box) {
-    box.innerHTML = `
-      <div class="jsw-coach-title">🎯 Coach Parfect</div>
-      <div class="jsw-coach-comment">${coachComment}</div>
-    `;
-  }
-}
 
       <div class="jsw-grid">
         ${visibleKeys.map((key) => {
@@ -4050,6 +4020,36 @@ if (typeof window.requestSwingCoachAnalysis === "function") {
       </div>
     </div>
   `;
+
+
+// =================================================
+// COACH IA — Analyse swing via scores + landmarks
+// =================================================
+window.lastSwing = swing;
+window.lastSwingScores = scores;
+
+console.log("🧠 JustSwing coach trigger from review", {
+  hasSwing: !!swing,
+  hasScores: !!scores,
+  hasBreakdown: !!scores?.breakdown,
+  requestSwingCoachAnalysis: typeof window.requestSwingCoachAnalysis,
+  requestCoach: typeof window.requestCoach,
+  buildSwingCoachContext: typeof window.buildSwingCoachContext
+});
+
+if (typeof window.requestSwingCoachAnalysis === "function") {
+  window.requestSwingCoachAnalysis(swing, scores);
+} else {
+  console.warn("⚠️ window.requestSwingCoachAnalysis indisponible");
+
+  const box = document.querySelector(".jsw-coach-box");
+  if (box) {
+    box.innerHTML = `
+      <div class="jsw-coach-title">🎯 Coach Parfect</div>
+      <div class="jsw-coach-comment">${coachComment}</div>
+    `;
+  }
+}
 
   const card = container.querySelector(".jsw-review-card");
   requestAnimationFrame(() => {
