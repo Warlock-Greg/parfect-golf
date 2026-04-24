@@ -656,8 +656,6 @@ body.coach-hidden #coach-ia {
 
 #coach-ia.coach-collapsed {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
   width: auto;
   max-width: none;
   min-height: 0;
@@ -696,8 +694,8 @@ body.coach-hidden #coach-ia {
 
 #coach-ia.coach-expanded {
   position: fixed;
-  right: 16px;
-  bottom: 16px;
+  right: 0px;
+  bottom: 0px;
   width: min(420px, calc(100vw - 32px));
   max-width: 420px;
   min-height: 360px;
@@ -711,9 +709,9 @@ body.coach-hidden #coach-ia {
 
 @media (max-width: 768px) {
   #coach-ia.coach-expanded {
-    right: 10px;
-    left: 10px;
-    bottom: 10px;
+    right: 0px;
+    left: 0px;
+    bottom: 55px;
     width: auto;
     max-width: none;
   }
