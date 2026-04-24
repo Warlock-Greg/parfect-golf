@@ -1,438 +1,521 @@
 // =====================================================
-// Parfect.golfr — Coach IA Orchestrateur (ZEN compatible)
-// - UI gérée par coach-zen.js
-// - Ce fichier ne bind PAS l'input
-// - Supporte whisper + chat + quick actions adaptatives
+// Parfect.golfr — Coach IA V2
+// - Compatible coach-zen.js
+// - Entrée utilisateur : #coach-input / #coach-send
+// - Sortie coach : coachReact() uniquement
+// - Modes : SWING / MENTAL / CADDY
 // =====================================================
 
-console.log("🧠 Coach IA Orchestrateur chargé");
+console.log("🧠 Coach IA V2 chargé");
 
 // -----------------------------------------------------
-// Utils
+// DOM
 // -----------------------------------------------------
 function $(id) {
   return document.getElementById(id);
 }
 
-function cleanText(value) {
-  return String(value || "").trim();
+// -----------------------------------------------------
+// KNOWLEDGE FALLBACK
+// Si coach-knowledge-v2.js est chargé, il sera prioritaire.
+// -----------------------------------------------------
+window.PARFECT_COACH_KNOWLEDGE_V2 = window.PARFECT_COACH_KNOWLEDGE_V2 || {
+  swing: {
+    tempo: {
+      goal: "Créer un rythme répétable.",
+      principles: ["Le tempo stable est plus important qu’un swing parfait."],
+      drills: ["Fais 3 swings à 70% en comptant 1-2-3 à la montée, 1 à la descente."]
+    },
+    rotation: {
+      goal: "Tourner sans perdre la stabilité.",
+      principles: ["La rotation utile est celle qui reste contrôlée."],
+      drills: ["Fais 3 swings lents en gardant un finish stable."]
+    },
+    triangle: {
+      goal: "Garder la connexion bras/épaules.",
+      principles: ["Un triangle stable aide à répéter le contact."],
+      drills: ["Fais 5 demi-swings compacts, sans chercher la puissance."]
+    },
+    weightShift: {
+      goal: "Transférer progressivement vers l’avant.",
+      principles: ["Le transfert doit être progressif, pas violent."],
+      drills: ["Tiens le finish 2 secondes après chaque swing."]
+    },
+    extension: {
+      goal: "Laisser les bras s’allonger après impact.",
+      principles: ["L’extension vient après un contact organisé."],
+      drills: ["Fais 3 demi-swings avec finish bras longs."]
+    },
+    balance: {
+      goal: "Finir stable et contrôlé.",
+      principles: ["Le finish révèle la qualité du swing."],
+      drills: ["Swing à 70%, puis tiens le finish 2 secondes."]
+    }
+  },
+
+  mental: {
+    routine: {
+      goal: "Créer un script simple avant chaque coup.",
+      principles: [
+        "Une seule intention par coup.",
+        "On juge la qualité de la routine, pas seulement le résultat."
+      ],
+      script: [
+        "cible",
+        "coup raisonnable",
+        "intention en 3 mots",
+        "respiration",
+        "action"
+      ]
+    },
+    pressure: {
+      goal: "Revenir au coup jouable.",
+      principles: [
+        "Sous pression, on réduit l’ambition.",
+        "Le bon coup est celui qui garde la balle en jeu."
+      ],
+      drills: ["Respire 4 secondes, expire 6 secondes, puis joue simple."]
+    },
+    postBadShot: {
+      goal: "Ne pas laisser un mauvais coup décider du suivant.",
+      principles: [
+        "Un mauvais coup est une information, pas une identité."
+      ],
+      reset: [
+        "regarde la situation réelle",
+        "choisis l’option qui remet la balle en jeu",
+        "accepte bogey si nécessaire"
+      ]
+    }
+  },
+
+  caddy: {
+    decisionFramework: {
+      questions: [
+        "Quelle est la cible la plus sûre ?",
+        "Où est le danger à éviter absolument ?",
+        "Quel club donne le plus de marge ?",
+        "Quel coup peux-tu rater correctement ?"
+      ],
+      rules: [
+        "Entre deux clubs, choisis celui qui couvre le danger principal.",
+        "Si le danger est court, prends plus de club.",
+        "Si le danger est long, prends moins de club.",
+        "Si le lie est mauvais, réduis l’ambition.",
+        "Si tu hésites, choisis l’option la plus simple à exécuter."
+      ]
+    },
+    clubChoice: {
+      defaultAnswer:
+        "Je choisis le club qui donne la meilleure marge, pas celui qui demande le coup parfait.",
+      betweenTwoClubs: [
+        "Si tu dois forcer le petit club, prends le grand club en swing contrôlé.",
+        "Si le grand club amène un danger long, prends le petit club et accepte court.",
+        "Si le vent est contre, monte d’un club.",
+        "Si le lie est moyen, monte d’un club et swingue plus simple.",
+        "Sous pression, prends le club avec lequel tu peux faire ton swing normal."
+      ]
+    },
+    onCourseModes: {
+      attack: "Attaque seulement si le mauvais coup reste jouable.",
+      safe: "Joue la zone large. Accepte un putt plus long ou une approche simple.",
+      recovery: "Remets la balle en jeu. Pas de héros.",
+      protectScore: "Protège le double. Le bogey peut être un bon score."
+    }
+  }
+};
+
+// -----------------------------------------------------
+// HELPERS
+// -----------------------------------------------------
+function knowledge() {
+  return window.PARFECT_COACH_KNOWLEDGE_V2 || {};
 }
 
-function isVisible(el) {
-  if (!el) return false;
-  return el.style.display !== "none";
+function cleanText(str) {
+  return String(str || "").replace(/\s+/g, " ").trim();
+}
+
+function clampText(str, max = 520) {
+  const clean = cleanText(str);
+  return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
+}
+
+function safeCoachReact(message, opts = {}) {
+  const clean = cleanText(message);
+  if (!clean) return;
+
+  if (typeof window.coachReact === "function") {
+    window.coachReact(clean, opts);
+  } else {
+    console.log("Coach:", clean);
+  }
 }
 
 // -----------------------------------------------------
-// Intro message (une seule fois)
+// INIT
 // -----------------------------------------------------
 function initCoachIA() {
+  const input = $("coach-input");
+  const send = $("coach-send");
+
+  if (!input || !send) {
+    console.warn("⚠️ Coach IA V2 : input ou bouton manquant");
+    return;
+  }
+
+  if (send.dataset.coachV2Bound === "1") return;
+  send.dataset.coachV2Bound = "1";
+
   if (!localStorage.getItem("coachIntroDone")) {
-    window.coachReact?.("👋 Salut golfeur ! Je suis ton coach Parfect.golfr.");
+    safeCoachReact("Salut 👋 Je suis ton coach Parfect. Swing, mental ou caddy : pose-moi ta question.");
     localStorage.setItem("coachIntroDone", "true");
   }
+
+  send.addEventListener("click", () => onUserSend(input));
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") onUserSend(input);
+  });
+
+  console.log("✅ Coach IA V2 initialisé");
 }
 
 // -----------------------------------------------------
-// Détection du mode coach selon contexte + message
+// USER LOG
 // -----------------------------------------------------
-function detectCoachModeFromRouteAndMessage(message) {
-  const lower = cleanText(message).toLowerCase();
+function appendUserMessage(text) {
+  const log = $("coach-user-log");
+  if (!log) return;
 
-  const swingReview = $("swing-review");
-  const trainingArea = $("training-area");
-  const gameArea = $("game-area");
+  const clean = cleanText(text);
+  if (!clean) return;
 
-  if (
-    lower.includes("swing") ||
-    lower.includes("rotation") ||
-    lower.includes("tempo") ||
-    lower.includes("backswing") ||
-    lower.includes("downswing") ||
-    lower.includes("impact") ||
-    lower.includes("extension") ||
-    isVisible(swingReview)
-  ) {
-    return "swing_analysis";
-  }
+  const div = document.createElement("div");
+  div.className = "msg user";
+  div.textContent = clean;
 
-  if (
-    lower.includes("entrainement") ||
-    lower.includes("entraînement") ||
-    lower.includes("routine") ||
-    lower.includes("focus") ||
-    lower.includes("régularité") ||
-    lower.includes("regularite") ||
-    lower.includes("séance") ||
-    lower.includes("seance") ||
-    isVisible(trainingArea)
-  ) {
-    return "training_session";
-  }
+  log.appendChild(div);
+  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
+}
 
-  if (
-    lower.includes("parcours") ||
-    lower.includes("partie") ||
-    lower.includes("mental") ||
-    lower.includes("craqué") ||
-    lower.includes("craque") ||
-    lower.includes("explosé") ||
-    lower.includes("explose") ||
-    lower.includes("frustré") ||
-    lower.includes("frustre") ||
-    lower.includes("recentre") ||
-    lower.includes("recentrer") ||
-    lower.includes("trou") ||
-    lower.includes("drive") ||
-    lower.includes("putt") ||
-    isVisible(gameArea)
-  ) {
-    return "round_support";
-  }
+function onUserSend(input) {
+  const message = cleanText(input?.value);
+  if (!message) return;
 
-  return "generic";
+  appendUserMessage(message);
+  input.value = "";
+
+  respondAsCoach(message);
 }
 
 // -----------------------------------------------------
-// Formatage UI selon mode
+// INTENT DETECTION
 // -----------------------------------------------------
-function formatCoachResponseForUI(response, mode) {
-  if (!response) return "Je t’écoute.";
-  if (typeof response === "string") return response;
+function detectIntent(message) {
+  const m = cleanText(message).toLowerCase();
 
-  if (mode === "swing_analysis") {
-    return [
-      response.summary,
-      ...(Array.isArray(response.immediate_actions)
-        ? response.immediate_actions.slice(0, 2)
-        : [])
-    ]
-      .filter(Boolean)
-      .join(" ");
+  if (
+    m.includes("caddy") ||
+    m.includes("club") ||
+    m.includes("fer ") ||
+    m.includes("fer7") ||
+    m.includes("fer 7") ||
+    m.includes("fer8") ||
+    m.includes("fer 8") ||
+    m.includes("driver") ||
+    m.includes("bois") ||
+    m.includes("hybride") ||
+    m.includes("wedge") ||
+    m.includes("j’hésite") ||
+    m.includes("j'hesite") ||
+    m.includes("j hésite") ||
+    m.includes("option") ||
+    m.includes("prochain coup") ||
+    m.includes("vent") ||
+    m.includes("lie") ||
+    m.includes("danger")
+  ) {
+    return "CADDY";
   }
 
-  if (mode === "training_session") {
-    return [
-      response.summary,
-      response.session_focus ? `Focus : ${response.session_focus}.` : "",
-      ...(Array.isArray(response.immediate_actions)
-        ? response.immediate_actions.slice(0, 1)
-        : [])
-    ]
-      .filter(Boolean)
-      .join(" ");
+  if (
+    m.includes("mental") ||
+    m.includes("stress") ||
+    m.includes("pression") ||
+    m.includes("confiance") ||
+    m.includes("routine") ||
+    m.includes("peur") ||
+    m.includes("mauvais coup") ||
+    m.includes("raté") ||
+    m.includes("rate")
+  ) {
+    return "MENTAL";
   }
 
-  if (mode === "round_support") {
-    return [
-      response.summary,
-      ...(Array.isArray(response.reset_protocol)
-        ? response.reset_protocol.slice(0, 2)
-        : [])
-    ]
-      .filter(Boolean)
-      .join(" ");
-  }
+  return "SWING";
+}
 
+// -----------------------------------------------------
+// SWING CONTEXT
+// -----------------------------------------------------
+function getLatestSwingContext() {
   return (
-    response.summary ||
-    response.message ||
-    "Je t’écoute. Dis-moi si tu veux parler swing, entraînement ou parcours."
+    window.lastSwingScores ||
+    window.currentSwingScores ||
+    window.lastJustSwingScores ||
+    window.lastSwingResult ||
+    null
+  );
+}
+
+function pickWeakMetric(scores) {
+  const order = [
+    "tempo",
+    "rotation",
+    "triangle",
+    "weightShift",
+    "extension",
+    "balance"
+  ];
+
+  const candidates = [];
+
+  for (const key of order) {
+    const value =
+      scores?.breakdown?.[key]?.score ??
+      scores?.scores?.[key] ??
+      scores?.metrics?.[key]?.score ??
+      scores?.[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      candidates.push({ key, value });
+    }
+  }
+
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => a.value - b.value);
+  return candidates[0];
+}
+
+function metricLabel(key) {
+  const labels = {
+    tempo: "tempo",
+    rotation: "rotation",
+    triangle: "connexion bras/épaules",
+    weightShift: "transfert d’appui",
+    extension: "extension",
+    balance: "équilibre"
+  };
+
+  return labels[key] || key;
+}
+
+// -----------------------------------------------------
+// ANSWERS — SWING
+// -----------------------------------------------------
+function answerSwing(message) {
+  const k = knowledge();
+  const scores = getLatestSwingContext();
+  const weak = pickWeakMetric(scores);
+
+  if (!weak) {
+    return clampText(
+      "Swing : je garde une priorité simple. Fais 3 swings à 70%, même routine, même rythme, puis tiens le finish 2 secondes. On cherche la répétabilité, pas le swing parfait."
+    );
+  }
+
+  const block = k.swing?.[weak.key];
+  const label = metricLabel(weak.key);
+
+  if (!block) {
+    return clampText(
+      `Priorité : ${label}. Fais 3 swings calmes avec une seule intention. Le but est de rendre ce point plus répétable.`
+    );
+  }
+
+  const principle = block.principles?.[0] || "";
+  const drill = block.drills?.[0] || "Fais 3 répétitions simples à 70%.";
+
+  return clampText(
+    `Priorité ${label} : ${block.goal} ${principle} Action : ${drill}`
   );
 }
 
 // -----------------------------------------------------
-// FAQ fallback générique
+// ANSWERS — MENTAL
 // -----------------------------------------------------
-async function respondCoachGeneric(message) {
-  if (!window.faqData) {
-    try {
-      const res = await fetch("./data/coach-faq.json");
-      window.faqData = await res.json();
-      console.log("📘 FAQ coach chargée");
-    } catch (err) {
-      console.warn("FAQ coach indisponible", err);
-      return {
-        summary:
-          "Désolé, je ne trouve pas mes notes. Dis-moi si tu veux parler swing, entraînement ou parcours."
-      };
-    }
+function answerMental(message) {
+  const k = knowledge();
+  const m = cleanText(message).toLowerCase();
+
+  if (
+    m.includes("mauvais coup") ||
+    m.includes("raté") ||
+    m.includes("rate") ||
+    m.includes("énerv") ||
+    m.includes("enerve")
+  ) {
+    const b = k.mental?.postBadShot;
+    return clampText(
+      `Reset mental : ${b.goal} ${b.principles?.[0] || ""} Action : ${b.reset?.join(" → ")}.`
+    );
   }
 
-  const lower = cleanText(message).toLowerCase();
-  let responses = null;
-
-  for (const obj of Object.values(window.faqData || {})) {
-    if (obj?.keywords?.some((k) => lower.includes(String(k).toLowerCase()))) {
-      responses = obj.responses;
-      break;
-    }
+  if (
+    m.includes("pression") ||
+    m.includes("stress") ||
+    m.includes("peur") ||
+    m.includes("confiance")
+  ) {
+    const b = k.mental?.pressure;
+    return clampText(
+      `Sous pression : ${b.goal} ${b.principles?.[0] || ""} Action : ${b.drills?.[0]}`
+    );
   }
 
-  const reply = responses?.length
-    ? responses[Math.floor(Math.random() * responses.length)]
-    : "Peux-tu préciser si tu parles du swing, de l’entraînement ou du parcours ?";
+  const b = k.mental?.routine;
 
-  return {
-    summary: reply
-  };
+  return clampText(
+    `Routine : ${b.goal} ${b.principles?.[0] || ""} Script : ${b.script?.join(" → ")}.`
+  );
 }
 
 // -----------------------------------------------------
-// Mémoire locale orchestrateur
+// ANSWERS — CADDY
 // -----------------------------------------------------
-window.__CoachState = window.__CoachState || {
-  lastMode: null,
-  lastContext: null,
-  lastResponse: null,
-  lastUiTarget: "whisper"
-};
+function extractClubOptions(message) {
+  const m = cleanText(message).toLowerCase();
+  const clubs = [];
 
-function setCoachState({ mode, context, response, uiTarget }) {
-  window.__CoachState.lastMode = mode || window.__CoachState.lastMode;
-  window.__CoachState.lastContext = context || window.__CoachState.lastContext;
-  window.__CoachState.lastResponse = response || window.__CoachState.lastResponse;
-  window.__CoachState.lastUiTarget = uiTarget || window.__CoachState.lastUiTarget;
-}
-
-function getLastCoachMode() {
-  return window.__CoachState?.lastMode || "generic";
-}
-
-function getLastCoachContext() {
-  return window.__CoachState?.lastContext || {};
-}
-
-// -----------------------------------------------------
-// Quick actions adaptatives
-// -----------------------------------------------------
-function getQuickActionsForMode(mode) {
-  if (mode === "round_support") {
-    return [
-      {
-        key: "reset",
-        label: "🧘 Recentre-moi",
-        message: "Aide-moi à me recentrer mentalement maintenant"
-      },
-      {
-        key: "plan",
-        label: "🎯 Plan simple",
-        message: "Donne-moi un plan simple pour le prochain coup"
-      },
-      {
-        key: "explain",
-        label: "🔁 Explique autrement",
-        message: "Explique-moi autrement et plus simplement"
-      }
-    ];
-  }
-
-  if (mode === "training_session") {
-    return [
-      {
-        key: "home",
-        label: "📱 Maison + JustSwing",
-        message: "Explique-moi comment m'entraîner à la maison avec JustSwing, téléphone posé sur un plan de travail, en faisant des swings sans club"
-      },
-      {
-        key: "drill",
-        label: "🏋️ Drill simple",
-        message: "Donne-moi un drill simple pour continuer la séance"
-      },
-      {
-        key: "explain",
-        label: "🔁 Explique autrement",
-        message: "Explique-moi autrement et plus simplement"
-      }
-    ];
-  }
-
-  if (mode === "swing_analysis") {
-    return [
-      {
-        key: "priority",
-        label: "🎯 Priorité",
-        message: "Quelle est ma priorité absolue sur ce swing ?"
-      },
-      {
-        key: "home",
-        label: "📱 Avec JustSwing",
-        message: "Explique-moi comment travailler ce point avec JustSwing à la maison, téléphone posé sur un plan de travail et swings sans club"
-      },
-      {
-        key: "drill",
-        label: "🏋️ Drill",
-        message: "Donne-moi un drill simple pour corriger ce swing"
-      }
-    ];
-  }
-
-  return [
-    {
-      key: "explain",
-      label: "🔁 Explique autrement",
-      message: "Explique-moi autrement et plus simplement"
-    }
+  const patterns = [
+    "driver",
+    "bois 3",
+    "bois3",
+    "bois 5",
+    "bois5",
+    "hybride",
+    "fer 4",
+    "fer4",
+    "fer 5",
+    "fer5",
+    "fer 6",
+    "fer6",
+    "fer 7",
+    "fer7",
+    "fer 8",
+    "fer8",
+    "fer 9",
+    "fer9",
+    "pw",
+    "sw",
+    "wedge"
   ];
-}
 
-function clearExistingQuickActions() {
-  document.querySelectorAll(".coach-quick-actions").forEach((el) => el.remove());
-}
-
-function renderCoachQuickActions(mode = getLastCoachMode()) {
-  const actions = getQuickActionsForMode(mode);
-  if (!actions.length) return null;
-
-  const container = document.createElement("div");
-  container.className = "coach-quick-actions";
-
-  actions.forEach((action) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.dataset.action = action.key;
-    btn.textContent = action.label;
-
-    btn.addEventListener("click", async () => {
-      try {
-        await window.requestCoach({
-          mode: getLastCoachMode(),
-          context: getLastCoachContext(),
-          userMessage: action.message,
-          uiTarget: "chat"
-        });
-      } catch (err) {
-        console.warn("quick action failed", err);
-      }
-    });
-
-    container.appendChild(btn);
+  patterns.forEach((club) => {
+    if (m.includes(club)) {
+      clubs.push(
+        club
+          .replace("bois3", "bois 3")
+          .replace("bois5", "bois 5")
+          .replace(/fer(\d)/, "fer $1")
+      );
+    }
   });
 
-  return container;
+  return [...new Set(clubs)];
+}
+
+function detectCaddyMode(message) {
+  const m = cleanText(message).toLowerCase();
+
+  if (
+    m.includes("recentr") ||
+    m.includes("rough") ||
+    m.includes("forêt") ||
+    m.includes("foret") ||
+    m.includes("bunker") ||
+    m.includes("mauvais lie")
+  ) {
+    return "recovery";
+  }
+
+  if (
+    m.includes("attaquer") ||
+    m.includes("attaque") ||
+    m.includes("birdie") ||
+    m.includes("drapeau") ||
+    m.includes("green")
+  ) {
+    return "attack";
+  }
+
+  if (
+    m.includes("score") ||
+    m.includes("protéger") ||
+    m.includes("proteger") ||
+    m.includes("bogey") ||
+    m.includes("double")
+  ) {
+    return "protectScore";
+  }
+
+  return "safe";
+}
+
+function answerCaddy(message) {
+  const k = knowledge();
+  const clubs = extractClubOptions(message);
+  const mode = detectCaddyMode(message);
+
+  const modeLine =
+    k.caddy?.onCourseModes?.[mode] ||
+    k.caddy?.onCourseModes?.safe ||
+    "";
+
+  const rules = k.caddy?.clubChoice?.betweenTwoClubs || [];
+  const defaultAnswer =
+    k.caddy?.clubChoice?.defaultAnswer ||
+    "Choisis le club qui donne le plus de marge.";
+
+  if (clubs.length >= 2) {
+    return clampText(
+      `Caddy : entre ${clubs[0]} et ${clubs[1]}, je choisis l’option qui protège le score. ${rules[0] || ""} ${modeLine} Question clé : où est le danger à éviter absolument ?`
+    );
+  }
+
+  return clampText(
+    `Caddy : ${defaultAnswer} ${modeLine} Donne-moi distance, lie, vent, danger court/long, et je te tranche le club.`
+  );
 }
 
 // -----------------------------------------------------
-// Envoi vers le chat avec quick actions
+// MAIN COACH
 // -----------------------------------------------------
-function sendCoachTextToChat(text, mode) {
-  const clean = cleanText(text);
-  if (!clean) return;
+async function respondAsCoach(message) {
+  const intent = detectIntent(message);
 
-  if (typeof window.sendCoachToChat === "function") {
-    window.sendCoachToChat(clean);
-  } else if (typeof window.appendCoachMessageToChat === "function") {
-    window.showCoachIA?.();
-    window.appendCoachMessageToChat(clean);
+  let reply = "";
+
+  if (intent === "CADDY") {
+    reply = answerCaddy(message);
+  } else if (intent === "MENTAL") {
+    reply = answerMental(message);
   } else {
-    window.coachReact?.(clean);
-    return;
+    reply = answerSwing(message);
   }
 
-  const log = $("coach-user-log");
-  if (!log) return;
-
-  clearExistingQuickActions();
-
-  const actions = renderCoachQuickActions(mode);
-  if (actions) {
-    log.appendChild(actions);
-    log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
-  }
+  safeCoachReact(reply);
 }
 
 // -----------------------------------------------------
-// Point d’entrée unique pour les réponses coach
-// -----------------------------------------------------
-window.requestCoach = async function ({
-  mode = "generic",
-  context = {},
-  userMessage = "",
-  uiTarget = "whisper"
-} = {}) {
-  try {
-    let response;
-
-    switch (mode) {
-      case "swing_analysis":
-        response = window.CoachModes?.swing
-          ? await window.CoachModes.swing({ context, userMessage })
-          : await respondCoachGeneric(userMessage);
-        break;
-
-      case "training_session":
-        response = window.CoachModes?.training
-          ? await window.CoachModes.training({ context, userMessage })
-          : await respondCoachGeneric(userMessage);
-        break;
-
-      case "round_support":
-        response = window.CoachModes?.round
-          ? await window.CoachModes.round({ context, userMessage })
-          : await respondCoachGeneric(userMessage);
-        break;
-
-      default:
-        response = await respondCoachGeneric(userMessage);
-        break;
-    }
-
-    window.CoachMemory?.setLastResponse?.(response);
-    setCoachState({ mode, context, response, uiTarget });
-
-    const text = formatCoachResponseForUI(response, mode);
-
-    if (uiTarget === "chat") {
-      sendCoachTextToChat(text, mode);
-    } else {
-      window.coachReact?.(text);
-    }
-
-    return response;
-  } catch (err) {
-    console.warn("requestCoach failed", err);
-
-    const fallback =
-      "Je suis là. On repart simple : une respiration, une intention, une action.";
-
-    if (uiTarget === "chat") {
-      sendCoachTextToChat(fallback, mode);
-    } else {
-      window.coachReact?.(fallback);
-    }
-
-    return {
-      summary: fallback,
-      error: true
-    };
-  }
-};
-
-// -----------------------------------------------------
-// Point d’entrée texte libre appelé par coach-zen.js
-// -----------------------------------------------------
-window.respondAsCoach = async function (message) {
-  const clean = cleanText(message);
-  if (!clean) return null;
-
-  const mode = detectCoachModeFromRouteAndMessage(clean);
-  const context = window.CoachContextFactory?.fromCurrentAppState?.(mode) || {};
-
-  return window.requestCoach({
-    mode,
-    context,
-    userMessage: clean,
-    uiTarget: "chat"
-  });
-};
-
-// -----------------------------------------------------
-// UI visibility
+// UI VISIBILITY
 // -----------------------------------------------------
 function showCoachIA(message = "") {
   const coach = $("coach-ia");
   if (coach) coach.style.display = "flex";
-  if (message) window.coachReact?.(message);
+  if (message) safeCoachReact(message);
 }
 
 function hideCoachIA() {
@@ -440,9 +523,6 @@ function hideCoachIA() {
   if (coach) coach.style.display = "none";
 }
 
-// -----------------------------------------------------
-// Toast
-// -----------------------------------------------------
 function showCoachToast(msg, color = "#00ff99") {
   const toast = document.createElement("div");
   toast.textContent = msg;
@@ -463,15 +543,15 @@ function showCoachToast(msg, color = "#00ff99") {
 }
 
 // -----------------------------------------------------
-// Exports
+// EXPORTS
 // -----------------------------------------------------
 window.initCoachIA = initCoachIA;
+window.respondAsCoach = respondAsCoach;
 window.showCoachIA = showCoachIA;
 window.hideCoachIA = hideCoachIA;
 window.showCoachToast = showCoachToast;
-window.renderCoachQuickActions = renderCoachQuickActions;
 
-// auto init légère
+// Auto init safe
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
 });
