@@ -3343,36 +3343,7 @@ function onSwingValidated({ scores, currentClub, swing }) {
     }
   }
 
-cwindow.lastSwing = swing;
-window.lastSwingScores = scores;
 
-console.log("🧠 onSwingValidated coach check", {
-  hasSwing: !!swing,
-  hasScores: !!scores,
-  hasBreakdown: !!scores?.breakdown,
-  hasRequestSwingCoachAnalysis: typeof window.requestSwingCoachAnalysis,
-  hasWindowRequestCoach: typeof window.requestCoach,
-  hasBuildSwingCoachContext: typeof window.buildSwingCoachContext
-});
-
-if (typeof window.requestSwingCoachAnalysis === "function") {
-  console.log("🧠 Calling window.requestSwingCoachAnalysis...");
-  window.requestSwingCoachAnalysis(swing, scores);
-} else {
-  console.warn("⚠️ window.requestSwingCoachAnalysis indisponible");
-}
-  
-  // =================================================
-  // 2️⃣ COACH IA — Analyse swing via JSON + landmarks
-  // =================================================
-  window.lastSwing = swing;
-  window.lastSwingScores = scores;
-
-  if (typeof requestSwingCoachAnalysis === "function") {
-    requestSwingCoachAnalysis(swing, scores);
-  } else {
-    console.warn("⚠️ requestSwingCoachAnalysis indisponible");
-  }
 
   // =================================================
   // 2️⃣ LICENCE & USER (SOURCE DE VÉRITÉ)
@@ -3972,43 +3943,76 @@ const OBJECTIVES = {
   return tips.slice(0, 2).join("<br><br>");
 }
 
-  const coachComment = buildCoachComment();
+const coachComment = buildCoachComment();
 
-  const bestMetric = visibleKeys
-    .map(k => [k, getScore(k)])
-    .sort((a, b) => b[1] - a[1])[0];
+const bestMetric = visibleKeys
+  .map(k => [k, getScore(k)])
+  .sort((a, b) => b[1] - a[1])[0];
 
-  container.innerHTML = `
-    <div class="jsw-review-card">
+container.innerHTML = `
+  <div class="jsw-review-card">
 
-      <div class="jsw-review-header">
-        <div class="jsw-score-ring">
-          <div class="jsw-big-score" id="jsw-animated-score">0</div>
-        </div>
-
-        <div class="jsw-score-label">Score Parfect</div>
-        <span class="jsw-pill">${viewLabel} · ${clubLabel}</span>
-
-        ${buildReferenceInfo()}
-        </div>
-        
-        <div class="jsw-coach-box">
-          <div class="jsw-coach-title">🎯 Coach Parfect</div>
-          <div class="jsw-coach-comment">${coachComment}</div>
+    <div class="jsw-review-header">
+      <div class="jsw-score-ring">
+        <div class="jsw-big-score" id="jsw-animated-score">0</div>
       </div>
 
-      <div class="jsw-radar-wrap">
-        <canvas id="jsw-radar" height="220"></canvas>
-      </div>
+      <div class="jsw-score-label">Score Parfect</div>
+      <span class="jsw-pill">${viewLabel} · ${clubLabel}</span>
 
-      <div class="jsw-replay-compare-controls">
-        <label for="jsw-compare-mode">Replay comparatif</label>
-        <select id="jsw-compare-mode">
-          <option value="none">Aucun</option>
-          <option value="parfect" ${parfectRef ? "" : "disabled"}>vs Parfect</option>
-          <option value="user" ${userRef ? "" : "disabled"}>vs Ma référence</option>
-        </select>
+      ${buildReferenceInfo()}
+    </div>
+
+    <div class="jsw-coach-box">
+      <div class="jsw-coach-title">Coach IA Parfect</div>
+      <div class="jsw-coach-comment">
+        Analyse IA du swing en cours...
       </div>
+    </div>
+
+    <div class="jsw-radar-wrap">
+      <canvas id="jsw-radar" height="220"></canvas>
+    </div>
+
+    <div class="jsw-replay-compare-controls">
+      <label for="jsw-compare-mode">Replay comparatif</label>
+      <select id="jsw-compare-mode">
+        <option value="none">Aucun</option>
+        <option value="parfect" ${parfectRef ? "" : "disabled"}>vs Parfect</option>
+        <option value="user" ${userRef ? "" : "disabled"}>vs Ma référence</option>
+      </select>
+    </div>
+  </div>
+`;
+
+// =================================================
+// COACH IA — Analyse swing via scores + landmarks
+// =================================================
+window.lastSwing = swing;
+window.lastSwingScores = scores;
+
+console.log("🧠 JustSwing coach trigger from review", {
+  hasSwing: !!swing,
+  hasScores: !!scores,
+  hasBreakdown: !!scores?.breakdown,
+  requestSwingCoachAnalysis: typeof window.requestSwingCoachAnalysis,
+  requestCoach: typeof window.requestCoach,
+  buildSwingCoachContext: typeof window.buildSwingCoachContext
+});
+
+if (typeof window.requestSwingCoachAnalysis === "function") {
+  window.requestSwingCoachAnalysis(swing, scores);
+} else {
+  console.warn("⚠️ window.requestSwingCoachAnalysis indisponible");
+
+  const box = document.querySelector(".jsw-coach-box");
+  if (box) {
+    box.innerHTML = `
+      <div class="jsw-coach-title">🎯 Coach Parfect</div>
+      <div class="jsw-coach-comment">${coachComment}</div>
+    `;
+  }
+}
 
       <div class="jsw-grid">
         ${visibleKeys.map((key) => {
