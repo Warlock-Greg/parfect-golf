@@ -214,7 +214,7 @@ body {
   flex: 1;
   border: none;
   outline: none;
-  background: transparent;
+  background: transparent!importabnt;
   font-size: 0.9rem;
   color: var(--pg-text-main);
    min-width: 71%!important;
@@ -812,7 +812,7 @@ body.coach-hidden #coach-ia {
 }
 
 #coach-input::placeholder {
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.6)!important;
 }
 
 #coach-input:focus {
