@@ -214,7 +214,7 @@ body {
   flex: 1;
   border: none;
   outline: none;
-  background: transparent!importabnt;
+  background: transparent !important;
   font-size: 0.9rem;
   color: var(--pg-text-main);
    min-width: 71%!important;
