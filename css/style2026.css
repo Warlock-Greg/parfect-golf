@@ -801,7 +801,6 @@ body.coach-hidden #coach-ia {
   height: 46px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,0.10);
-  background: rgba(255,255,255,0.05);
   color: var(--pg-green-main);
   padding: 0 16px;
   font-size: 0.95rem;
