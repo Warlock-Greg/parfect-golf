@@ -1,3 +1,11 @@
+function pickKeyframePose(swing, name) {
+  return (
+    swing?.keyFrames?.[name]?.pose ||
+    swing?.keyframes?.[name]?.pose ||
+    null
+  );
+}
+
 window.buildSwingCoachContext = function ({ swing, scores } = {}) {
   const safeSwing = swing || {};
   const safeScores = scores || {};
@@ -41,15 +49,15 @@ window.buildSwingCoachContext = function ({ swing, scores } = {}) {
       breakdown: safeScores?.breakdown || {},
       metrics: safeScores?.metrics || {}
     },
-    landmarks,
-    references: {
-      user: window.userReference || null,
-      system: window.systemReference || null,
-      active: window.REF || null
+    landmarks_context: {
+      address: pickKeyframePose(swing, "address"),
+      top: pickKeyframePose(swing, "top"),
+      impact: pickKeyframePose(swing, "impact"),
+      finish: pickKeyframePose(swing, "finish")
     },
-    raw: {
-      keyFrames: safeSwing?.keyFrames || {},
-      quality: safeSwing?.quality || {}
+
+    raw_context: {
+      keyFrames: swing?.keyFrames || swing?.keyframes || {}
     }
   };
 };
