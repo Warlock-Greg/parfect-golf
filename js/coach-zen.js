@@ -5,6 +5,7 @@
    - coach-user-log = messages joueur
    ========================================================= */
 
+
 // ✅ POINT D’ENTRÉE UNIQUE
 window.coachReact = function (msg, opts = {}) {
   try {
@@ -26,6 +27,7 @@ window.hideCoachIA = function () {
 };
 
 
+collapseCoachIA();
 
 (function () {
   // ---------- DOM ----------
@@ -103,6 +105,23 @@ window.hideCoachIA = function () {
     if (e.target === historyWrap) historyWrap.classList.remove("is-open");
   });
 
+function collapseCoachIA() {
+  if (!coachSection) return;
+  coachSection.classList.remove("coach-expanded", "coach-medium");
+  coachSection.classList.add("coach-collapsed");
+}
+
+function expandCoachIA() {
+  if (!coachSection) return;
+  coachSection.style.display = "flex";
+  coachSection.classList.remove("coach-collapsed");
+  coachSection.classList.add("coach-expanded");
+}
+
+window.collapseCoachIA = collapseCoachIA;
+window.expandCoachIA = expandCoachIA;
+
+   
 function appendCoachMessageToChat(text) {
   if (!userLog) return;
 
@@ -119,7 +138,7 @@ function appendCoachMessageToChat(text) {
 
 window.appendCoachMessageToChat = appendCoachMessageToChat;
 
- window.sendCoachToChat = function (text) {
+window.sendCoachToChat = function (text, options = {}) {
   const clean = String(text || "").trim();
   if (!clean) return;
 
@@ -127,6 +146,13 @@ window.appendCoachMessageToChat = appendCoachMessageToChat;
   if (userLog) userLog.style.display = "flex";
 
   appendCoachMessageToChat(clean);
+
+  if (options.open === true) {
+    expandCoachIA();
+  } else {
+    collapseCoachIA();
+    window.coachReact?.("💬 Réponse du coach prête");
+  }
 };
    
   // ---------- user log (input) ----------
@@ -192,6 +218,17 @@ window.appendCoachMessageToChat = appendCoachMessageToChat;
       window.coachReact("Je t’écoute. Donne-moi un peu plus de contexte 🧠");
     }
   }
+
+   coachSection?.addEventListener("click", (e) => {
+  if (!coachSection.classList.contains("coach-collapsed")) return;
+  e.preventDefault();
+  expandCoachIA();
+});
+
+   coachClose?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  collapseCoachIA();
+});
 
   send?.addEventListener("click", onSend);
   input?.addEventListener("keydown", (e) => {
