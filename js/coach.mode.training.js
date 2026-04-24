@@ -95,7 +95,7 @@ function buildLocalTrainingFallback(context, userMessage = "") {
     immediate_actions: [immediate].filter(Boolean),
     routine_reset: routineReset,
     success_signal: buildTrainingSuccessSignal(objective),
-    next_block_goal: buildTrainingNextGoal(objective, weakMetric)
+    next_block_goal: buildTrainingNextGoal(objective, weakMetric),
     home_hint:
     "Tu peux aussi faire ce travail à la maison avec JustSwing, téléphone posé sur un plan de travail, en faisant des swings sans club lents et contrôlés."
 
