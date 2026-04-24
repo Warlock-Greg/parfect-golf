@@ -650,6 +650,75 @@ body.coach-hidden #coach-ia {
   transform: scale(1.03);
 }
 
+/* ===============================
+   COACH IA — compact / expanded
+   =============================== */
+
+#coach-ia.coach-collapsed {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: auto;
+  max-width: none;
+  min-height: 0;
+  z-index: 9000;
+}
+
+#coach-ia.coach-collapsed .pg-coach-shell {
+  width: auto;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+#coach-ia.coach-collapsed .pg-coach-header,
+#coach-ia.coach-collapsed #coach-user-log,
+#coach-ia.coach-collapsed #coach-input-zone {
+  display: none !important;
+}
+
+#coach-ia.coach-collapsed::after {
+  content: "💬 Coach IA";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--pg-green-main, #00ff99);
+  color: #07110d;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+  cursor: pointer;
+}
+
+#coach-ia.coach-expanded {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: min(420px, calc(100vw - 32px));
+  max-width: 420px;
+  min-height: 360px;
+  z-index: 9000;
+}
+
+#coach-ia.coach-expanded .pg-coach-shell {
+  min-height: 360px;
+  max-height: 72vh;
+}
+
+@media (max-width: 768px) {
+  #coach-ia.coach-expanded {
+    right: 10px;
+    left: 10px;
+    bottom: 10px;
+    width: auto;
+    max-width: none;
+  }
+}
+
 /* -----------------------------------------------------
    Conversation area
    ----------------------------------------------------- */
