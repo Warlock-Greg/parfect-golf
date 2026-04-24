@@ -3193,6 +3193,15 @@ window.saveSwingToNocoDB = async function saveSwingToNocoDB(record) {
 // =====================================================
 async function requestSwingCoachAnalysis(swing, scores) {
   try {
+    const box = document.querySelector(".jsw-coach-box");
+
+    if (box) {
+      box.innerHTML = `
+        <div class="jsw-coach-title">🧠 Coach IA Parfect</div>
+        <div class="jsw-coach-comment">Analyse IA du swing en cours...</div>
+      `;
+    }
+
     if (!swing || !scores) {
       console.warn("⚠️ requestSwingCoachAnalysis: swing ou scores manquants");
       return null;
@@ -3202,25 +3211,105 @@ async function requestSwingCoachAnalysis(swing, scores) {
       console.warn("⚠️ buildSwingCoachContext non disponible");
       return null;
     }
+
     if (window.__lastSwingCoachTs && Date.now() - window.__lastSwingCoachTs < 1200) {
       return null;
     }
+
     window.__lastSwingCoachTs = Date.now();
-   
+
+    // Expose pour debug console
+    window.lastSwing = swing;
+    window.lastSwingScores = scores;
+
     const context = window.buildSwingCoachContext({ swing, scores });
 
     window.CoachMemory?.setLastSwing?.(context);
 
-    return await window.requestCoach?.({
+    const response = await window.requestCoach?.({
       mode: "swing_analysis",
       context,
-      userMessage: "Analyse ce swing",
-      uiTarget: "chat"
+      userMessage:
+        "Analyse ce swing JustSwing avec les scores, les metrics et les landmarks. Donne une priorité claire et une ou deux actions concrètes.",
+      uiTarget: "silent"
     });
+
+    renderJustSwingCoachBox(response);
+
+    return response;
   } catch (err) {
     console.warn("❌ Coach swing analysis failed", err);
+
+    renderJustSwingCoachBox({
+      summary: "Je n’ai pas pu lancer l’analyse IA. Ton swing est bien enregistré.",
+      immediate_actions: [
+        "Refais un swing calme à 70%.",
+        "Tiens le finish deux secondes."
+      ],
+      home_drills: [
+        "À la maison, pose ton téléphone sur un plan de travail et fais 5 swings sans club."
+      ]
+    });
+
     return null;
   }
+}
+
+function renderJustSwingCoachBox(response) {
+  const box = document.querySelector(".jsw-coach-box");
+  if (!box) return;
+
+  const summary =
+    response?.summary ||
+    "Analyse prête. Garde une seule intention claire sur le prochain swing.";
+
+  const actions = Array.isArray(response?.immediate_actions)
+    ? response.immediate_actions.slice(0, 2)
+    : [];
+
+  const drills = Array.isArray(response?.home_drills)
+    ? response.home_drills.slice(0, 1)
+    : [];
+
+  box.innerHTML = `
+    <div class="jsw-coach-title">🧠 Coach IA Parfect</div>
+
+    <div class="jsw-coach-comment">${summary}</div>
+
+    ${
+      actions.length
+        ? `<ul class="jsw-coach-actions">
+            ${actions.map((a) => `<li>${a}</li>`).join("")}
+          </ul>`
+        : ""
+    }
+
+    ${
+      drills.length
+        ? `<div class="jsw-coach-drill">
+            <strong>Drill maison :</strong> ${drills[0]}
+          </div>`
+        : ""
+    }
+
+    <button id="jsw-open-coach-chat" class="jsw-coach-chat-btn" type="button">
+      💬 Discuter avec le coach
+    </button>
+  `;
+
+  document
+    .getElementById("jsw-open-coach-chat")
+    ?.addEventListener("click", () => {
+      const text = [
+        summary,
+        ...actions,
+        drills.length ? `Drill maison : ${drills[0]}` : ""
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      window.sendCoachToChat?.(text, { open: true });
+    });
 }
   
 // ========================================
@@ -3252,6 +3341,18 @@ function onSwingValidated({ scores, currentClub, swing }) {
     if (typeof renderSessionHistoryInline === "function") {
       renderSessionHistoryInline();
     }
+  }
+
+  // =================================================
+  // 2️⃣ COACH IA — Analyse swing via JSON + landmarks
+  // =================================================
+  window.lastSwing = swing;
+  window.lastSwingScores = scores;
+
+  if (typeof requestSwingCoachAnalysis === "function") {
+    requestSwingCoachAnalysis(swing, scores);
+  } else {
+    console.warn("⚠️ requestSwingCoachAnalysis indisponible");
   }
 
   // =================================================
