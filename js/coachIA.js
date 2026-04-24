@@ -1,526 +1,665 @@
 // =====================================================
-// Parfect.golfr — Coach IA V2
+// Parfect.golfr — Coach IA Orchestrateur V3
 // - Compatible coach-zen.js
-// - Entrée utilisateur : #coach-input / #coach-send
-// - Sortie coach : coachReact() uniquement
-// - Modes : SWING / MENTAL / CADDY
+// - Ne bind PAS l'input
+// - Route vers swing / training / round
+// - Injecte base contrôlée PARFECT_COACH_KNOWLEDGE_V2
+// - Gère premium/free
+// - Supporte uiTarget: whisper | chat | silent
 // =====================================================
 
-console.log("🧠 Coach IA V2 chargé");
+console.log("🧠 Coach IA Orchestrateur V3 chargé");
 
 // -----------------------------------------------------
-// DOM
+// Utils
 // -----------------------------------------------------
 function $(id) {
   return document.getElementById(id);
 }
 
-// -----------------------------------------------------
-// KNOWLEDGE FALLBACK
-// Si coach-knowledge-v2.js est chargé, il sera prioritaire.
-// -----------------------------------------------------
-window.PARFECT_COACH_KNOWLEDGE_V2 = window.PARFECT_COACH_KNOWLEDGE_V2 || {
-  swing: {
-    tempo: {
-      goal: "Créer un rythme répétable.",
-      principles: ["Le tempo stable est plus important qu’un swing parfait."],
-      drills: ["Fais 3 swings à 70% en comptant 1-2-3 à la montée, 1 à la descente."]
-    },
-    rotation: {
-      goal: "Tourner sans perdre la stabilité.",
-      principles: ["La rotation utile est celle qui reste contrôlée."],
-      drills: ["Fais 3 swings lents en gardant un finish stable."]
-    },
-    triangle: {
-      goal: "Garder la connexion bras/épaules.",
-      principles: ["Un triangle stable aide à répéter le contact."],
-      drills: ["Fais 5 demi-swings compacts, sans chercher la puissance."]
-    },
-    weightShift: {
-      goal: "Transférer progressivement vers l’avant.",
-      principles: ["Le transfert doit être progressif, pas violent."],
-      drills: ["Tiens le finish 2 secondes après chaque swing."]
-    },
-    extension: {
-      goal: "Laisser les bras s’allonger après impact.",
-      principles: ["L’extension vient après un contact organisé."],
-      drills: ["Fais 3 demi-swings avec finish bras longs."]
-    },
-    balance: {
-      goal: "Finir stable et contrôlé.",
-      principles: ["Le finish révèle la qualité du swing."],
-      drills: ["Swing à 70%, puis tiens le finish 2 secondes."]
-    }
-  },
+function cleanText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
 
-  mental: {
-    routine: {
-      goal: "Créer un script simple avant chaque coup.",
-      principles: [
-        "Une seule intention par coup.",
-        "On juge la qualité de la routine, pas seulement le résultat."
-      ],
-      script: [
-        "cible",
-        "coup raisonnable",
-        "intention en 3 mots",
-        "respiration",
-        "action"
-      ]
-    },
-    pressure: {
-      goal: "Revenir au coup jouable.",
-      principles: [
-        "Sous pression, on réduit l’ambition.",
-        "Le bon coup est celui qui garde la balle en jeu."
-      ],
-      drills: ["Respire 4 secondes, expire 6 secondes, puis joue simple."]
-    },
-    postBadShot: {
-      goal: "Ne pas laisser un mauvais coup décider du suivant.",
-      principles: [
-        "Un mauvais coup est une information, pas une identité."
-      ],
-      reset: [
-        "regarde la situation réelle",
-        "choisis l’option qui remet la balle en jeu",
-        "accepte bogey si nécessaire"
-      ]
-    }
-  },
+function isVisible(el) {
+  if (!el) return false;
+  return el.style.display !== "none";
+}
 
-  caddy: {
-    decisionFramework: {
-      questions: [
-        "Quelle est la cible la plus sûre ?",
-        "Où est le danger à éviter absolument ?",
-        "Quel club donne le plus de marge ?",
-        "Quel coup peux-tu rater correctement ?"
-      ],
-      rules: [
-        "Entre deux clubs, choisis celui qui couvre le danger principal.",
-        "Si le danger est court, prends plus de club.",
-        "Si le danger est long, prends moins de club.",
-        "Si le lie est mauvais, réduis l’ambition.",
-        "Si tu hésites, choisis l’option la plus simple à exécuter."
-      ]
-    },
-    clubChoice: {
-      defaultAnswer:
-        "Je choisis le club qui donne la meilleure marge, pas celui qui demande le coup parfait.",
-      betweenTwoClubs: [
-        "Si tu dois forcer le petit club, prends le grand club en swing contrôlé.",
-        "Si le grand club amène un danger long, prends le petit club et accepte court.",
-        "Si le vent est contre, monte d’un club.",
-        "Si le lie est moyen, monte d’un club et swingue plus simple.",
-        "Sous pression, prends le club avec lequel tu peux faire ton swing normal."
-      ]
-    },
-    onCourseModes: {
-      attack: "Attaque seulement si le mauvais coup reste jouable.",
-      safe: "Joue la zone large. Accepte un putt plus long ou une approche simple.",
-      recovery: "Remets la balle en jeu. Pas de héros.",
-      protectScore: "Protège le double. Le bogey peut être un bon score."
+function isPremiumUser() {
+  const licence = String(window.userLicence?.licence || "").toLowerCase();
+  return ["pro", "premium", "paid", "founder"].includes(licence);
+}
+
+// -----------------------------------------------------
+// Init
+// -----------------------------------------------------
+function initCoachIA() {
+  if (!localStorage.getItem("coachIntroDone")) {
+    window.coachReact?.(
+      "👋 Coach IA prêt. Pose-moi une question swing, entraînement ou parcours."
+    );
+    localStorage.setItem("coachIntroDone", "true");
+  }
+}
+
+// -----------------------------------------------------
+// Mode detection
+// -----------------------------------------------------
+function detectCoachModeFromRouteAndMessage(message) {
+  const lower = cleanText(message).toLowerCase();
+
+  const swingReview = $("swing-review");
+  const trainingArea = $("training-area");
+  const gameArea = $("game-area");
+
+  if (
+    lower.includes("swing") ||
+    lower.includes("tempo") ||
+    lower.includes("rotation") ||
+    lower.includes("triangle") ||
+    lower.includes("impact") ||
+    lower.includes("extension") ||
+    lower.includes("backswing") ||
+    lower.includes("downswing") ||
+    lower.includes("justswing") ||
+    lower.includes("just swing") ||
+    isVisible(swingReview)
+  ) {
+    return "swing_analysis";
+  }
+
+  if (
+    lower.includes("entrainement") ||
+    lower.includes("entraînement") ||
+    lower.includes("séance") ||
+    lower.includes("seance") ||
+    lower.includes("drill") ||
+    lower.includes("routine") ||
+    lower.includes("focus") ||
+    lower.includes("maison") ||
+    lower.includes("cuisine") ||
+    isVisible(trainingArea)
+  ) {
+    return "training_session";
+  }
+
+  if (
+    lower.includes("parcours") ||
+    lower.includes("partie") ||
+    lower.includes("mental") ||
+    lower.includes("caddy") ||
+    lower.includes("club") ||
+    lower.includes("prochain coup") ||
+    lower.includes("danger") ||
+    lower.includes("vent") ||
+    lower.includes("lie") ||
+    lower.includes("double") ||
+    lower.includes("trou") ||
+    lower.includes("putt") ||
+    lower.includes("drive") ||
+    lower.includes("recentr") ||
+    lower.includes("craqu") ||
+    lower.includes("frustr") ||
+    isVisible(gameArea)
+  ) {
+    return "round_support";
+  }
+
+  return "generic";
+}
+
+// -----------------------------------------------------
+// Knowledge controlled grounding
+// -----------------------------------------------------
+function getControlledKnowledge() {
+  return window.PARFECT_COACH_KNOWLEDGE_V2 || {};
+}
+
+function getAnswerRules() {
+  const kb = getControlledKnowledge();
+  return kb.answerRules || {
+    neverSay: [],
+    alwaysDo: []
+  };
+}
+
+function detectKnowledgeTopics(message, mode) {
+  const m = cleanText(message).toLowerCase();
+  const topics = [];
+
+  const add = (domain, key) => {
+    const id = `${domain}.${key}`;
+    if (!topics.some((x) => `${x[0]}.${x[1]}` === id)) {
+      topics.push([domain, key]);
     }
+  };
+
+  // Swing
+  if (mode === "swing_analysis" || m.includes("tempo") || m.includes("rythme")) {
+    add("swing", "tempo");
+  }
+
+  if (
+    mode === "swing_analysis" ||
+    m.includes("rotation") ||
+    m.includes("épaule") ||
+    m.includes("epaule")
+  ) {
+    add("swing", "rotation");
+  }
+
+  if (
+    mode === "swing_analysis" ||
+    m.includes("triangle") ||
+    m.includes("connexion") ||
+    m.includes("bras")
+  ) {
+    add("swing", "triangle");
+  }
+
+  if (
+    mode === "swing_analysis" ||
+    m.includes("transfert") ||
+    m.includes("appui") ||
+    m.includes("poids")
+  ) {
+    add("swing", "weightShift");
+  }
+
+  if (mode === "swing_analysis" || m.includes("extension") || m.includes("release")) {
+    add("swing", "extension");
+  }
+
+  if (
+    mode === "swing_analysis" ||
+    m.includes("équilibre") ||
+    m.includes("equilibre") ||
+    m.includes("balance") ||
+    m.includes("finish")
+  ) {
+    add("swing", "balance");
+  }
+
+  // Training / mental
+  if (
+    mode === "training_session" ||
+    mode === "round_support" ||
+    m.includes("routine")
+  ) {
+    add("mental", "routine");
+  }
+
+  if (
+    mode === "training_session" ||
+    mode === "round_support" ||
+    m.includes("stress") ||
+    m.includes("pression") ||
+    m.includes("confiance")
+  ) {
+    add("mental", "pressure");
+  }
+
+  if (
+    mode === "round_support" ||
+    m.includes("mauvais coup") ||
+    m.includes("raté") ||
+    m.includes("rate") ||
+    m.includes("double") ||
+    m.includes("triple")
+  ) {
+    add("mental", "postBadShot");
+  }
+
+  // Caddy
+  if (
+    mode === "round_support" ||
+    m.includes("caddy") ||
+    m.includes("club") ||
+    m.includes("danger") ||
+    m.includes("vent") ||
+    m.includes("lie") ||
+    m.includes("prochain coup")
+  ) {
+    add("caddy", "decisionFramework");
+    add("caddy", "clubChoice");
+    add("caddy", "onCourseModes");
+  }
+
+  return topics;
+}
+
+function flattenKnowledgeBlock(path, block) {
+  if (!block) return null;
+
+  const parts = [];
+
+  if (block.goal) parts.push(`Objectif : ${block.goal}`);
+  if (Array.isArray(block.detects)) parts.push(`Détecte : ${block.detects.join(" ; ")}`);
+  if (Array.isArray(block.principles)) parts.push(`Principes : ${block.principles.join(" ; ")}`);
+  if (Array.isArray(block.drills)) parts.push(`Drills : ${block.drills.join(" ; ")}`);
+  if (Array.isArray(block.script)) parts.push(`Script : ${block.script.join(" ; ")}`);
+  if (Array.isArray(block.reset)) parts.push(`Reset : ${block.reset.join(" ; ")}`);
+  if (Array.isArray(block.questions)) parts.push(`Questions : ${block.questions.join(" ; ")}`);
+  if (Array.isArray(block.rules)) parts.push(`Règles : ${block.rules.join(" ; ")}`);
+  if (block.defaultAnswer) parts.push(`Réponse par défaut : ${block.defaultAnswer}`);
+  if (Array.isArray(block.betweenTwoClubs)) {
+    parts.push(`Entre deux clubs : ${block.betweenTwoClubs.join(" ; ")}`);
+  }
+
+  if (typeof block === "string") {
+    parts.push(block);
+  }
+
+  const content = parts.join("\n").trim();
+  if (!content) return null;
+
+  return {
+    source: `PARFECT_COACH_KNOWLEDGE_V2.${path.join(".")}`,
+    content
+  };
+}
+
+function buildKnowledgeContext(message, mode) {
+  if (!isPremiumUser()) return [];
+
+  const kb = getControlledKnowledge();
+  const topics = detectKnowledgeTopics(message, mode);
+  const chunks = [];
+
+  topics.forEach((path) => {
+    const block = path.reduce((acc, key) => acc?.[key], kb);
+    const flat = flattenKnowledgeBlock(path, block);
+    if (flat) chunks.push(flat);
+  });
+
+  return chunks.slice(0, 6);
+}
+
+// -----------------------------------------------------
+// Context enrichment
+// -----------------------------------------------------
+function getBaseContextForMode(mode) {
+  return window.CoachContextFactory?.fromCurrentAppState?.(mode) || {};
+}
+
+function enrichCoachContext({ mode, context, userMessage }) {
+  const premium = isPremiumUser();
+
+  return {
+    ...(context || {}),
+
+    premium_context: {
+      is_premium: premium,
+      licence: window.userLicence?.licence || "free",
+      email: window.userLicence?.email || null
+    },
+
+    knowledge_context: premium
+      ? buildKnowledgeContext(userMessage, mode)
+      : [],
+
+    answer_rules: getAnswerRules(),
+
+    product_context: {
+      app: "Parfect.golfr",
+      module: "JustSwing",
+      instruction:
+        "Tu es intégré à JustSwing. Ne demande jamais de landmarks, JSON ou vidéo. Si des données manquent, dis d’utiliser JustSwing et que tu aideras à partir de l’analyse.",
+      home_training:
+        "Tu peux recommander de poser le téléphone sur un plan de travail ou un support stable et de faire des swings sans club à la maison."
+    }
+  };
+}
+
+// -----------------------------------------------------
+// Output formatting
+// -----------------------------------------------------
+function formatCoachResponseForUI(response, mode) {
+  if (!response) return "Je t’écoute.";
+  if (typeof response === "string") return response;
+
+  if (mode === "swing_analysis") {
+    return [
+      response.summary,
+      ...(Array.isArray(response.immediate_actions)
+        ? response.immediate_actions.slice(0, 2)
+        : []),
+      ...(Array.isArray(response.home_drills)
+        ? response.home_drills.slice(0, 1)
+        : Array.isArray(response.drill)
+        ? response.drill.slice(0, 1)
+        : [])
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  if (mode === "training_session") {
+    return [
+      response.summary,
+      response.session_focus ? `Focus : ${response.session_focus}.` : "",
+      ...(Array.isArray(response.immediate_actions)
+        ? response.immediate_actions.slice(0, 2)
+        : []),
+      ...(Array.isArray(response.block_plan)
+        ? response.block_plan.slice(0, 1)
+        : [])
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  if (mode === "round_support") {
+    return [
+      response.summary,
+      ...(Array.isArray(response.reset_protocol)
+        ? response.reset_protocol.slice(0, 2)
+        : []),
+      response.next_shot_intention
+        ? `Intention : ${response.next_shot_intention}`
+        : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return (
+    response.summary ||
+    response.message ||
+    "Je t’écoute. Dis-moi si tu veux parler swing, entraînement ou parcours."
+  );
+}
+
+// -----------------------------------------------------
+// Local fallback
+// -----------------------------------------------------
+async function respondCoachGeneric(message) {
+  return {
+    summary:
+      "Je t’écoute. Pour une réponse plus précise, dis-moi si tu veux parler swing, entraînement ou parcours."
+  };
+}
+
+// -----------------------------------------------------
+// Coach state
+// -----------------------------------------------------
+window.__CoachState = window.__CoachState || {
+  lastMode: null,
+  lastContext: null,
+  lastResponse: null,
+  lastUiTarget: "whisper"
+};
+
+function setCoachState({ mode, context, response, uiTarget }) {
+  window.__CoachState.lastMode = mode || window.__CoachState.lastMode;
+  window.__CoachState.lastContext = context || window.__CoachState.lastContext;
+  window.__CoachState.lastResponse = response || window.__CoachState.lastResponse;
+  window.__CoachState.lastUiTarget = uiTarget || window.__CoachState.lastUiTarget;
+}
+
+function getLastCoachMode() {
+  return window.__CoachState?.lastMode || "generic";
+}
+
+function getLastCoachContext() {
+  return window.__CoachState?.lastContext || {};
+}
+
+// -----------------------------------------------------
+// Quick actions adaptatives
+// -----------------------------------------------------
+function getQuickActionsForMode(mode) {
+  if (mode === "round_support") {
+    return [
+      {
+        key: "reset",
+        label: "🧘 Recentre-moi",
+        message: "Aide-moi à me recentrer mentalement maintenant"
+      },
+      {
+        key: "plan",
+        label: "🎯 Plan simple",
+        message: "Donne-moi un plan simple pour le prochain coup"
+      },
+      {
+        key: "explain",
+        label: "🔁 Explique autrement",
+        message: "Explique-moi autrement et plus simplement"
+      }
+    ];
+  }
+
+  if (mode === "training_session") {
+    return [
+      {
+        key: "home",
+        label: "📱 Maison + JustSwing",
+        message:
+          "Explique-moi comment m'entraîner à la maison avec JustSwing, téléphone posé sur un plan de travail, en faisant des swings sans club"
+      },
+      {
+        key: "drill",
+        label: "🏋️ Drill simple",
+        message: "Donne-moi un drill simple pour continuer la séance"
+      },
+      {
+        key: "explain",
+        label: "🔁 Explique autrement",
+        message: "Explique-moi autrement et plus simplement"
+      }
+    ];
+  }
+
+  if (mode === "swing_analysis") {
+    return [
+      {
+        key: "priority",
+        label: "🎯 Priorité",
+        message: "Quelle est ma priorité absolue sur ce swing ?"
+      },
+      {
+        key: "home",
+        label: "📱 Avec JustSwing",
+        message:
+          "Explique-moi comment travailler ce point avec JustSwing à la maison, téléphone posé sur un plan de travail et swings sans club"
+      },
+      {
+        key: "drill",
+        label: "🏋️ Drill",
+        message: "Donne-moi un drill simple pour corriger ce swing"
+      }
+    ];
+  }
+
+  return [
+    {
+      key: "explain",
+      label: "🔁 Explique autrement",
+      message: "Explique-moi autrement et plus simplement"
+    }
+  ];
+}
+
+function clearExistingQuickActions() {
+  document.querySelectorAll(".coach-quick-actions").forEach((el) => el.remove());
+}
+
+function renderCoachQuickActions(mode = getLastCoachMode()) {
+  const log = $("coach-user-log");
+  if (!log) return;
+
+  const actions = getQuickActionsForMode(mode);
+  if (!actions.length) return;
+
+  clearExistingQuickActions();
+
+  const container = document.createElement("div");
+  container.className = "coach-quick-actions";
+
+  actions.forEach((action) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.action = action.key;
+    btn.textContent = action.label;
+
+    btn.addEventListener("click", async () => {
+      await window.requestCoach({
+        mode: getLastCoachMode(),
+        context: getLastCoachContext(),
+        userMessage: action.message,
+        uiTarget: "chat",
+        openChat: true
+      });
+    });
+
+    container.appendChild(btn);
+  });
+
+  log.appendChild(container);
+  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
+}
+
+// -----------------------------------------------------
+// Display output
+// -----------------------------------------------------
+function displayCoachOutput({ text, mode, uiTarget, openChat }) {
+  if (!text) return;
+
+  if (uiTarget === "silent") return;
+
+  if (uiTarget === "chat") {
+    window.sendCoachToChat?.(text, { open: !!openChat });
+    renderCoachQuickActions(mode);
+    return;
+  }
+
+  window.coachReact?.(text);
+}
+
+// -----------------------------------------------------
+// Main API
+// -----------------------------------------------------
+window.requestCoach = async function ({
+  mode = "generic",
+  context = {},
+  userMessage = "",
+  uiTarget = "whisper",
+  openChat = false
+} = {}) {
+  try {
+    const enrichedContext = enrichCoachContext({
+      mode,
+      context,
+      userMessage
+    });
+
+    let response;
+
+    if (mode === "swing_analysis") {
+      response = window.CoachModes?.swing
+        ? await window.CoachModes.swing({
+            context: enrichedContext,
+            userMessage
+          })
+        : await respondCoachGeneric(userMessage);
+    } else if (mode === "training_session") {
+      response = window.CoachModes?.training
+        ? await window.CoachModes.training({
+            context: enrichedContext,
+            userMessage
+          })
+        : await respondCoachGeneric(userMessage);
+    } else if (mode === "round_support") {
+      response = window.CoachModes?.round
+        ? await window.CoachModes.round({
+            context: enrichedContext,
+            userMessage
+          })
+        : await respondCoachGeneric(userMessage);
+    } else {
+      response = await respondCoachGeneric(userMessage);
+    }
+
+    window.CoachMemory?.setLastResponse?.(response);
+
+    setCoachState({
+      mode,
+      context: enrichedContext,
+      response,
+      uiTarget
+    });
+
+    const text = formatCoachResponseForUI(response, mode);
+
+    displayCoachOutput({
+      text,
+      mode,
+      uiTarget,
+      openChat
+    });
+
+    return response;
+  } catch (err) {
+    console.warn("requestCoach failed", err);
+
+    const fallback =
+      "Je suis là. On repart simple : une respiration, une intention, une action.";
+
+    displayCoachOutput({
+      text: fallback,
+      mode,
+      uiTarget,
+      openChat
+    });
+
+    return {
+      error: true,
+      summary: fallback
+    };
   }
 };
 
 // -----------------------------------------------------
-// HELPERS
+// Entry point called by coach-zen.js
 // -----------------------------------------------------
-function knowledge() {
-  return window.PARFECT_COACH_KNOWLEDGE_V2 || {};
-}
-
-function cleanText(str) {
-  return String(str || "").replace(/\s+/g, " ").trim();
-}
-
-function clampText(str, max = 520) {
-  const clean = cleanText(str);
-  return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
-}
-
-function safeCoachReact(message, opts = {}) {
+window.respondAsCoach = async function (message) {
   const clean = cleanText(message);
-  if (!clean) return;
+  if (!clean) return null;
 
-  if (typeof window.coachReact === "function") {
-    window.coachReact(clean, opts);
-  } else {
-    console.log("Coach:", clean);
-  }
-}
+  const mode = detectCoachModeFromRouteAndMessage(clean);
+  const baseContext = getBaseContextForMode(mode);
 
-// -----------------------------------------------------
-// INIT
-// -----------------------------------------------------
-function initCoachIA() {
-  const input = $("coach-input");
-  const send = $("coach-send");
-
-  if (!input || !send) {
-    console.warn("⚠️ Coach IA V2 : input ou bouton manquant");
-    return;
-  }
-
-  if (send.dataset.coachV2Bound === "1") return;
-  send.dataset.coachV2Bound = "1";
-
-  if (!localStorage.getItem("coachIntroDone")) {
-    safeCoachReact("Salut 👋 Je suis ton coach Parfect. Swing, mental ou caddy : pose-moi ta question.");
-    localStorage.setItem("coachIntroDone", "true");
-  }
-
-  send.addEventListener("click", () => onUserSend(input));
-
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") onUserSend(input);
+  return window.requestCoach({
+    mode,
+    context: baseContext,
+    userMessage: clean,
+    uiTarget: "chat",
+    openChat: true
   });
-
-  console.log("✅ Coach IA V2 initialisé");
-}
+};
 
 // -----------------------------------------------------
-// USER LOG
-// -----------------------------------------------------
-function appendUserMessage(text) {
-  const log = $("coach-user-log");
-  if (!log) return;
-
-  const clean = cleanText(text);
-  if (!clean) return;
-
-  const div = document.createElement("div");
-  div.className = "msg user";
-  div.textContent = clean;
-
-  log.appendChild(div);
-  log.scrollTo({ top: log.scrollHeight, behavior: "smooth" });
-}
-
-function onUserSend(input) {
-  const message = cleanText(input?.value);
-  if (!message) return;
-
-  appendUserMessage(message);
-  input.value = "";
-
-  respondAsCoach(message);
-}
-
-// -----------------------------------------------------
-// INTENT DETECTION
-// -----------------------------------------------------
-function detectIntent(message) {
-  const m = cleanText(message).toLowerCase();
-
-  if (
-    m.includes("caddy") ||
-    m.includes("club") ||
-    m.includes("fer ") ||
-    m.includes("fer7") ||
-    m.includes("fer 7") ||
-    m.includes("fer8") ||
-    m.includes("fer 8") ||
-    m.includes("driver") ||
-    m.includes("bois") ||
-    m.includes("hybride") ||
-    m.includes("wedge") ||
-    m.includes("j’hésite") ||
-    m.includes("j'hesite") ||
-    m.includes("j hésite") ||
-    m.includes("option") ||
-    m.includes("prochain coup") ||
-    m.includes("vent") ||
-    m.includes("lie") ||
-    m.includes("danger")
-  ) {
-    return "CADDY";
-  }
-
-  if (
-    m.includes("mental") ||
-    m.includes("stress") ||
-    m.includes("pression") ||
-    m.includes("confiance") ||
-    m.includes("routine") ||
-    m.includes("peur") ||
-    m.includes("mauvais coup") ||
-    m.includes("raté") ||
-    m.includes("rate")
-  ) {
-    return "MENTAL";
-  }
-
-  return "SWING";
-}
-
-// -----------------------------------------------------
-// SWING CONTEXT
-// -----------------------------------------------------
-function getLatestSwingContext() {
-  return (
-    window.lastSwingScores ||
-    window.currentSwingScores ||
-    window.lastJustSwingScores ||
-    window.lastSwingResult ||
-    null
-  );
-}
-
-function pickWeakMetric(scores) {
-  const order = [
-    "tempo",
-    "rotation",
-    "triangle",
-    "weightShift",
-    "extension",
-    "balance"
-  ];
-
-  const candidates = [];
-
-  for (const key of order) {
-    const value =
-      scores?.breakdown?.[key]?.score ??
-      scores?.scores?.[key] ??
-      scores?.metrics?.[key]?.score ??
-      scores?.[key];
-
-    if (typeof value === "number" && Number.isFinite(value)) {
-      candidates.push({ key, value });
-    }
-  }
-
-  if (!candidates.length) return null;
-
-  candidates.sort((a, b) => a.value - b.value);
-  return candidates[0];
-}
-
-function metricLabel(key) {
-  const labels = {
-    tempo: "tempo",
-    rotation: "rotation",
-    triangle: "connexion bras/épaules",
-    weightShift: "transfert d’appui",
-    extension: "extension",
-    balance: "équilibre"
-  };
-
-  return labels[key] || key;
-}
-
-// -----------------------------------------------------
-// ANSWERS — SWING
-// -----------------------------------------------------
-function answerSwing(message) {
-  const k = knowledge();
-  const scores = getLatestSwingContext();
-  const weak = pickWeakMetric(scores);
-
-  if (!weak) {
-    return clampText(
-      "Swing : je garde une priorité simple. Fais 3 swings à 70%, même routine, même rythme, puis tiens le finish 2 secondes. On cherche la répétabilité, pas le swing parfait."
-    );
-  }
-
-  const block = k.swing?.[weak.key];
-  const label = metricLabel(weak.key);
-
-  if (!block) {
-    return clampText(
-      `Priorité : ${label}. Fais 3 swings calmes avec une seule intention. Le but est de rendre ce point plus répétable.`
-    );
-  }
-
-  const principle = block.principles?.[0] || "";
-  const drill = block.drills?.[0] || "Fais 3 répétitions simples à 70%.";
-
-  return clampText(
-    `Priorité ${label} : ${block.goal} ${principle} Action : ${drill}`
-  );
-}
-
-// -----------------------------------------------------
-// ANSWERS — MENTAL
-// -----------------------------------------------------
-function answerMental(message) {
-  const k = knowledge();
-  const m = cleanText(message).toLowerCase();
-
-  if (
-    m.includes("mauvais coup") ||
-    m.includes("raté") ||
-    m.includes("rate") ||
-    m.includes("énerv") ||
-    m.includes("enerve")
-  ) {
-    const b = k.mental?.postBadShot;
-    return clampText(
-      `Reset mental : ${b.goal} ${b.principles?.[0] || ""} Action : ${b.reset?.join(" → ")}.`
-    );
-  }
-
-  if (
-    m.includes("pression") ||
-    m.includes("stress") ||
-    m.includes("peur") ||
-    m.includes("confiance")
-  ) {
-    const b = k.mental?.pressure;
-    return clampText(
-      `Sous pression : ${b.goal} ${b.principles?.[0] || ""} Action : ${b.drills?.[0]}`
-    );
-  }
-
-  const b = k.mental?.routine;
-
-  return clampText(
-    `Routine : ${b.goal} ${b.principles?.[0] || ""} Script : ${b.script?.join(" → ")}.`
-  );
-}
-
-// -----------------------------------------------------
-// ANSWERS — CADDY
-// -----------------------------------------------------
-function extractClubOptions(message) {
-  const m = cleanText(message).toLowerCase();
-  const clubs = [];
-
-  const patterns = [
-    "driver",
-    "bois 3",
-    "bois3",
-    "bois 5",
-    "bois5",
-    "hybride",
-    "fer 4",
-    "fer4",
-    "fer 5",
-    "fer5",
-    "fer 6",
-    "fer6",
-    "fer 7",
-    "fer7",
-    "fer 8",
-    "fer8",
-    "fer 9",
-    "fer9",
-    "pw",
-    "sw",
-    "wedge"
-  ];
-
-  patterns.forEach((club) => {
-    if (m.includes(club)) {
-      clubs.push(
-        club
-          .replace("bois3", "bois 3")
-          .replace("bois5", "bois 5")
-          .replace(/fer(\d)/, "fer $1")
-      );
-    }
-  });
-
-  return [...new Set(clubs)];
-}
-
-function detectCaddyMode(message) {
-  const m = cleanText(message).toLowerCase();
-
-  if (
-    m.includes("recentr") ||
-    m.includes("rough") ||
-    m.includes("forêt") ||
-    m.includes("foret") ||
-    m.includes("bunker") ||
-    m.includes("mauvais lie")
-  ) {
-    return "recovery";
-  }
-
-  if (
-    m.includes("attaquer") ||
-    m.includes("attaque") ||
-    m.includes("birdie") ||
-    m.includes("drapeau") ||
-    m.includes("green")
-  ) {
-    return "attack";
-  }
-
-  if (
-    m.includes("score") ||
-    m.includes("protéger") ||
-    m.includes("proteger") ||
-    m.includes("bogey") ||
-    m.includes("double")
-  ) {
-    return "protectScore";
-  }
-
-  return "safe";
-}
-
-function answerCaddy(message) {
-  const k = knowledge();
-  const clubs = extractClubOptions(message);
-  const mode = detectCaddyMode(message);
-
-  const modeLine =
-    k.caddy?.onCourseModes?.[mode] ||
-    k.caddy?.onCourseModes?.safe ||
-    "";
-
-  const rules = k.caddy?.clubChoice?.betweenTwoClubs || [];
-  const defaultAnswer =
-    k.caddy?.clubChoice?.defaultAnswer ||
-    "Choisis le club qui donne le plus de marge.";
-
-  if (clubs.length >= 2) {
-    return clampText(
-      `Caddy : entre ${clubs[0]} et ${clubs[1]}, je choisis l’option qui protège le score. ${rules[0] || ""} ${modeLine} Question clé : où est le danger à éviter absolument ?`
-    );
-  }
-
-  return clampText(
-    `Caddy : ${defaultAnswer} ${modeLine} Donne-moi distance, lie, vent, danger court/long, et je te tranche le club.`
-  );
-}
-
-// -----------------------------------------------------
-// MAIN COACH
-// -----------------------------------------------------
-async function respondAsCoach(message) {
-  const intent = detectIntent(message);
-
-  let reply = "";
-
-  if (intent === "CADDY") {
-    reply = answerCaddy(message);
-  } else if (intent === "MENTAL") {
-    reply = answerMental(message);
-  } else {
-    reply = answerSwing(message);
-  }
-
-  safeCoachReact(reply);
-}
-
-// -----------------------------------------------------
-// UI VISIBILITY
+// UI helpers
 // -----------------------------------------------------
 function showCoachIA(message = "") {
-  const coach = $("coach-ia");
-  if (coach) coach.style.display = "flex";
-  if (message) safeCoachReact(message);
+  if (typeof window.expandCoachIA === "function") {
+    window.expandCoachIA();
+  } else {
+    const coach = $("coach-ia");
+    if (coach) coach.style.display = "flex";
+  }
+
+  if (message) window.coachReact?.(message);
 }
 
 function hideCoachIA() {
-  const coach = $("coach-ia");
-  if (coach) coach.style.display = "none";
+  if (typeof window.collapseCoachIA === "function") {
+    window.collapseCoachIA();
+  } else {
+    const coach = $("coach-ia");
+    if (coach) coach.style.display = "none";
+  }
 }
 
 function showCoachToast(msg, color = "#00ff99") {
@@ -543,15 +682,17 @@ function showCoachToast(msg, color = "#00ff99") {
 }
 
 // -----------------------------------------------------
-// EXPORTS
+// Exports
 // -----------------------------------------------------
 window.initCoachIA = initCoachIA;
-window.respondAsCoach = respondAsCoach;
 window.showCoachIA = showCoachIA;
 window.hideCoachIA = hideCoachIA;
 window.showCoachToast = showCoachToast;
+window.renderCoachQuickActions = renderCoachQuickActions;
 
-// Auto init safe
+// -----------------------------------------------------
+// Auto init
+// -----------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
   initCoachIA();
 });
