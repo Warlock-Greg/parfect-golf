@@ -3197,7 +3197,7 @@ window.requestSwingCoachAnalysis = async function requestSwingCoachAnalysis(swin
 
     if (box) {
       box.innerHTML = `
-        <div class="jsw-coach-title">🧠 Coach IA Parfect</div>
+        <div class="jsw-coach-title">🏌️Coach IA Parfect</div>
         <div class="jsw-coach-comment">Analyse IA du swing en cours...</div>
       `;
     }
