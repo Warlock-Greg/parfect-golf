@@ -3247,7 +3247,7 @@ window.requestSwingCoachAnalysis = async function requestSwingCoachAnalysis(swin
         "Tiens le finish deux secondes."
       ],
       home_drills: [
-        "À la maison, pose ton téléphone sur un plan de travail et fais 5 swings sans club."
+        "À la maison, pose ton téléphone sur un plan de travail sur Just Swing et enchaine 5 swings sans club."
       ]
     });
 
