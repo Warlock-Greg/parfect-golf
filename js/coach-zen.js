@@ -119,11 +119,13 @@ function appendCoachMessageToChat(text) {
 
 window.appendCoachMessageToChat = appendCoachMessageToChat;
 
-   window.sendCoachToChat = function (text) {
+ window.sendCoachToChat = function (text) {
   const clean = String(text || "").trim();
   if (!clean) return;
 
   if (coachSection) coachSection.style.display = "flex";
+  if (userLog) userLog.style.display = "flex";
+
   appendCoachMessageToChat(clean);
 };
    

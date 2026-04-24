@@ -102,7 +102,7 @@ function getMentalStateFromStorage(trigger = "manual") {
   };
 }
 
-function buildRoundCoachContext(extra = {}) {
+function buildPlayRoundCoachContext(extra = {}) {
   if (typeof window.buildRoundCoachContext !== "function") {
     return {};
   }
@@ -111,14 +111,16 @@ function buildRoundCoachContext(extra = {}) {
     hole: getCurrentHoleContext(),
     scoreState: getRoundScoreState(),
     nextShot: getNextShotContext(),
-    mentalState: extra.mentalState || getMentalStateFromStorage(extra.trigger || "manual"),
+    mentalState:
+      extra.mentalState ||
+      getMentalStateFromStorage(extra.trigger || "manual"),
     recentEvents: roundEvents
   });
 }
 
 async function requestRoundCoach(userMessage, extra = {}) {
   try {
-    const context = buildRoundCoachContext(extra);
+    const context = buildPlayRoundCoachContext(extra);
 
     window.CoachMemory?.setLastRound?.(context);
 

@@ -76,17 +76,17 @@
         <div class="pg-home-tiles">
           <button id="home-just-swing" class="pg-tile" type="button">
             <div class="pg-tile-title">Just Swing</div>
-            <div class="pg-tile-desc">L'analyse vidéo t'amènera à parfaire ton swing.</div>
+            <div class="pg-tile-desc">Progresse grâce à la video.</div>
           </button>
 
           <button id="home-play" class="pg-tile" type="button">
-            <div class="pg-tile-title">Carte de Score</div>
-            <div class="pg-tile-desc">Renforce ta stratégie de jeu en connaissantr tes datas (Fairway, GIR, Putts).</div>
+            <div class="pg-tile-title">Coach Parcours</div>
+            <div class="pg-tile-desc">Ton parcours en mode accompagné.</div>
           </button>
 
           <button id="home-training" class="pg-tile" type="button">
-            <div class="pg-tile-title">Training</div>
-            <div class="pg-tile-desc">Répétition, routine, mental</div>
+            <div class="pg-tile-title">Coach Training</div>
+            <div class="pg-tile-desc">Répétition, routine, mental.</div>
           </button>
 
           <button id="home-friends" class="pg-tile" type="button">
@@ -316,15 +316,26 @@
 <!-- ===============================
      COACH IA (input + user log)
      =============================== -->
-<section id="coach-ia" class="pg-coach-ia" style="display:flex;">
-  <!-- Log joueur uniquement -->
-  <div id="coach-user-log" class="pg-coach-user-log"></div>
+<section id="coach-ia" class="pg-coach-ia coach-medium" style="display:flex;">
+  <div class="pg-coach-shell">
+    <div class="pg-coach-header">
+      <div class="pg-coach-title-wrap">
+        <div class="pg-coach-dot"></div>
+        <div>
+          <div class="pg-coach-title">Coach IA</div>
+          <div class="pg-coach-subtitle">Swing · Training · Round</div>
+        </div>
+      </div>
 
-  <!-- Input en bas pleine largeur -->
-  <div id="coach-input-zone" class="pg-coach-input-zone">
-    <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
-    <button id="coach-send" type="button">Envoyer</button>
-    <button id="coach-close" type="button" aria-label="Fermer">✕</button>
+      <button id="coach-close" type="button" class="pg-coach-close" aria-label="Fermer">✕</button>
+    </div>
+
+    <div id="coach-user-log" class="pg-coach-user-log"></div>
+
+    <div id="coach-input-zone" class="pg-coach-input-zone">
+      <input id="coach-input" type="text" placeholder="Pose ta question au coach…" />
+      <button id="coach-send" type="button" class="pg-coach-send">Envoyer</button>
+    </div>
   </div>
 </section>
 
