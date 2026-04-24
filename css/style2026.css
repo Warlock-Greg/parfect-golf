@@ -628,7 +628,7 @@ body.coach-hidden #coach-ia {
 
 .pg-coach-subtitle {
   font-size: 0.78rem;
-  color: rgba(255,255,255,0.62);
+  color: var(--pg-green-main);
   margin-top: 2px;
 }
 
@@ -812,7 +812,7 @@ body.coach-hidden #coach-ia {
 }
 
 #coach-input::placeholder {
-  color: rgba(255,255,255,0.42);
+  color: rgba(255,255,255,0.9);
 }
 
 #coach-input:focus {
