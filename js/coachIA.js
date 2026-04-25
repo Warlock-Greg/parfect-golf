@@ -634,16 +634,34 @@ window.requestCoach = async function ({
   mode = "generic",
   context = {},
   userMessage = "",
-  uiTarget = "whisper",
+  uiTarget = "chat",
   openChat = false
 } = {}) {
   try {
+     if (mode === "generic") {
+      mode = detectCoachModeFromRouteAndMessage(userMessage);
+    }
+
+    if (mode === "generic") {
+      mode = "training_session";
+    }
+
+    if (mode === "generic" && uiTarget === "whisper") {
+      uiTarget = "chat";
+      openChat = true;
+    }
     const enrichedContext = enrichCoachContext({
       mode,
       context,
       userMessage
     });
-
+console.log("🧠 requestCoach mode final", {
+  mode,
+  userMessage,
+  hasSwingMode: !!window.CoachModes?.swing,
+  hasTrainingMode: !!window.CoachModes?.training,
+  hasRoundMode: !!window.CoachModes?.round
+});
     let response;
 
     if (mode === "swing_analysis") {
