@@ -3144,7 +3144,7 @@ background: #ffffff;
   }
 
   .jsw-video {
-        width: 70vw;
+        width: 60vw;
         max-width: none;
         aspect-ratio: 9 / 16;
         min-height: calc(66dvh - 181px);
