@@ -1,0 +1,23 @@
+{
+  "id": "parfect-coach-knowledge-v2-index",
+  "schema_version": "2.0",
+  "validated": true,
+  "description": "Index de chargement des bases de connaissances coach par type.",
+  "files": [
+    "./data/coach-knowledge/v2/swing.json",
+    "./data/coach-knowledge/v2/mental.json",
+    "./data/coach-knowledge/v2/caddy.json",
+    "./data/coach-knowledge/v2/training.json"
+  ],
+  "load_order": [
+    "swing",
+    "mental",
+    "caddy",
+    "training"
+  ],
+  "usage": {
+    "free": "local rules + knowledge snippets",
+    "premium": "remote OpenAI + compact grounded context",
+    "token_policy": "ne jamais envoyer les landmarks complets ; envoyer uniquement summary, scores, metrics utiles et top 3 chunks"
+  }
+}
