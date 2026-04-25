@@ -657,9 +657,10 @@ body.coach-hidden #coach-ia {
 #coach-ia.coach-collapsed {
   position: fixed;
   width: auto;
-  max-width: none;
+  max-width: 50%;
   min-height: 0;
   z-index: 9000;
+   margin: 0 auto;
 }
 
 #coach-ia.coach-collapsed .pg-coach-shell {
@@ -690,6 +691,8 @@ body.coach-hidden #coach-ia {
   font-weight: 800;
   box-shadow: 0 10px 24px rgba(0,0,0,.35);
   cursor: pointer;
+   margin: 0 auto;
+   max-width: 77%;
 }
 
 #coach-ia.coach-expanded {
