@@ -1,0 +1,157 @@
+{
+  "language": "fr",
+  "validated": true,
+  "schema_version": "2.0",
+  "answer_rules": {
+    "always_do": [
+      "donner une seule priorité",
+      "donner une action simple",
+      "donner un drill court",
+      "répondre comme un coach/caddy de terrain",
+      "adapter la réponse au contexte : swing, mental, stratégie ou entraînement"
+    ],
+    "never_say": [
+      "filme un swing de face et de profil",
+      "envoie les landmarks MediaPipe",
+      "je ne peux pas analyser sans vidéo",
+      "change complètement ton swing",
+      "corrige tout en même temps"
+    ],
+    "format": {
+      "max_priorities": 1,
+      "max_actions": 2,
+      "max_drills": 1,
+      "tone": "calme, concret, encourageant"
+    }
+  },
+  "id": "parfect-coach-caddy-v2",
+  "coach_type": "caddy",
+  "title": "Coach Caddy — Strategy Knowledge V2",
+  "description": "Base contrôlée pour décision de club, gestion du risque et stratégie score.",
+  "retrieval": {
+    "priority_tags": [
+      "strategy",
+      "risk",
+      "club_choice",
+      "strokes_gained",
+      "safe_target",
+      "recovery"
+    ]
+  },
+  "sources": [
+    {
+      "id": "caddy_broadie_strokes_gained",
+      "source_name": "Mark Broadie — Strokes Gained Research",
+      "source_url": "https://columbia.edu/~mnb2/broadie/Assets/strokes_gained_pga_broadie_20110408.pdf",
+      "source_type": "academic_paper",
+      "trust_level": "high",
+      "coach_topics": [
+        "caddy",
+        "strategy"
+      ],
+      "tags": [
+        "strokes_gained",
+        "analytics",
+        "shot_value",
+        "decision"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "shot_value_context",
+          "text": "La qualité d'un coup se comprend par rapport à sa position de départ et sa position d'arrivée, pas seulement par le résultat brut.",
+          "coach_use": "Évaluer un choix par sa marge et son risque, pas par le coup parfait."
+        }
+      ]
+    },
+    {
+      "id": "caddy_decade_strategy",
+      "source_name": "DECADE Golf / Scott Fawcett",
+      "source_url": "https://decade.golf",
+      "source_type": "strategy_platform",
+      "trust_level": "medium",
+      "coach_topics": [
+        "caddy"
+      ],
+      "tags": [
+        "strategy",
+        "target",
+        "risk",
+        "safe_zone"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "target_zone",
+          "text": "Une stratégie solide vise des zones avec de la marge plutôt que des cibles parfaites.",
+          "coach_use": "Quand le joueur hésite, proposer la zone la plus large et le coup ratable."
+        }
+      ]
+    },
+    {
+      "id": "caddy_practical_golf_decade",
+      "source_name": "Practical Golf — DECADE and Course Management",
+      "source_url": "https://practical-golf.com/decade-scott-fawcett",
+      "source_type": "strategy_article",
+      "trust_level": "medium",
+      "coach_topics": [
+        "caddy"
+      ],
+      "tags": [
+        "course_management",
+        "probability",
+        "risk"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "probability_strategy",
+          "text": "La stratégie moderne de parcours s'appuie sur les probabilités et la réduction des erreurs coûteuses.",
+          "coach_use": "Recommander le coup qui protège le score, même s'il est moins spectaculaire."
+        }
+      ]
+    },
+    {
+      "id": "caddy_golf_sidekick_bogey",
+      "source_name": "Golf Sidekick — Stress-free Course Management",
+      "source_url": "https://golfsidekick.com",
+      "source_type": "strategy_platform",
+      "trust_level": "medium",
+      "coach_topics": [
+        "caddy"
+      ],
+      "tags": [
+        "bogey",
+        "simple",
+        "ego",
+        "recovery"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "bogey_is_ok",
+          "text": "Un bogey bien géré vaut mieux qu'un double bogey provoqué par un coup héroïque.",
+          "coach_use": "En recovery, interdire le héros et proposer la remise en jeu."
+        }
+      ]
+    }
+  ],
+  "decision_framework": {
+    "questions": [
+      "Quelle est la cible la plus sûre ?",
+      "Où est le danger à éviter absolument ?",
+      "Quel club me donne le plus de marge ?",
+      "Quel coup puis-je rater correctement ?",
+      "Ce choix protège-t-il mon score ?"
+    ],
+    "rules": [
+      "Entre deux clubs, choisis celui qui couvre le danger principal.",
+      "Si le danger est court, prends plus de club.",
+      "Si le danger est long, prends moins de club.",
+      "Si le lie est mauvais, réduis l'ambition.",
+      "Si tu hésites, choisis le swing normal et la cible large."
+    ],
+    "modes": {
+      "attack": "Attaque seulement si le mauvais coup reste jouable.",
+      "safe": "Joue la zone large, accepte un putt plus long ou une approche simple.",
+      "recovery": "Remets la balle en jeu. Pas de héros.",
+      "protect_score": "Protège le double. Le bogey peut être un bon score."
+    }
+  }
+}
