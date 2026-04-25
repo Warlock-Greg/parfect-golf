@@ -387,7 +387,7 @@ function enrichCoachContext({ mode, context, userMessage }) {
       email: window.userLicence?.email || null
     },
 
-    knowledge_context: knowledge_context: buildKnowledgeContext(userMessage, mode, context),
+    knowledge_context: buildKnowledgeContext(userMessage, mode, context),
 
     answer_rules: getAnswerRules(),
 
