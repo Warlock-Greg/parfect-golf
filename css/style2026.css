@@ -1647,7 +1647,7 @@ position: fixed;
 ================================ */
 
 .jsw-header {
- position: relative;
+ position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -1655,8 +1655,8 @@ position: fixed;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  z-index: 10;
-   background: black;
+  z-index: 10000;
+  background: black;
 }
 
 /* -------------------------------
@@ -1757,11 +1757,11 @@ position: fixed;
    MESSAGE CENTRAL (adresse / installation)
    --------------------------------------------------------- */
 #jsw-big-msg {
-  position: absolute!important;
-  top: 91%!important;
+  position: relative;
+  top: 0%!important;
   left: 0%!important;
   transform: translate(0%, 0%)!important;
-  z-index: 50;
+  z-index: 1000;
   min-width: 95vw;
   padding: 0px 0px;
   border-radius: 18px;
@@ -1770,7 +1770,7 @@ position: fixed;
   font-weight: 700;
   opacity: 0;
   transition: opacity 0.5s ease;
-   text-align: left;
+   text-align: center;
 }
 
 .jsw-start-title {
@@ -2839,7 +2839,7 @@ background: #ffffff;
     background: var(--pg-green-main)!important;
     color: #fff!important;
     border: none!important;
-    border-radius: var(--pg-radius-pill!important);
+    border-radius: 300px;
     font-weight: 600!important;
     cursor: pointer;
     white-space: nowrap;}
