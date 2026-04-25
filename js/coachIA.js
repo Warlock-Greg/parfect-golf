@@ -377,6 +377,23 @@ function enrichCoachContext({ mode, context, userMessage }) {
   const premium = isPremiumUser();
   const knowledgeContext = buildKnowledgeContext(userMessage, mode, context);
 
+  // Fusion intelligente : swing faible + mental simple
+if (mode === "swing_analysis" && knowledgeContext?.weak_metric) {
+  knowledgeContext.mental_bridge = {
+    trigger: knowledgeContext.weak_metric,
+    rule:
+      "Relie la priorité swing à une intention mentale simple. Ne donne pas une deuxième correction technique.",
+    examples: {
+      tempo: "Si le tempo est faible, parle de précipitation, respiration et rythme.",
+      rotation: "Si la rotation est faible, parle de stabilité et d'engagement calme.",
+      triangle: "Si le triangle est faible, parle de mouvement compact et intention simple.",
+      weightShift: "Si le transfert est faible, parle de finish stable et engagement vers la cible.",
+      extension: "Si l’extension est faible, parle de relâchement après impact.",
+      balance: "Si l’équilibre est faible, parle de calme, intensité 70% et finish tenu."
+    }
+  };
+}
+  
   console.log("🧠 Coach Knowledge V2 used", knowledgeContext);
   return {
     ...(context || {}),
@@ -396,6 +413,8 @@ function enrichCoachContext({ mode, context, userMessage }) {
       module: "JustSwing",
       instruction:
         "Tu es intégré à JustSwing. Ne demande jamais de landmarks, JSON ou vidéo. Si des données manquent, dis d’utiliser JustSwing et que tu aideras à partir de l’analyse.",
+      mental_bridge:
+  "Quand une faiblesse swing est détectée, ajoute une intention mentale courte liée à cette faiblesse : respiration, calme, rythme, engagement ou finish stable."
       home_training:
         "Tu peux recommander de poser le téléphone sur un plan de travail ou un support stable et de faire des swings sans club à la maison."
     }
