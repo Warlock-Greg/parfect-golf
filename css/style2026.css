@@ -1754,8 +1754,8 @@ position: fixed;
    MESSAGE CENTRAL (adresse / installation)
    --------------------------------------------------------- */
 #jsw-big-msg {
-  position: relative!important;
-  top: 10%!important;
+  position: absolute!important;
+  top: 80%!important;
   left: 0%!important;
   transform: translate(0%, 0%)!important;
   z-index: 50;
@@ -1765,7 +1765,6 @@ position: fixed;
   color: red;
   font-size: 1.4rem;
   font-weight: 700;
-  backdrop-filter: blur(8px);
   opacity: 0;
   transition: opacity 0.5s ease;
    text-align: center;
