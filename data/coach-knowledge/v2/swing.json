@@ -1,0 +1,236 @@
+{
+  "language": "fr",
+  "validated": true,
+  "schema_version": "2.0",
+  "answer_rules": {
+    "always_do": [
+      "donner une seule priorité",
+      "donner une action simple",
+      "donner un drill court",
+      "répondre comme un coach/caddy de terrain",
+      "adapter la réponse au contexte : swing, mental, stratégie ou entraînement"
+    ],
+    "never_say": [
+      "filme un swing de face et de profil",
+      "envoie les landmarks MediaPipe",
+      "je ne peux pas analyser sans vidéo",
+      "change complètement ton swing",
+      "corrige tout en même temps"
+    ],
+    "format": {
+      "max_priorities": 1,
+      "max_actions": 2,
+      "max_drills": 1,
+      "tone": "calme, concret, encourageant"
+    }
+  },
+  "id": "parfect-coach-swing-v2",
+  "coach_type": "swing",
+  "title": "Coach Swing — JustSwing Knowledge V2",
+  "description": "Base contrôlée pour interpréter les scores, métriques et signaux JustSwing.",
+  "retrieval": {
+    "priority_tags": [
+      "tempo",
+      "rotation",
+      "triangle",
+      "weightShift",
+      "extension",
+      "balance",
+      "plan"
+    ],
+    "scoring": {
+      "weak_threshold_20": 15,
+      "weak_threshold_10": 7,
+      "critical_threshold_20": 10,
+      "critical_threshold_10": 5
+    }
+  },
+  "sources": [
+    {
+      "id": "swing_tempo_garmin_3to1",
+      "source_name": "Garmin TruSwing — Swing Tempo",
+      "source_url": "https://www8.garmin.com/manuals/webhelp/truswing/EN-US/GUID-CC3A61DE-E455-4192-9DA6-C8B0B4EC4A07.html",
+      "source_type": "manufacturer_manual",
+      "trust_level": "high",
+      "coach_topics": [
+        "swing"
+      ],
+      "tags": [
+        "tempo",
+        "ratio",
+        "backswing",
+        "downswing"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "tempo_ratio_definition",
+          "text": "Le tempo est le rapport entre la durée de montée et la durée de descente. Un repère utile est proche de 3:1.",
+          "coach_use": "Quand le ratio tempo est trop éloigné de la cible, proposer une sensation de rythme plutôt qu'une correction technique."
+        },
+        {
+          "chunk_id": "tempo_individual",
+          "text": "Deux joueurs peuvent avoir des temps différents tout en gardant un ratio cohérent. La priorité est la répétabilité du tempo.",
+          "coach_use": "Ne pas chercher un swing lent ou rapide par principe : chercher un rythme stable."
+        }
+      ],
+      "drills": [
+        "3 swings à 70% : compte 1-2-3 à la montée, 1 à la descente.",
+        "Fais 5 swings sans balle avec le même rythme, puis seulement 1 swing avec balle."
+      ]
+    },
+    {
+      "id": "swing_kinematic_sequence_tpi",
+      "source_name": "Titleist Performance Institute — Kinematic Sequence Basics",
+      "source_url": "https://www.mytpi.com/articles/biomechanics/kinematic_sequence_basics",
+      "source_type": "biomechanics_article",
+      "trust_level": "high",
+      "coach_topics": [
+        "swing"
+      ],
+      "tags": [
+        "sequence",
+        "rotation",
+        "weightShift",
+        "power",
+        "efficiency"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "sequence_order",
+          "text": "Un swing efficace transfère l'énergie du bas du corps vers le tronc, puis les bras, puis le club.",
+          "coach_use": "Si rotation ou transfert sont faibles, rappeler que l'objectif est une séquence fluide, pas un mouvement forcé."
+        },
+        {
+          "chunk_id": "style_vs_sequence",
+          "text": "Deux swings visuellement différents peuvent produire une séquence efficace. Le style compte moins que l'ordre et la coordination.",
+          "coach_use": "Éviter de demander au joueur de copier une forme parfaite ; prioriser la coordination."
+        }
+      ],
+      "drills": [
+        "Step drill doux : démarre le backswing, puis sens la pression revenir vers l'avant avant l'impact.",
+        "Swing ralenti en 3 temps : charge, tourne, finis stable."
+      ]
+    },
+    {
+      "id": "swing_balance_finish",
+      "source_name": "Golf Distillery — Finish and Balance",
+      "source_url": "https://www.golfdistillery.com/swing-tips/finish/",
+      "source_type": "instruction_article",
+      "trust_level": "medium",
+      "coach_topics": [
+        "swing"
+      ],
+      "tags": [
+        "balance",
+        "finish",
+        "stability"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "finish_reveals_control",
+          "text": "Le finish donne une indication simple sur la maîtrise globale du swing.",
+          "coach_use": "Si balance faible, réduire l'intensité et demander au joueur de tenir le finish."
+        },
+        {
+          "chunk_id": "stable_finish",
+          "text": "Un finish tenu indique souvent un meilleur contrôle du rythme et du transfert.",
+          "coach_use": "Relier balance, tempo et transfert sans multiplier les consignes."
+        }
+      ],
+      "drills": [
+        "Tiens le finish 2 secondes après chaque swing.",
+        "Passe à 70% d’intensité jusqu’à pouvoir tenir le finish sans bouger."
+      ]
+    },
+    {
+      "id": "swing_home_training_slow_motion",
+      "source_name": "Me and My Golf — Home Practice",
+      "source_url": "https://meandmygolf.com",
+      "source_type": "instruction_platform",
+      "trust_level": "medium",
+      "coach_topics": [
+        "swing",
+        "training"
+      ],
+      "tags": [
+        "training",
+        "slow",
+        "repetition",
+        "home"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "slow_repetition",
+          "text": "Le travail à vitesse réduite facilite la mémorisation d'une sensation de swing.",
+          "coach_use": "Pour un joueur en difficulté, prescrire des répétitions lentes sans balle avant de chercher la vitesse."
+        }
+      ],
+      "drills": [
+        "10 swings sans balle dans la maison, très lents, en cherchant uniquement l'équilibre.",
+        "3 demi-swings connectés avant chaque vrai swing."
+      ]
+    }
+  ],
+  "metric_mapping": {
+    "tempo": {
+      "goal": "Créer un rythme répétable.",
+      "bad_signals": [
+        "ratio très éloigné de 3:1",
+        "transition précipitée",
+        "downswing trop brusque"
+      ],
+      "default_priority": "Ralentis la montée et garde une descente engagée.",
+      "default_drill": "3 swings à 70% : 1-2-3 montée, 1 descente."
+    },
+    "rotation": {
+      "goal": "Tourner sans perdre l'axe.",
+      "bad_signals": [
+        "épaules insuffisantes",
+        "hanches trop actives",
+        "faible dissociation"
+      ],
+      "default_priority": "Cherche plus de rotation d'épaules sans forcer les hanches.",
+      "default_drill": "3 swings lents en sentant les épaules tourner autour d'un axe calme."
+    },
+    "triangle": {
+      "goal": "Garder la connexion bras/épaules.",
+      "bad_signals": [
+        "triangle instable",
+        "bras qui se déconnectent",
+        "impact désorganisé"
+      ],
+      "default_priority": "Rends le mouvement plus compact.",
+      "default_drill": "Serviette sous les bras : 5 demi-swings calmes."
+    },
+    "weightShift": {
+      "goal": "Transférer progressivement vers l'avant.",
+      "bad_signals": [
+        "poids bloqué arrière",
+        "transfert tardif",
+        "appui avant faible"
+      ],
+      "default_priority": "Finis avec une pression stable sur le pied avant.",
+      "default_drill": "Tiens le finish 2 secondes en sentant le poids devant."
+    },
+    "extension": {
+      "goal": "Laisser les bras sortir après impact.",
+      "bad_signals": [
+        "bras qui se replient tôt",
+        "release bloqué",
+        "extension courte"
+      ],
+      "default_priority": "Laisse les bras s'allonger vers la cible après impact.",
+      "default_drill": "Demi-swings avec finish bras longs."
+    },
+    "balance": {
+      "goal": "Finir stable.",
+      "bad_signals": [
+        "finish instable",
+        "tête qui bouge",
+        "perte d'équilibre"
+      ],
+      "default_priority": "Réduis l'intensité et tiens le finish.",
+      "default_drill": "Swing à 70%, finish tenu 2 secondes."
+    }
+  }
+}
