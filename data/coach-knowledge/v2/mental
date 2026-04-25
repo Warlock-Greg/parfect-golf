@@ -1,0 +1,156 @@
+{
+  "language": "fr",
+  "validated": true,
+  "schema_version": "2.0",
+  "answer_rules": {
+    "always_do": [
+      "donner une seule priorité",
+      "donner une action simple",
+      "donner un drill court",
+      "répondre comme un coach/caddy de terrain",
+      "adapter la réponse au contexte : swing, mental, stratégie ou entraînement"
+    ],
+    "never_say": [
+      "filme un swing de face et de profil",
+      "envoie les landmarks MediaPipe",
+      "je ne peux pas analyser sans vidéo",
+      "change complètement ton swing",
+      "corrige tout en même temps"
+    ],
+    "format": {
+      "max_priorities": 1,
+      "max_actions": 2,
+      "max_drills": 1,
+      "tone": "calme, concret, encourageant"
+    }
+  },
+  "id": "parfect-coach-mental-v2",
+  "coach_type": "mental",
+  "title": "Coach Mental — Knowledge V2",
+  "description": "Base contrôlée pour routine, pression, reset après mauvais coup et focus.",
+  "retrieval": {
+    "priority_tags": [
+      "routine",
+      "pressure",
+      "reset",
+      "confidence",
+      "focus",
+      "breathing"
+    ]
+  },
+  "sources": [
+    {
+      "id": "mental_preshot_golfpsych",
+      "source_name": "GolfPsych — Mental Pre-Shot Routine",
+      "source_url": "https://www.golfpsych.com/mental-pre-shot-routine/",
+      "source_type": "mental_game_article",
+      "trust_level": "medium",
+      "coach_topics": [
+        "mental"
+      ],
+      "tags": [
+        "routine",
+        "consistency",
+        "simplicity",
+        "energy"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "routine_foundation",
+          "text": "Une routine pré-shot solide sert de fondation au mental car elle apporte simplicité, constance et économie d'énergie.",
+          "coach_use": "Quand le joueur parle de pression, ramener à une routine courte et répétable."
+        }
+      ],
+      "scripts": [
+        "Cible. Coup raisonnable. Respiration. Action.",
+        "Une intention en 3 mots : calme, fluide, stable."
+      ],
+      "drills": [
+        "Avant 5 balles, répète exactement la même routine de 15 secondes."
+      ]
+    },
+    {
+      "id": "mental_golf_state_of_mind_preshot",
+      "source_name": "Golf State of Mind — Pre-Shot Routine",
+      "source_url": "https://golfstateofmind.com/the-pre-shot-routine-for-golf/",
+      "source_type": "mental_game_article",
+      "trust_level": "medium",
+      "coach_topics": [
+        "mental"
+      ],
+      "tags": [
+        "focus",
+        "routine",
+        "narrow_focus"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "broad_to_narrow_focus",
+          "text": "La routine aide à passer d'une attention large entre les coups à une attention étroite au moment de jouer.",
+          "coach_use": "Sous pression, proposer un déclencheur simple pour revenir au coup présent."
+        }
+      ],
+      "drills": [
+        "Choisis un mot déclencheur : cible, rythme ou équilibre. Répète-le juste avant l'action."
+      ]
+    },
+    {
+      "id": "mental_pressure_reset",
+      "source_name": "Golf Monthly — Mental Game Skills",
+      "source_url": "https://www.golfmonthly.com/features/5-mental-game-skills-to-build-this-winter-for-better-golf-next-season",
+      "source_type": "mental_game_article",
+      "trust_level": "medium",
+      "coach_topics": [
+        "mental",
+        "training"
+      ],
+      "tags": [
+        "reset",
+        "pressure",
+        "focus_word",
+        "bad_shot"
+      ],
+      "chunks": [
+        {
+          "chunk_id": "bounce_back",
+          "text": "Le mental se travaille aussi par la capacité à se recentrer après une distraction ou un mauvais coup.",
+          "coach_use": "Après un mauvais coup, séparer l'identité du joueur et l'information donnée par le coup."
+        }
+      ],
+      "drills": [
+        "Reset 10 secondes : expiration longue, regarde la situation réelle, choisis le coup jouable."
+      ]
+    }
+  ],
+  "frameworks": {
+    "routine": {
+      "goal": "Créer un script simple avant chaque coup.",
+      "script": [
+        "Quelle est ma cible ?",
+        "Quel est le coup raisonnable ?",
+        "Quelle est mon intention en 3 mots ?",
+        "Respiration.",
+        "Action."
+      ],
+      "coach_response": "Une seule intention. Ne cherche pas le swing parfait, cherche l'engagement."
+    },
+    "pressure": {
+      "goal": "Réduire l'ambition et revenir au coup jouable.",
+      "rules": [
+        "Sous pression, le bon choix est souvent le plus simple.",
+        "La routine doit devenir plus courte, pas plus longue.",
+        "On protège le score avant de chercher le coup parfait."
+      ],
+      "drill": "Respiration 4 secondes inspiration / 6 secondes expiration."
+    },
+    "post_bad_shot": {
+      "goal": "Ne pas laisser un mauvais coup décider du suivant.",
+      "reset": [
+        "Regarde la situation réelle.",
+        "Choisis l'option qui remet la balle en jeu.",
+        "Accepte bogey si nécessaire."
+      ],
+      "coach_response": "Ce coup est une information, pas une identité."
+    }
+  }
+}
