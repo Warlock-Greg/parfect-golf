@@ -112,15 +112,17 @@ function detectCoachModeFromRouteAndMessage(message) {
 // -----------------------------------------------------
 // Knowledge controlled grounding
 // -----------------------------------------------------
-function getControlledKnowledge() {
-  return window.PARFECT_COACH_KNOWLEDGE_V2 || {};
+function getControlledKnowledgeSources() {
+  return window.PARFECT_COACH_KNOWLEDGE_V2?.sources || [];
 }
 
 function getAnswerRules() {
-  const kb = getControlledKnowledge();
-  return kb.answerRules || {
-    neverSay: [],
-    alwaysDo: []
+  const sources = getControlledKnowledgeSources();
+  const rules = sources.find(s => s.answer_rules)?.answer_rules;
+
+  return rules || {
+    never_say: [],
+    always_do: []
   };
 }
 
@@ -260,20 +262,108 @@ function flattenKnowledgeBlock(path, block) {
   };
 }
 
-function buildKnowledgeContext(message, mode) {
-  if (!isPremiumUser()) return [];
+function resolveCoachTypeFromMode(mode) {
+  if (mode === "swing_analysis") return "swing";
+  if (mode === "training_session") return "training";
+  if (mode === "round_support") return "caddy";
+  return "mental";
+}
 
-  const kb = getControlledKnowledge();
-  const topics = detectKnowledgeTopics(message, mode);
-  const chunks = [];
+function detectWeakMetricFromContext(context = {}) {
+  const breakdown =
+    context?.analysis_context?.breakdown ||
+    context?.breakdown ||
+    {};
 
-  topics.forEach((path) => {
-    const block = path.reduce((acc, key) => acc?.[key], kb);
-    const flat = flattenKnowledgeBlock(path, block);
-    if (flat) chunks.push(flat);
+  const order = ["tempo", "rotation", "triangle", "weightShift", "extension", "balance"];
+
+  const candidates = order
+    .map(key => ({
+      key,
+      score: breakdown?.[key]?.score
+    }))
+    .filter(x => typeof x.score === "number");
+
+  if (!candidates.length) return null;
+
+  candidates.sort((a, b) => a.score - b.score);
+  return candidates[0].key;
+}
+
+function buildKnowledgeContext(message, mode, context = {}) {
+  const coachType = resolveCoachTypeFromMode(mode);
+  const weakMetric = detectWeakMetricFromContext(context);
+
+  const query = [
+    cleanText(message).toLowerCase(),
+    weakMetric
+  ].filter(Boolean).join(" ");
+
+  const files = getControlledKnowledgeSources()
+    .filter(s => s.validated === true)
+    .filter(s => s.coach_type === coachType);
+
+  const selected = [];
+
+  files.forEach(file => {
+    // 1. Sources externes
+    (file.sources || []).forEach(src => {
+      const tags = (src.tags || []).map(t => String(t).toLowerCase());
+
+      const match =
+        tags.some(tag => query.includes(tag)) ||
+        (weakMetric && tags.includes(String(weakMetric).toLowerCase()));
+
+      if (match) {
+        selected.push({
+          source_id: src.id,
+          source_name: src.source_name,
+          source_url: src.source_url,
+          tags: src.tags || [],
+          chunks: (src.chunks || []).slice(0, 2),
+          drills: (src.drills || []).slice(0, 1)
+        });
+      }
+    });
+
+    // 2. Mapping métrique swing
+    if (weakMetric && file.metric_mapping?.[weakMetric]) {
+      selected.unshift({
+        source_id: `metric_mapping.${weakMetric}`,
+        source_name: `Parfect metric mapping ${weakMetric}`,
+        tags: [weakMetric],
+        chunks: [
+          {
+            text: file.metric_mapping[weakMetric].default_priority,
+            coach_use: file.metric_mapping[weakMetric].goal
+          }
+        ],
+        drills: [file.metric_mapping[weakMetric].default_drill]
+      });
+    }
+
+    // 3. Training exercise library
+    if (coachType === "training" && Array.isArray(file.exercise_library)) {
+      const exercise = file.exercise_library.find(ex =>
+        (ex.tags || []).some(tag => query.includes(String(tag).toLowerCase()))
+      );
+
+      if (exercise) {
+        selected.unshift({
+          source_id: exercise.id,
+          source_name: exercise.name,
+          tags: exercise.tags || [],
+          exercise
+        });
+      }
+    }
   });
 
-  return chunks.slice(0, 6);
+  return {
+    coach_type: coachType,
+    weak_metric: weakMetric,
+    chunks: selected.slice(0, 3)
+  };
 }
 
 // -----------------------------------------------------
@@ -285,7 +375,9 @@ function getBaseContextForMode(mode) {
 
 function enrichCoachContext({ mode, context, userMessage }) {
   const premium = isPremiumUser();
+  const knowledgeContext = buildKnowledgeContext(userMessage, mode, context);
 
+  console.log("🧠 Coach Knowledge V2 used", knowledgeContext);
   return {
     ...(context || {}),
 
@@ -295,9 +387,7 @@ function enrichCoachContext({ mode, context, userMessage }) {
       email: window.userLicence?.email || null
     },
 
-    knowledge_context: premium
-      ? buildKnowledgeContext(userMessage, mode)
-      : [],
+    knowledge_context: knowledge_context: buildKnowledgeContext(userMessage, mode, context),
 
     answer_rules: getAnswerRules(),
 
