@@ -412,30 +412,48 @@ async function loadCommunitySummary(force = false) {
   return socialSummaryInflight;
 }
 
-async function openLegalPage() {
-  const container = document.getElementById("legal-page-container");
+window.openLegalPage = async function () {
+  const legalArea = document.getElementById("legal-area");
+  const legalContainer = document.getElementById("legal-page-container");
 
-  if (!container) {
-    console.warn("legal container introuvable");
+  if (!legalArea || !legalContainer) {
+    console.warn("legal-area ou legal-page-container introuvable");
     return;
   }
 
-  if (!container.dataset.loaded) {
-    const res = await fetch("/legal.html");
+  // Cache toutes les vues
+  [
+    "home-area",
+    "game-area",
+    "training-area",
+    "friends-area",
+    "history-area",
+    "just-swing-area"
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+
+  // Charge legal.html une seule fois
+  if (!legalContainer.dataset.loaded) {
+    const res = await fetch("./legal.html");
+
+    if (!res.ok) {
+      console.error("Impossible de charger legal.html", res.status);
+      return;
+    }
+
     const html = await res.text();
-    container.innerHTML = html;
-    container.dataset.loaded = "true";
+    legalContainer.innerHTML = html;
+    legalContainer.dataset.loaded = "true";
   }
 
-  // 🔥 cacher le reste (SAFE)
-  const social = document.getElementById("social-screen");
-  if (social) {
-    social.style.display = "none";
-  }
+  // Affiche la vue légale
+  legalArea.style.display = "block";
+  legalContainer.style.display = "block";
 
-  // 🔥 afficher legal
-  container.style.display = "block";
-}
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
 function renderCommunitySummary({ swings = [], rounds = [], trainings = [] }) {
   if (swings?.length) {
