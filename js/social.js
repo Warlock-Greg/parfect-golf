@@ -415,6 +415,11 @@ async function loadCommunitySummary(force = false) {
 async function openLegalPage() {
   const container = document.getElementById("legal-page-container");
 
+  if (!container) {
+    console.warn("legal container introuvable");
+    return;
+  }
+
   if (!container.dataset.loaded) {
     const res = await fetch("/legal.html");
     const html = await res.text();
@@ -422,8 +427,11 @@ async function openLegalPage() {
     container.dataset.loaded = "true";
   }
 
-  // 🔥 cacher le reste
-  document.getElementById("social-screen")?.style.display = "none";
+  // 🔥 cacher le reste (SAFE)
+  const social = document.getElementById("social-screen");
+  if (social) {
+    social.style.display = "none";
+  }
 
   // 🔥 afficher legal
   container.style.display = "block";
