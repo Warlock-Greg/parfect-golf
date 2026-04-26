@@ -414,7 +414,7 @@ if (mode === "swing_analysis" && knowledgeContext?.weak_metric) {
       instruction:
         "Tu es intégré à JustSwing. Ne demande jamais de landmarks, JSON ou vidéo. Si des données manquent, dis d’utiliser JustSwing et que tu aideras à partir de l’analyse.",
       mental_bridge:
-  "Quand une faiblesse swing est détectée, ajoute une intention mentale courte liée à cette faiblesse : respiration, calme, rythme, engagement ou finish stable."
+  "Quand une faiblesse swing est détectée, ajoute une intention mentale courte liée à cette faiblesse : respiration, calme, rythme, engagement ou finish stable.",
       home_training:
         "Tu peux recommander de poser le téléphone sur un plan de travail ou un support stable et de faire des swings sans club à la maison."
     }
