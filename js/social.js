@@ -409,6 +409,23 @@ async function loadCommunitySummary(force = false) {
   return socialSummaryInflight;
 }
 
+async function openLegalPage() {
+  const container = document.getElementById("legal-page-container");
+
+  if (!container.dataset.loaded) {
+    const res = await fetch("/legal.html");
+    const html = await res.text();
+    container.innerHTML = html;
+    container.dataset.loaded = "true";
+  }
+
+  // 🔥 cacher le reste
+  document.getElementById("social-screen")?.style.display = "none";
+
+  // 🔥 afficher legal
+  container.style.display = "block";
+}
+
 function renderCommunitySummary({ swings = [], rounds = [], trainings = [] }) {
   if (swings?.length) {
     document.getElementById("latest-swing").innerHTML = `
