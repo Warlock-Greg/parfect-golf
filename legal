@@ -296,7 +296,7 @@
 
       <div class="pg-legal-actions">
         <!-- Si tu as un bouton home -->
-        <button class="pg-btn pg-btn-secondary" type="button" onclick="document.getElementById('home-btn')?.click?.()">
+         <button class="pg-btn pg-btn-secondary" type="button" onclick="closeLegalPage()">
           ← Retour
         </button>
         <button class="pg-btn pg-btn-primary" type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})">
