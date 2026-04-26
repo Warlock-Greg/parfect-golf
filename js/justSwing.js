@@ -721,21 +721,25 @@ function exportSwingForTraining(swing, scores) {
   }
 
 function registerKeyframe(type, index, pose) {
-  if (!window.currentSwing) return;
+  if (!activeSwing || !Array.isArray(pose)) return;
 
-  if (!window.currentSwing.keyframeLandmarks) {
-    window.currentSwing.keyframeLandmarks = {};
-  }
+  const safeIndex = Math.max(0, activeSwing.frames.length - 1);
 
-  // snapshot profond (anti-mutation)
-  window.currentSwing.keyframeLandmarks[type] = {
-    index,
-    pose: pose.map(p => ({
-      x: p.x,
-      y: p.y,
-      z: p.z ?? null,
-      v: p.visibility ?? null
-    }))
+  const snap = pose.map(p => ({
+    x: p.x,
+    y: p.y,
+    z: p.z ?? null,
+    visibility: p.visibility ?? null
+  }));
+
+  activeSwing.keyFrames[type] = {
+    index: typeof index === "number" ? index : safeIndex,
+    pose: snap
+  };
+
+  activeSwing.keyframeLandmarks[type] = {
+    index: typeof index === "number" ? index : safeIndex,
+    pose: snap
   };
 }
 
@@ -1012,24 +1016,71 @@ function hasRealMotion(swing) {
    return total > 0.08; // seuil mobile validé
  }
 
+  function computeLandmarkTravel(frames, ids) {
+  let total = 0;
+
+  for (let f = 1; f < frames.length; f++) {
+    for (const id of ids) {
+      const a = frames[f - 1]?.[id];
+      const b = frames[f]?.[id];
+      if (!a || !b) continue;
+
+      total += Math.hypot(b.x - a.x, b.y - a.y);
+    }
+  }
+
+  return total;
+}
+
 function isValidSwing(swing) {
-  const kf = swing.keyFrames || {};
+  const frames = swing?.frames || [];
+  const kf = swing?.keyFrames || {};
+  const T = swing?.timestamps || [];
 
-  // impact indispensable
-  if (!kf.impact) return false;
+  // 1. Frames suffisantes
+  if (frames.length < 35) {
+    return false;
+  }
 
-  // top OU backswing acceptable
-  if (!kf.top && !kf.backswing) return false;
+  // 2. Keyframes indispensables
+  if (!kf.address?.pose) return false;
+  if (!kf.impact?.pose) return false;
+  if (!kf.top?.pose && !kf.backswing?.pose) return false;
 
-  // durée minimale
-  if (!swing.frames || swing.frames.length < 25) return false;
+  // 3. Ordre logique des keyframes
+  const a = kf.address?.index;
+  const t = kf.top?.index ?? kf.backswing?.index;
+  const i = kf.impact?.index;
 
-  // mouvement réel
-  if (!hasRealMotion(swing)) return false;
+  if (
+    typeof a !== "number" ||
+    typeof t !== "number" ||
+    typeof i !== "number" ||
+    !(a < t && t < i)
+  ) {
+    return false;
+  }
+
+  // 4. Durées réalistes
+  if (T[a] && T[t] && T[i]) {
+    const backswingT = (T[t] - T[a]) / 1000;
+    const downswingT = (T[i] - T[t]) / 1000;
+
+    if (backswingT < 0.20 || backswingT > 2.5) return false;
+    if (downswingT < 0.10 || downswingT > 1.2) return false;
+  }
+
+  // 5. Mouvement réel
+  const wristMove = computeLandmarkTravel(frames, [15, 16]);
+  const shoulderMove = computeLandmarkTravel(frames, [11, 12]);
+  const hipMove = computeLandmarkTravel(frames, [23, 24]);
+
+  if (wristMove < 0.22) return false;
+  if (shoulderMove < 0.08) return false;
+  if (wristMove <= hipMove * 1.6) return false;
 
   return true;
 }
-
 
 
   function showSwingRetryButton(messageHtml) {
@@ -1697,7 +1748,20 @@ if (pendingAddress && !addressLocked && isStableAddress(landmarks)) {
   // 1 Toujours pousser la frame au moteur
   // ----------------------------
   const now = performance.now();
-  const evt = engine.processPose(landmarks, now, currentClubType);
+
+if (activeSwing && isRecordingActive && state === JSW_STATE.SWING_CAPTURE) {
+  const snap = landmarks.map(p => ({
+    x: p.x,
+    y: p.y,
+    z: p.z ?? null,
+    visibility: p.visibility ?? null
+  }));
+
+  activeSwing.frames.push(snap);
+  activeSwing.timestamps.push(now);
+}
+
+const evt = engine.processPose(landmarks, now, currentClubType);
 
   if (!engine.keyFrames) return;
 
@@ -4584,24 +4648,37 @@ async function handleSwingComplete(swing) {
   // ======================================================
   // 2️⃣ Validation UX
   // ======================================================
-  if (!isValidSwing(swing) || !hasRealMotion(swing)) {
-    stopRecording();
-    showBigMessage("😕 Aucun swing détecté.\nRecommence calmement.");
+ // 🔒 VALIDATION SWING UNIQUE
+if (!isValidSwing(swing)) {
+  stopRecording();
+
+  console.warn("⛔ Swing rejeté");
+
+  showBigMessage(
+    "😕 Pas de vrai swing détecté.\nRecommence sans bouger avant."
+  );
+
+  setTimeout(() => {
+    hideBigMessage();
     startRoutineSequence();
-    return;
-  }
+  }, 1500);
 
-  if (!addressLocked) {
-    stopRecording();
-    showBigMessage("🧍‍♂️ Stabilise-toi à l’adresse");
+  return;
+}
 
-    setTimeout(() => {
-      hideBigMessage();
-      startRoutineSequence();
-    }, 1500);
+// 🔒 SÉCURITÉ ADDRESS (APRÈS validation)
+if (!addressLocked) {
+  stopRecording();
 
-    return;
-  }
+  showBigMessage("🧍‍♂️ Stabilise-toi à l’adresse");
+
+  setTimeout(() => {
+    hideBigMessage();
+    startRoutineSequence();
+  }, 1500);
+
+  return;
+}
 
   // ======================================================
   // 3️⃣ Fin capture
