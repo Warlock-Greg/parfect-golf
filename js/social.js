@@ -947,47 +947,28 @@ async function startStripeCheckout() {
 
 window.startStripeCheckout = startStripeCheckout;
 
-window.openLegalPage = async function () {
-  const legalArea = document.getElementById("legal-area");
-  const legalContainer = document.getElementById("legal-page-container");
+async function openLegalPage() {
+  const container = document.getElementById("legal-page-container");
 
-  if (!legalArea || !legalContainer) {
-    console.warn("Legal area introuvable");
+  if (!container) {
+    console.warn("legal container introuvable");
     return;
   }
 
-  // Cache toutes les vues principales
-  [
-    "home-area",
-    "game-area",
-    "training-area",
-    "friends-area",
-    "history-area",
-    "just-swing-area"
-  ].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = "none";
-  });
-
-  // Charge legal.html une seule fois
-  if (!legalContainer.dataset.loaded) {
-    const res = await fetch("./legal.html");
+  if (!container.dataset.loaded) {
+    const res = await fetch("/legal.html");
     const html = await res.text();
-
-    legalContainer.innerHTML = html;
-    legalContainer.dataset.loaded = "true";
+    container.innerHTML = html;
+    container.dataset.loaded = "true";
   }
 
-  legalArea.style.display = "block";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+  // 🔥 cacher social
+  const social = document.getElementById("social-screen");
+  if (social) social.style.display = "none";
 
-window.closeLegalPage = function () {
-  const legalArea = document.getElementById("legal-area");
-  if (legalArea) legalArea.style.display = "none";
-
-  document.getElementById("friends-btn")?.click();
-};
+  // 🔥 afficher legal
+  container.style.display = "block";
+}
 
 // ------------------------------------------------
 // EXPORT
