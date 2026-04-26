@@ -962,9 +962,11 @@ async function openLegalPage() {
     container.dataset.loaded = "true";
   }
 
-  // 🔥 cacher social
+  // 🔥 cacher le reste (SAFE)
   const social = document.getElementById("social-screen");
-  if (social) social.style.display = "none";
+  if (social) {
+    social.style.display = "none";
+  }
 
   // 🔥 afficher legal
   container.style.display = "block";
