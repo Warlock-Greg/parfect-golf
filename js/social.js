@@ -949,7 +949,8 @@ async function startStripeCheckout() {
 
   try {
     const res = await fetch(
-      "https://jsisebmdjihfmelyymon.supabase.co/functions/v1/create-checkout",
+      //"https://jsisebmdjihfmelyymon.supabase.co/functions/v1/create-checkout",
+      `${window.CONFIG.API_BASE_URL}/api/stripe/create-checkout-session`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
